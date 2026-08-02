@@ -67,8 +67,8 @@ const composeTileImage = async (sourceImage, generatedImage, safeMask, lineOverl
     .raw()
     .toBuffer()
   const maskedGenerated = await sharp(generated)
+    .flatten({ background: '#000000' })
     .resize(atlasTileSize, atlasTileSize, { fit: 'fill' })
-    .removeAlpha()
     .joinChannel(alpha, {
       raw: { width: atlasTileSize, height: atlasTileSize, channels: 1 },
     })
@@ -199,6 +199,7 @@ const listCachedTiles = async () => {
                 x,
                 y,
                 url: cachedTileUrl({ scene, zoom: atlasZoom, x, y }),
+                contentBounds: cached.contentBounds ?? null,
               }))
             }
           }
@@ -367,7 +368,11 @@ const generateAtlasTile = async (request, response, tile) => {
   // cached tile never depends on OpenRouter configuration.
   const cached = await findCachedTile(tile)
   if (cached) {
-    sendJson(response, 200, { url: cachedTileUrl(cached.tile), scene: cached.tile.scene })
+    sendJson(response, 200, {
+      url: cachedTileUrl(cached.tile),
+      scene: cached.tile.scene,
+      contentBounds: cached.contentBounds ?? null,
+    })
     return true
   }
 
