@@ -11,7 +11,7 @@ const fogRadiusDuration = 180_000
 const generatedRevealDuration = 1400
 const generatedTileOpacity = 0.94
 const fogPokeDuration = 900
-const fogPokeExpansion = 0.1
+const fogPokeExpansion = 0.16
 
 const tileId = ({ x, y }) => `${atlasZoom}/${x}/${y}`
 const tileFromId = id => {
@@ -704,11 +704,9 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
       ? Math.min(1, (time - generatingStartedAt.get(id)) / fogRadiusDuration)
       : 0
     const baseRadiusScale =
-      state === 'generating'
+      state === 'generating' || state === 'revealing'
         ? 1 - generationProgress * 0.34
-        : state === 'revealing'
-          ? 0.66
-          : 1
+        : 1
     const radiusScale = baseRadiusScale * pokeScale
     const revealProgress = revealStartedAt.has(id)
       ? Math.min(1, (time - revealStartedAt.get(id)) / generatedRevealDuration)
@@ -716,8 +714,9 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
 
     maskContext.save()
     if (state === 'checking') {
-      const pulse = (Math.sin(time / 180 + seed) + 1) / 2
-      maskContext.globalAlpha = 0.42 + pulse * 0.48
+      // Keep the body opaque while it reacts to the click. The expansion
+      // should read as a physical exhale, not as the fog thinning out.
+      maskContext.globalAlpha = 1
     } else if (state === 'revealing') {
       maskContext.globalAlpha = 1 - revealProgress
     } else {
@@ -812,7 +811,7 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
     tileState.forEach((state, id) => {
       if (state !== 'generating') {
         loadingSequences.delete(id)
-        generatingStartedAt.delete(id)
+        if (state !== 'revealing') generatingStartedAt.delete(id)
         return
       }
       if (!loadingSequences.has(id)) {
