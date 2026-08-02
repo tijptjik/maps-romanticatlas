@@ -67,7 +67,7 @@ export const hongKongStyle = {
   sources: {
     'hongkong-latest': {
       type: 'vector',
-      url: '/map-assets/hype/basemap/hongkong-latest.json',
+      url: '/map-assets/saanseoi/hongkong-latest.json',
     },
   },
   glyphs: 'https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf',
