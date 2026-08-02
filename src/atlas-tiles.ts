@@ -602,6 +602,10 @@ const createFogMaskPath = (context, x, y, size, seed, radiusScale = 1) => {
 }
 
 const createFogCanvas = (map, tileState, isLandTargetable) => {
+  const mapDataIsReady = () =>
+    map.isStyleLoaded() &&
+    map.isSourceLoaded('hongkong-latest') &&
+    map.areTilesLoaded()
   const canvas = document.createElement('canvas')
   canvas.className = 'atlas-fog'
   canvas.setAttribute('aria-hidden', 'true')
@@ -644,6 +648,7 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
   let previousFrameTime: number | undefined
   const fogFrameInterval = 1000 / 60
   const maskFrameInterval = 1000 / 60
+  let maskRetryTimer: number | undefined
   const loadingSequences = new Map()
   const generatingStartedAt = new Map()
   const revealStartedAt = new Map()
@@ -1108,6 +1113,18 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
     }
     lastMaskFrame = time
     if (!clientWidth || !clientHeight) return
+    if (!mapDataIsReady()) {
+      // The first render can happen before the vector source has finished its
+      // initial request. Keep the mask dirty and retry after the source settles
+      // instead of permanently accepting an empty mask.
+      if (maskRetryTimer === undefined) {
+        maskRetryTimer = window.setTimeout(() => {
+          maskRetryTimer = undefined
+          invalidate()
+        }, 250)
+      }
+      return
+    }
     maskContext.setTransform(maskScale, 0, 0, maskScale, 0, 0)
     maskContext.clearRect(0, 0, clientWidth, clientHeight)
     visibleFogTiles(map).forEach(tile => {
@@ -1180,6 +1197,8 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
   mapEvents.forEach(eventName => {
     map.on(eventName, invalidate)
   })
+  map.on('data', invalidate)
+  map.on('idle', invalidate)
   resize()
   invalidate()
   animationFrame = requestAnimationFrame(render)
@@ -1203,8 +1222,11 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
       mapEvents.forEach(eventName => {
         map.off(eventName, invalidate)
       })
+      map.off('data', invalidate)
+      map.off('idle', invalidate)
       if (animationFrame) cancelAnimationFrame(animationFrame)
       if (maskFrame) cancelAnimationFrame(maskFrame)
+      if (maskRetryTimer !== undefined) window.clearTimeout(maskRetryTimer)
       generatingStartedAt.clear()
       revealStartedAt.clear()
       pokedAt.clear()
@@ -1299,13 +1321,6 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
 
   ;['move', 'resize', 'zoom', 'rotate', 'pitch'].forEach(eventName => {
     map.on(eventName, positionTitleCards)
-  })
-
-  map.on('idle', () => {
-    if (!mapDataIsReady()) return
-    // Keep classifications cached so fog tiles that just left the viewport do
-    // not disappear merely because the map finished its pan.
-    fog.invalidate()
   })
 
   const checkCachedTile = async tile => {
