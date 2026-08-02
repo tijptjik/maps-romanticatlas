@@ -1,13 +1,20 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "hong-kong-romantic-atlas",
+  "name": "maps-visionarymachines",
   "main": "src/worker.js",
   "compatibility_date": "2026-07-18",
   "workers_dev": true,
+  "routes": [
+    { "pattern": "visionarymachines.hype.hk", "custom_domain": true }
+  ],
+  "vars": {
+    "ATLAS_ALLOWED_ORIGIN": "https://visionarymachines.hype.hk",
+    "GEMINI_MODEL": "gemini-2.5-flash-image"
+  },
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
     "not_found_handling": "single-page-application",
-    "run_worker_first": ["/map-assets/hype/*"]
+    "run_worker_first": ["/map-assets/saanseoi/*"]
   }
 }
