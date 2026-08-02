@@ -9,8 +9,11 @@ const map = new maplibregl.Map({
   container: 'map',
   style: hongKongStyle,
   center: [114.1694, 22.3193],
-  zoom: 16,
-  maxZoom: 19,
+  zoom: 16.5,
+  // Atlas interactions use the z18 tile grid. The fog remains visible above it,
+  // while generation still requires a complete z18 tile in the viewport.
+  minZoom: 16.5,
+  maxZoom: 18,
   maxBounds: [113.8, 22.1, 114.5, 22.6],
   attributionControl: false,
 })
