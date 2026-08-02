@@ -1,19 +1,22 @@
 import { createServer } from 'node:http'
-import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, readdir, rmdir, unlink, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import sharp from 'sharp'
 import { createServer as createViteServer } from 'vite'
 
 import { createOpenRouterClient } from './openrouter-client.ts'
-import { atlasScenes } from '../src/atlas-scenes.ts'
+import { atlasSeaScenes, atlasSceneNames, atlasScenes } from '../src/atlas-scenes.ts'
 
 const rootDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const cacheDirectory = path.join(rootDirectory, 'generated-tiles')
 const productionDirectory = path.join(rootDirectory, 'dist')
 const atlasZoom = 18
+const atlasTileSize = 512
 const isProduction = process.env.NODE_ENV === 'production'
+const isAdminModeEnabled = process.env.ATLAS_ADMIN_MODE === 'true'
 const localOriginPattern = /^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/
-const atlasPromptVersion = 'openai-edit-v1'
+const atlasColourDirection = 'Keep the surrounding map and its Victorian-brown palette unchanged. Within the event, use a lively, carefully balanced storybook palette with warm parchment and sandy cream foundations, plus clear accents of cobalt blue, coral vermilion, marigold yellow, leafy sage green, dusty rose, and soft lilac. Keep the colours richly pigmented, crisp, and pleasantly contrasty so the event stands out, while remaining slightly softened and paper-printed rather than neon, fluorescent, garish, or oversaturated.'
 const contentTypes = {
   '.css': 'text/css; charset=utf-8',
   '.html': 'text/html; charset=utf-8',
@@ -44,11 +47,65 @@ const readRequestBody = async request => {
   return JSON.parse(Buffer.concat(chunks).toString('utf8'))
 }
 
+const parseImageDataUrl = dataUrl => {
+  const match = dataUrl.match(/^data:(image\/[\w.+-]+);base64,(.+)$/s)
+  if (!match) throw new Error('The tile source image must be a valid image data URL.')
+  return { contentType: match[1], data: Buffer.from(match[2], 'base64') }
+}
+
+const imageDataUrl = (contentType, data) =>
+  `data:${contentType};base64,${data.toString('base64')}`
+
+const normalizeGenerationBounds = value => {
+  const x = Number(value?.x)
+  const y = Number(value?.y)
+  const width = Number(value?.width)
+  const height = Number(value?.height)
+  if (![x, y, width, height].every(Number.isFinite)) {
+    return { x: 0, y: 0, width: atlasTileSize, height: atlasTileSize }
+  }
+
+  const left = Math.max(0, Math.min(atlasTileSize - 1, Math.floor(x)))
+  const top = Math.max(0, Math.min(atlasTileSize - 1, Math.floor(y)))
+  const right = Math.max(left + 1, Math.min(atlasTileSize, Math.ceil(x + width)))
+  const bottom = Math.max(top + 1, Math.min(atlasTileSize, Math.ceil(y + height)))
+  return { x: left, y: top, width: right - left, height: bottom - top }
+}
+
+const cropSourceImage = async (sourceImage, bounds) => {
+  const source = parseImageDataUrl(sourceImage)
+  const crop = await sharp(source.data)
+    .extract({
+      left: bounds.x,
+      top: bounds.y,
+      width: bounds.width,
+      height: bounds.height,
+    })
+    .png()
+    .toBuffer()
+  return imageDataUrl('image/png', crop)
+}
+
+const composeTileImage = async (sourceImage, generatedImage, bounds) => {
+  const source = parseImageDataUrl(sourceImage)
+  const generated = generatedImage.data
+  const resizedGenerated = await sharp(generated)
+    .resize(bounds.width, bounds.height, { fit: 'fill' })
+    .png()
+    .toBuffer()
+  const tile = await sharp(source.data)
+    .resize(atlasTileSize, atlasTileSize, { fit: 'fill' })
+    .composite([{ input: resizedGenerated, left: bounds.x, top: bounds.y }])
+    .png()
+    .toBuffer()
+  return { contentType: 'image/png', data: tile }
+}
+
 const parseTileRequest = pathname => {
-  const match = pathname.match(/^\/(?:api\/atlas-tiles|generated-tiles)\/([^/]+)\/(\d+)\/(\d+)\/(\d+)$/)
+  const match = pathname.match(/^\/(?:api\/atlas-tiles|generated-tiles)\/(\d+)\/(\d+)\/(\d+)\/([^/]+)$/)
   if (!match) return null
 
-  const [, scene, zoom, x, y] = match
+  const [, zoom, x, y, scene] = match
   if (!atlasScenes[scene]) return null
   const numericZoom = Number(zoom)
   const numericX = Number(x)
@@ -61,43 +118,85 @@ const parseTileRequest = pathname => {
   return { scene, zoom: numericZoom, x: numericX, y: numericY }
 }
 
+const parseTilePositionRequest = pathname => {
+  const match = pathname.match(/^\/api\/atlas-tiles\/cache-status\/(\d+)\/(\d+)\/(\d+)$/)
+  if (!match) return null
+
+  const [, zoom, x, y] = match
+  const numericZoom = Number(zoom)
+  const numericX = Number(x)
+  const numericY = Number(y)
+  const tileCount = 2 ** numericZoom
+  if (numericZoom !== atlasZoom || numericX < 0 || numericY < 0 || numericX >= tileCount || numericY >= tileCount) {
+    return null
+  }
+
+  return { zoom: numericZoom, x: numericX, y: numericY }
+}
+
 const tilePaths = tile => {
-  const directory = path.join(cacheDirectory, atlasPromptVersion, tile.scene, String(tile.zoom), String(tile.x))
+  const directory = path.join(cacheDirectory, String(tile.zoom), String(tile.x), String(tile.y))
   return {
     directory,
-    image: path.join(directory, `${tile.y}.image`),
-    metadata: path.join(directory, `${tile.y}.json`),
+    image: path.join(directory, `${tile.scene}.image`),
+    metadata: path.join(directory, `${tile.scene}.json`),
   }
 }
 
 const getCachedTile = async tile => {
   try {
-    const { metadata } = tilePaths(tile)
-    return JSON.parse(await readFile(metadata, 'utf8'))
+    const { image, metadata } = tilePaths(tile)
+    const cached = JSON.parse(await readFile(metadata, 'utf8'))
+    const imageMetadata = await sharp(image).metadata()
+    if (!imageMetadata.width || !imageMetadata.height) return null
+    return cached
   } catch {
     return null
   }
 }
 
+const cachedTileUrl = tile =>
+  `/generated-tiles/${tile.zoom}/${tile.x}/${tile.y}/${tile.scene}`
+
+const findCachedTile = async tile => {
+  const cachedTiles = []
+  for (const scene of atlasSceneNames) {
+    const candidate = { ...tile, scene }
+    const cached = await getCachedTile(candidate)
+    if (cached) cachedTiles.push({ ...cached, tile: candidate })
+  }
+  if (!cachedTiles.length) return null
+  return cachedTiles[Math.floor(Math.random() * cachedTiles.length)]
+}
+
 const listCachedTiles = async () => {
   const cachedTiles = new Set<string>()
   try {
-    const scenes = await readdir(path.join(cacheDirectory, atlasPromptVersion), { withFileTypes: true })
-    for (const scene of scenes) {
-      if (!scene.isDirectory() || !atlasScenes[scene.name]) continue
-      const zooms = await readdir(path.join(cacheDirectory, atlasPromptVersion, scene.name), { withFileTypes: true })
-      for (const zoom of zooms) {
-        if (!zoom.isDirectory() || Number(zoom.name) !== atlasZoom) continue
-        const xDirectories = await readdir(path.join(cacheDirectory, atlasPromptVersion, scene.name, zoom.name), { withFileTypes: true })
-        for (const xDirectory of xDirectories) {
-          if (!xDirectory.isDirectory() || !/^\d+$/.test(xDirectory.name)) continue
-          const x = Number(xDirectory.name)
-          const metadataFiles = await readdir(path.join(cacheDirectory, atlasPromptVersion, scene.name, zoom.name, xDirectory.name))
+    const zooms = await readdir(cacheDirectory, { withFileTypes: true })
+    for (const zoom of zooms) {
+      if (!zoom.isDirectory() || Number(zoom.name) !== atlasZoom) continue
+      const xDirectories = await readdir(path.join(cacheDirectory, zoom.name), { withFileTypes: true })
+      for (const xDirectory of xDirectories) {
+        if (!xDirectory.isDirectory() || !/^\d+$/.test(xDirectory.name)) continue
+        const x = Number(xDirectory.name)
+        const yDirectories = await readdir(path.join(cacheDirectory, zoom.name, xDirectory.name), { withFileTypes: true })
+        for (const yDirectory of yDirectories) {
+          if (!yDirectory.isDirectory() || !/^\d+$/.test(yDirectory.name)) continue
+          const y = Number(yDirectory.name)
+          const metadataFiles = await readdir(path.join(cacheDirectory, zoom.name, xDirectory.name, yDirectory.name))
           for (const metadataFile of metadataFiles) {
-            if (!metadataFile.endsWith('.json') || !/^\d+\.json$/.test(metadataFile)) continue
-            const y = Number(metadataFile.slice(0, -5))
+            const scene = metadataFile.replace(/\.json$/, '')
             const tileCount = 2 ** atlasZoom
-            if (x < tileCount && y < tileCount) cachedTiles.add(`${atlasZoom}/${x}/${y}`)
+            if (!atlasScenes[scene] || !metadataFile.endsWith('.json') || x >= tileCount || y >= tileCount) continue
+            if (await getCachedTile({ scene, zoom: atlasZoom, x, y })) {
+              cachedTiles.add(JSON.stringify({
+                scene,
+                zoom: atlasZoom,
+                x,
+                y,
+                url: cachedTileUrl({ scene, zoom: atlasZoom, x, y }),
+              }))
+            }
           }
         }
       }
@@ -106,38 +205,52 @@ const listCachedTiles = async () => {
     // An empty cache is expected on a fresh development server.
   }
 
-  return [...cachedTiles].map(id => {
-    const [zoom, x, y] = id.split('/').map(Number)
-    return { zoom, x, y }
-  })
+  return [...cachedTiles].map(entry => JSON.parse(entry))
 }
 
-const atlasPrompt = (scene, hasSea) => {
-  const seaRule = scene === 'lighthouse'
+const atlasPrompt = (scene, hasSea, bounds) => {
+  const seaRule = atlasSeaScenes.has(scene)
     ? hasSea
-      ? 'The tile contains visible sea or coastal water; place the lighthouse beside that water and include a small amount of the sea within the tile.'
-      : 'This tile does not contain visible sea or coastal water. Do not create a lighthouse; preserve the map unchanged.'
+      ? 'The tile contains visible sea or coastal water; place this sea-side event beside that water and include a small amount of the sea within the tile.'
+      : 'This tile does not contain visible sea or coastal water. Do not create the sea-side event; preserve the map unchanged.'
     : ''
 
-  return `Create ${atlasScenes[scene]} that fits this tile leaving a 10% safety margin. Preserve the entire surrounding map, its roads, labels, palette, scale, orientation, and top-down cartographic geometry. The result must be a planimetric, strict overhead view integrated into the map, not a poster or framed illustration. Keep the event strictly contained within the tile. Do not crop, rotate, add a border, or add new text. ${seaRule}`
+  const cropRule = bounds.width < atlasTileSize || bounds.height < atlasTileSize
+    ? 'This image is a crop from a single z18 map tile. Fill this crop with the event while preserving its visible roads, labels, palette, scale, orientation, and cartographic geometry around the event. Do not assume or invent geometry outside this crop.'
+    : 'This image is a complete single z18 map tile. Keep the event strictly contained within the tile.'
+  return `Create ${atlasScenes[scene]} that fits this image leaving a 10% safety margin. ${cropRule} ${atlasColourDirection} The result must be a planimetric, strict overhead view integrated into the map, not a poster or framed illustration. Do not crop, rotate, add a border, or add new text. ${seaRule}`
 }
 
-const generateTile = async (tile, sourceImage) => {
-  const cached = await getCachedTile(tile)
+const generateTile = async (tile, sourceImage, generationBounds) => {
+  const cached = await findCachedTile(tile)
   if (cached) return cached
 
+  const croppedSourceImage = await cropSourceImage(sourceImage, generationBounds)
+  const startedAt = performance.now()
   const generatedImage = await createOpenRouterClient().editImage({
-    prompt: atlasPrompt(tile.scene, tile.hasSea),
-    sourceImage,
+    prompt: atlasPrompt(tile.scene, tile.hasSea, generationBounds),
+    sourceImage: croppedSourceImage,
   })
+  const generatedAt = performance.now()
 
   const { directory, image, metadata } = tilePaths(tile)
-  const contentType = generatedImage.contentType
-  const cacheEntry = { contentType, generatedAt: new Date().toISOString() }
+  const composedImage = await composeTileImage(sourceImage, generatedImage, generationBounds)
+  const contentType = composedImage.contentType
+  const cacheEntry = {
+    contentType,
+    generatedAt: new Date().toISOString(),
+    generationBounds,
+    outputSize: { width: atlasTileSize, height: atlasTileSize },
+  }
   await mkdir(directory, { recursive: true })
-  await writeFile(image, generatedImage.data)
+  await writeFile(image, composedImage.data)
   await writeFile(metadata, JSON.stringify(cacheEntry))
-  return cacheEntry
+  console.info(
+    `[atlas] ${tile.scene}/${tile.zoom}/${tile.x}/${tile.y} generated in ` +
+      `${Math.round(generatedAt - startedAt)}ms; cached in ` +
+      `${Math.round(performance.now() - generatedAt)}ms`,
+  )
+  return { ...cacheEntry, tile }
 }
 
 const serveCachedTile = async (request, response, tile) => {
@@ -157,7 +270,63 @@ const serveCachedTile = async (request, response, tile) => {
   return true
 }
 
+const serveCacheStatus = async (request, response, tile) => {
+  if (request.method !== 'GET') {
+    sendError(response, 405, 'Cache status only supports GET requests.')
+    return true
+  }
+  const cached = await findCachedTile(tile)
+  sendJson(response, 200, {
+    cached: Boolean(cached),
+    url: cached ? cachedTileUrl(cached.tile) : null,
+  })
+  return true
+}
+
+const isAllowedApplicationRequest = request => {
+  const origin = request.headers.origin
+  const allowedOrigin = process.env.ATLAS_ALLOWED_ORIGIN ?? 'https://romanticatlas.hype.hk'
+  const allowedHost = new URL(allowedOrigin).host
+  const isLocalDevelopmentRequest = !isProduction && localOriginPattern.test(origin ?? '')
+  const hostIsAllowed = request.headers.host === allowedHost ||
+    (!isProduction && /^(?:localhost|127\.0\.0\.1)(?::\d+)?$/.test(request.headers.host ?? ''))
+  const originIsAllowed = !origin || origin === allowedOrigin || isLocalDevelopmentRequest
+  return originIsAllowed && hostIsAllowed
+}
+
+const deleteCachedTile = async (request, response, tile) => {
+  if (request.method !== 'DELETE') return false
+  if (!isAdminModeEnabled) {
+    sendError(response, 403, 'Atlas admin mode is disabled.')
+    return true
+  }
+  if (!isAllowedApplicationRequest(request)) {
+    sendError(response, 403, 'Cache management is restricted to the configured application domain.')
+    return true
+  }
+
+  const cached = await getCachedTile(tile)
+  if (!cached) {
+    sendError(response, 404, 'This atlas tile is not cached.')
+    return true
+  }
+
+  const { directory, image, metadata } = tilePaths(tile)
+  await unlink(image)
+  await unlink(metadata)
+  try {
+    await rmdir(directory)
+  } catch {
+    // Keep the tile directory when another scene is still cached there.
+  }
+  sendJson(response, 200, { deleted: true, tile })
+  console.info(`[atlas] deleted ${tile.scene}/${tile.zoom}/${tile.x}/${tile.y}`)
+  return true
+}
+
 const serveAtlasTileRequest = async (request, response, tile) => {
+  if (request.method === 'DELETE') return deleteCachedTile(request, response, tile)
+
   if (request.method === 'GET') {
     const cached = await getCachedTile(tile)
     if (cached) {
@@ -177,8 +346,9 @@ const generateAtlasTile = async (request, response, tile) => {
   // A client may retry generation for a tile that was generated by an earlier
   // request. Resolve that case before validating the generation request so a
   // cached tile never depends on OpenRouter configuration.
-  if (await getCachedTile(tile)) {
-    sendJson(response, 200, { url: `/generated-tiles/${tile.scene}/${tile.zoom}/${tile.x}/${tile.y}` })
+  const cached = await findCachedTile(tile)
+  if (cached) {
+    sendJson(response, 200, { url: cachedTileUrl(cached.tile) })
     return true
   }
 
@@ -194,14 +364,19 @@ const generateAtlasTile = async (request, response, tile) => {
     return true
   }
 
-  const { sourceImage, hasSea } = await readRequestBody(request)
+  const { sourceImage, hasSea, generationBounds } = await readRequestBody(request)
   if (typeof sourceImage !== 'string' || !sourceImage.startsWith('data:image/')) {
     sendError(response, 400, 'A PNG or JPEG data URL is required as the tile source image.')
     return true
   }
 
-  await generateTile({ ...tile, hasSea: hasSea === true }, sourceImage)
-  sendJson(response, 200, { url: `/generated-tiles/${tile.scene}/${tile.zoom}/${tile.x}/${tile.y}` })
+  const normalizedGenerationBounds = normalizeGenerationBounds(generationBounds)
+  const generated = await generateTile(
+    { ...tile, hasSea: hasSea === true },
+    sourceImage,
+    normalizedGenerationBounds,
+  )
+  sendJson(response, 200, { url: cachedTileUrl(generated.tile) })
   return true
 }
 
@@ -237,7 +412,18 @@ const server = createServer(async (request, response) => {
     const pathname = new URL(request.url, 'http://localhost').pathname
 
     if (request.method === 'GET' && pathname === '/api/atlas-tiles/cached') {
-      sendJson(response, 200, { tiles: await listCachedTiles() })
+      const tiles = await listCachedTiles()
+      sendJson(response, 200, {
+        adminMode: isAdminModeEnabled,
+        preRenderedCount: tiles.length,
+        tiles,
+      })
+      return
+    }
+
+    const tilePosition = parseTilePositionRequest(pathname)
+    if (tilePosition) {
+      await serveCacheStatus(request, response, tilePosition)
       return
     }
 
