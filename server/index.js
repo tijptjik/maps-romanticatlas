@@ -4,8 +4,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createServer as createViteServer } from 'vite'
 
-import { createGeminiClient } from './gemini-client.js'
-import { describeTileGeometry } from './vector-tile-analysis.js'
+import { createOpenRouterClient } from './openrouter-client.js'
 
 const rootDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const cacheDirectory = path.join(rootDirectory, 'generated-tiles')
@@ -16,6 +15,13 @@ const tileOrigin = 'https://tiles.saanseoi.hk'
 const tileProxyPrefix = '/map-assets/saanseoi'
 const tileJsonPath = `${tileProxyPrefix}/hongkong-latest.json`
 const publicOrigin = 'https://visionarymachines.hype.hk'
+const localOriginPattern = /^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/
+const atlasPromptVersion = 'openai-edit-v1'
+const atlasScenes = {
+  circus: 'a Victorian circus',
+  'balloon-festival': 'a balloon festival',
+  'art-nouveau-palace': 'an elaborate Art Nouveau palace',
+}
 const tileVectorPattern = new RegExp(
   `^${tileProxyPrefix}/hongkong-latest/(\\d+)/(\\d+)/(\\d+)\\.mvt$`,
 )
@@ -96,20 +102,23 @@ const readRequestBody = async request => {
 }
 
 const parseTileRequest = pathname => {
-  const match = pathname.match(/^\/(?:api\/atlas-tiles|generated-tiles)\/(\d+)\/(\d+)\/(\d+)$/)
+  const match = pathname.match(/^\/(?:api\/atlas-tiles|generated-tiles)\/(circus|balloon-festival|art-nouveau-palace)\/(\d+)\/(\d+)\/(\d+)$/)
   if (!match) return null
 
-  const [, zoom, x, y] = match.map(Number)
-  const tileCount = 2 ** zoom
-  if (zoom !== atlasZoom || x < 0 || y < 0 || x >= tileCount || y >= tileCount) {
+  const [, scene, zoom, x, y] = match
+  const numericZoom = Number(zoom)
+  const numericX = Number(x)
+  const numericY = Number(y)
+  const tileCount = 2 ** numericZoom
+  if (numericZoom !== atlasZoom || numericX < 0 || numericY < 0 || numericX >= tileCount || numericY >= tileCount) {
     return null
   }
 
-  return { zoom, x, y }
+  return { scene, zoom: numericZoom, x: numericX, y: numericY }
 }
 
 const tilePaths = tile => {
-  const directory = path.join(cacheDirectory, String(tile.zoom), String(tile.x))
+  const directory = path.join(cacheDirectory, atlasPromptVersion, tile.scene, String(tile.zoom), String(tile.x))
   return {
     directory,
     image: path.join(directory, `${tile.y}.image`),
@@ -126,15 +135,16 @@ const getCachedTile = async tile => {
   }
 }
 
-const atlasPrompt = geometryBrief => `Retell this exact level-18 Hong Kong map tile as a hand-drawn romantic-era atlas. The supplied image is authoritative geometry: trace every coastline, road centreline, water edge, building footprint, and park boundary in the same position. Do not crop, rotate, change scale, add or remove streets, or invent landmarks. Use graceful copperplate-era ink linework, light watercolour washes, parchment shading, botanical green parks, and restrained rose and ochre buildings. No title, legend, border, compass rose, labels, or new text. Keep all four edges seamless with adjacent tiles. Vector geometry brief: ${geometryBrief}`
+const atlasPrompt = scene => `Create ${atlasScenes[scene]} that fits in the center of this tile. Preserve the entire surrounding map, its roads, labels, palette, scale, orientation, and top-down cartographic geometry. The result must be a planimetric, strict overhead view integrated into the map, not a poster or framed illustration. Keep the event centered and contained within the tile. Do not crop, rotate, add a border, or add new text.`
 
 const generateTile = async (tile, sourceImage) => {
   const cached = await getCachedTile(tile)
   if (cached) return cached
 
-  const geminiClient = createGeminiClient()
-  const geometryBrief = await describeTileGeometry(tile)
-  const generatedImage = await geminiClient.generateImage({ prompt: atlasPrompt(geometryBrief), sourceImage })
+  const generatedImage = await createOpenRouterClient().editImage({
+    prompt: atlasPrompt(tile.scene),
+    sourceImage,
+  })
 
   const { directory, image, metadata } = tilePaths(tile)
   const contentType = generatedImage.contentType
@@ -168,7 +178,11 @@ const generateAtlasTile = async (request, response, tile) => {
   const origin = request.headers.origin
   const allowedOrigin = process.env.ATLAS_ALLOWED_ORIGIN ?? 'https://visionarymachines.hype.hk'
   const allowedHost = new URL(allowedOrigin).host
-  if ((origin && origin !== allowedOrigin) || request.headers.host !== allowedHost) {
+  const isLocalDevelopmentRequest = !isProduction && localOriginPattern.test(origin ?? '')
+  const hostIsAllowed = request.headers.host === allowedHost ||
+    (!isProduction && /^(?:localhost|127\.0\.0\.1)(?::\d+)?$/.test(request.headers.host ?? ''))
+  const originIsAllowed = !origin || origin === allowedOrigin || isLocalDevelopmentRequest
+  if (!originIsAllowed || !hostIsAllowed) {
     sendError(response, 403, 'Image generation is restricted to the configured application domain.')
     return true
   }
@@ -180,7 +194,7 @@ const generateAtlasTile = async (request, response, tile) => {
   }
 
   await generateTile(tile, sourceImage)
-  sendJson(response, 200, { url: `/generated-tiles/${tile.zoom}/${tile.x}/${tile.y}` })
+  sendJson(response, 200, { url: `/generated-tiles/${tile.scene}/${tile.zoom}/${tile.x}/${tile.y}` })
   return true
 }
 
