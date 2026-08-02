@@ -1,8 +1,8 @@
 import { atlasSeaScenes, atlasSceneNames } from './atlas-scenes.ts'
 import { createAtlasTitleCard, positionAtlasTitleCard } from './atlas-title-cards.ts'
 import { loadingConcepts } from './loading-concepts.ts'
+import { atlasZoom, tileBounds, tileForPosition } from './tile-geometry.ts'
 
-const atlasZoom = 18
 const minimumFogZoom = 15
 const landTargetThreshold = 0.75
 const landSampleSize = 10
@@ -12,34 +12,12 @@ const generatedRevealDuration = 1400
 const generatedTileOpacity = 0.94
 const fogPokeDuration = 900
 const fogPokeExpansion = 0.16
+const personalClearanceLimit = 2
+const cityClearanceDuration = 180_000
 
 const tileId = ({ x, y }) => `${atlasZoom}/${x}/${y}`
 const tileFromId = id => {
   const [, x, y] = id.split('/').map(Number)
-  return { x, y }
-}
-
-const tileLongitude = x => (x / 2 ** atlasZoom) * 360 - 180
-
-const tileLatitude = y => {
-  const radians = Math.PI - (2 * Math.PI * y) / 2 ** atlasZoom
-  return (180 / Math.PI) * Math.atan(Math.sinh(radians))
-}
-
-const tileBounds = tile => ({
-  west: tileLongitude(tile.x),
-  north: tileLatitude(tile.y),
-  east: tileLongitude(tile.x + 1),
-  south: tileLatitude(tile.y + 1),
-})
-
-const tileForPosition = ({ lng, lat }) => {
-  const count = 2 ** atlasZoom
-  const x = Math.floor(((lng + 180) / 360) * count)
-  const latitudeRadians = (lat * Math.PI) / 180
-  const y = Math.floor(
-    ((1 - Math.asinh(Math.tan(latitudeRadians)) / Math.PI) / 2) * count,
-  )
   return { x, y }
 }
 
@@ -102,6 +80,44 @@ const nextLoadingConcept = () => {
   const concept = loadingConcepts[loadingConceptCursor]
   loadingConceptCursor = (loadingConceptCursor + 1) % loadingConcepts.length
   return concept
+}
+
+const createClearanceNotice = map => {
+  const notice = document.createElement('div')
+  notice.className = 'atlas-clearance-notice'
+  notice.setAttribute('role', 'status')
+  notice.setAttribute('aria-live', 'polite')
+  notice.hidden = true
+
+  const title = document.createElement('strong')
+  title.textContent = 'The fog is moving'
+  const message = document.createElement('span')
+  notice.append(title, message)
+  map.getContainer().append(notice)
+
+  let hideTimer: number | undefined
+  const hide = () => {
+    if (hideTimer) window.clearTimeout(hideTimer)
+    notice.classList.remove('is-visible')
+    window.setTimeout(() => {
+      if (!notice.classList.contains('is-visible')) notice.hidden = true
+    }, 450)
+  }
+
+  return {
+    show: text => {
+      if (hideTimer) window.clearTimeout(hideTimer)
+      message.textContent = text
+      notice.hidden = false
+      requestAnimationFrame(() => notice.classList.add('is-visible'))
+      hideTimer = window.setTimeout(hide, 9000)
+    },
+    hide,
+    destroy: () => {
+      if (hideTimer) window.clearTimeout(hideTimer)
+      notice.remove()
+    },
+  }
 }
 
 const hideTextLabels = map => {
@@ -1153,6 +1169,8 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
   const landTargetState = new Map()
   const generatedTileIds = new Set()
   const titleCards = new Map()
+  const clearanceNotice = createClearanceNotice(map)
+  let clearanceStartedAt: number | undefined
   const isAdminMode = () => map.getContainer().classList.contains('atlas-admin-mode')
   const mapDataIsReady = () =>
     map.isStyleLoaded() && map.isSourceLoaded('hongkong-latest') && map.areTilesLoaded()
@@ -1205,6 +1223,9 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
       }
 
       tileState.set(id, 'generated')
+      if (generatedTileIds.size === personalClearanceLimit && clearanceStartedAt === undefined) {
+        clearanceStartedAt = Date.now()
+      }
       if (titleCard) {
         titleCard.style.opacity = ''
         titleCard.style.transform = ''
@@ -1284,10 +1305,25 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
       tileState.get(id) === 'generated'
     )
       return
+
+    if (generatedTileIds.size >= personalClearanceLimit) {
+      const remaining = clearanceStartedAt === undefined
+        ? cityClearanceDuration
+        : Math.max(0, cityClearanceDuration - (Date.now() - clearanceStartedAt))
+      if (remaining > 0) {
+        clearanceNotice.show(
+          'Your two clearings are complete. The fog is being cleared elsewhere in the city; it takes around three minutes.',
+        )
+        return
+      }
+      clearanceStartedAt = undefined
+    }
+
     tileState.set(id, 'checking')
     fog.poke(id)
     fog.invalidate()
     const startedAt = performance.now()
+    let rateLimited = false
     try {
       const cachedUrl = await checkCachedTile(tile)
       if (cachedUrl) {
@@ -1339,6 +1375,16 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
           `The atlas-tile server returned a non-JSON response (HTTP ${response.status}). Restart with bun run dev.`,
         )
       }
+      if (!response.ok) {
+        if (response.status === 429) {
+          rateLimited = true
+          clearanceStartedAt = Date.now()
+          clearanceNotice.show(
+            body?.error ??
+              'The fog is being cleared elsewhere in the city; it takes around three minutes.',
+          )
+        }
+      }
       if (!response.ok)
         throw new Error(
           body?.error ??
@@ -1368,14 +1414,16 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
     } catch (error) {
       tileState.delete(id)
       fog.invalidate()
-      new maplibregl.Popup({ closeButton: false })
-        .setLngLat(event.lngLat)
-        .setText(
-          error instanceof Error
-            ? error.message
-            : 'Could not generate this atlas tile.',
-        )
-        .addTo(map)
+      if (!rateLimited) {
+        new maplibregl.Popup({ closeButton: false })
+          .setLngLat(event.lngLat)
+          .setText(
+            error instanceof Error
+              ? error.message
+              : 'Could not generate this atlas tile.',
+          )
+          .addTo(map)
+      }
     }
   })
 
@@ -1422,6 +1470,8 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
         })
         generatedTileIds.clear()
         tileState.clear()
+        clearanceStartedAt = undefined
+        clearanceNotice.hide()
         fog.invalidate()
         resolve()
       }
