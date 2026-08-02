@@ -14,7 +14,7 @@ const isProduction = process.env.NODE_ENV === 'production'
 const tileOrigin = 'https://tiles.saanseoi.hk'
 const tileProxyPrefix = '/map-assets/saanseoi'
 const tileJsonPath = `${tileProxyPrefix}/hongkong-latest.json`
-const publicOrigin = 'https://visionarymachines.hype.hk'
+const publicOrigin = 'https://romanticatlas.hype.hk'
 const localOriginPattern = /^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/
 const atlasPromptVersion = 'openai-edit-v1'
 const atlasScenes = {
@@ -172,11 +172,25 @@ const serveCachedTile = async (request, response, tile) => {
   return true
 }
 
+const serveAtlasTileRequest = async (request, response, tile) => {
+  if (request.method === 'GET') {
+    const cached = await getCachedTile(tile)
+    if (cached) {
+      await serveCachedTile(request, response, tile)
+    } else {
+      sendError(response, 404, 'This atlas tile has not been generated yet. Click the fogged tile in the map to start generation.')
+    }
+    return true
+  }
+
+  return generateAtlasTile(request, response, tile)
+}
+
 const generateAtlasTile = async (request, response, tile) => {
   if (request.method !== 'POST') return false
 
   const origin = request.headers.origin
-  const allowedOrigin = process.env.ATLAS_ALLOWED_ORIGIN ?? 'https://visionarymachines.hype.hk'
+  const allowedOrigin = process.env.ATLAS_ALLOWED_ORIGIN ?? 'https://romanticatlas.hype.hk'
   const allowedHost = new URL(allowedOrigin).host
   const isLocalDevelopmentRequest = !isProduction && localOriginPattern.test(origin ?? '')
   const hostIsAllowed = request.headers.host === allowedHost ||
@@ -246,7 +260,7 @@ const server = createServer(async (request, response) => {
     }
 
     if (tile && pathname.startsWith('/api/atlas-tiles/')) {
-      await generateAtlasTile(request, response, tile)
+      await serveAtlasTileRequest(request, response, tile)
       return
     }
 

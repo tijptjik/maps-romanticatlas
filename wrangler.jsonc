@@ -5,11 +5,11 @@
   "compatibility_date": "2026-07-18",
   "workers_dev": true,
   "routes": [
-    { "pattern": "visionarymachines.hype.hk", "custom_domain": true }
+    { "pattern": "romanticatlas.hype.hk", "custom_domain": true }
   ],
   "vars": {
-    "ATLAS_ALLOWED_ORIGIN": "https://visionarymachines.hype.hk",
-    "GEMINI_MODEL": "gemini-2.5-flash-image"
+    "ATLAS_ALLOWED_ORIGIN": "https://romanticatlas.hype.hk",
+    "OPENROUTER_MODEL": "openai/gpt-5.4-image-2"
   },
   "assets": {
     "directory": "./dist",

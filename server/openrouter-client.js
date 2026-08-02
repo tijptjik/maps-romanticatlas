@@ -29,7 +29,7 @@ export const createOpenRouterClient = ({
       headers: {
         authorization: `Bearer ${apiKey}`,
         'content-type': 'application/json',
-        'http-referer': 'https://visionarymachines.hype.hk',
+        'http-referer': 'https://romanticatlas.hype.hk',
         'x-title': 'Visionary Machines Map',
       },
       body: JSON.stringify({

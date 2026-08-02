@@ -10,6 +10,7 @@ import mapCompassUrl from './assets/loading/09-map-compass.png'
 import poetBustUrl from './assets/loading/10-poet-bust.png'
 
 const atlasZoom = 18
+const atlasScenes = ['circus', 'balloon-festival', 'art-nouveau-palace']
 
 const loadingImageUrls = [
   poetNotebookUrl,
@@ -84,25 +85,71 @@ const seeded = value => {
   return noise - Math.floor(noise)
 }
 
-const captureTile = async (map, tile) => {
-  await waitForRender(map)
-  const bounds = tileBounds(tile)
-  const northWest = map.project([bounds.west, bounds.north])
-  const southEast = map.project([bounds.east, bounds.south])
-  const mapCanvas = map.getCanvas()
-  const scale = mapCanvas.width / mapCanvas.clientWidth
-  const tileCanvas = document.createElement('canvas')
-  tileCanvas.width = 512
-  tileCanvas.height = 512
-  tileCanvas.getContext('2d').drawImage(mapCanvas, northWest.x * scale, northWest.y * scale, (southEast.x - northWest.x) * scale, (southEast.y - northWest.y) * scale, 0, 0, 512, 512)
-  return tileCanvas.toDataURL('image/jpeg', 0.92)
+const hideTextLabels = map => {
+  const hiddenLayerIds = map.getStyle().layers
+    .filter(layer => layer.type === 'symbol' && layer.layout?.['text-field'] && layer.layout.visibility !== 'none')
+    .map(layer => layer.id)
+  hiddenLayerIds.forEach(layerId => {
+    map.setLayoutProperty(layerId, 'visibility', 'none')
+  })
+  return hiddenLayerIds
 }
 
-const addGeneratedTile = (map, tile, url) => {
+const captureTile = async (map, tile) => {
+  const hiddenLayerIds = hideTextLabels(map)
+  try {
+    await waitForRender(map)
+    const bounds = tileBounds(tile)
+    const northWest = map.project([bounds.west, bounds.north])
+    const southEast = map.project([bounds.east, bounds.south])
+    const mapCanvas = map.getCanvas()
+    const scale = mapCanvas.width / mapCanvas.clientWidth
+    const tileCanvas = document.createElement('canvas')
+    tileCanvas.width = 512
+    tileCanvas.height = 512
+    const context = tileCanvas.getContext('2d')
+    context.drawImage(mapCanvas, northWest.x * scale, northWest.y * scale, (southEast.x - northWest.x) * scale, (southEast.y - northWest.y) * scale, 0, 0, 512, 512)
+    return tileCanvas.toDataURL('image/png')
+  } finally {
+    hiddenLayerIds.forEach(layerId => {
+      map.setLayoutProperty(layerId, 'visibility', 'visible')
+    })
+    map.triggerRepaint()
+  }
+}
+
+const fadeTileEdges = async url => {
+  const image = new Image()
+  image.src = url
+  await image.decode()
+
+  const size = 512
+  const fade = size * 0.1
+  const canvas = document.createElement('canvas')
+  canvas.width = size
+  canvas.height = size
+  const context = canvas.getContext('2d')
+  context.drawImage(image, 0, 0, size, size)
+
+  const pixels = context.getImageData(0, 0, size, size)
+  for (let y = 0; y < size; y += 1) {
+    for (let x = 0; x < size; x += 1) {
+      const distance = Math.min(x, y, size - 1 - x, size - 1 - y)
+      const amount = Math.min(1, distance / fade)
+      const smoothAmount = amount * amount * (3 - 2 * amount)
+      pixels.data[(y * size + x) * 4 + 3] = Math.round(pixels.data[(y * size + x) * 4 + 3] * smoothAmount)
+    }
+  }
+  context.putImageData(pixels, 0, 0)
+  return canvas.toDataURL('image/png')
+}
+
+const addGeneratedTile = async (map, tile, url) => {
   const id = `atlas-tile-${tile.x}-${tile.y}`
   if (map.getLayer(id)) return
   const bounds = tileBounds(tile)
-  map.addSource(id, { type: 'image', url, coordinates: [[bounds.west, bounds.north], [bounds.east, bounds.north], [bounds.east, bounds.south], [bounds.west, bounds.south]] })
+  const fadedUrl = await fadeTileEdges(url)
+  map.addSource(id, { type: 'image', url: fadedUrl, coordinates: [[bounds.west, bounds.north], [bounds.east, bounds.north], [bounds.east, bounds.south], [bounds.west, bounds.south]] })
   map.addLayer({ id, type: 'raster', source: id, paint: { 'raster-opacity': 0.94 } })
 }
 
@@ -221,8 +268,9 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
     if (!isFogged(tile) || !isFullyVisible(map, tile) || tileState.get(id) === 'generating' || tileState.get(id) === 'generated') return
     tileState.set(id, 'generating')
     try {
+      const scene = atlasScenes[Math.floor(Math.random() * atlasScenes.length)]
       const sourceImage = await captureTile(map, tile)
-      const response = await fetch(`/api/atlas-tiles/${atlasZoom}/${tile.x}/${tile.y}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sourceImage }) })
+      const response = await fetch(`/api/atlas-tiles/${scene}/${atlasZoom}/${tile.x}/${tile.y}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ sourceImage }) })
       const responseText = await response.text()
       let body
       try { body = responseText ? JSON.parse(responseText) : null } catch { throw new Error('The map is not connected to the local atlas-tile server. Restart with bun run dev.') }

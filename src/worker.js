@@ -8,7 +8,7 @@ const vectorTilePattern = new RegExp(
 const upstreamUrl = pathname => new URL(pathname.slice(proxyPrefix.length), tileOrigin)
 const upstreamRequestInit = request => ({
   headers: {
-    Origin: request.headers.get('Origin') ?? 'https://visionarymachines.hype.hk',
+    Origin: request.headers.get('Origin') ?? 'https://romanticatlas.hype.hk',
   },
 })
 
