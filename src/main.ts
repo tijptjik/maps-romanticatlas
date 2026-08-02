@@ -13,7 +13,7 @@ const map = new maplibregl.Map({
   // Atlas interactions use the z18 tile grid. The fog remains visible above it,
   // while generation still requires a complete z18 tile in the viewport.
   minZoom: 16.5,
-  maxZoom: 18,
+  maxZoom: 18.5,
   maxBounds: [113.8, 22.1, 114.5, 22.6],
   attributionControl: false,
 })
