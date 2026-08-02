@@ -78,16 +78,24 @@ bun run deploy
 ```
 
 `bun run deploy` deploys `src/worker.ts` and the `dist/` directory to Cloudflare. The
-current Worker is an asset-only handler; it does not expose the Node server's
-`/api/atlas-tiles` or `/generated-tiles` routes. The deployed app therefore provides the
-introductory experience, artist statement, and base map, while on-demand image
-generation and cache administration remain available through the local server.
+Worker serves the browser assets and the production atlas API. On-demand image
+generation calls OpenRouter from the Worker, composes the result with the safe-zone and
+line masks using the Worker-compatible Photon runtime, and stores versioned images and
+metadata in the configured R2 bucket.
 
-This is intentional: the production bundle does not install the fog, tile-generation,
-cache-admin, or OpenRouter client interactions, and the Worker returns a clear 404 for
-those reserved API paths. A production API is not implemented yet; enabling those
-features requires moving image compositing from Node `sharp` to a Worker-compatible
-runtime and adding persistent production cache storage.
+Create the R2 bucket once, then add the OpenRouter key as a Worker secret before the
+first deployment:
+
+```sh
+wrangler r2 bucket create maps-visionarymachines-atlas
+wrangler secret put OPENROUTER_API_KEY
+bun run deploy
+```
+
+The bucket name must match `wrangler.jsonc`. Production cache administration is off by
+default. To enable it, set `ATLAS_ADMIN_MODE` to `true` in the Worker configuration and
+set the matching secret with `wrangler secret put ATLAS_ADMIN_TOKEN`; the browser admin
+panel then prompts for that token and uses a same-origin CSRF cookie for deletion.
 
 The map's tiles, fonts, and sprite assets are loaded from remote services, so it needs
 an internet connection.
@@ -98,13 +106,14 @@ time to return to the introduction. After 3 minutes without activity, locally re
 tiles fade back into the fog, the view returns to its starting position, and the
 introduction animates in again.
 
-## Local on-demand romantic atlas tiles
+## On-demand romantic atlas tiles
 
-On the local development server, the map is restricted to zoom levels 16.5–18.5. At that
-available zoom range, a drifting fog descends over a deterministic half of the fully
-visible z18 tiles that are at least 75% land. Each fog form spills into neighboring gaps
-and is rendered from a cached mask plus a low-cost WebGL noise shader, so the pattern
-reads as overlapping mist rather than an alternating grid.
+On the local development server and the production Worker, the map is restricted to zoom
+levels 16.5–18.5. At that available zoom range, a drifting fog descends over a
+deterministic half of the fully visible z18 tiles that are at least 75% land. Each fog
+form spills into neighboring gaps and is rendered from a cached mask plus a low-cost
+WebGL noise shader, so the pattern reads as overlapping mist rather than an alternating
+grid.
 
 Click a fully visible fogged land tile to create a strictly top-down cartographic event
 tile from the rendered map. The selected tile gets a “LOOKING UP THIS TILE” treatment
@@ -112,28 +121,27 @@ while it runs. The fog carries one of 24 short provocations about imagination,
 discovery, possibility, and Romanticism, each paired with a quotation from a Romantic
 author. The text clears once the generated image is ready.
 
-Each client may start two new tile clearings in a rolling three-minute window, with only
-one paid generation active at a time. Requests for the same tile are coalesced while a
+Each client may start three new tile clearings in a rolling three-minute window, with up to
+three paid generations active at a time. Requests for the same tile are coalesced while a
 generation is in flight, and cache images and metadata are written atomically. After the
-two personal clearings, the map gives a soft warning that the fog is being cleared
+three personal clearings, the map gives a soft warning that the fog is being cleared
 elsewhere in the city and asks the visitor to wait around three minutes.
 
-Generated event images are cached locally in `generated-tiles/`, which is ignored by
-Git. Current generations use versioned files such as `18/x/y/type.v4.image` and matching
-metadata. Older cache versions remain readable from the public tile endpoint but the admin
-manifest uses only the newest versioned cache set.
-Unversioned legacy files are excluded. Generation sends the model a full-tile source plus a
-vector-derived safe-zone guide: land is available for transformation, while water,
-roads, paths, boundaries, and tile edges are locked. The same safe mask is enforced
-during compositing, and the original path linework is restored above the generated
-artwork.
+Generated event images are cached in local `generated-tiles/` during development and in
+the configured R2 bucket in production. Current generations use versioned keys such as
+`18/x/y/type.v4.image` and matching metadata. Generation sends the model a full-tile
+source plus a vector-derived safe-zone guide: land is available for transformation,
+while water, roads, paths, boundaries, and tile edges are locked. The same safe mask is
+enforced during compositing, and the original path linework is restored above the
+generated artwork.
 
 ## OpenRouter image client
 
-The server-only OpenRouter wrapper is at `server/openrouter-client.ts`. Copy
-`.env.example` to `.env` and set `OPENROUTER_API_KEY` in the server environment when
-generating images or the paper texture. Never expose it through a `VITE_*` variable or
-import the wrapper from browser code.
+The local server-only OpenRouter wrapper is at `server/openrouter-client.ts`; the
+production equivalent runs in `src/worker-api.ts`. Copy `.env.example` to `.env` and set
+`OPENROUTER_API_KEY` in the local server environment when generating images or the paper
+texture. For production, use `wrangler secret put OPENROUTER_API_KEY`. Never expose the
+key through a `VITE_*` variable or import the server wrapper from browser code.
 
 The default model is `openai/gpt-5.4-image-2`. Generation requests are routed through
 OpenRouter, with the full rendered tile supplied as the edit target. Set
@@ -148,10 +156,10 @@ The supported environment variables are:
   `https://romanticatlas.hype.hk`.
 - `VITE_DIAGNOSTIC_CACHED_TILES`: set to `true` to show red boundaries around cached
   tiles during local development.
-- `ATLAS_ADMIN_MODE`: set to `true` to enable the local cache manifest, image cycling,
-  and deletion UI. Only the newest versioned cache set is listed; unversioned legacy
-  images are excluded. Click an image to reveal its controls. The flag gates both the
-  browser UI and the server-side DELETE endpoint.
+- `ATLAS_ADMIN_MODE`: set to `true` to enable the cache manifest, image cycling, and
+  deletion UI in either local or production mode. In production, also set the
+  `ATLAS_ADMIN_TOKEN` Worker secret. Only the newest versioned cache set is listed;
+  unversioned legacy images are excluded. Click an image to reveal its controls.
 - `ATLAS_ADMIN_TOKEN`: required when `ATLAS_ADMIN_MODE=true`; use a long random secret.
   The admin UI prompts for it once per browser session. The server also requires a
   same-origin Origin header and a signed CSRF cookie/header pair for deletion.

@@ -11,6 +11,7 @@ const atlasColourDirection = 'Keep the surrounding map and its Victorian-brown p
 
 type Scene = keyof typeof atlasScenes
 type Tile = { scene: Scene; zoom: number; x: number; y: number }
+type AtlasEnv = Env & { ATLAS_ADMIN_TOKEN?: string }
 type ContentBounds = { x: number; y: number; width: number; height: number } | null
 type CachedTile = {
   tile: Tile
@@ -33,6 +34,70 @@ const json = (data: unknown, status = 200, headers: Record<string, string> = {})
 
 const errorResponse = (status: number, error: string, headers?: Record<string, string>) =>
   json({ error }, status, headers)
+
+const bearerToken = (request: Request) => {
+  const value = request.headers.get('authorization')
+  return value?.match(/^Bearer\s+([^\s]+)$/i)?.[1] ?? null
+}
+
+const constantTimeEqual = (left: Uint8Array, right: Uint8Array) => {
+  if (left.length !== right.length) return false
+  let difference = 0
+  for (let index = 0; index < left.length; index += 1) difference |= left[index] ^ right[index]
+  return difference === 0
+}
+
+const hmac = async (secret: string, value: string) => {
+  const key = await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  )
+  return new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(value)))
+}
+
+const adminTokenIsValid = async (request: Request, env: AtlasEnv) => {
+  const configuredToken = env.ATLAS_ADMIN_TOKEN?.trim()
+  const suppliedToken = bearerToken(request)
+  if (!configuredToken || !suppliedToken) return false
+  const expected = await hmac(configuredToken, configuredToken)
+  const actual = await hmac(configuredToken, suppliedToken)
+  return constantTimeEqual(expected, actual)
+}
+
+const cookieValue = (request: Request, name: string) =>
+  request.headers.get('cookie')
+    ?.split(';')
+    .map(cookie => cookie.trim())
+    .find(cookie => cookie.startsWith(`${name}=`))
+    ?.slice(name.length + 1) ?? null
+
+const csrfCookieName = 'atlas_csrf'
+const csrfToken = async (secret: string) => {
+  const nonceBytes = new Uint8Array(32)
+  crypto.getRandomValues(nonceBytes)
+  const nonce = [...nonceBytes].map(value => value.toString(16).padStart(2, '0')).join('')
+  const signature = [...await hmac(secret, nonce)]
+    .map(value => value.toString(16).padStart(2, '0'))
+    .join('')
+  return `${nonce}.${signature}`
+}
+
+const csrfTokenIsValid = async (token: string | null, secret: string | undefined) => {
+  if (!token || !secret) return false
+  const match = token.match(/^([a-f0-9]{64})\.([a-f0-9]{64})$/)
+  if (!match) return false
+  const expected = await hmac(secret, match[1])
+  const actual = Uint8Array.from(match[2].match(/../g) ?? [], value => Number.parseInt(value, 16))
+  return constantTimeEqual(expected, actual)
+}
+
+const adminRequestIsAllowed = (request: Request, env: AtlasEnv) =>
+  Boolean(request.headers.get('origin')) &&
+  isAllowedApplicationRequest(request, env) &&
+  request.headers.get('origin') === env.ATLAS_ALLOWED_ORIGIN
 
 const tileKey = (tile: Tile, version = generationVersion) =>
   `atlas/${tile.zoom}/${tile.x}/${tile.y}/${tile.scene}.v${version}`
@@ -342,9 +407,16 @@ const openrouterImage = async (env: Env, prompt: string, sourceImage: string, gu
     throw new Error(`OpenRouter image generation failed (${response.status}).`)
   }
   const result = await response.json() as {
-    choices?: Array<{ message?: { images?: Array<{ image_url?: { url?: string } }> } }>
+    choices?: Array<{
+      message?: {
+        images?: Array<{ image_url?: { url?: string } }>
+        content?: Array<{ image_url?: { url?: string } }>
+      }
+    }>
   }
-  const imageUrl = result.choices?.[0]?.message?.images?.find(image => image.image_url?.url)?.image_url?.url
+  const message = result.choices?.[0]?.message
+  const imageUrl = message?.images?.find(image => image.image_url?.url)?.image_url?.url ??
+    message?.content?.find(image => image.image_url?.url)?.image_url?.url
   const parsed = decodeDataUrl(imageUrl, 'OpenRouter image')
   return parsed.bytes
 }
@@ -416,7 +488,7 @@ const generateTile = async (request: Request, env: Env, tile: Tile) => {
   try {
     body = await readJsonBody(request)
     const source = decodeDataUrl(body.sourceImage, 'The tile source image')
-    const guide = decodeDataUrl(body.guideImage, 'The guide image')
+    decodeDataUrl(body.guideImage, 'The guide image')
     const mask = decodeDataUrl(body.safeMask, 'The safe-zone mask')
     const overlay = decodeDataUrl(body.lineOverlay, 'The line overlay')
     const hasSea = body.hasSea === true
@@ -454,7 +526,7 @@ const generateTile = async (request: Request, env: Env, tile: Tile) => {
   }
 }
 
-const serveCacheStatus = async (env: Env, position: Omit<Tile, 'scene'>) => {
+const serveCacheStatus = async (env: AtlasEnv, position: Omit<Tile, 'scene'>) => {
   const cached = await findCachedTile(env.ATLAS_BUCKET, position)
   return json({
     cached: Boolean(cached),
@@ -464,17 +536,48 @@ const serveCacheStatus = async (env: Env, position: Omit<Tile, 'scene'>) => {
   })
 }
 
-export const handleAtlasApi = async (request: Request, env: Env): Promise<Response | null> => {
+const deleteCachedTile = async (request: Request, env: AtlasEnv, tile: Tile) => {
+  if (env.ATLAS_ADMIN_MODE !== 'true') return errorResponse(403, 'Atlas admin mode is disabled.')
+  if (!await adminTokenIsValid(request, env)) {
+    return errorResponse(401, 'Atlas admin authentication is required.', {
+      'www-authenticate': 'Bearer realm="atlas-admin"',
+    })
+  }
+  const csrfHeader = request.headers.get('x-atlas-csrf-token')
+  if (!adminRequestIsAllowed(request, env) ||
+    !await csrfTokenIsValid(cookieValue(request, csrfCookieName), env.ATLAS_ADMIN_TOKEN) ||
+    !await csrfTokenIsValid(csrfHeader, env.ATLAS_ADMIN_TOKEN) ||
+    csrfHeader !== cookieValue(request, csrfCookieName)) {
+    return errorResponse(403, 'Cache management is restricted to the configured application domain.')
+  }
+
+  const version = requestedVersion(request) ?? generationVersion
+  const cached = await readCachedTile(env.ATLAS_BUCKET, tile, version)
+  if (!cached) return errorResponse(404, 'This atlas tile is not cached.')
+  await env.ATLAS_BUCKET.delete([cached.imageKey, cached.metadataKey])
+  return json({ deleted: true, tile })
+}
+
+export const handleAtlasApi = async (request: Request, env: AtlasEnv): Promise<Response | null> => {
   const url = new URL(request.url)
   if (request.method === 'GET' && url.pathname === '/api/atlas-tiles/cached') {
     if (env.ATLAS_ADMIN_MODE !== 'true') {
       return json({ adminMode: false, preRenderedCount: 0, tiles: [] })
     }
-    if (!isAllowedApplicationRequest(request, env)) {
+    if (!await adminTokenIsValid(request, env)) {
+      return errorResponse(401, 'Atlas admin authentication is required.', {
+        'www-authenticate': 'Bearer realm="atlas-admin"',
+      })
+    }
+    if (!adminRequestIsAllowed(request, env)) {
       return errorResponse(403, 'Cache administration is restricted to the configured application domain.')
     }
     const tiles = await listCachedTiles(env.ATLAS_BUCKET)
-    return json({ adminMode: true, preRenderedCount: tiles.length, tiles })
+    const csrf = await csrfToken(env.ATLAS_ADMIN_TOKEN as string)
+    const secureCookie = url.protocol === 'https:' ? '; Secure' : ''
+    return json({ adminMode: true, preRenderedCount: tiles.length, tiles }, 200, {
+      'set-cookie': `${csrfCookieName}=${csrf}; Path=/; SameSite=Strict${secureCookie}`,
+    })
   }
 
   const position = parsePositionPath(url.pathname)
@@ -491,6 +594,7 @@ export const handleAtlasApi = async (request: Request, env: Env): Promise<Respon
     if (!tile) return errorResponse(404, 'Atlas tile not found.')
     if (request.method === 'GET') return serveCachedTile(request, env, tile)
     if (request.method === 'POST') return generateTile(request, env, tile)
+    if (request.method === 'DELETE') return deleteCachedTile(request, env, tile)
     return errorResponse(405, 'This atlas endpoint does not support that method.')
   }
 

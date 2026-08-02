@@ -12,7 +12,7 @@ const generatedRevealDuration = 1400
 const generatedTileOpacity = 0.94
 const fogPokeDuration = 900
 const fogPokeExpansion = 0.16
-const personalClearanceLimit = 2
+const personalClearanceLimit = 3
 const cityClearanceDuration = 180_000
 
 const tileId = ({ x, y }) => `${atlasZoom}/${x}/${y}`
@@ -930,13 +930,17 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
             currentWordIndex += 1
           }
         }
-        const streamPosition = isLingering
-          ? words.length - 1
-          : currentWordIndex + wordElapsed / durations[currentWordIndex]
         const lineHeight = Math.max(fontSize * 1.12, size * 0.11)
         const firstVisibleWord = isLingering
           ? currentWordIndex
           : Math.max(0, currentWordIndex - 2)
+        const lingerProgress = isLingering
+          ? easeOutCubic(Math.min(1, (phase - wordSequenceDuration) / 500))
+          : 0
+        const centerDistance = (baseline - centerY) / lineHeight
+        const streamPosition = isLingering
+          ? currentWordIndex + 1 + (centerDistance - 1) * lingerProgress
+          : currentWordIndex + wordElapsed / durations[currentWordIndex]
         const streamBaseline = baseline
 
         for (
@@ -946,8 +950,6 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
         ) {
           const distance = streamPosition - wordIndex
           const isCurrentWord = wordIndex === currentWordIndex
-          const isFinalWord = currentWordIndex === words.length - 1
-          const visualDistance = isFinalWord && isCurrentWord ? 0 : distance
           const progress = isCurrentWord && !isLingering ? distance : 1
           const word = words[wordIndex]
           loadingContext.font = `600 italic ${fontSize}px 'Cormorant Garamond', Georgia, serif`
@@ -960,10 +962,10 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
             ? easeOutCubic(Math.min(1, progress / 0.55))
             : 0.84 + Math.min(0.1, (2 - distance) * 0.08)
           const scale = isCurrentWord ? 0.84 + easeOutCubic(progress) * 0.16 : 1
-          const wavePhase = time / 1100 + wordIndex * 1.7 + visualDistance * 2.4
+          const wavePhase = time / 1100 + wordIndex * 1.7 + distance * 2.4
           const floatX = Math.sin(wavePhase) * size * 0.035
           const floatY = Math.cos(wavePhase * 0.72) * size * 0.012
-          const wordY = streamBaseline - visualDistance * lineHeight + floatY
+          const wordY = streamBaseline - distance * lineHeight + floatY
           if (wordY - fittedSize * 0.58 < wordLimitY) continue
           drawCenteredLine(
             word,
@@ -1312,7 +1314,7 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
         : Math.max(0, cityClearanceDuration - (Date.now() - clearanceStartedAt))
       if (remaining > 0) {
         clearanceNotice.show(
-          'Your two clearings are complete. The fog is being cleared elsewhere in the city; it takes around three minutes.',
+          'Your three clearings are complete. The fog is being cleared elsewhere in the city; it takes around three minutes.',
         )
         return
       }

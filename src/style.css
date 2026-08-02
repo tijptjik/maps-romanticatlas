@@ -71,6 +71,10 @@ body {
   pointer-events: none;
 }
 
+.atlas-intro:not(.is-visible) .artist-statement__trigger {
+  pointer-events: none;
+}
+
 .atlas-intro__curtain,
 .atlas-intro__lights,
 .atlas-intro__tent,
@@ -494,6 +498,7 @@ body {
   font-size: clamp(1rem, 2vw, 1.18rem);
   font-style: italic;
   line-height: 1.15;
+  white-space: pre-line;
 }
 
 @media (prefers-reduced-motion: reduce) {

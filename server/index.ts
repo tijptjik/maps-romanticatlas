@@ -17,8 +17,8 @@ const atlasZoom = 18
 const atlasTileSize = 512
 const generationVersion = 4
 const generationWindowMs = 180_000
-const generationsPerClient = 2
-const concurrentGenerationsPerClient = 1
+const generationsPerClient = 3
+const concurrentGenerationsPerClient = 3
 const isProduction = process.env.NODE_ENV === 'production'
 const isAdminModeEnabled = process.env.ATLAS_ADMIN_MODE === 'true'
 const adminToken = process.env.ATLAS_ADMIN_TOKEN?.trim() || null
@@ -80,7 +80,9 @@ const reserveGeneration = clientKey => {
     return {
       allowed: false,
       retryAfterMs: generationWindowMs,
-      reason: 'You already have an atlas tile clearing in progress.',
+      reason:
+        'You already have an atlas tile clearing in progress.\n' +
+        'Allow 3 minutes for its dramatic exit',
     }
   }
 
@@ -90,7 +92,7 @@ const reserveGeneration = clientKey => {
     return {
       allowed: false,
       retryAfterMs,
-      reason: 'Two tile clearings are complete. The fog is being cleared elsewhere in the city; please wait around three minutes.',
+      reason: 'Three tile clearings are complete. The fog is being cleared elsewhere in the city; please wait around three minutes.',
     }
   }
 
