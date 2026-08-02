@@ -16,6 +16,7 @@ const productionDirectory = path.join(rootDirectory, 'dist')
 const atlasZoom = 18
 const atlasTileSize = 512
 const generationVersion = 4
+const readableCacheVersions = [2, 3, 4]
 const generationWindowMs = 180_000
 const generationsPerClient = 3
 const concurrentGenerationsPerClient = 3
@@ -365,12 +366,13 @@ const requestedCacheVersion = request => {
 }
 
 const findCachedTile = async tile => {
-  const cachedTiles = []
-  for (const scene of atlasSceneNames) {
-    const candidate = { ...tile, scene }
-    const cached = await getCachedTile(candidate)
-    if (cached) cachedTiles.push({ ...cached, tile: candidate })
-  }
+  const cachedTiles = (await Promise.all(
+    readableCacheVersions.flatMap(version => atlasSceneNames.map(async scene => {
+      const candidate = { ...tile, scene }
+      const cached = await getVersionedCachedTile(candidate, version)
+      return cached ? { ...cached, tile: candidate } : null
+    })),
+  )).filter(Boolean)
   if (!cachedTiles.length) return null
   return cachedTiles[Math.floor(Math.random() * cachedTiles.length)]
 }

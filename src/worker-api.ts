@@ -4,6 +4,7 @@ import { atlasSeaScenes, atlasSceneNames, atlasScenes } from './atlas-scenes.ts'
 const atlasZoom = 18
 const atlasTileSize = 512
 const generationVersion = 4
+const readableCacheVersions = [2, 3, 4] as const
 const maximumRequestBytes = 12_000_000
 const maximumImageBytes = 4_000_000
 const openrouterApiUrl = 'https://openrouter.ai/api/v1/chat/completions'
@@ -11,7 +12,7 @@ const atlasColourDirection = 'Keep the surrounding map and its Victorian-brown p
 
 type Scene = keyof typeof atlasScenes
 type Tile = { scene: Scene; zoom: number; x: number; y: number }
-type AtlasEnv = Env & { ATLAS_ADMIN_TOKEN?: string }
+type AtlasEnv = Env & { ATLAS_ADMIN_TOKEN?: string; ATLAS_LOCAL_DEV?: string }
 type ContentBounds = { x: number; y: number; width: number; height: number } | null
 type CachedTile = {
   tile: Tile
@@ -94,10 +95,10 @@ const csrfTokenIsValid = async (token: string | null, secret: string | undefined
   return constantTimeEqual(expected, actual)
 }
 
-const adminRequestIsAllowed = (request: Request, env: AtlasEnv) =>
-  Boolean(request.headers.get('origin')) &&
-  isAllowedApplicationRequest(request, env) &&
-  request.headers.get('origin') === env.ATLAS_ALLOWED_ORIGIN
+const adminRequestIsAllowed = (request: Request, env: AtlasEnv, requireOrigin = false) => {
+  return (!requireOrigin || Boolean(request.headers.get('origin'))) &&
+    isAllowedApplicationRequest(request, env)
+}
 
 const tileKey = (tile: Tile, version = generationVersion) =>
   `atlas/${tile.zoom}/${tile.x}/${tile.y}/${tile.scene}.v${version}`
@@ -204,7 +205,9 @@ const getVersionedCachedTile = (bucket: R2Bucket, tile: Tile, version: number | 
 
 const findCachedTile = async (bucket: R2Bucket, position: Omit<Tile, 'scene'>) => {
   const candidates = await Promise.all(
-    atlasSceneNames.map(scene => getCachedTile(bucket, { ...position, scene })),
+    readableCacheVersions.flatMap(version =>
+      atlasSceneNames.map(scene => readCachedTile(bucket, { ...position, scene }, version)),
+    ),
   )
   const cached = candidates.filter((candidate): candidate is CachedTile => candidate !== null)
   return cached.length ? randomItem(cached) : null
@@ -449,16 +452,29 @@ const readJsonBody = async (request: Request) => {
   return JSON.parse(new TextDecoder().decode(body)) as Record<string, unknown>
 }
 
-const isAllowedApplicationRequest = (request: Request, env: Env) => {
+const isAllowedApplicationRequest = (request: Request, env: AtlasEnv) => {
   const allowedOrigin = env.ATLAS_ALLOWED_ORIGIN
   if (!allowedOrigin) return false
+  const origin = request.headers.get('origin')
   const requestUrl = new URL(request.url)
   const allowedUrl = new URL(allowedOrigin)
-  const origin = request.headers.get('origin')
-  const isLocalRemoteDev = /^http:\/\/localhost(?::\d+)?$/.test(allowedOrigin)
+  const isLocalHost = (host: string) => /^(?:localhost|127\.0\.0\.1)(?::\d+)?$/.test(host)
+  const localDevelopment = env.ATLAS_LOCAL_DEV === 'true'
+  // A Wrangler dev server is always loopback, even when its configured origin
+  // is inherited from the production config. The production Worker cannot
+  // receive a loopback request, so accepting loopback here does not weaken the
+  // deployed host check.
   const hostMatches = requestUrl.host === allowedUrl.host ||
-    (isLocalRemoteDev && origin === allowedOrigin)
-  return hostMatches && (!origin || origin === allowedOrigin)
+    (localDevelopment && (isLocalHost(requestUrl.host) || isLocalHost(allowedUrl.host)))
+  const originMatches = !origin || origin === allowedOrigin ||
+    (localDevelopment && (() => {
+      try {
+        return isLocalHost(new URL(origin).host)
+      } catch {
+        return false
+      }
+    })())
+  return hostMatches && originMatches
 }
 
 const serveCachedTile = async (request: Request, env: Env, tile: Tile) => {
@@ -548,7 +564,7 @@ const deleteCachedTile = async (request: Request, env: AtlasEnv, tile: Tile) => 
     })
   }
   const csrfHeader = request.headers.get('x-atlas-csrf-token')
-  if (!adminRequestIsAllowed(request, env) ||
+  if (!adminRequestIsAllowed(request, env, true) ||
     !await csrfTokenIsValid(cookieValue(request, csrfCookieName), env.ATLAS_ADMIN_TOKEN) ||
     !await csrfTokenIsValid(csrfHeader, env.ATLAS_ADMIN_TOKEN) ||
     csrfHeader !== cookieValue(request, csrfCookieName)) {

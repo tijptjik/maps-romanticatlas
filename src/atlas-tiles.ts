@@ -906,6 +906,8 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
       const titleBottom =
         titleTop + (titleLines.length - 1) * titleLineHeight + titleSize * 0.55
       const wordLimitY = titleBottom + size * 0.08
+      const titleVisualCenterY = (titleTop + titleBottom) / 2
+      const wordHoldCenterY = centerY + (centerY - titleVisualCenterY)
       const questionBaseline = centerY + size * 0.22
       const quoteBaseline = centerY + size * 0.22
 
@@ -972,9 +974,8 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
         const lingerProgress = isLingering
           ? easeOutCubic(Math.min(1, (phase - wordSequenceDuration) / 500))
           : 0
-        const centerDistance = (baseline - centerY) / lineHeight
         const streamPosition = isLingering
-          ? currentWordIndex + 1 + (centerDistance - 1) * lingerProgress
+          ? currentWordIndex + 1
           : currentWordIndex + wordElapsed / durations[currentWordIndex]
         const streamBaseline = baseline
 
@@ -1003,7 +1004,11 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
           const wavePhase = waveTime / 1100 + wordIndex * 1.7 + waveDistance * 2.4
           const floatX = Math.sin(wavePhase) * size * 0.035
           const floatY = isLingering ? 0 : Math.cos(wavePhase * 0.72) * size * 0.012
-          const wordY = streamBaseline - distance * lineHeight + floatY
+          const wordY = isLingeringFinalWord
+            ? wordHoldCenterY +
+              (streamBaseline - lineHeight - wordHoldCenterY) *
+                (1 - lingerProgress)
+            : streamBaseline - distance * lineHeight + floatY
           if (!isLingeringFinalWord && wordY - fittedSize * 0.58 < wordLimitY) continue
           drawCenteredLine(
             word,

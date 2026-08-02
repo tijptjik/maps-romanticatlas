@@ -136,8 +136,9 @@ elsewhere in the city and asks the visitor to wait around three minutes.
 
 Generated event images are cached in local `generated-tiles/` during development and in
 the configured R2 bucket in production. Current generations use versioned keys such as
-`atlas/18/x/y/type.v4.image` and matching metadata. Generation sends the model a full-tile
-source plus a vector-derived safe-zone guide: land is available for transformation,
+`atlas/18/x/y/type.v4.image` and matching metadata. Normal cache lookup draws from the
+available v2, v3, and v4 images; new generation writes v4. Generation sends the model a
+full-tile source plus a vector-derived safe-zone guide: land is available for transformation,
 while water, roads, paths, boundaries, and tile edges are locked. The same safe mask is
 enforced during compositing, and the original path linework is restored above the
 generated artwork.

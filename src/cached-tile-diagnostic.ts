@@ -25,6 +25,9 @@ export const installCachedTileDiagnostic = async map => {
       },
     }))
 
+    // The fog is a DOM canvas above MapLibre's canvas. Hide it in diagnostic
+    // mode so the tile boundaries remain visible even when admin mode is off.
+    map.getContainer().classList.add('atlas-diagnostic-mode')
     map.addSource(diagnosticSourceId, {
       type: 'geojson',
       data: { type: 'FeatureCollection', features },
