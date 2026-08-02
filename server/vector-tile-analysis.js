@@ -2,7 +2,7 @@ import { VectorTile } from '@mapbox/vector-tile'
 import Pbf from 'pbf'
 
 const sourceMaxZoom = 15
-const sourceTileUrl = 'https://tiles.hype.hk/basemap/hongkong-latest/{z}/{x}/{y}.mvt'
+const sourceTileUrl = 'https://tiles.saanseoi.hk/hongkong-latest/{z}/{x}/{y}.mvt'
 const analyses = new Map()
 
 const intersects = (feature, bounds) => {

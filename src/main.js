@@ -11,9 +11,10 @@ const map = new maplibregl.Map({
   zoom: 16,
   maxZoom: 19,
   maxBounds: [113.8, 22.1, 114.5, 22.6],
+  attributionControl: false,
 })
 
-map.addControl(new maplibregl.NavigationControl(), 'top-right')
+map.addControl(new maplibregl.AttributionControl({ compact: true }))
 map.on('load', () => {
   if (['127.0.0.1', 'localhost'].includes(window.location.hostname)) {
     installAtlasTileInteractions(map, maplibregl)

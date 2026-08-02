@@ -1,21 +1,31 @@
-const hypeOrigin = 'https://tiles.hype.hk'
-const proxyPrefix = '/map-assets/hype'
-const tileJsonPath = `${proxyPrefix}/basemap/hongkong-latest.json`
+const tileOrigin = 'https://tiles.saanseoi.hk'
+const proxyPrefix = '/map-assets/saanseoi'
+const tileJsonPath = `${proxyPrefix}/hongkong-latest.json`
 const vectorTilePattern = new RegExp(
-  `^${proxyPrefix}/basemap/hongkong-latest/(\\d+)/(\\d+)/(\\d+)\\.mvt$`,
+  `^${proxyPrefix}/hongkong-latest/(\\d+)/(\\d+)/(\\d+)\\.mvt$`,
 )
 
-const upstreamUrl = pathname => new URL(pathname.slice(proxyPrefix.length), hypeOrigin)
+const upstreamUrl = pathname => new URL(pathname.slice(proxyPrefix.length), tileOrigin)
+const upstreamRequestInit = request => ({
+  headers: {
+    Origin: request.headers.get('Origin') ?? 'https://visionarymachines.hype.hk',
+  },
+})
 
 const proxyTileJson = async request => {
-  const response = await fetch(upstreamUrl('/map-assets/hype/basemap/hongkong-latest.json'))
+  const response = await fetch(
+    upstreamUrl(tileJsonPath),
+    upstreamRequestInit(request),
+  )
   if (!response.ok) return response
 
   const tileJson = await response.json()
   const proxyOrigin = new URL(request.url).origin
   tileJson.tiles = tileJson.tiles.map(tileUrl => {
-    if (!tileUrl.startsWith(hypeOrigin)) return tileUrl
-    return `${proxyOrigin}${proxyPrefix}${tileUrl.slice(hypeOrigin.length)}`
+    const upstreamTileUrl = new URL(tileUrl, tileOrigin)
+    if (upstreamTileUrl.origin !== tileOrigin) return tileUrl
+    const tilePath = decodeURIComponent(upstreamTileUrl.pathname)
+    return `${proxyOrigin}${proxyPrefix}${tilePath}${upstreamTileUrl.search}`
   })
 
   const headers = new Headers(response.headers)
@@ -23,7 +33,8 @@ const proxyTileJson = async request => {
   return Response.json(tileJson, { headers })
 }
 
-const proxyVectorTile = request => fetch(upstreamUrl(new URL(request.url).pathname), request)
+const proxyVectorTile = request =>
+  fetch(upstreamUrl(new URL(request.url).pathname), upstreamRequestInit(request))
 
 export default {
   async fetch(request, env) {
