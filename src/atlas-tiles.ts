@@ -1,10 +1,12 @@
 import { atlasSeaScenes, atlasSceneNames } from './atlas-scenes.ts'
+import { createAtlasTitleCard, positionAtlasTitleCard } from './atlas-title-cards.ts'
 import { loadingConcepts } from './loading-concepts.ts'
 
 const atlasZoom = 18
 const minimumFogZoom = 15
 const landTargetThreshold = 0.75
 const landSampleSize = 10
+const waterLayerIds = ['water', 'water_stream', 'water_river']
 
 const tileId = ({ x, y }) => `${atlasZoom}/${x}/${y}`
 const tileFromId = id => {
@@ -49,16 +51,18 @@ const isFullyVisible = (map, tile) => {
   )
 }
 
-const intersectsViewport = (map, tile) => {
+const intersectsViewport = (map, tile, spill = 0) => {
   const bounds = tileBounds(tile)
   const northWest = map.project([bounds.west, bounds.north])
   const southEast = map.project([bounds.east, bounds.south])
   const canvas = map.getCanvas()
+  const tileSize = Math.max(southEast.x - northWest.x, southEast.y - northWest.y)
+  const padding = tileSize * spill
   return (
-    southEast.x >= 0 &&
-    southEast.y >= 0 &&
-    northWest.x <= canvas.clientWidth &&
-    northWest.y <= canvas.clientHeight
+    southEast.x + padding >= 0 &&
+    southEast.y + padding >= 0 &&
+    northWest.x - padding <= canvas.clientWidth &&
+    northWest.y - padding <= canvas.clientHeight
   )
 }
 
@@ -68,10 +72,12 @@ const visibleFogTiles = map => {
   const northWest = tileForPosition({ lng: bounds.getWest(), lat: bounds.getNorth() })
   const southEast = tileForPosition({ lng: bounds.getEast(), lat: bounds.getSouth() })
   const tiles = []
-  for (let y = northWest.y; y <= southEast.y; y += 1) {
-    for (let x = northWest.x; x <= southEast.x; x += 1) {
+  for (let y = northWest.y - 1; y <= southEast.y + 1; y += 1) {
+    for (let x = northWest.x - 1; x <= southEast.x + 1; x += 1) {
       const tile = { x, y }
-      if (intersectsViewport(map, tile)) tiles.push(tile)
+      // Keep a fog body while it crosses the viewport edge. The extra padding
+      // accounts for the irregular cloud shape spilling past its tile bounds.
+      if (intersectsViewport(map, tile, 0.3)) tiles.push(tile)
     }
   }
   return tiles
@@ -124,7 +130,16 @@ const captureTile = async (map, tile) => {
       512,
       512,
     )
-    return tileCanvas.toDataURL('image/png')
+    const generationArtifacts = createGenerationArtifacts(
+      map,
+      tileCanvas,
+      northWest,
+      southEast,
+    )
+    return {
+      sourceImage: tileCanvas.toDataURL('image/png'),
+      ...generationArtifacts,
+    }
   } finally {
     hiddenLayerIds.forEach(layerId => {
       map.setLayoutProperty(layerId, 'visibility', 'visible')
@@ -139,7 +154,7 @@ const tileHasSea = (map, tile) => {
   const southEast = map.project([bounds.east, bounds.south])
   const seaKinds = new Set(['sea', 'ocean', 'bay', 'strait', 'fjord'])
   return map
-    .queryRenderedFeatures([northWest, southEast], { layers: ['water'] })
+    .queryRenderedFeatures([northWest, southEast], { layers: waterLayerIds })
     .some(feature => seaKinds.has(feature.properties?.kind))
 }
 
@@ -152,7 +167,7 @@ const tileLandFraction = (map, tile) => {
       const lat =
         bounds.south + ((bounds.north - bounds.south) * (row + 0.5)) / landSampleSize
       const point = map.project([lng, lat])
-      return map.queryRenderedFeatures(point, { layers: ['water'] }).length === 0
+      return map.queryRenderedFeatures(point, { layers: waterLayerIds }).length === 0
     }),
   ).flat()
 
@@ -160,91 +175,166 @@ const tileLandFraction = (map, tile) => {
 }
 
 const atlasTileSize = 512
-const generationCropMinimum = 192
-const generationCropMaximum = 448
-const generationCropPadding = 32
 
-const projectedGeometryBounds = (map, geometry) => {
-  const points = []
-  const visit = coordinates => {
-    if (!Array.isArray(coordinates)) return
-    if (typeof coordinates[0] === 'number' && typeof coordinates[1] === 'number') {
-      const point = map.project(coordinates)
-      if (Number.isFinite(point.x) && Number.isFinite(point.y)) points.push(point)
-      return
-    }
-    coordinates.forEach(visit)
+const featureName = feature =>
+  `${feature.layer?.id ?? ''} ${feature.sourceLayer ?? ''}`.toLowerCase()
+
+const isWaterFeature = feature =>
+  /water|sea|ocean|bay|strait|fjord|river|stream|canal|reservoir/.test(featureName(feature))
+
+const isLockedLineFeature = feature =>
+  feature.layer?.type === 'line' &&
+  /road|street|transport|rail|boundary|path|trail|water/.test(featureName(feature))
+
+const drawGeometry = (
+  context,
+  geometry,
+  project,
+  { fill, stroke, lineWidth }: { fill?: boolean; stroke?: boolean; lineWidth?: number } = {},
+) => {
+  if (!geometry) return
+  const drawLine = coordinates => {
+    if (!coordinates?.length) return
+    context.moveTo(...project(coordinates[0]))
+    coordinates.slice(1).forEach(coordinate => {
+      context.lineTo(...project(coordinate))
+    })
   }
-  visit(geometry?.coordinates)
-  if (!points.length) return null
-  return {
-    left: Math.min(...points.map(point => point.x)),
-    top: Math.min(...points.map(point => point.y)),
-    right: Math.max(...points.map(point => point.x)),
-    bottom: Math.max(...points.map(point => point.y)),
+
+  context.beginPath()
+  if (geometry.type === 'Polygon') {
+    geometry.coordinates.forEach(drawLine)
+  } else if (geometry.type === 'MultiPolygon') {
+    geometry.coordinates.flat().forEach(drawLine)
+  } else if (geometry.type === 'LineString') {
+    drawLine(geometry.coordinates)
+  } else if (geometry.type === 'MultiLineString') {
+    geometry.coordinates.forEach(drawLine)
+  } else if (geometry.type === 'GeometryCollection') {
+    geometry.geometries.forEach(child => {
+      drawGeometry(context, child, project, { fill, stroke, lineWidth })
+    })
+    return
+  }
+
+  if (fill) context.fill('evenodd')
+  if (stroke) {
+    context.lineWidth = lineWidth ?? 4
+    context.lineCap = 'round'
+    context.lineJoin = 'round'
+    context.stroke()
   }
 }
 
-const generationBoundsForTile = (map, tile) => {
-  const bounds = tileBounds(tile)
-  const northWest = map.project([bounds.west, bounds.north])
-  const southEast = map.project([bounds.east, bounds.south])
-  const screenWidth = southEast.x - northWest.x
-  const screenHeight = southEast.y - northWest.y
-  const screenToTile = point => ({
-    x: ((point.x - northWest.x) / screenWidth) * atlasTileSize,
-    y: ((point.y - northWest.y) / screenHeight) * atlasTileSize,
+const createGenerationArtifacts = (map, sourceCanvas, northWest, southEast) => {
+  const scaleX = atlasTileSize / (southEast.x - northWest.x)
+  const scaleY = atlasTileSize / (southEast.y - northWest.y)
+  const project = coordinate => {
+    const point = map.project(coordinate)
+    return [(point.x - northWest.x) * scaleX, (point.y - northWest.y) * scaleY]
+  }
+  const features = map.queryRenderedFeatures([northWest, southEast])
+  const safeCanvas = document.createElement('canvas')
+  safeCanvas.width = atlasTileSize
+  safeCanvas.height = atlasTileSize
+  const safeContext = safeCanvas.getContext('2d')
+  const lineCanvas = document.createElement('canvas')
+  lineCanvas.width = atlasTileSize
+  lineCanvas.height = atlasTileSize
+  const lineContext = lineCanvas.getContext('2d')
+
+  const landFeatures = features.filter(
+    feature => feature.layer?.type === 'fill' && !isWaterFeature(feature),
+  )
+  const waterFeatures = features.filter(
+    feature => feature.layer?.type === 'fill' && isWaterFeature(feature),
+  )
+  const lockedLineFeatures = features.filter(isLockedLineFeature)
+
+  safeContext.fillStyle = '#ffffff'
+  if (landFeatures.length) {
+    landFeatures.forEach(feature => {
+      drawGeometry(safeContext, feature.geometry, project, { fill: true })
+    })
+  } else {
+    safeContext.fillRect(0, 0, atlasTileSize, atlasTileSize)
+  }
+  safeContext.globalCompositeOperation = 'destination-out'
+  waterFeatures.forEach(feature => {
+    drawGeometry(safeContext, feature.geometry, project, { fill: true })
+  })
+  lockedLineFeatures.forEach(feature => {
+    drawGeometry(safeContext, feature.geometry, project, {
+      stroke: true,
+      lineWidth: /boundary/.test(featureName(feature)) ? 5 : 8,
+    })
+  })
+  safeContext.lineWidth = 24
+  safeContext.strokeRect(0, 0, atlasTileSize, atlasTileSize)
+  safeContext.globalCompositeOperation = 'source-over'
+
+  lineContext.strokeStyle = '#ffffff'
+  lockedLineFeatures.forEach(feature => {
+    drawGeometry(lineContext, feature.geometry, project, {
+      stroke: true,
+      lineWidth: /boundary/.test(featureName(feature)) ? 4 : 6,
+    })
   })
 
-  const candidates = map
-    .queryRenderedFeatures([northWest, southEast])
-    .filter(feature => {
-      if (feature.layer?.type !== 'fill') return false
-      const layerName = `${feature.layer?.id ?? ''} ${feature.sourceLayer ?? ''}`.toLowerCase()
-      return !/water|road|street|transport|boundary|label|place/.test(layerName)
-    })
-    .map(feature => projectedGeometryBounds(map, feature.geometry))
-    .filter(featureBounds => {
-      if (!featureBounds) return false
-      const width = featureBounds.right - featureBounds.left
-      const height = featureBounds.bottom - featureBounds.top
-      return width >= 48 && height >= 48 && width < screenWidth * 0.82 && height < screenHeight * 0.82
-    })
-    .sort((first, second) =>
-      (second.right - second.left) * (second.bottom - second.top) -
-      (first.right - first.left) * (first.bottom - first.top),
-    )
-
-  const candidate = candidates[0]
-  if (!candidate) {
-    return {
-      x: (atlasTileSize - generationCropMaximum) / 2,
-      y: (atlasTileSize - generationCropMaximum) / 2,
-      width: generationCropMaximum,
-      height: generationCropMaximum,
+  const maskPixels = safeContext.getImageData(0, 0, atlasTileSize, atlasTileSize)
+  let contentLeft = atlasTileSize
+  let contentTop = atlasTileSize
+  let contentRight = -1
+  let contentBottom = -1
+  for (let y = 0; y < atlasTileSize; y += 1) {
+    for (let x = 0; x < atlasTileSize; x += 1) {
+      if (maskPixels.data[(y * atlasTileSize + x) * 4 + 3] <= 32) continue
+      contentLeft = Math.min(contentLeft, x)
+      contentTop = Math.min(contentTop, y)
+      contentRight = Math.max(contentRight, x)
+      contentBottom = Math.max(contentBottom, y)
     }
   }
-
-  const tileBoundsForCandidate = {
-    left: screenToTile({ x: candidate.left, y: candidate.top }).x,
-    top: screenToTile({ x: candidate.left, y: candidate.top }).y,
-    right: screenToTile({ x: candidate.right, y: candidate.bottom }).x,
-    bottom: screenToTile({ x: candidate.right, y: candidate.bottom }).y,
+  const guideCanvas = document.createElement('canvas')
+  guideCanvas.width = atlasTileSize
+  guideCanvas.height = atlasTileSize
+  const guideContext = guideCanvas.getContext('2d')
+  const guidePixels = guideContext.createImageData(atlasTileSize, atlasTileSize)
+  for (let index = 0; index < maskPixels.data.length; index += 4) {
+    const safe = maskPixels.data[index + 3] > 32
+    guidePixels.data[index] = safe ? 56 : 176
+    guidePixels.data[index + 1] = safe ? 156 : 72
+    guidePixels.data[index + 2] = safe ? 91 : 63
+    guidePixels.data[index + 3] = safe ? 150 : 190
   }
-  const candidateWidth = tileBoundsForCandidate.right - tileBoundsForCandidate.left
-  const candidateHeight = tileBoundsForCandidate.bottom - tileBoundsForCandidate.top
-  const side = Math.min(
-    generationCropMaximum,
-    Math.max(generationCropMinimum, Math.max(candidateWidth, candidateHeight) + generationCropPadding * 2),
-  )
-  const centerX = (tileBoundsForCandidate.left + tileBoundsForCandidate.right) / 2
-  const centerY = (tileBoundsForCandidate.top + tileBoundsForCandidate.bottom) / 2
+  guideContext.putImageData(guidePixels, 0, 0)
+
+  const sourcePixels = sourceCanvas
+    .getContext('2d')
+    .getImageData(0, 0, atlasTileSize, atlasTileSize)
+  const linePixels = lineContext.getImageData(0, 0, atlasTileSize, atlasTileSize)
+  const overlayPixels = lineContext.createImageData(atlasTileSize, atlasTileSize)
+  for (let index = 0; index < sourcePixels.data.length; index += 4) {
+    overlayPixels.data[index] = sourcePixels.data[index]
+    overlayPixels.data[index + 1] = sourcePixels.data[index + 1]
+    overlayPixels.data[index + 2] = sourcePixels.data[index + 2]
+    overlayPixels.data[index + 3] = linePixels.data[index + 3]
+  }
+  lineContext.putImageData(overlayPixels, 0, 0)
 
   return {
-    x: Math.max(0, Math.min(atlasTileSize - side, Math.round(centerX - side / 2))),
-    y: Math.max(0, Math.min(atlasTileSize - side, Math.round(centerY - side / 2))),
-    width: Math.round(side),
-    height: Math.round(side),
+    guideImage: guideCanvas.toDataURL('image/png'),
+    safeMask: safeCanvas.toDataURL('image/png'),
+    lineOverlay: lineCanvas.toDataURL('image/png'),
+    contentBounds:
+      contentRight >= contentLeft && contentBottom >= contentTop
+        ? {
+            x: contentLeft,
+            y: contentTop,
+            width: contentRight - contentLeft + 1,
+            height: contentBottom - contentTop + 1,
+          }
+        : null,
   }
 }
 
@@ -276,7 +366,7 @@ const fadeTileEdges = async url => {
   return canvas.toDataURL('image/png')
 }
 
-const addGeneratedTile = async (map, tile, url) => {
+const addGeneratedTile = async (map, tile, url, scene, titleCards, contentBounds) => {
   const id = `atlas-tile-${tile.x}-${tile.y}`
   if (map.getLayer(id)) return
   const bounds = tileBounds(tile)
@@ -303,6 +393,11 @@ const addGeneratedTile = async (map, tile, url) => {
       'raster-fade-duration': 0,
     },
   })
+  if (scene && titleCards) {
+    const card = createAtlasTitleCard(map.getContainer(), scene)
+    titleCards.set(tileId(tile), { card, tile, contentBounds })
+    positionAtlasTitleCard(map, card, tile, contentBounds)
+  }
 }
 
 const fogVertexShader = `
@@ -319,6 +414,8 @@ const fogFragmentShader = `
   precision highp float;
   uniform sampler2D u_mask;
   uniform float u_time;
+  uniform vec2 u_anchor_screen;
+  uniform vec2 u_viewport_size;
   varying vec2 v_uv;
 
   float hash(vec2 point) {
@@ -342,31 +439,44 @@ const fogFragmentShader = `
   }
 
   void main() {
-    float mask = texture2D(u_mask, v_uv).a;
+    // Keep the animated texture attached to the map instead of the screen.
+    // The mask moves with the map while panning, so screen-space noise would
+    // expose a new part of the cloud field and make the fog appear to speed up.
+    vec2 screenPosition = vec2(v_uv.x, 1.0 - v_uv.y) * u_viewport_size;
+    vec2 fogUv = (screenPosition - u_anchor_screen) / u_viewport_size + 0.5;
+
+    // Gently deform the silhouette as well as moving the internal veils. This
+    // keeps the fog from reading as a static set of tile-shaped patches.
+    vec2 maskWarp = vec2(
+      sin(u_time * 0.82 + fogUv.y * 16.0 + sin(fogUv.x * 8.0) * 1.2),
+      cos(u_time * 0.68 + fogUv.x * 14.0 + cos(fogUv.y * 7.0) * 1.1)
+    ) * 0.014;
+    float mask = texture2D(u_mask, clamp(v_uv + maskWarp, 0.0, 1.0)).a;
     if (mask < 0.01) discard;
 
     // Keep the tile coverage static, but move several veils through it quickly
     // enough to be apparent during a normal glance at the map.
-    vec2 driftA = vec2(u_time * 0.060, -u_time * 0.036);
-    vec2 driftB = vec2(-u_time * 0.042, u_time * 0.054);
-    float layerA = smoothstep(0.22, 0.76, cloudNoise(v_uv * vec2(4.2, 2.7) + driftA));
-    float layerB = smoothstep(0.26, 0.78, cloudNoise(v_uv * vec2(5.4, 3.4) + driftB));
+    vec2 driftA = vec2(u_time * 0.18, -u_time * 0.11);
+    vec2 driftB = vec2(-u_time * 0.13, u_time * 0.16);
+    float layerA = smoothstep(0.22, 0.76, cloudNoise(fogUv * vec2(4.2, 2.7) + driftA));
+    float layerB = smoothstep(0.26, 0.78, cloudNoise(fogUv * vec2(5.4, 3.4) + driftB));
     float movingVeil = smoothstep(
       0.28,
       0.72,
-      cloudNoise(v_uv * vec2(8.0, 5.0) + driftA * 1.8)
+      cloudNoise(fogUv * vec2(8.0, 5.0) + driftA * 2.4)
     );
-    float edgeFade = smoothstep(0.02, 0.78, mask);
-    float softMask = mask * edgeFade;
-    float grain = hash(floor(gl_FragCoord.xy / 3.0) + floor(driftA * 8.0));
-    float densityA = softMask * (0.72 + layerA * 0.24);
-    float densityB = softMask * (0.10 + layerB * 0.16);
+    // Remap the blurred canvas mask into a firmer body with a short, visible
+    // feather instead of letting the whole fog form fade gradually.
+    float softMask = smoothstep(0.12, 0.48, mask);
+    float grain = hash(floor(fogUv * u_viewport_size / 3.0) + floor(driftA * 8.0));
+    float densityA = softMask * (0.90 + layerA * 0.10);
+    float densityB = softMask * (0.22 + layerB * 0.14);
     float density = 1.0 - (1.0 - densityA) * (1.0 - densityB);
-    density *= 0.88 + movingVeil * 0.16;
+    density *= 0.90 + movingVeil * 0.15;
     vec3 pale = vec3(0.91, 0.92, 0.92);
     vec3 deep = vec3(0.67, 0.70, 0.71);
     vec3 fogColor = mix(deep, pale, 0.28 + layerA * 0.30 + layerB * 0.22 + (grain - 0.5) * 0.08);
-    gl_FragColor = vec4(fogColor, density * 0.98);
+    gl_FragColor = vec4(fogColor, min(1.0, density * 1.03));
   }
 `
 
@@ -401,19 +511,19 @@ const createFogProgram = gl => {
 }
 
 const createFogMaskPath = (context, x, y, size, seed) => {
-  // Keep the body close to its target tile. A narrow spill and the blur provide
-  // a soft edge without washing out most of the neighboring tiles.
-  const spill = size * 0.06
+  // Let each body reach into its neighbors. The irregular radius keeps the
+  // overlap cloud-like instead of making a larger, regular tile grid.
+  const spill = size * 0.14
   const left = x - spill
   const top = y - spill * (0.72 + seeded(seed + 1) * 0.42)
   const width = size + spill * (1.8 + seeded(seed + 2) * 0.35)
   const height = size + spill * (1.8 + seeded(seed + 3) * 0.35)
-  const points = 12
+  const points = 16
 
   context.beginPath()
   for (let index = 0; index < points; index += 1) {
     const angle = (Math.PI * 2 * index) / points
-    const radius = 0.92 + seeded(seed + index * 2.41) * 0.16
+    const radius = 0.72 + seeded(seed + index * 2.41) * 0.42
     const pointX = left + width * (0.5 + Math.cos(angle) * 0.5 * radius)
     const pointY = top + height * (0.5 + Math.sin(angle) * 0.5 * radius)
     if (index === 0) context.moveTo(pointX, pointY)
@@ -422,7 +532,7 @@ const createFogMaskPath = (context, x, y, size, seed) => {
   context.closePath()
 }
 
-const createFogCanvas = (map, tileState, isLandTargetable) => {
+  const createFogCanvas = (map, tileState, isLandTargetable) => {
   const canvas = document.createElement('canvas')
   canvas.className = 'atlas-fog'
   canvas.setAttribute('aria-hidden', 'true')
@@ -448,6 +558,9 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
   const positionAttribute = program && gl?.getAttribLocation(program, 'a_position')
   const maskUniform = program && gl?.getUniformLocation(program, 'u_mask')
   const timeUniform = program && gl?.getUniformLocation(program, 'u_time')
+  const anchorScreenUniform = program && gl?.getUniformLocation(program, 'u_anchor_screen')
+  const viewportSizeUniform = program && gl?.getUniformLocation(program, 'u_viewport_size')
+  const fogAnchor = map.getCenter()
   let clientWidth = 0
   let clientHeight = 0
   let maskScale = 0.5
@@ -456,6 +569,8 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
   let maskFrame: number | undefined
   let lastFogFrame = -Infinity
   let lastMaskFrame = -Infinity
+  let fogTime = 0
+  let previousFrameTime: number | undefined
   const fogFrameInterval = 1000 / 60
   const maskFrameInterval = 1000 / 60
 
@@ -529,23 +644,23 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
     } else {
       maskContext.globalAlpha = state === 'generating' ? 1 : 0.96
     }
-    maskContext.filter = `blur(${Math.max(5, size * 0.07)}px)`
+    maskContext.filter = `blur(${Math.max(3, size * 0.04)}px)`
     maskContext.fillStyle = '#ffffff'
     createFogMaskPath(maskContext, x, y, size, seed)
     maskContext.fill()
     maskContext.restore()
 
-    // A restrained second cloud breaks up the repeated tile cadence without
-    // becoming a second, oversized fog tile between the target tiles.
+    // A broad, offset cloud merges nearby bodies into amorphous shapes instead
+    // of leaving the deterministic fogged-tile pattern visible.
     maskContext.save()
-    maskContext.globalAlpha = 0.08
+    maskContext.globalAlpha = 0.2
     maskContext.filter = `blur(${Math.max(7, size * 0.12)}px)`
     maskContext.fillStyle = '#ffffff'
     createFogMaskPath(
       maskContext,
-      x + (seeded(seed + 7) - 0.5) * size * 0.35,
-      y + (seeded(seed + 8) - 0.5) * size * 0.35,
-      size * (0.94 + seeded(seed + 9) * 0.08),
+      x + (seeded(seed + 7) - 0.5) * size * 0.28,
+      y + (seeded(seed + 8) - 0.5) * size * 0.28,
+      size * (1.18 + seeded(seed + 9) * 0.16),
       seed + 19,
     )
     maskContext.fill()
@@ -693,6 +808,11 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
 
   const render = time => {
     resize()
+    const frameDelta = previousFrameTime === undefined ? 0 : time - previousFrameTime
+    previousFrameTime = time
+    // The mask follows the map during a pan. Pause the screen-space shader
+    // animation for that interval so the fog does not appear to move twice.
+    if (!map.isMoving()) fogTime += Math.min(100, frameDelta) / 1000
     // Keep the card geometry in lockstep with the map while it is being
     // dragged. Keeping the fog and labels on the same frame cadence prevents
     // either overlay from visibly trailing the raster map or generated artwork.
@@ -714,7 +834,12 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
       gl.activeTexture(gl.TEXTURE0)
       gl.bindTexture(gl.TEXTURE_2D, maskTexture)
       gl.uniform1i(maskUniform, 0)
-      gl.uniform1f(timeUniform, time / 1000)
+      gl.uniform1f(timeUniform, fogTime)
+      if (anchorScreenUniform && viewportSizeUniform) {
+        const anchorScreen = map.project(fogAnchor)
+        gl.uniform2f(anchorScreenUniform, anchorScreen.x, anchorScreen.y)
+        gl.uniform2f(viewportSizeUniform, clientWidth, clientHeight)
+      }
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
     }
     animationFrame = requestAnimationFrame(render)
@@ -744,17 +869,44 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
 export const installAtlasTileInteractions = (map, maplibregl) => {
   const tileState = new Map()
   const landTargetState = new Map()
+  const generatedTileIds = new Set()
+  const titleCards = new Map()
   const isAdminMode = () => map.getContainer().classList.contains('atlas-admin-mode')
+  const mapDataIsReady = () =>
+    map.isStyleLoaded() &&
+    map.isSourceLoaded('hongkong-latest') &&
+    map.areTilesLoaded()
 
   const isLandTargetable = tile => {
     const id = tileId(tile)
-    if (!landTargetState.has(id)) {
-      landTargetState.set(id, tileLandFraction(map, tile) >= landTargetThreshold)
-    }
+    if (landTargetState.has(id)) return landTargetState.get(id)
+
+    // queryRenderedFeatures() is render-state dependent. Never turn missing
+    // source data into land while the initial map or a new viewport is still
+    // settling. Cached classifications above must remain usable during that
+    // settling period or the whole fog mask can briefly clear during a pan.
+    if (!mapDataIsReady() || !isFullyVisible(map, tile)) return false
+    landTargetState.set(id, tileLandFraction(map, tile) >= landTargetThreshold)
     return landTargetState.get(id)
   }
 
   const fog = createFogCanvas(map, tileState, isLandTargetable)
+  const positionTitleCards = () => {
+    titleCards.forEach(({ card, tile, contentBounds }) => {
+      positionAtlasTitleCard(map, card, tile, contentBounds)
+    })
+  }
+
+  ;['move', 'resize', 'zoom', 'rotate', 'pitch'].forEach(eventName => {
+    map.on(eventName, positionTitleCards)
+  })
+
+  map.on('idle', () => {
+    if (!mapDataIsReady()) return
+    // Keep classifications cached so fog tiles that just left the viewport do
+    // not disappear merely because the map finished its pan.
+    fog.invalidate()
+  })
 
   const checkCachedTile = async tile => {
     const response = await fetch(
@@ -768,10 +920,10 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
       )
     }
     if (body?.cached !== true) return null
-    if (typeof body.url !== 'string' || !body.url) {
+    if (typeof body.url !== 'string' || !body.url || typeof body.scene !== 'string') {
       throw new Error('The atlas-tile cache lookup returned an invalid cached image URL.')
     }
-    return body.url
+    return { url: body.url, scene: body.scene, contentBounds: body.contentBounds }
   }
 
   map.on('mousemove', event => {
@@ -810,8 +962,16 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
     try {
       const cachedUrl = await checkCachedTile(tile)
       if (cachedUrl) {
-        await addGeneratedTile(map, tile, cachedUrl)
+        await addGeneratedTile(
+          map,
+          tile,
+          cachedUrl.url,
+          cachedUrl.scene,
+          titleCards,
+          cachedUrl.contentBounds,
+        )
         tileState.set(id, 'generated')
+        generatedTileIds.add(id)
         fog.invalidate()
         console.info(`[atlas] ${id} loaded from cache in ${Math.round(performance.now() - startedAt)}ms`)
         return
@@ -819,9 +979,8 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
 
       tileState.set(id, 'generating')
       fog.invalidate()
-      const sourceImage = await captureTile(map, tile)
+      const capturedTile = await captureTile(map, tile)
       const capturedAt = performance.now()
-      const generationBounds = generationBoundsForTile(map, tile)
       const hasSea = tileHasSea(map, tile)
       const availableScenes = hasSea
         ? atlasSceneNames
@@ -832,11 +991,17 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
         {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ sourceImage, hasSea, generationBounds }),
+          body: JSON.stringify({ ...capturedTile, hasSea }),
         },
       )
       const responseText = await response.text()
-      let body: { error?: string; message?: string; url?: string } | null
+      let body: {
+        error?: string
+        message?: string
+        url?: string
+        scene?: string
+        contentBounds?: { x: number; y: number; width: number; height: number } | null
+      } | null
       try {
         const parsedBody = responseText ? JSON.parse(responseText) : null
         body = parsedBody && typeof parsedBody === 'object' ? parsedBody : null
@@ -856,13 +1021,20 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
           `The atlas-tile server returned HTTP ${response.status} without a generated tile URL.`,
         )
       const generatedAt = performance.now()
-      await addGeneratedTile(map, tile, body.url)
+      await addGeneratedTile(
+        map,
+        tile,
+        body.url,
+        body.scene ?? scene,
+        titleCards,
+        body.contentBounds,
+      )
       tileState.set(id, 'generated')
+      generatedTileIds.add(id)
       fog.invalidate()
       console.info(
-        `[atlas] ${id} ready in ${Math.round(performance.now() - startedAt)}ms ` +
-          `(capture ${Math.round(capturedAt - startedAt)}ms, ` +
-          `crop ${generationBounds.width}x${generationBounds.height}@${generationBounds.x},${generationBounds.y}, ` +
+          `[atlas] ${id} ready in ${Math.round(performance.now() - startedAt)}ms ` +
+          `(capture ${Math.round(capturedAt - startedAt)}ms, full-tile safe-zone mask, ` +
           `generation ${Math.round(generatedAt - capturedAt)}ms, ` +
           `display ${Math.round(performance.now() - generatedAt)}ms)`,
       )
@@ -879,4 +1051,55 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
         .addTo(map)
     }
   })
+
+  const resetReveals = () => {
+    const revealedLayerIds = [...generatedTileIds]
+      .map(id => `atlas-tile-${tileFromId(id).x}-${tileFromId(id).y}`)
+      .filter(layerId => map.getLayer(layerId))
+
+    // Put the fog back over the artwork before the artwork fades away. This
+    // makes the reset read as the city disappearing into mist, not as a hard cut.
+    generatedTileIds.forEach(id => {
+      tileState.set(id, 'resetting')
+    })
+    fog.invalidate()
+
+    return new Promise<void>(resolve => {
+      const startedAt = performance.now()
+      const duration = 1200
+      const fade = now => {
+        const progress = Math.min(1, (now - startedAt) / duration)
+        const eased = 1 - (1 - progress) ** 3
+        revealedLayerIds.forEach(layerId => {
+          if (map.getLayer(layerId)) {
+            map.setPaintProperty(layerId, 'raster-opacity', 0.94 * (1 - eased))
+          }
+        })
+
+        if (progress < 1) {
+          requestAnimationFrame(fade)
+          return
+        }
+
+        revealedLayerIds.forEach(layerId => {
+          const sourceId = layerId
+          if (map.getLayer(layerId)) map.removeLayer(layerId)
+          if (map.getSource(sourceId)) map.removeSource(sourceId)
+        })
+        titleCards.forEach(({ card, tile }) => {
+          if (generatedTileIds.has(tileId(tile))) {
+            card.remove()
+            titleCards.delete(tileId(tile))
+          }
+        })
+        generatedTileIds.clear()
+        tileState.clear()
+        fog.invalidate()
+        resolve()
+      }
+      requestAnimationFrame(fade)
+    })
+  }
+
+  return { resetReveals }
 }
