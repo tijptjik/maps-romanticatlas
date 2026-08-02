@@ -783,7 +783,8 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
     const questionLastWordHold = 1800
     const questionQuotePause = 1800
     const quoteStart = questionEnd + questionLastWordHold + questionQuotePause
-    const quoteEnd = quoteStart + quoteDuration
+    const quoteLastWordHold = 1800
+    const quoteEnd = quoteStart + quoteDuration + quoteLastWordHold
     const creditStart = quoteEnd + 1000
     const creditDuration = 2200
 
@@ -797,6 +798,7 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
       questionEnd,
       questionLastWordHold,
       quoteStart,
+      quoteLastWordHold,
       creditStart,
       creditDuration,
       cycleDuration: creditStart + creditDuration + 1400,
@@ -919,12 +921,7 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
         const firstVisibleWord = isLingering
           ? currentWordIndex
           : Math.max(0, currentWordIndex - 2)
-        const lingerProgress = isLingering
-          ? easeOutCubic(Math.min(1, (phase - wordSequenceDuration) / 500))
-          : 0
-        const streamBaseline = isLingering
-          ? baseline + (centerY - baseline) * lingerProgress
-          : baseline
+        const streamBaseline = baseline
 
         for (
           let wordIndex = firstVisibleWord;
@@ -933,6 +930,8 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
         ) {
           const distance = streamPosition - wordIndex
           const isCurrentWord = wordIndex === currentWordIndex
+          const isFinalWord = currentWordIndex === words.length - 1
+          const visualDistance = isFinalWord && isCurrentWord ? 0 : distance
           const progress = isCurrentWord && !isLingering ? distance : 1
           const word = words[wordIndex]
           loadingContext.font = `600 italic ${fontSize}px 'Cormorant Garamond', Georgia, serif`
@@ -945,10 +944,10 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
             ? easeOutCubic(Math.min(1, progress / 0.55))
             : 0.84 + Math.min(0.1, (2 - distance) * 0.08)
           const scale = isCurrentWord ? 0.84 + easeOutCubic(progress) * 0.16 : 1
-          const wavePhase = time / 1100 + wordIndex * 1.7 + distance * 2.4
+          const wavePhase = time / 1100 + wordIndex * 1.7 + visualDistance * 2.4
           const floatX = Math.sin(wavePhase) * size * 0.035
           const floatY = Math.cos(wavePhase * 0.72) * size * 0.012
-          const wordY = streamBaseline - distance * lineHeight + floatY
+          const wordY = streamBaseline - visualDistance * lineHeight + floatY
           if (wordY - fittedSize * 0.58 < wordLimitY) continue
           drawCenteredLine(
             word,
@@ -995,6 +994,7 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
           quoteSize,
           '#594435',
           quoteBaseline,
+          timing.quoteLastWordHold,
         )
       } else if (
         elapsed >= timing.creditStart &&

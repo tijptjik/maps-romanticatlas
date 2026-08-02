@@ -1,6 +1,6 @@
 const artistStatementMarkup = `
   <button class="artist-statement__trigger" type="button" aria-controls="artist-statement" aria-expanded="false">
-    About the atlas <span aria-hidden="true">↗</span>
+    Cartographer's Note <span aria-hidden="true">↗</span>
   </button>
   <section class="artist-statement" id="artist-statement" hidden>
     <div class="artist-statement__dialog" role="dialog" aria-modal="true" aria-labelledby="artist-statement-title">
@@ -34,10 +34,13 @@ export const installArtistStatement = container => {
   container.append(wrapper)
 
   const trigger = wrapper.querySelector<HTMLButtonElement>('.artist-statement__trigger')
+  const actions = container.querySelector('.atlas-intro__actions') as HTMLElement | null
   const statement = wrapper.querySelector<HTMLElement>('.artist-statement')
   const dialog = wrapper.querySelector<HTMLElement>('.artist-statement__dialog')
   const closeButton = wrapper.querySelector<HTMLButtonElement>('.artist-statement__close')
   let previouslyFocused: HTMLElement | null = null
+
+  wrapper.addEventListener('pointerdown', event => event.stopPropagation())
 
   const close = () => {
     if (!statement || statement.hidden) return
@@ -54,6 +57,9 @@ export const installArtistStatement = container => {
     closeButton?.focus()
   }
 
+  if (actions && trigger) actions.prepend(trigger)
+  trigger?.addEventListener('pointerdown', event => event.stopPropagation())
+  trigger?.addEventListener('click', event => event.stopPropagation())
   trigger?.addEventListener('click', open)
   closeButton?.addEventListener('click', close)
   statement?.addEventListener('click', event => {

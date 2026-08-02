@@ -34,9 +34,11 @@ const splashMarkup = `
       <p>VENTURE INTO THE FOG<br />REIMAGINE HONG KONG</p>
       <span class="atlas-intro__board-star" aria-hidden="true">✦</span>
     </div>
-    <button class="atlas-intro__enter" type="button">
-      Enter the fog <span aria-hidden="true">↗</span>
-    </button>
+    <div class="atlas-intro__actions">
+      <button class="atlas-intro__enter" type="button">
+        ENTER THE FOG <span aria-hidden="true">↗</span>
+      </button>
+    </div>
   </div>
   <p class="atlas-intro__credit">
     by TIJPTJIK
