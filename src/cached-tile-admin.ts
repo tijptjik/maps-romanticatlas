@@ -1,41 +1,63 @@
 import { createAtlasTitleCard, positionAtlasTitleCard } from './atlas-title-cards.ts'
+import { atlasZoom, tileBounds, tileForPosition } from './tile-geometry.ts'
 
-const atlasZoom = 18
 const adminControlId = 'atlas-admin-delete-control'
 const adminStatusId = 'atlas-admin-status'
+const adminTokenStorageKey = 'atlas-admin-token'
+const csrfCookieName = 'atlas_csrf'
 
 const tileKey = tile => `${tile.zoom}/${tile.x}/${tile.y}/${tile.scene}`
 const tilePositionKey = tile => `${tile.zoom}/${tile.x}/${tile.y}`
-
-const tileBounds = tile => {
-  const tileCount = 2 ** tile.zoom
-  const longitude = x => (x / tileCount) * 360 - 180
-  const latitude = y => {
-    const radians = Math.PI - (2 * Math.PI * y) / tileCount
-    return (180 / Math.PI) * Math.atan(Math.sinh(radians))
-  }
-
-  return {
-    west: longitude(tile.x),
-    north: latitude(tile.y),
-    east: longitude(tile.x + 1),
-    south: latitude(tile.y + 1),
-  }
-}
-
-const tileForPosition = ({ lng, lat }) => {
-  const count = 2 ** atlasZoom
-  const latitudeRadians = (lat * Math.PI) / 180
-  return {
-    x: Math.floor(((lng + 180) / 360) * count),
-    y: Math.floor(((1 - Math.asinh(Math.tan(latitudeRadians)) / Math.PI) / 2) * count),
-  }
-}
 
 const imageLayerId = tile => `atlas-admin-tile-${tileKey(tile).replaceAll('/', '-')}`
 const imageSourceId = tile => `${imageLayerId(tile)}-source`
 const firstLabelLayerId = map =>
   map.getStyle().layers.find(layer => layer.type === 'symbol')?.id
+
+const storedAdminToken = () => {
+  try {
+    return sessionStorage.getItem(adminTokenStorageKey)
+  } catch {
+    return null
+  }
+}
+
+const csrfToken = () =>
+  document.cookie
+    .split(';')
+    .map(cookie => cookie.trim())
+    .find(cookie => cookie.startsWith(`${csrfCookieName}=`))
+    ?.slice(csrfCookieName.length + 1) ?? null
+
+const fetchAdmin = async (url, options: RequestInit = {}) => {
+  const makeRequest = token => {
+    const headers = new Headers(options.headers)
+    if (token) headers.set('authorization', `Bearer ${token}`)
+    return fetch(url, { ...options, headers })
+  }
+
+  let token = storedAdminToken()
+  let response = await makeRequest(token)
+  if (response.status !== 401) return response
+
+  const enteredToken = window.prompt('Enter the Atlas admin token')?.trim()
+  if (!enteredToken) return response
+  token = enteredToken
+  try {
+    sessionStorage.setItem(adminTokenStorageKey, token)
+  } catch {
+    // The token can still be used for this request when session storage is unavailable.
+  }
+  response = await makeRequest(token)
+  if (response.status === 401) {
+    try {
+      sessionStorage.removeItem(adminTokenStorageKey)
+    } catch {
+      // Ignore storage errors; the failed credential is not reused in this tab.
+    }
+  }
+  return response
+}
 
 const installCachedImage = (map, tile) => {
   const sourceId = imageSourceId(tile)
@@ -75,7 +97,7 @@ const removeCachedImage = (map, tile) => {
 
 export const installCachedTileAdmin = async map => {
   try {
-    const response = await fetch('/api/atlas-tiles/cached')
+    const response = await fetchAdmin('/api/atlas-tiles/cached')
     if (!response.ok)
       throw new Error(`Cache manifest request failed with ${response.status}`)
     const body = await response.json()
@@ -246,10 +268,13 @@ export const installCachedTileAdmin = async map => {
       deleteControl.disabled = true
       deleteControl.textContent = 'Deleting…'
       try {
-        const response = await fetch(
-          `/api/atlas-tiles/${tile.zoom}/${tile.x}/${tile.y}/${tile.scene}`,
+        const response = await fetchAdmin(
+          `/api/atlas-tiles/${tile.zoom}/${tile.x}/${tile.y}/${tile.scene}?version=${tile.version}`,
           {
             method: 'DELETE',
+            headers: {
+              'x-atlas-csrf-token': csrfToken() ?? '',
+            },
           },
         )
         const body = await response.json().catch(() => null)
