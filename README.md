@@ -1,7 +1,31 @@
-# Hong Kong Map
+# A Romantic’s Atlas of Hong Kong
 
-A minimal MapLibre map centered on Hong Kong. It uses the `hongkong-latest` vector-tile
-source from `tiles.saanseoi.hk` and the matching Protomaps light basemap style.
+_A Romantic’s Atlas of Hong Kong_ interrogates what becomes of wonder when no territory
+remains undiscovered.
+
+For centuries, maps held blank spaces: _terra incognita_. These lands unknown were
+fantastical playgrounds where imagination could move ahead of measurement. Their very
+lack of definition invited both seafaring and inward exploration. Spaces where stories,
+desires, uncertainties, and inventions could take shape. Today, satellite imagery,
+LiDAR, and computational mapping impose the inverse condition: a city rendered in
+inescapably meticulous and definitive detail.
+
+Our work reintroduces uncertainty into this mapped reality. Using the cartographic
+commons and frontier generative AI, we construct impossible sites within a familiar Hong
+Kong setting: a circus appears in the ordered fabric of Mong Kok; a balloon festival
+takes flight where ordinarily the ICC stands; and everywhere, fantasy inhabits the
+visual language of infrastructure, parcels, routes, and coordinates. The intervention is
+deliberately subtle. It leans into the map’s contoured authority while quietly refusing
+its claim to completeness… and its final word on what our city is or could be.
+
+This project embraces technological vision while turning it towards possibility. It
+takes a leviathan of a machine, sustained by vast towers of abstraction, automation, and
+computation, to produce a rendering of the city that appears fixed, exhaustive, and
+unshakeable. Yet imagination holds an unfair advantage. It is fuelled by dreams,
+desires, and aspirations for a better world: an infinitely renewable resource, available
+to all. By allowing the improbable to surface within the measured city, _A Romantic’s
+Atlas of Hong Kong_ proposes that even the most precisely mapped world can remain open
+to revision, wonder, and possibility.
 
 ## Run locally
 
@@ -55,16 +79,9 @@ For Cloudflare, store the key as a secret rather than in `wrangler.jsonc`:
 wrangler secret put OPENROUTER_API_KEY
 ```
 
-The deployed Worker forwards the approved `romanticatlas.hype.hk` origin to
-SaanSeoi, which permits unmetered first-party access.
+The deployed Worker forwards the approved `romanticatlas.hype.hk` origin to SaanSeoi,
+which permits unmetered first-party access.
 
-```ts
-import { createOpenRouterClient } from './server/openrouter-client.ts'
-
-const openrouterClient = createOpenRouterClient();
-const result = await openrouterClient.generateImage({
-  prompt: "A romantic-era illustrated map of Hong Kong on textured paper",
-})
-
-console.log(result.contentType)
-```
+To show a red boundary around every generated tile found in the server cache during
+development, set `VITE_DIAGNOSTIC_CACHED_TILES=true` in `.env` and restart the dev
+server.
