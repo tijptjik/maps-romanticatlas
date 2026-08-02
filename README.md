@@ -34,7 +34,7 @@ bun install
 bun run dev
 ```
 
-Open the local URL printed by the server (normally `http://127.0.0.1:5173`).
+Open the local URL printed by the server (use `http://localhost:5173`).
 
 ## Production build
 
@@ -50,9 +50,7 @@ bun run deploy
 ```
 
 The tiles, fonts, and sprite assets are loaded from their remote services, so the map
-needs an internet connection. In the Cloudflare deployment, the Worker proxies the
-TileJSON and vector tiles through `/map-assets/saanseoi/`; this avoids browser CORS
-restrictions from the upstream tile host.
+needs an internet connection.
 
 ## On-demand romantic atlas tiles
 
