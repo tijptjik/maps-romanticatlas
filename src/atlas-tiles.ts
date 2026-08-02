@@ -72,6 +72,7 @@ const seeded = value => {
   const noise = Math.sin(value * 12.9898) * 43758.5453
   return noise - Math.floor(noise)
 }
+const clampUnit = value => Math.max(0, Math.min(1, value))
 
 // Choose the opening concept once at map initialization, then walk the full
 // collection in order so a loading sequence never repeats early.
@@ -449,7 +450,7 @@ const addGeneratedTile = async (
       type: 'raster',
       source: id,
       paint: {
-        'raster-opacity': initialOpacity,
+        'raster-opacity': clampUnit(initialOpacity),
         // These are already decoded, finished atlas tiles. Fading them in makes
         // a newly added tile feel like it is drifting behind the map while it
         // catches up with a pan.
@@ -720,11 +721,11 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
     const y = northWest.y
     const id = tileId(tile)
     const pokeProgress = pokedAt.has(id)
-      ? Math.min(1, (time - pokedAt.get(id)) / fogPokeDuration)
+      ? clampUnit((time - pokedAt.get(id)) / fogPokeDuration)
       : 1
     const pokeScale = 1 + Math.sin(Math.PI * pokeProgress) * fogPokeExpansion
     const generationProgress = generatingStartedAt.has(id)
-      ? Math.min(1, (time - generatingStartedAt.get(id)) / fogRadiusDuration)
+      ? clampUnit((time - generatingStartedAt.get(id)) / fogRadiusDuration)
       : 0
     const baseRadiusScale =
       state === 'generating' || state === 'revealing'
@@ -732,7 +733,7 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
         : 1
     const radiusScale = baseRadiusScale * pokeScale
     const revealProgress = revealStartedAt.has(id)
-      ? Math.min(1, (time - revealStartedAt.get(id)) / generatedRevealDuration)
+      ? clampUnit((time - revealStartedAt.get(id)) / generatedRevealDuration)
       : 0
 
     maskContext.save()
@@ -772,7 +773,7 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
   const clearGeneratedTileMask = (tile, state, time) => {
     const id = tileId(tile)
     const revealProgress = revealStartedAt.has(id)
-      ? Math.min(1, (time - revealStartedAt.get(id)) / generatedRevealDuration)
+      ? clampUnit((time - revealStartedAt.get(id)) / generatedRevealDuration)
       : state === 'generated'
         ? 1
         : 0
@@ -1277,7 +1278,10 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
     const startedAt = performance.now()
     const reveal = time => {
       if (tileState.get(id) !== 'revealing') return
-      const progress = Math.min(1, (time - startedAt) / generatedRevealDuration)
+      // RAF timestamps can be a few milliseconds older than the performance
+      // timestamp captured immediately before scheduling the first frame.
+      // Clamp the progress so MapLibre never receives a negative opacity.
+      const progress = clampUnit((time - startedAt) / generatedRevealDuration)
       const tile = tileFromId(id)
       const layerId = `atlas-tile-${tile.x}-${tile.y}`
       if (map.getLayer(layerId)) {
@@ -1519,7 +1523,7 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
       const startedAt = performance.now()
       const duration = 1200
       const fade = now => {
-        const progress = Math.min(1, (now - startedAt) / duration)
+        const progress = clampUnit((now - startedAt) / duration)
         const eased = 1 - (1 - progress) ** 3
         revealedLayerIds.forEach(layerId => {
           if (map.getLayer(layerId)) {
