@@ -1,23 +1,5 @@
 import { atlasScenes } from './atlas-scenes.ts'
-
-const atlasZoom = 18
-
-const tileBounds = tile => {
-  const zoom = tile.zoom ?? atlasZoom
-  const tileCount = 2 ** zoom
-  const longitude = x => (x / tileCount) * 360 - 180
-  const latitude = y => {
-    const radians = Math.PI - (2 * Math.PI * y) / tileCount
-    return (180 / Math.PI) * Math.atan(Math.sinh(radians))
-  }
-
-  return {
-    west: longitude(tile.x),
-    north: latitude(tile.y),
-    east: longitude(tile.x + 1),
-    south: latitude(tile.y + 1),
-  }
-}
+import { tileBounds } from './tile-geometry.ts'
 
 const titleCase = value =>
   value

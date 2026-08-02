@@ -1,22 +1,7 @@
+import { tilePolygon } from './tile-geometry.ts'
+
 const diagnosticSourceId = 'cached-tile-diagnostic'
 const diagnosticLayerId = 'cached-tile-diagnostic-boundary'
-
-const tileBounds = (zoom, x, y) => {
-  const tileCount = 2 ** zoom
-  const longitude = tileX => (tileX / tileCount) * 360 - 180
-  const latitude = tileY => {
-    const radians = Math.PI - (2 * Math.PI * tileY) / tileCount
-    return (180 / Math.PI) * Math.atan(Math.sinh(radians))
-  }
-
-  return [
-    [longitude(x), latitude(y)],
-    [longitude(x + 1), latitude(y)],
-    [longitude(x + 1), latitude(y + 1)],
-    [longitude(x), latitude(y + 1)],
-    [longitude(x), latitude(y)],
-  ]
-}
 
 export const installCachedTileDiagnostic = async map => {
   try {
@@ -35,7 +20,7 @@ export const installCachedTileDiagnostic = async map => {
       properties: {},
       geometry: {
         type: 'Polygon',
-        coordinates: [tileBounds(tile.zoom, tile.x, tile.y)],
+        coordinates: [tilePolygon(tile)],
       },
     }))
 

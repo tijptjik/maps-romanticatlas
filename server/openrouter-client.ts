@@ -1,10 +1,6 @@
-const openrouterApiUrl = 'https://openrouter.ai/api/v1/chat/completions'
+import { parseImageDataUrl } from './image-data-url.ts'
 
-const parseDataUrl = dataUrl => {
-  const match = dataUrl.match(/^data:(image\/[\w.+-]+);base64,(.+)$/s)
-  if (!match) throw new Error('OpenRouter returned an invalid image data URL.')
-  return { contentType: match[1], data: Buffer.from(match[2], 'base64') }
-}
+const openrouterApiUrl = 'https://openrouter.ai/api/v1/chat/completions'
 
 const findImageUrl = message => {
   const imagePart = message?.images?.find(part => part.image_url?.url)
@@ -49,7 +45,7 @@ export const createOpenRouterClient = ({
     const result = await response.json()
     const imageUrl = findImageUrl(result.choices?.[0]?.message)
     if (!imageUrl) throw new Error('OpenRouter returned no image for the requested prompt.')
-    return parseDataUrl(imageUrl)
+    return parseImageDataUrl(imageUrl, 'OpenRouter returned an invalid image data URL.')
   }
 
   return {
