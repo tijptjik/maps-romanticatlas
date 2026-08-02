@@ -4,6 +4,7 @@ import { installAtlasTileInteractions } from './atlas-tiles.ts'
 import { installCachedTileAdmin } from './cached-tile-admin.ts'
 import { installCachedTileDiagnostic } from './cached-tile-diagnostic.ts'
 import { createIntroSplash } from './intro-splash.ts'
+import { installArtistStatement } from './artist-statement.ts'
 import { hongKongStyle } from './map-style.ts'
 import './style.css'
 
@@ -33,6 +34,7 @@ const map = new maplibregl.Map({
 })
 
 const intro = createIntroSplash(map.getContainer())
+installArtistStatement(map.getContainer())
 const idleDelay = 180_000
 let idleTimer: number | undefined
 let resetAtlas: (() => Promise<void>) | undefined
@@ -65,6 +67,18 @@ window.addEventListener('pointerdown', () => noteActivity(true), { passive: true
 window.addEventListener('pointermove', () => noteActivity(), { passive: true })
 window.addEventListener('wheel', () => noteActivity(), { passive: true })
 window.addEventListener('touchstart', () => noteActivity(true), { passive: true })
+window.addEventListener(
+  'keydown',
+  event => {
+    if (event.ctrlKey && !event.altKey && event.key.toLowerCase() === 'm') {
+      event.preventDefault()
+      event.stopPropagation()
+      intro.show()
+      noteActivity()
+    }
+  },
+  { capture: true },
+)
 window.addEventListener('keydown', () => noteActivity())
 
 const collapseAttribution = () => {

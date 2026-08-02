@@ -7,6 +7,11 @@ const minimumFogZoom = 15
 const landTargetThreshold = 0.75
 const landSampleSize = 10
 const waterLayerIds = ['water', 'water_stream', 'water_river']
+const fogRadiusDuration = 180_000
+const generatedRevealDuration = 1400
+const generatedTileOpacity = 0.94
+const fogPokeDuration = 900
+const fogPokeExpansion = 0.1
 
 const tileId = ({ x, y }) => `${atlasZoom}/${x}/${y}`
 const tileFromId = id => {
@@ -88,6 +93,15 @@ const waitForRender = map => new Promise(resolve => map.once('render', resolve))
 const seeded = value => {
   const noise = Math.sin(value * 12.9898) * 43758.5453
   return noise - Math.floor(noise)
+}
+
+// Choose the opening concept once at map initialization, then walk the full
+// collection in order so a loading sequence never repeats early.
+let loadingConceptCursor = Math.floor(Math.random() * loadingConcepts.length)
+const nextLoadingConcept = () => {
+  const concept = loadingConcepts[loadingConceptCursor]
+  loadingConceptCursor = (loadingConceptCursor + 1) % loadingConcepts.length
+  return concept
 }
 
 const hideTextLabels = map => {
@@ -183,7 +197,9 @@ const featureName = feature =>
   `${feature.layer?.id ?? ''} ${feature.sourceLayer ?? ''}`.toLowerCase()
 
 const isWaterFeature = feature =>
-  /water|sea|ocean|bay|strait|fjord|river|stream|canal|reservoir/.test(featureName(feature))
+  /water|sea|ocean|bay|strait|fjord|river|stream|canal|reservoir/.test(
+    featureName(feature),
+  )
 
 const isRoadLineFeature = feature =>
   feature.layer?.type === 'line' &&
@@ -200,15 +216,19 @@ const isLockedLineFeature = feature =>
 const lockedLineWidth = (feature, purpose) => {
   const name = featureName(feature)
   if (/boundary/.test(name)) return purpose === 'mask' ? 8 : 6
-  if (isRoadLineFeature(feature)) return purpose === 'mask' ? 24 : 18
-  return purpose === 'mask' ? 14 : 10
+  if (isRoadLineFeature(feature)) return purpose === 'mask' ? 40 : 32
+  return purpose === 'mask' ? 18 : 14
 }
 
 const drawGeometry = (
   context,
   geometry,
   project,
-  { fill, stroke, lineWidth }: { fill?: boolean; stroke?: boolean; lineWidth?: number } = {},
+  {
+    fill,
+    stroke,
+    lineWidth,
+  }: { fill?: boolean; stroke?: boolean; lineWidth?: number } = {},
 ) => {
   if (!geometry) return
   const drawLine = coordinates => {
@@ -384,7 +404,15 @@ const fadeTileEdges = async url => {
   return canvas.toDataURL('image/png')
 }
 
-const addGeneratedTile = async (map, tile, url, scene, titleCards, contentBounds) => {
+const addGeneratedTile = async (
+  map,
+  tile,
+  url,
+  scene,
+  titleCards,
+  contentBounds,
+  initialOpacity = 0,
+) => {
   const id = `atlas-tile-${tile.x}-${tile.y}`
   if (map.getLayer(id)) return
   const bounds = tileBounds(tile)
@@ -405,7 +433,7 @@ const addGeneratedTile = async (map, tile, url, scene, titleCards, contentBounds
       type: 'raster',
       source: id,
       paint: {
-        'raster-opacity': 0.94,
+        'raster-opacity': initialOpacity,
         // These are already decoded, finished atlas tiles. Fading them in makes
         // a newly added tile feel like it is drifting behind the map while it
         // catches up with a pan.
@@ -531,14 +559,18 @@ const createFogProgram = gl => {
   return program
 }
 
-const createFogMaskPath = (context, x, y, size, seed) => {
+const createFogMaskPath = (context, x, y, size, seed, radiusScale = 1) => {
   // Let each body reach into its neighbors. The irregular radius keeps the
   // overlap cloud-like instead of making a larger, regular tile grid.
-  const spill = size * 0.14
-  const left = x - spill
-  const top = y - spill * (0.72 + seeded(seed + 1) * 0.42)
-  const width = size + spill * (1.8 + seeded(seed + 2) * 0.35)
-  const height = size + spill * (1.8 + seeded(seed + 3) * 0.35)
+  const scaledSize = size * radiusScale
+  const offset = (size - scaledSize) / 2
+  const scaledX = x + offset
+  const scaledY = y + offset
+  const spill = scaledSize * 0.14
+  const left = scaledX - spill
+  const top = scaledY - spill * (0.72 + seeded(seed + 1) * 0.42)
+  const width = scaledSize + spill * (1.8 + seeded(seed + 2) * 0.35)
+  const height = scaledSize + spill * (1.8 + seeded(seed + 3) * 0.35)
   const points = 16
 
   context.beginPath()
@@ -553,7 +585,7 @@ const createFogMaskPath = (context, x, y, size, seed) => {
   context.closePath()
 }
 
-  const createFogCanvas = (map, tileState, isLandTargetable) => {
+const createFogCanvas = (map, tileState, isLandTargetable) => {
   const canvas = document.createElement('canvas')
   canvas.className = 'atlas-fog'
   canvas.setAttribute('aria-hidden', 'true')
@@ -579,8 +611,10 @@ const createFogMaskPath = (context, x, y, size, seed) => {
   const positionAttribute = program && gl?.getAttribLocation(program, 'a_position')
   const maskUniform = program && gl?.getUniformLocation(program, 'u_mask')
   const timeUniform = program && gl?.getUniformLocation(program, 'u_time')
-  const anchorScreenUniform = program && gl?.getUniformLocation(program, 'u_anchor_screen')
-  const viewportSizeUniform = program && gl?.getUniformLocation(program, 'u_viewport_size')
+  const anchorScreenUniform =
+    program && gl?.getUniformLocation(program, 'u_anchor_screen')
+  const viewportSizeUniform =
+    program && gl?.getUniformLocation(program, 'u_viewport_size')
   const fogAnchor = map.getCenter()
   let clientWidth = 0
   let clientHeight = 0
@@ -594,6 +628,10 @@ const createFogMaskPath = (context, x, y, size, seed) => {
   let previousFrameTime: number | undefined
   const fogFrameInterval = 1000 / 60
   const maskFrameInterval = 1000 / 60
+  const loadingSequences = new Map()
+  const generatingStartedAt = new Map()
+  const revealStartedAt = new Map()
+  const pokedAt = new Map()
 
   if (gl && positionBuffer) {
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
@@ -657,24 +695,44 @@ const createFogMaskPath = (context, x, y, size, seed) => {
     const seed = tile.x * 0.47 + tile.y * 0.91
     const x = northWest.x
     const y = northWest.y
+    const id = tileId(tile)
+    const pokeProgress = pokedAt.has(id)
+      ? Math.min(1, (time - pokedAt.get(id)) / fogPokeDuration)
+      : 1
+    const pokeScale = 1 + Math.sin(Math.PI * pokeProgress) * fogPokeExpansion
+    const generationProgress = generatingStartedAt.has(id)
+      ? Math.min(1, (time - generatingStartedAt.get(id)) / fogRadiusDuration)
+      : 0
+    const baseRadiusScale =
+      state === 'generating'
+        ? 1 - generationProgress * 0.34
+        : state === 'revealing'
+          ? 0.66
+          : 1
+    const radiusScale = baseRadiusScale * pokeScale
+    const revealProgress = revealStartedAt.has(id)
+      ? Math.min(1, (time - revealStartedAt.get(id)) / generatedRevealDuration)
+      : 0
 
     maskContext.save()
     if (state === 'checking') {
       const pulse = (Math.sin(time / 180 + seed) + 1) / 2
       maskContext.globalAlpha = 0.42 + pulse * 0.48
+    } else if (state === 'revealing') {
+      maskContext.globalAlpha = 1 - revealProgress
     } else {
       maskContext.globalAlpha = state === 'generating' ? 1 : 0.96
     }
     maskContext.filter = `blur(${Math.max(3, size * 0.04)}px)`
     maskContext.fillStyle = '#ffffff'
-    createFogMaskPath(maskContext, x, y, size, seed)
+    createFogMaskPath(maskContext, x, y, size, seed, radiusScale)
     maskContext.fill()
     maskContext.restore()
 
     // A broad, offset cloud merges nearby bodies into amorphous shapes instead
     // of leaving the deterministic fogged-tile pattern visible.
     maskContext.save()
-    maskContext.globalAlpha = 0.2
+    maskContext.globalAlpha = 0.2 * (state === 'revealing' ? 1 - revealProgress : 1)
     maskContext.filter = `blur(${Math.max(7, size * 0.12)}px)`
     maskContext.fillStyle = '#ffffff'
     createFogMaskPath(
@@ -683,12 +741,289 @@ const createFogMaskPath = (context, x, y, size, seed) => {
       y + (seeded(seed + 8) - 0.5) * size * 0.28,
       size * (1.18 + seeded(seed + 9) * 0.16),
       seed + 19,
+      radiusScale,
     )
     maskContext.fill()
     maskContext.restore()
   }
 
-  const wrapText = (context, text, maxWidth) => {
+  const easeOutCubic = progress => 1 - (1 - progress) ** 3
+
+  const getWordDurations = (words, baselineDuration) =>
+    words.map(word => {
+      const characterCount = word.replace(/[^\p{L}\p{N}]/gu, '').length
+      const lengthAdjustment = (characterCount - 6) * 45
+      return Math.max(
+        baselineDuration * 0.75,
+        Math.min(baselineDuration * 1.5, baselineDuration + lengthAdjustment),
+      )
+    })
+
+  const getLoadingTiming = (concept, size) => {
+    const questionWords = concept.question.split(/\s+/)
+    const quoteWords = concept.quote.split(/\s+/).map((word, index, words) => {
+      const opening = index === 0 ? '“' : ''
+      const closing = index === words.length - 1 ? '”' : ''
+      return `${opening}${word}${closing}`
+    })
+    const baselineWordDuration = Math.max(610, Math.min(850, size * 3.57))
+    const questionDurations = getWordDurations(questionWords, baselineWordDuration)
+    const quoteDurations = getWordDurations(quoteWords, baselineWordDuration)
+    const questionDuration = questionDurations.reduce(
+      (total, duration) => total + duration,
+      0,
+    )
+    const quoteDuration = quoteDurations.reduce(
+      (total, duration) => total + duration,
+      0,
+    )
+    const titleInDuration = 1530
+    const titleHoldDuration = 1785
+    const questionStart = titleInDuration + titleHoldDuration
+    const questionEnd = questionStart + questionDuration
+    const questionLastWordHold = 1800
+    const questionQuotePause = 1800
+    const quoteStart = questionEnd + questionLastWordHold + questionQuotePause
+    const quoteEnd = quoteStart + quoteDuration
+    const creditStart = quoteEnd + 1000
+    const creditDuration = 2200
+
+    return {
+      questionWords,
+      quoteWords,
+      questionDurations,
+      quoteDurations,
+      titleInDuration,
+      questionStart,
+      questionEnd,
+      questionLastWordHold,
+      quoteStart,
+      creditStart,
+      creditDuration,
+      cycleDuration: creditStart + creditDuration + 1400,
+    }
+  }
+
+  const drawLoadingText = time => {
+    if (!loadingContext) return
+    const ratio = canvas.width / Math.max(1, clientWidth)
+    loadingContext.setTransform(ratio, 0, 0, ratio, 0, 0)
+    loadingContext.clearRect(0, 0, clientWidth, clientHeight)
+    tileState.forEach((state, id) => {
+      if (state !== 'generating') {
+        loadingSequences.delete(id)
+        generatingStartedAt.delete(id)
+        return
+      }
+      if (!loadingSequences.has(id)) {
+        loadingSequences.set(id, { concept: nextLoadingConcept(), startedAt: time })
+      }
+      if (!generatingStartedAt.has(id)) generatingStartedAt.set(id, time)
+
+      const tile = tileFromId(id)
+      const bounds = tileBounds(tile)
+      const northWest = map.project([bounds.west, bounds.north])
+      const southEast = map.project([bounds.east, bounds.south])
+      const size = southEast.x - northWest.x
+      const sequence = loadingSequences.get(id)
+      let concept = sequence.concept
+      let elapsed = time - sequence.startedAt
+      let timing = getLoadingTiming(concept, size)
+      while (elapsed >= timing.cycleDuration) {
+        sequence.concept = nextLoadingConcept()
+        sequence.startedAt += timing.cycleDuration
+        concept = sequence.concept
+        elapsed = time - sequence.startedAt
+        timing = getLoadingTiming(concept, size)
+      }
+      const centerX = northWest.x + size / 2
+      const centerY = northWest.y + size / 2
+      const textWidth = size * 0.86
+      const titleSize = Math.max(14, Math.min(30, size * 0.12))
+      const questionSize = Math.max(12, Math.min(23, size * 0.09))
+      const quoteSize = Math.max(11, Math.min(20, size * 0.075))
+      const titleProgress = Math.min(1, elapsed / timing.titleInDuration)
+      const titleEase = easeOutCubic(titleProgress)
+      const titleLines = wrapTextForWidth(
+        loadingContext,
+        concept.title,
+        textWidth,
+        titleSize,
+      )
+      const titleLineHeight = titleSize * 0.98
+      const titleTop =
+        centerY - ((titleLines.length - 1) * titleLineHeight) / 2 - size * 0.2
+      const titleBottom =
+        titleTop + (titleLines.length - 1) * titleLineHeight + titleSize * 0.55
+      const wordLimitY = titleBottom + size * 0.08
+      const questionBaseline = centerY + size * 0.22
+      const quoteBaseline = centerY + size * 0.22
+
+      const drawCenteredLine = (
+        text,
+        y,
+        font,
+        color,
+        alpha,
+        transform = null,
+        x = centerX,
+      ) => {
+        loadingContext.save()
+        loadingContext.globalAlpha = alpha
+        loadingContext.font = font
+        loadingContext.textAlign = 'center'
+        loadingContext.textBaseline = 'middle'
+        loadingContext.fillStyle = color
+        loadingContext.shadowColor = 'rgba(248, 237, 207, 0.75)'
+        loadingContext.shadowBlur = Math.max(2, size * 0.025)
+        if (transform) {
+          loadingContext.translate(x, y)
+          loadingContext.scale(transform.scale, transform.scale)
+          loadingContext.translate(-x, -y)
+        }
+        loadingContext.fillText(text, x, y)
+        loadingContext.restore()
+      }
+
+      const drawWordStream = (
+        words,
+        durations,
+        phase,
+        fontSize,
+        color,
+        baseline,
+        lingerDuration = 0,
+      ) => {
+        const wordSequenceDuration = durations.reduce(
+          (total, duration) => total + duration,
+          0,
+        )
+        const isLingering = phase >= wordSequenceDuration
+        if (isLingering && phase >= wordSequenceDuration + lingerDuration) return
+        let currentWordIndex = 0
+        let wordElapsed = phase
+        if (isLingering) {
+          currentWordIndex = words.length - 1
+        } else {
+          while (
+            currentWordIndex < durations.length - 1 &&
+            wordElapsed >= durations[currentWordIndex]
+          ) {
+            wordElapsed -= durations[currentWordIndex]
+            currentWordIndex += 1
+          }
+        }
+        const streamPosition = isLingering
+          ? words.length - 1
+          : currentWordIndex + wordElapsed / durations[currentWordIndex]
+        const lineHeight = Math.max(fontSize * 1.12, size * 0.11)
+        const firstVisibleWord = isLingering
+          ? currentWordIndex
+          : Math.max(0, currentWordIndex - 2)
+        const lingerProgress = isLingering
+          ? easeOutCubic(Math.min(1, (phase - wordSequenceDuration) / 500))
+          : 0
+        const streamBaseline = isLingering
+          ? baseline + (centerY - baseline) * lingerProgress
+          : baseline
+
+        for (
+          let wordIndex = firstVisibleWord;
+          wordIndex <= currentWordIndex;
+          wordIndex += 1
+        ) {
+          const distance = streamPosition - wordIndex
+          const isCurrentWord = wordIndex === currentWordIndex
+          const progress = isCurrentWord && !isLingering ? distance : 1
+          const word = words[wordIndex]
+          loadingContext.font = `600 italic ${fontSize}px 'Cormorant Garamond', Georgia, serif`
+          const fittedSize = Math.min(
+            fontSize,
+            (textWidth / Math.max(1, loadingContext.measureText(word).width)) *
+              fontSize,
+          )
+          const fadeIn = isCurrentWord
+            ? easeOutCubic(Math.min(1, progress / 0.55))
+            : 0.84 + Math.min(0.1, (2 - distance) * 0.08)
+          const scale = isCurrentWord ? 0.84 + easeOutCubic(progress) * 0.16 : 1
+          const wavePhase = time / 1100 + wordIndex * 1.7 + distance * 2.4
+          const floatX = Math.sin(wavePhase) * size * 0.035
+          const floatY = Math.cos(wavePhase * 0.72) * size * 0.012
+          const wordY = streamBaseline - distance * lineHeight + floatY
+          if (wordY - fittedSize * 0.58 < wordLimitY) continue
+          drawCenteredLine(
+            word,
+            wordY,
+            `600 italic ${fittedSize}px 'Cormorant Garamond', Georgia, serif`,
+            color,
+            fadeIn,
+            { scale },
+            centerX + floatX,
+          )
+        }
+      }
+
+      loadingContext.save()
+      loadingContext.textAlign = 'center'
+      loadingContext.textBaseline = 'middle'
+      titleLines.forEach((line, index) => {
+        const y = titleTop + index * titleLineHeight
+        drawCenteredLine(
+          line,
+          y,
+          `700 ${titleSize}px 'IM Fell English SC', Georgia, serif`,
+          '#3b2518',
+          0.9 * titleEase,
+          { scale: 0.84 + titleEase * 0.16 },
+        )
+      })
+
+      if (elapsed >= timing.questionStart && elapsed < timing.quoteStart) {
+        drawWordStream(
+          timing.questionWords,
+          timing.questionDurations,
+          elapsed - timing.questionStart,
+          questionSize,
+          '#6e4d3b',
+          questionBaseline,
+          timing.questionLastWordHold,
+        )
+      } else if (elapsed >= timing.quoteStart && elapsed < timing.creditStart) {
+        drawWordStream(
+          timing.quoteWords,
+          timing.quoteDurations,
+          elapsed - timing.quoteStart,
+          quoteSize,
+          '#594435',
+          quoteBaseline,
+        )
+      } else if (
+        elapsed >= timing.creditStart &&
+        elapsed < timing.creditStart + timing.creditDuration
+      ) {
+        const creditProgress = (elapsed - timing.creditStart) / timing.creditDuration
+        const creditEase = easeOutCubic(Math.min(1, creditProgress / 0.4))
+        drawCenteredLine(
+          `— ${concept.author}`,
+          centerY + size * 0.03,
+          `600 ${Math.max(10, quoteSize * 0.88)}px 'Cormorant Garamond', Georgia, serif`,
+          '#a86f5b',
+          creditEase,
+        )
+        drawCenteredLine(
+          concept.work,
+          centerY + size * 0.17,
+          `italic ${Math.max(9, quoteSize * 0.84)}px 'Cormorant Garamond', Georgia, serif`,
+          '#a86f5b',
+          creditEase * 0.85,
+        )
+      }
+      loadingContext.restore()
+    })
+  }
+
+  const wrapTextForWidth = (context, text, maxWidth, fontSize) => {
+    context.font = `700 ${fontSize}px 'IM Fell English SC', Georgia, serif`
     const words = text.split(' ')
     const lines = []
     let line = ''
@@ -702,105 +1037,7 @@ const createFogMaskPath = (context, x, y, size, seed) => {
       }
     })
     if (line) lines.push(line)
-    return lines
-  }
-
-  const drawLoadingText = time => {
-    if (!loadingContext) return
-    const ratio = canvas.width / Math.max(1, clientWidth)
-    loadingContext.setTransform(ratio, 0, 0, ratio, 0, 0)
-    loadingContext.clearRect(0, 0, clientWidth, clientHeight)
-    tileState.forEach((state, id) => {
-      if (state !== 'generating') return
-      const tile = tileFromId(id)
-      const concept =
-        loadingConcepts[
-          Math.floor(seeded(tile.x * 0.47 + tile.y * 0.91) * loadingConcepts.length)
-        ]
-      const bounds = tileBounds(tile)
-      const northWest = map.project([bounds.west, bounds.north])
-      const southEast = map.project([bounds.east, bounds.south])
-      const size = southEast.x - northWest.x
-      const cardWidth = size * 0.84
-      const cardHeight = size * 0.84
-      const left = northWest.x + (size - cardWidth) / 2
-      const top = northWest.y + (size - cardHeight) / 2
-      const padding = Math.max(8, size * 0.075)
-      const pulse = 0.9 + Math.sin(time / 1100 + tile.x * 0.3) * 0.06
-      const titleSize = Math.max(9, Math.min(17, size * 0.075))
-      const questionSize = Math.max(8, Math.min(14, size * 0.057))
-      const quoteSize = Math.max(7, Math.min(12, size * 0.047))
-      const innerWidth = cardWidth - padding * 2
-
-      loadingContext.save()
-      loadingContext.globalAlpha = pulse
-      loadingContext.strokeStyle = `rgba(168, 111, 91, ${0.62 + pulse * 0.18})`
-      loadingContext.lineWidth = Math.max(2, size * 0.018)
-      loadingContext.setLineDash([Math.max(5, size * 0.035), Math.max(3, size * 0.018)])
-      loadingContext.strokeRect(
-        left - padding * 0.42,
-        top - padding * 0.42,
-        cardWidth + padding * 0.84,
-        cardHeight + padding * 0.84,
-      )
-      loadingContext.setLineDash([])
-      loadingContext.shadowColor = 'rgba(52, 34, 22, 0.35)'
-      loadingContext.shadowBlur = Math.max(5, size * 0.05)
-      loadingContext.fillStyle = 'rgba(248, 237, 207, 0.94)'
-      loadingContext.fillRect(left, top, cardWidth, cardHeight)
-      loadingContext.shadowBlur = 0
-      loadingContext.strokeStyle = 'rgba(125, 92, 67, 0.78)'
-      loadingContext.lineWidth = Math.max(1, size * 0.008)
-      loadingContext.strokeRect(left, top, cardWidth, cardHeight)
-
-      loadingContext.fillStyle = '#a86f5b'
-      loadingContext.font = `700 ${Math.max(7, size * 0.035)}px Arial, sans-serif`
-      loadingContext.fillText(
-        `${size < 150 ? 'LOOKUP ACTIVE' : 'LOOKING UP THIS TILE'} · ${String(loadingConcepts.indexOf(concept) + 1).padStart(2, '0')}/24`,
-        left + padding,
-        top + padding + Math.max(7, size * 0.035),
-      )
-
-      let cursorY = top + padding + Math.max(7, size * 0.035) + titleSize * 1.5
-      loadingContext.fillStyle = '#3b2518'
-      loadingContext.font = `700 ${titleSize}px Georgia, serif`
-      wrapText(loadingContext, concept.title, innerWidth)
-        .slice(0, 2)
-        .forEach(line => {
-          loadingContext.fillText(line, left + padding, cursorY)
-          cursorY += titleSize * 1.05
-        })
-
-      cursorY += questionSize * 0.3
-      loadingContext.fillStyle = '#6e4d3b'
-      loadingContext.font = `italic ${questionSize}px Georgia, serif`
-      wrapText(loadingContext, concept.question, innerWidth)
-        .slice(0, 3)
-        .forEach(line => {
-          loadingContext.fillText(line, left + padding, cursorY)
-          cursorY += questionSize * 1.12
-        })
-
-      cursorY += quoteSize * 0.45
-      loadingContext.fillStyle = '#594435'
-      loadingContext.font = `italic ${quoteSize}px Georgia, serif`
-      wrapText(loadingContext, `“${concept.quote}”`, innerWidth)
-        .slice(0, 3)
-        .forEach(line => {
-          loadingContext.fillText(line, left + padding, cursorY)
-          cursorY += quoteSize * 1.08
-        })
-
-      loadingContext.fillStyle = '#a86f5b'
-      loadingContext.font = `600 ${Math.max(7, quoteSize * 0.82)}px Arial, sans-serif`
-      wrapText(loadingContext, `— ${concept.author}, ${concept.work}`, innerWidth)
-        .slice(0, 2)
-        .forEach(line => {
-          loadingContext.fillText(line, left + padding, cursorY + quoteSize * 0.25)
-          cursorY += quoteSize * 0.9
-        })
-      loadingContext.restore()
-    })
+    return lines.slice(0, 2)
   }
 
   const renderMask = time => {
@@ -815,6 +1052,12 @@ const createFogMaskPath = (context, x, y, size, seed) => {
     maskContext.clearRect(0, 0, clientWidth, clientHeight)
     visibleFogTiles(map).forEach(tile => {
       const state = tileState.get(tileId(tile))
+      if (state === 'generating' && !generatingStartedAt.has(tileId(tile))) {
+        generatingStartedAt.set(tileId(tile), time)
+      }
+      if (state !== 'checking' && state !== 'generating' && state !== 'revealing') {
+        pokedAt.delete(tileId(tile))
+      }
       if (!isLandTargetable(tile) || !isFogged(tile) || state === 'generated') return
       drawFogMask(tile, state, time)
     })
@@ -843,8 +1086,10 @@ const createFogMaskPath = (context, x, y, size, seed) => {
       return
     }
     lastFogFrame = time
-    const fogIsChecking = [...tileState.values()].some(state => state === 'checking')
-    if ((maskDirty || fogIsChecking) && !maskFrame) renderMask(time)
+    const fogIsActive = [...tileState.values()].some(
+      state => state === 'checking' || state === 'generating' || state === 'revealing',
+    )
+    if ((maskDirty || fogIsActive) && !maskFrame) renderMask(time)
     if (gl && program && positionBuffer && maskTexture) {
       gl.clearColor(0, 0, 0, 0)
       gl.clear(gl.COLOR_BUFFER_BIT)
@@ -875,12 +1120,29 @@ const createFogMaskPath = (context, x, y, size, seed) => {
   animationFrame = requestAnimationFrame(render)
   return {
     invalidate,
+    poke: id => {
+      pokedAt.set(id, performance.now())
+    },
+    beginReveal: id => {
+      revealStartedAt.set(id, performance.now())
+    },
+    finishReveal: id => {
+      revealStartedAt.delete(id)
+      pokedAt.delete(id)
+    },
+    cancelReveal: id => {
+      revealStartedAt.delete(id)
+      pokedAt.delete(id)
+    },
     destroy: () => {
       mapEvents.forEach(eventName => {
         map.off(eventName, invalidate)
       })
       if (animationFrame) cancelAnimationFrame(animationFrame)
       if (maskFrame) cancelAnimationFrame(maskFrame)
+      generatingStartedAt.clear()
+      revealStartedAt.clear()
+      pokedAt.clear()
       canvas.remove()
       loadingCanvas.remove()
     },
@@ -894,9 +1156,7 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
   const titleCards = new Map()
   const isAdminMode = () => map.getContainer().classList.contains('atlas-admin-mode')
   const mapDataIsReady = () =>
-    map.isStyleLoaded() &&
-    map.isSourceLoaded('hongkong-latest') &&
-    map.areTilesLoaded()
+    map.isStyleLoaded() && map.isSourceLoaded('hongkong-latest') && map.areTilesLoaded()
 
   const isLandTargetable = tile => {
     const id = tileId(tile)
@@ -912,6 +1172,49 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
   }
 
   const fog = createFogCanvas(map, tileState, isLandTargetable)
+  const revealGeneratedTile = id => {
+    tileState.set(id, 'revealing')
+    generatedTileIds.add(id)
+    fog.beginReveal(id)
+
+    const titleCard = titleCards.get(id)?.card
+    if (titleCard) {
+      titleCard.style.opacity = '0'
+      titleCard.style.transform = 'rotate(-1.2deg) translateY(0.4rem) scale(0.96)'
+    }
+
+    const startedAt = performance.now()
+    const reveal = time => {
+      if (tileState.get(id) !== 'revealing') return
+      const progress = Math.min(1, (time - startedAt) / generatedRevealDuration)
+      const tile = tileFromId(id)
+      const layerId = `atlas-tile-${tile.x}-${tile.y}`
+      if (map.getLayer(layerId)) {
+        map.setPaintProperty(layerId, 'raster-opacity', generatedTileOpacity * progress)
+      }
+      if (titleCard) {
+        titleCard.style.opacity = `${progress}`
+        titleCard.style.transform =
+          `rotate(-1.2deg) translateY(${(1 - progress) * 0.4}rem) ` +
+          `scale(${0.96 + progress * 0.04})`
+      }
+      fog.invalidate()
+
+      if (progress < 1) {
+        requestAnimationFrame(reveal)
+        return
+      }
+
+      tileState.set(id, 'generated')
+      if (titleCard) {
+        titleCard.style.opacity = ''
+        titleCard.style.transform = ''
+      }
+      fog.finishReveal(id)
+      fog.invalidate()
+    }
+    requestAnimationFrame(reveal)
+  }
   const positionTitleCards = () => {
     titleCards.forEach(({ card, tile, contentBounds }) => {
       positionAtlasTitleCard(map, card, tile, contentBounds)
@@ -937,12 +1240,15 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
     const body = await response.json().catch(() => null)
     if (!response.ok) {
       throw new Error(
-        body?.error ?? `The atlas-tile cache lookup failed with HTTP ${response.status}.`,
+        body?.error ??
+          `The atlas-tile cache lookup failed with HTTP ${response.status}.`,
       )
     }
     if (body?.cached !== true) return null
     if (typeof body.url !== 'string' || !body.url || typeof body.scene !== 'string') {
-      throw new Error('The atlas-tile cache lookup returned an invalid cached image URL.')
+      throw new Error(
+        'The atlas-tile cache lookup returned an invalid cached image URL.',
+      )
     }
     return { url: body.url, scene: body.scene, contentBounds: body.contentBounds }
   }
@@ -958,7 +1264,8 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
       isLandTargetable(tile) &&
       isFogged(tile) &&
       isFullyVisible(map, tile) &&
-      tileState.get(tileId(tile)) !== 'generated'
+      tileState.get(tileId(tile)) !== 'generated' &&
+      tileState.get(tileId(tile)) !== 'revealing'
         ? 'pointer'
         : ''
   })
@@ -974,10 +1281,12 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
       !isFullyVisible(map, tile) ||
       tileState.get(id) === 'checking' ||
       tileState.get(id) === 'generating' ||
+      tileState.get(id) === 'revealing' ||
       tileState.get(id) === 'generated'
     )
       return
     tileState.set(id, 'checking')
+    fog.poke(id)
     fog.invalidate()
     const startedAt = performance.now()
     try {
@@ -991,10 +1300,10 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
           titleCards,
           cachedUrl.contentBounds,
         )
-        tileState.set(id, 'generated')
-        generatedTileIds.add(id)
-        fog.invalidate()
-        console.info(`[atlas] ${id} loaded from cache in ${Math.round(performance.now() - startedAt)}ms`)
+        revealGeneratedTile(id)
+        console.info(
+          `[atlas] ${id} loaded from cache in ${Math.round(performance.now() - startedAt)}ms`,
+        )
         return
       }
 
@@ -1050,11 +1359,9 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
         titleCards,
         body.contentBounds,
       )
-      tileState.set(id, 'generated')
-      generatedTileIds.add(id)
-      fog.invalidate()
+      revealGeneratedTile(id)
       console.info(
-          `[atlas] ${id} ready in ${Math.round(performance.now() - startedAt)}ms ` +
+        `[atlas] ${id} ready in ${Math.round(performance.now() - startedAt)}ms ` +
           `(capture ${Math.round(capturedAt - startedAt)}ms, full-tile safe-zone mask, ` +
           `generation ${Math.round(generatedAt - capturedAt)}ms, ` +
           `display ${Math.round(performance.now() - generatedAt)}ms)`,
@@ -1081,6 +1388,7 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
     // Put the fog back over the artwork before the artwork fades away. This
     // makes the reset read as the city disappearing into mist, not as a hard cut.
     generatedTileIds.forEach(id => {
+      fog.cancelReveal(id)
       tileState.set(id, 'resetting')
     })
     fog.invalidate()

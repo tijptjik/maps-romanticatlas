@@ -13,7 +13,7 @@ const cacheDirectory = path.join(rootDirectory, 'generated-tiles')
 const productionDirectory = path.join(rootDirectory, 'dist')
 const atlasZoom = 18
 const atlasTileSize = 512
-const generationVersion = 3
+const generationVersion = 4
 const isProduction = process.env.NODE_ENV === 'production'
 const isAdminModeEnabled = process.env.ATLAS_ADMIN_MODE === 'true'
 const localOriginPattern = /^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/
@@ -66,6 +66,15 @@ const composeTileImage = async (sourceImage, generatedImage, safeMask, lineOverl
     .blur(10)
     .raw()
     .toBuffer()
+  const lockedLineAlpha = await sharp(overlay.data)
+    .ensureAlpha()
+    .extractChannel(3)
+    .resize(atlasTileSize, atlasTileSize, { fit: 'fill' })
+    .raw()
+    .toBuffer()
+  for (let index = 0; index < alpha.length; index += 1) {
+    if (lockedLineAlpha[index] > 0) alpha[index] = 0
+  }
   const maskedGenerated = await sharp(generated)
     .flatten({ background: '#000000' })
     .resize(atlasTileSize, atlasTileSize, { fit: 'fill' })
