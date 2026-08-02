@@ -20,9 +20,12 @@ export const createOpenRouterClient = ({
     throw new Error('Missing OPENROUTER_API_KEY. Set it in the server environment before generating images.')
   }
 
-  const requestImage = async (prompt, sourceImage) => {
+  const requestImage = async (prompt, sourceImage, referenceImages = []) => {
     const content: Array<Record<string, string | Record<string, string>>> = [{ type: 'text', text: prompt }]
     if (sourceImage) content.push({ type: 'image_url', image_url: { url: sourceImage } })
+    referenceImages.forEach(image => {
+      content.push({ type: 'image_url', image_url: { url: image } })
+    })
 
     const response = await fetch(openrouterApiUrl, {
       method: 'POST',
@@ -51,6 +54,7 @@ export const createOpenRouterClient = ({
 
   return {
     generateImage: ({ prompt }) => requestImage(prompt, undefined),
-    editImage: ({ prompt, sourceImage }) => requestImage(prompt, sourceImage),
+    editImage: ({ prompt, sourceImage, referenceImages }) =>
+      requestImage(prompt, sourceImage, referenceImages),
   }
 }

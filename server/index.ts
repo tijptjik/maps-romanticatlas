@@ -13,6 +13,7 @@ const cacheDirectory = path.join(rootDirectory, 'generated-tiles')
 const productionDirectory = path.join(rootDirectory, 'dist')
 const atlasZoom = 18
 const atlasTileSize = 512
+const generationVersion = 2
 const isProduction = process.env.NODE_ENV === 'production'
 const isAdminModeEnabled = process.env.ATLAS_ADMIN_MODE === 'true'
 const localOriginPattern = /^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/
@@ -38,8 +39,8 @@ const readRequestBody = async request => {
 
   for await (const chunk of request) {
     size += chunk.length
-    if (size > 4_000_000) {
-      throw new Error('The tile source image is too large.')
+    if (size > 12_000_000) {
+      throw new Error('The tile generation payload is too large.')
     }
     chunks.push(chunk)
   }
@@ -53,49 +54,32 @@ const parseImageDataUrl = dataUrl => {
   return { contentType: match[1], data: Buffer.from(match[2], 'base64') }
 }
 
-const imageDataUrl = (contentType, data) =>
-  `data:${contentType};base64,${data.toString('base64')}`
-
-const normalizeGenerationBounds = value => {
-  const x = Number(value?.x)
-  const y = Number(value?.y)
-  const width = Number(value?.width)
-  const height = Number(value?.height)
-  if (![x, y, width, height].every(Number.isFinite)) {
-    return { x: 0, y: 0, width: atlasTileSize, height: atlasTileSize }
-  }
-
-  const left = Math.max(0, Math.min(atlasTileSize - 1, Math.floor(x)))
-  const top = Math.max(0, Math.min(atlasTileSize - 1, Math.floor(y)))
-  const right = Math.max(left + 1, Math.min(atlasTileSize, Math.ceil(x + width)))
-  const bottom = Math.max(top + 1, Math.min(atlasTileSize, Math.ceil(y + height)))
-  return { x: left, y: top, width: right - left, height: bottom - top }
-}
-
-const cropSourceImage = async (sourceImage, bounds) => {
-  const source = parseImageDataUrl(sourceImage)
-  const crop = await sharp(source.data)
-    .extract({
-      left: bounds.x,
-      top: bounds.y,
-      width: bounds.width,
-      height: bounds.height,
-    })
-    .png()
-    .toBuffer()
-  return imageDataUrl('image/png', crop)
-}
-
-const composeTileImage = async (sourceImage, generatedImage, bounds) => {
+const composeTileImage = async (sourceImage, generatedImage, safeMask, lineOverlay) => {
   const source = parseImageDataUrl(sourceImage)
   const generated = generatedImage.data
-  const resizedGenerated = await sharp(generated)
-    .resize(bounds.width, bounds.height, { fit: 'fill' })
+  const mask = parseImageDataUrl(safeMask)
+  const overlay = parseImageDataUrl(lineOverlay)
+  const alpha = await sharp(mask.data)
+    .resize(atlasTileSize, atlasTileSize, { fit: 'fill' })
+    .flatten({ background: '#000000' })
+    .greyscale()
+    .blur(10)
+    .raw()
+    .toBuffer()
+  const maskedGenerated = await sharp(generated)
+    .resize(atlasTileSize, atlasTileSize, { fit: 'fill' })
+    .removeAlpha()
+    .joinChannel(alpha, {
+      raw: { width: atlasTileSize, height: atlasTileSize, channels: 1 },
+    })
     .png()
     .toBuffer()
   const tile = await sharp(source.data)
     .resize(atlasTileSize, atlasTileSize, { fit: 'fill' })
-    .composite([{ input: resizedGenerated, left: bounds.x, top: bounds.y }])
+    .composite([
+      { input: maskedGenerated, left: 0, top: 0 },
+      { input: overlay.data, left: 0, top: 0 },
+    ])
     .png()
     .toBuffer()
   return { contentType: 'image/png', data: tile }
@@ -138,22 +122,33 @@ const tilePaths = tile => {
   const directory = path.join(cacheDirectory, String(tile.zoom), String(tile.x), String(tile.y))
   return {
     directory,
+    image: path.join(directory, `${tile.scene}.v${generationVersion}.image`),
+    metadata: path.join(directory, `${tile.scene}.v${generationVersion}.json`),
+  }
+}
+
+const legacyTilePaths = tile => {
+  const directory = path.join(cacheDirectory, String(tile.zoom), String(tile.x), String(tile.y))
+  return {
+    directory,
     image: path.join(directory, `${tile.scene}.image`),
     metadata: path.join(directory, `${tile.scene}.json`),
   }
 }
 
-const getCachedTile = async tile => {
+const readCachedTile = async (paths) => {
   try {
-    const { image, metadata } = tilePaths(tile)
-    const cached = JSON.parse(await readFile(metadata, 'utf8'))
-    const imageMetadata = await sharp(image).metadata()
+    const cached = JSON.parse(await readFile(paths.metadata, 'utf8'))
+    const imageMetadata = await sharp(paths.image).metadata()
     if (!imageMetadata.width || !imageMetadata.height) return null
-    return cached
+    return { ...cached, paths }
   } catch {
     return null
   }
 }
+
+const getCachedTile = tile => readCachedTile(tilePaths(tile))
+const getLegacyCachedTile = tile => readCachedTile(legacyTilePaths(tile))
 
 const cachedTileUrl = tile =>
   `/generated-tiles/${tile.zoom}/${tile.x}/${tile.y}/${tile.scene}`
@@ -183,12 +178,21 @@ const listCachedTiles = async () => {
         for (const yDirectory of yDirectories) {
           if (!yDirectory.isDirectory() || !/^\d+$/.test(yDirectory.name)) continue
           const y = Number(yDirectory.name)
-          const metadataFiles = await readdir(path.join(cacheDirectory, zoom.name, xDirectory.name, yDirectory.name))
+          const directory = path.join(cacheDirectory, zoom.name, xDirectory.name, yDirectory.name)
+          const metadataFiles = await readdir(directory)
+          const scenes = new Set<string>()
           for (const metadataFile of metadataFiles) {
-            const scene = metadataFile.replace(/\.json$/, '')
+            const currentMatch = metadataFile.match(/^(.+)\.v2\.json$/)
+            const legacyMatch = metadataFile.match(/^(.+)\.json$/)
+            const scene = currentMatch?.[1] ?? legacyMatch?.[1]
+            if (scene) scenes.add(scene)
+          }
+          for (const scene of scenes) {
             const tileCount = 2 ** atlasZoom
-            if (!atlasScenes[scene] || !metadataFile.endsWith('.json') || x >= tileCount || y >= tileCount) continue
-            if (await getCachedTile({ scene, zoom: atlasZoom, x, y })) {
+            if (!atlasScenes[scene] || x >= tileCount || y >= tileCount) continue
+            const tile = { scene, zoom: atlasZoom, x, y }
+            const cached = await getCachedTile(tile) ?? await getLegacyCachedTile(tile)
+            if (cached) {
               cachedTiles.add(JSON.stringify({
                 scene,
                 zoom: atlasZoom,
@@ -208,38 +212,56 @@ const listCachedTiles = async () => {
   return [...cachedTiles].map(entry => JSON.parse(entry))
 }
 
-const atlasPrompt = (scene, hasSea, bounds) => {
+const atlasPrompt = (scene, hasSea) => {
   const seaRule = atlasSeaScenes.has(scene)
     ? hasSea
       ? 'The tile contains visible sea or coastal water; place this sea-side event beside that water and include a small amount of the sea within the tile.'
       : 'This tile does not contain visible sea or coastal water. Do not create the sea-side event; preserve the map unchanged.'
     : ''
 
-  const cropRule = bounds.width < atlasTileSize || bounds.height < atlasTileSize
-    ? 'This image is a crop from a single z18 map tile. Fill this crop with the event while preserving its visible roads, labels, palette, scale, orientation, and cartographic geometry around the event. Do not assume or invent geometry outside this crop.'
-    : 'This image is a complete single z18 map tile. Keep the event strictly contained within the tile.'
-  return `Create ${atlasScenes[scene]} that fits this image leaving a 10% safety margin. ${cropRule} ${atlasColourDirection} The result must be a planimetric, strict overhead view integrated into the map, not a poster or framed illustration. Do not crop, rotate, add a border, or add new text. ${seaRule}`
+  return `Create ${atlasScenes[scene]} across the permitted land in this complete single z18 map tile, leaving a 10% safety margin. The first image is the source map. The second image is a zoning guide: green areas are safe to transform, while red areas are locked and must remain unchanged. Use the guide as an instruction, not as artwork. Preserve the exact tile size, orientation, scale, coastline, water, roads, paths, boundaries, and labels. Do not invent, move, bend, widen, recolour, or erase any locked path or road. Do not add text, shadows, gradients, lighting, borders, frames, or tile-shaped background patches. Use a flat, planimetric, strict overhead view integrated into the existing cartography. ${atlasColourDirection} ${seaRule}`
 }
 
-const generateTile = async (tile, sourceImage, generationBounds) => {
+const normalizeContentBounds = value => {
+  const x = Number(value?.x)
+  const y = Number(value?.y)
+  const width = Number(value?.width)
+  const height = Number(value?.height)
+  if (![x, y, width, height].every(Number.isFinite) || width <= 0 || height <= 0) return null
+
+  const left = Math.max(0, Math.min(atlasTileSize - 1, Math.floor(x)))
+  const top = Math.max(0, Math.min(atlasTileSize - 1, Math.floor(y)))
+  const right = Math.max(left + 1, Math.min(atlasTileSize, Math.ceil(x + width)))
+  const bottom = Math.max(top + 1, Math.min(atlasTileSize, Math.ceil(y + height)))
+  return { x: left, y: top, width: right - left, height: bottom - top }
+}
+
+const generateTile = async (tile, sourceImage, guideImage, safeMask, lineOverlay, contentBounds) => {
   const cached = await findCachedTile(tile)
   if (cached) return cached
 
-  const croppedSourceImage = await cropSourceImage(sourceImage, generationBounds)
   const startedAt = performance.now()
   const generatedImage = await createOpenRouterClient().editImage({
-    prompt: atlasPrompt(tile.scene, tile.hasSea, generationBounds),
-    sourceImage: croppedSourceImage,
+    prompt: atlasPrompt(tile.scene, tile.hasSea),
+    sourceImage,
+    referenceImages: [guideImage],
   })
   const generatedAt = performance.now()
 
   const { directory, image, metadata } = tilePaths(tile)
-  const composedImage = await composeTileImage(sourceImage, generatedImage, generationBounds)
+  const composedImage = await composeTileImage(
+    sourceImage,
+    generatedImage,
+    safeMask,
+    lineOverlay,
+  )
   const contentType = composedImage.contentType
   const cacheEntry = {
     contentType,
+    generationVersion,
     generatedAt: new Date().toISOString(),
-    generationBounds,
+    contentBounds: normalizeContentBounds(contentBounds),
+    mask: 'vector-safe-zones',
     outputSize: { width: atlasTileSize, height: atlasTileSize },
   }
   await mkdir(directory, { recursive: true })
@@ -255,13 +277,13 @@ const generateTile = async (tile, sourceImage, generationBounds) => {
 
 const serveCachedTile = async (request, response, tile) => {
   if (request.method !== 'GET') return false
-  const cached = await getCachedTile(tile)
+  const cached = await getCachedTile(tile) ?? await getLegacyCachedTile(tile)
   if (!cached) {
     sendError(response, 404, 'This atlas tile has not been generated yet.')
     return true
   }
 
-  const image = await readFile(tilePaths(tile).image)
+  const image = await readFile(cached.paths.image)
   response.writeHead(200, {
     'cache-control': 'public, max-age=31536000, immutable',
     'content-type': cached.contentType,
@@ -279,6 +301,8 @@ const serveCacheStatus = async (request, response, tile) => {
   sendJson(response, 200, {
     cached: Boolean(cached),
     url: cached ? cachedTileUrl(cached.tile) : null,
+    scene: cached?.tile.scene ?? null,
+    contentBounds: cached?.contentBounds ?? null,
   })
   return true
 }
@@ -305,13 +329,13 @@ const deleteCachedTile = async (request, response, tile) => {
     return true
   }
 
-  const cached = await getCachedTile(tile)
+  const cached = await getCachedTile(tile) ?? await getLegacyCachedTile(tile)
   if (!cached) {
     sendError(response, 404, 'This atlas tile is not cached.')
     return true
   }
 
-  const { directory, image, metadata } = tilePaths(tile)
+  const { directory, image, metadata } = cached.paths
   await unlink(image)
   await unlink(metadata)
   try {
@@ -328,12 +352,7 @@ const serveAtlasTileRequest = async (request, response, tile) => {
   if (request.method === 'DELETE') return deleteCachedTile(request, response, tile)
 
   if (request.method === 'GET') {
-    const cached = await getCachedTile(tile)
-    if (cached) {
-      await serveCachedTile(request, response, tile)
-    } else {
-      sendError(response, 404, 'This atlas tile has not been generated yet. Click the fogged tile in the map to start generation.')
-    }
+    await serveCachedTile(request, response, tile)
     return true
   }
 
@@ -348,7 +367,7 @@ const generateAtlasTile = async (request, response, tile) => {
   // cached tile never depends on OpenRouter configuration.
   const cached = await findCachedTile(tile)
   if (cached) {
-    sendJson(response, 200, { url: cachedTileUrl(cached.tile) })
+    sendJson(response, 200, { url: cachedTileUrl(cached.tile), scene: cached.tile.scene })
     return true
   }
 
@@ -364,19 +383,29 @@ const generateAtlasTile = async (request, response, tile) => {
     return true
   }
 
-  const { sourceImage, hasSea, generationBounds } = await readRequestBody(request)
+  const { sourceImage, guideImage, safeMask, lineOverlay, contentBounds, hasSea } = await readRequestBody(request)
   if (typeof sourceImage !== 'string' || !sourceImage.startsWith('data:image/')) {
     sendError(response, 400, 'A PNG or JPEG data URL is required as the tile source image.')
     return true
   }
+  if ([guideImage, safeMask, lineOverlay].some(value => typeof value !== 'string' || !value.startsWith('data:image/'))) {
+    sendError(response, 400, 'A guide image, safe-zone mask, and path overlay are required.')
+    return true
+  }
 
-  const normalizedGenerationBounds = normalizeGenerationBounds(generationBounds)
   const generated = await generateTile(
     { ...tile, hasSea: hasSea === true },
     sourceImage,
-    normalizedGenerationBounds,
+    guideImage,
+    safeMask,
+    lineOverlay,
+    contentBounds,
   )
-  sendJson(response, 200, { url: cachedTileUrl(generated.tile) })
+  sendJson(response, 200, {
+    url: cachedTileUrl(generated.tile),
+    scene: generated.tile.scene,
+    contentBounds: generated.contentBounds,
+  })
   return true
 }
 

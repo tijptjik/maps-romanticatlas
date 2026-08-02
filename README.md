@@ -3,29 +3,37 @@
 _A Romantic’s Atlas of Hong Kong_ interrogates what becomes of wonder when no territory
 remains undiscovered.
 
-For centuries, maps held blank spaces: _terra incognita_. These lands unknown were
-fantastical playgrounds where imagination could move ahead of measurement. Their very
-lack of definition invited both seafaring and inward exploration. Spaces where stories,
-desires, uncertainties, and inventions could take shape. Today, satellite imagery,
-LiDAR, and computational mapping impose the inverse condition: a city rendered in
-inescapably meticulous and definitive detail.
+For centuries, maps held blank spaces: _terra incognita_. Lands unknown where
+imagination could move ahead of measurement. Their lack of definition invited both
+seafaring and inward exploration; they were spaces for myth-making and speculation.
+Today, satellite imagery, LiDAR, and computational mapping offer the inverse condition:
+a world rendered in inescapable detail.
 
 Our work reintroduces uncertainty into this mapped reality. Using the cartographic
-commons and frontier generative AI, we construct impossible sites within a familiar Hong
-Kong setting: a circus appears in the ordered fabric of Mong Kok; a balloon festival
-takes flight where ordinarily the ICC stands; and everywhere, fantasy inhabits the
-visual language of infrastructure, parcels, routes, and coordinates. The intervention is
-deliberately subtle. It leans into the map’s contoured authority while quietly refusing
-its claim to completeness… and its final word on what our city is or could be.
+commons and frontier generative AI, we construct impossible sites within familiar Hong
+Kong settings: a circus draws a crowd in the dense fabric of Mong Kok; a balloon
+festival rises where usually towers stand; and fantasy inhabits the visual language of
+infrastructure, routes and parcels. Deliberately subtle, the intervention leans into the
+map’s contoured authority while gently unsettling its claim to be the final word on what
+the city is or can be.
 
-This project embraces technological vision while turning it towards possibility. It
-takes a leviathan of a machine, sustained by vast towers of abstraction, automation, and
-computation, to produce a rendering of the city that appears fixed, exhaustive, and
-unshakeable. Yet imagination holds an unfair advantage. It is fuelled by dreams,
-desires, and aspirations for a better world: an infinitely renewable resource, available
-to all. By allowing the improbable to surface within the measured city, _A Romantic’s
-Atlas of Hong Kong_ proposes that even the most precisely mapped world can remain open
-to revision, wonder, and possibility.
+These quiet acts of imaginative repurposing shape our response to technological
+progress. For some, its march is all boots and no fanfare. We take a generative approach
+to this advance, producing perspectives and critiques from the very playbook that risks
+rendering lived experience into precarity. Under the banners of safety and efficiency,
+even joy can become a resource to be economised from our environment.
+
+Planning and mapping tools organise the physical world through boundaries and
+permissible uses; AI tools increasingly shape civic and mental worlds through attention,
+discourse, and social relations. In both realms, leviathan machines sustained by
+towering abstractions and compute produce a world that appears fatalistic, exhausted,
+and foreclosed. Yet imagination retains an unfair advantage: fuelled by dreams, desires,
+and aspirations for a better world, it remains an infinitely renewable resource
+available to all.
+
+By allowing the improbable to surface within the measured city, _A Romantic’s Atlas_
+proposes that even the most precisely specified realm remains open to surprise,
+possibility, and imagination.
 
 ## Run locally
 
@@ -52,14 +60,27 @@ bun run deploy
 The tiles, fonts, and sprite assets are loaded from their remote services, so the map
 needs an internet connection.
 
+The map opens with a Victorian-circus-style introduction. Click or press a key to enter
+the atlas. After 30 seconds without activity, generated tiles fade back into the fog,
+the view returns to its starting position, and the introduction animates in again.
+
 ## On-demand romantic atlas tiles
 
-At zoom level 18, a drifting fog descends over a deterministic half of the fully visible
-tiles. Click a fogged tile to create a deterministic, strictly top-down cartographic
-event tile from the rendered map. While it runs, foxes, steam machines, and top-hatted
-Victorian walkers cross the fog; it clears once the generated image is ready. Generated
-images are cached locally in `generated-tiles/`. The map stays at or below zoom level 18
-so the captured image and overlay share the same tile grid.
+From zoom level 15 upward, a drifting fog descends over a deterministic half of the
+fully visible z18 tiles that are at least 75% land. Each fog form spills into
+neighboring gaps and is rendered from a small cached mask plus a low-cost WebGL noise
+shader, so the pattern reads as overlapping mist rather than an alternating grid. At any
+visible zoom level, click a fully visible fogged land tile to create a strictly top-down
+cartographic event tile from the rendered map. The selected tile gets a clear “LOOKING
+UP THIS TILE” treatment while it runs. The fog carries one of 24 short provocations
+about imagination, discovery, possibility, and Romanticism, each paired with a quotation
+from a Romantic author. The text clears once the generated image is ready. Generated
+event images are cached locally in `generated-tiles/`. New generations use versioned
+files such as `zoom/x/y/type.v2.image` and matching metadata, leaving older cached
+images in place. Generation sends the model a full-tile source plus a vector-derived
+safe-zone guide: land is available for transformation, while water, roads, paths,
+boundaries, and tile edges are locked. The same safe mask is enforced during
+compositing, and the original path linework is restored above the generated artwork.
 
 ## OpenRouter image client
 
