@@ -4,20 +4,20 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createServer as createViteServer } from 'vite'
 
-import { createFalClient } from './fal-client.js'
+import { createGeminiClient } from './gemini-client.js'
 import { describeTileGeometry } from './vector-tile-analysis.js'
 
 const rootDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const cacheDirectory = path.join(rootDirectory, 'generated-tiles')
 const productionDirectory = path.join(rootDirectory, 'dist')
 const atlasZoom = 18
-const falModel = process.env.FAL_ATLAS_MODEL ?? 'fal-ai/fast-sdxl/image-to-image'
 const isProduction = process.env.NODE_ENV === 'production'
-const hypeOrigin = 'https://tiles.hype.hk'
-const hypeProxyPrefix = '/map-assets/hype'
-const hypeTileJsonPath = `${hypeProxyPrefix}/basemap/hongkong-latest.json`
-const hypeVectorTilePattern = new RegExp(
-  `^${hypeProxyPrefix}/basemap/hongkong-latest/(\\d+)/(\\d+)/(\\d+)\\.mvt$`,
+const tileOrigin = 'https://tiles.saanseoi.hk'
+const tileProxyPrefix = '/map-assets/saanseoi'
+const tileJsonPath = `${tileProxyPrefix}/hongkong-latest.json`
+const publicOrigin = 'https://visionarymachines.hype.hk'
+const tileVectorPattern = new RegExp(
+  `^${tileProxyPrefix}/hongkong-latest/(\\d+)/(\\d+)/(\\d+)\\.mvt$`,
 )
 
 const contentTypes = {
@@ -46,8 +46,11 @@ const sendUpstreamResponse = async (response, upstreamResponse) => {
   response.end(Buffer.from(await upstreamResponse.arrayBuffer()))
 }
 
-const proxyHypeTileJson = async (request, response) => {
-  const upstreamResponse = await fetch(`${hypeOrigin}/basemap/hongkong-latest.json`)
+const proxyTileJson = async (request, response) => {
+  const upstreamUrl = new URL('/hongkong-latest.json', tileOrigin)
+  const upstreamResponse = await fetch(upstreamUrl, {
+    headers: { Origin: request.headers.origin ?? publicOrigin },
+  })
   if (!upstreamResponse.ok) {
     await sendUpstreamResponse(response, upstreamResponse)
     return
@@ -58,16 +61,22 @@ const proxyHypeTileJson = async (request, response) => {
   const protocol = typeof forwardedProtocol === 'string' ? forwardedProtocol.split(',')[0] : 'http'
   const proxyOrigin = `${protocol}://${request.headers.host}`
   tileJson.tiles = tileJson.tiles.map(tileUrl =>
-    tileUrl.startsWith(hypeOrigin)
-      ? `${proxyOrigin}${hypeProxyPrefix}${tileUrl.slice(hypeOrigin.length)}`
-      : tileUrl,
+    (() => {
+      const upstreamTileUrl = new URL(tileUrl, tileOrigin)
+      return upstreamTileUrl.origin === tileOrigin
+        ? `${proxyOrigin}${tileProxyPrefix}${decodeURIComponent(upstreamTileUrl.pathname)}${upstreamTileUrl.search}`
+        : tileUrl
+    })(),
   )
   response.writeHead(200, { 'content-type': 'application/json; charset=utf-8' })
   response.end(JSON.stringify(tileJson))
 }
 
-const proxyHypeVectorTile = async (response, pathname) => {
-  const upstreamResponse = await fetch(new URL(pathname.slice(hypeProxyPrefix.length), hypeOrigin))
+const proxyVectorTile = async (request, response, pathname) => {
+  const upstreamUrl = new URL(pathname.slice(tileProxyPrefix.length), tileOrigin)
+  const upstreamResponse = await fetch(upstreamUrl, {
+    headers: { Origin: request.headers.origin ?? publicOrigin },
+  })
   await sendUpstreamResponse(response, upstreamResponse)
 }
 
@@ -117,42 +126,21 @@ const getCachedTile = async tile => {
   }
 }
 
-const imageUrlFromResult = result => {
-  const data = result.data
-  return data?.images?.[0]?.url ?? data?.image?.url ?? data?.url ?? null
-}
-
 const atlasPrompt = geometryBrief => `Retell this exact level-18 Hong Kong map tile as a hand-drawn romantic-era atlas. The supplied image is authoritative geometry: trace every coastline, road centreline, water edge, building footprint, and park boundary in the same position. Do not crop, rotate, change scale, add or remove streets, or invent landmarks. Use graceful copperplate-era ink linework, light watercolour washes, parchment shading, botanical green parks, and restrained rose and ochre buildings. No title, legend, border, compass rose, labels, or new text. Keep all four edges seamless with adjacent tiles. Vector geometry brief: ${geometryBrief}`
 
 const generateTile = async (tile, sourceImage) => {
   const cached = await getCachedTile(tile)
   if (cached) return cached
 
-  const falClient = createFalClient()
+  const geminiClient = createGeminiClient()
   const geometryBrief = await describeTileGeometry(tile)
-  const result = await falClient.subscribe(falModel, {
-    image_url: sourceImage,
-    prompt: atlasPrompt(geometryBrief),
-    strength: 0.25,
-    guidance_scale: 8,
-    image_size: { width: 512, height: 512 },
-    format: 'png',
-  })
-  const outputUrl = imageUrlFromResult(result)
-  if (!outputUrl) {
-    throw new Error('Fal returned no image for the requested tile.')
-  }
-
-  const imageResponse = await fetch(outputUrl)
-  if (!imageResponse.ok) {
-    throw new Error('Could not download the generated tile from Fal.')
-  }
+  const generatedImage = await geminiClient.generateImage({ prompt: atlasPrompt(geometryBrief), sourceImage })
 
   const { directory, image, metadata } = tilePaths(tile)
-  const contentType = imageResponse.headers.get('content-type') ?? 'image/jpeg'
+  const contentType = generatedImage.contentType
   const cacheEntry = { contentType, generatedAt: new Date().toISOString() }
   await mkdir(directory, { recursive: true })
-  await writeFile(image, Buffer.from(await imageResponse.arrayBuffer()))
+  await writeFile(image, generatedImage.data)
   await writeFile(metadata, JSON.stringify(cacheEntry))
   return cacheEntry
 }
@@ -176,6 +164,14 @@ const serveCachedTile = async (request, response, tile) => {
 
 const generateAtlasTile = async (request, response, tile) => {
   if (request.method !== 'POST') return false
+
+  const origin = request.headers.origin
+  const allowedOrigin = process.env.ATLAS_ALLOWED_ORIGIN ?? 'https://visionarymachines.hype.hk'
+  const allowedHost = new URL(allowedOrigin).host
+  if ((origin && origin !== allowedOrigin) || request.headers.host !== allowedHost) {
+    sendError(response, 403, 'Image generation is restricted to the configured application domain.')
+    return true
+  }
 
   const { sourceImage } = await readRequestBody(request)
   if (typeof sourceImage !== 'string' || !sourceImage.startsWith('data:image/')) {
@@ -220,13 +216,13 @@ const server = createServer(async (request, response) => {
     const pathname = new URL(request.url, 'http://localhost').pathname
     const tile = parseTileRequest(pathname)
 
-    if (request.method === 'GET' && pathname === hypeTileJsonPath) {
-      await proxyHypeTileJson(request, response)
+    if (request.method === 'GET' && pathname === tileJsonPath) {
+      await proxyTileJson(request, response)
       return
     }
 
-    if (request.method === 'GET' && hypeVectorTilePattern.test(pathname)) {
-      await proxyHypeVectorTile(response, pathname)
+    if (request.method === 'GET' && tileVectorPattern.test(pathname)) {
+      await proxyVectorTile(request, response, pathname)
       return
     }
 
