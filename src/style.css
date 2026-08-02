@@ -298,9 +298,9 @@ body {
 .atlas-intro__nail--bottom-right { right: 0.7rem; bottom: 0.7rem; }
 
 .atlas-intro__board--sub {
-  width: min(58cqw, 36rem);
+  width: min(66cqw, 42rem);
   min-height: clamp(4.8rem, 9cqw, 7rem);
-  margin-top: 2.25rem;
+  margin-top: calc(2.25rem + 12px);
   padding: clamp(0.8rem, 1.8cqw, 1.3rem) clamp(1.2rem, 3cqw, 2.2rem);
   border-width: 0.25rem;
   flex-direction: row;
