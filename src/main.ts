@@ -33,7 +33,7 @@ const map = new maplibregl.Map({
 })
 
 const intro = createIntroSplash(map.getContainer())
-const idleDelay = 60_000
+const idleDelay = 180_000
 let idleTimer: number | undefined
 let resetAtlas: (() => Promise<void>) | undefined
 let isResetting = false
