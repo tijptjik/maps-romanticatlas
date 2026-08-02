@@ -34,6 +34,8 @@ const tileForPosition = ({ lng, lat }) => {
 
 const imageLayerId = tile => `atlas-admin-tile-${tileKey(tile).replaceAll('/', '-')}`
 const imageSourceId = tile => `${imageLayerId(tile)}-source`
+const firstLabelLayerId = map =>
+  map.getStyle().layers.find(layer => layer.type === 'symbol')?.id
 
 const installCachedImage = (map, tile) => {
   const sourceId = imageSourceId(tile)
@@ -50,15 +52,18 @@ const installCachedImage = (map, tile) => {
       [bounds.west, bounds.south],
     ],
   })
-  map.addLayer({
-    id: layerId,
-    type: 'raster',
-    source: sourceId,
-    paint: {
-      'raster-opacity': 0.94,
-      'raster-fade-duration': 0,
+  map.addLayer(
+    {
+      id: layerId,
+      type: 'raster',
+      source: sourceId,
+      paint: {
+        'raster-opacity': 0.94,
+        'raster-fade-duration': 0,
+      },
     },
-  })
+    firstLabelLayerId(map),
+  )
 }
 
 const removeCachedImage = (map, tile) => {
