@@ -56,8 +56,24 @@ body {
   mix-blend-mode: multiply;
 }
 
-.maplibregl-ctrl-top-right {
+.maplibregl-ctrl.maplibregl-ctrl-attrib {
   z-index: 3;
+  color: #a86f5b;
+  background-color: #f8edcf;
+}
+
+.maplibregl-ctrl.maplibregl-ctrl-attrib a {
+  color: #a86f5b;
+}
+
+.maplibregl-ctrl.maplibregl-ctrl-attrib .maplibregl-ctrl-attrib-button {
+  background-color: #f8edcf;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' fill='%23a86f5b' fill-rule='evenodd' viewBox='0 0 20 20'%3E%3Cpath d='M4 10a6 6 0 1 0 12 0 6 6 0 1 0-12 0m5-3a1 1 0 1 0 2 0 1 1 0 1 0-2 0m0 3a1 1 0 1 1 2 0v3a1 1 0 1 1-2 0'/%3E%3C/svg%3E");
+}
+
+.maplibregl-ctrl.maplibregl-ctrl-attrib .maplibregl-ctrl-attrib-button:focus,
+.maplibregl-ctrl.maplibregl-ctrl-attrib .maplibregl-ctrl-attrib-button:focus-visible {
+  box-shadow: 0 0 2px 2px #7d9fa0;
 }
 
 .map-title {
