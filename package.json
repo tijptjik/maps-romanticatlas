@@ -6,11 +6,11 @@
   "scripts": {
     "dev": "bun server/index.js",
     "build": "vite build",
+    "deploy": "bun run build && wrangler deploy",
     "preview": "NODE_ENV=production bun server/index.js",
     "generate:paper": "bun scripts/generate-paper-texture.js"
   },
   "dependencies": {
-    "@fal-ai/client": "^1.8.1",
     "@mapbox/vector-tile": "^2.0.4",
     "@protomaps/basemaps": "^5.7.2",
     "maplibre-gl": "^5.24.0",
