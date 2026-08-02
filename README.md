@@ -83,3 +83,7 @@ which permits unmetered first-party access.
 To show a red boundary around every generated tile found in the server cache during
 development, set `VITE_DIAGNOSTIC_CACHED_TILES=true` in `.env` and restart the dev
 server.
+
+To enable the cache management UI, set `ATLAS_ADMIN_MODE=true` in `.env` and restart the
+server. Cached images are loaded onto the map; click one to reveal its delete button.
+The flag gates both the browser UI and the server-side DELETE endpoint.
