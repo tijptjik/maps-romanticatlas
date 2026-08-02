@@ -165,7 +165,7 @@ const listCachedTiles = async (bucket: R2Bucket) => {
       const key = `${numericX}/${numericY}/${scene}`
       if (version > (latestVersions.get(key)?.version ?? 0)) {
         latestVersions.set(key, {
-          tile: { scene, zoom: atlasZoom, x: numericX, y: numericY },
+          tile: { scene: scene as Scene, zoom: atlasZoom, x: numericX, y: numericY },
           version,
         })
       }

@@ -10,5 +10,6 @@
     "types": ["node"],
     "skipLibCheck": true
   },
-  "include": ["src", "server", "scripts", "vite.config.ts", "worker-configuration.d.ts"]
+  "include": ["src", "server", "scripts", "vite.config.ts"],
+  "exclude": ["src/worker.ts", "src/worker-api.ts"]
 }

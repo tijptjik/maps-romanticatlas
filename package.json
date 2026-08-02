@@ -9,7 +9,7 @@
     "deploy": "bun run build && wrangler deploy",
     "preview": "NODE_ENV=production bun server/index.ts",
     "generate:paper": "bun scripts/generate-paper-texture.ts",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.worker.json --noEmit",
     "format": "biome format --write . && bun run format:markdown",
     "format:markdown": "prettier --write \"**/*.md\"",
     "format:markdown:check": "prettier --check \"**/*.md\"",
