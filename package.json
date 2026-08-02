@@ -4,11 +4,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun server/index.js",
+    "dev": "bun server/index.ts",
     "build": "vite build",
     "deploy": "bun run build && wrangler deploy",
-    "preview": "NODE_ENV=production bun server/index.js",
-    "generate:paper": "bun scripts/generate-paper-texture.js",
+    "preview": "NODE_ENV=production bun server/index.ts",
+    "generate:paper": "bun scripts/generate-paper-texture.ts",
+    "typecheck": "tsc --noEmit",
     "format": "biome format --write . && bun run format:markdown",
     "format:markdown": "prettier --write \"**/*.md\"",
     "format:markdown:check": "prettier --check \"**/*.md\"",
@@ -23,6 +24,8 @@
   "devDependencies": {
     "@biomejs/biome": "^2.5.6",
     "prettier": "^3.9.6",
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0",
     "vite": "^7.0.0",
     "wrangler": "^4.102.0"
   }

@@ -1,4 +1,5 @@
 import { layers, namedFlavor } from '@protomaps/basemaps'
+import type { StyleSpecification } from 'maplibre-gl'
 
 const romanticPaint = layer => {
   if (layer.id === 'background') {
@@ -73,4 +74,4 @@ export const hongKongStyle = {
   glyphs: 'https://protomaps.github.io/basemaps-assets/fonts/{fontstack}/{range}.pbf',
   sprite: 'https://protomaps.github.io/basemaps-assets/sprites/v4/light',
   layers: romanticLayers,
-}
+} as unknown as StyleSpecification

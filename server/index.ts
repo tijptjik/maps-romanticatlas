@@ -4,7 +4,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createServer as createViteServer } from 'vite'
 
-import { createOpenRouterClient } from './openrouter-client.js'
+import { createOpenRouterClient } from './openrouter-client.ts'
 
 const rootDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const cacheDirectory = path.join(rootDirectory, 'generated-tiles')

@@ -21,7 +21,7 @@ export const createOpenRouterClient = ({
   }
 
   const requestImage = async (prompt, sourceImage) => {
-    const content = [{ type: 'text', text: prompt }]
+    const content: Array<Record<string, string | Record<string, string>>> = [{ type: 'text', text: prompt }]
     if (sourceImage) content.push({ type: 'image_url', image_url: { url: sourceImage } })
 
     const response = await fetch(openrouterApiUrl, {
@@ -50,7 +50,7 @@ export const createOpenRouterClient = ({
   }
 
   return {
-    generateImage: ({ prompt }) => requestImage(prompt),
+    generateImage: ({ prompt }) => requestImage(prompt, undefined),
     editImage: ({ prompt, sourceImage }) => requestImage(prompt, sourceImage),
   }
 }

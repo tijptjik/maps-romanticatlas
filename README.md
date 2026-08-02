@@ -41,7 +41,7 @@ so the captured image and overlay share the same tile grid.
 
 ## OpenRouter image client
 
-The server-only OpenRouter wrapper is at `server/openrouter-client.js`. Copy
+The server-only OpenRouter wrapper is at `server/openrouter-client.ts`. Copy
 `.env.example` to `.env` and set `OPENROUTER_API_KEY` in the server environment; never
 expose it through a `VITE_*` variable or import the wrapper from browser code.
 
@@ -58,13 +58,13 @@ wrangler secret put OPENROUTER_API_KEY
 The deployed Worker forwards the approved `romanticatlas.hype.hk` origin to
 SaanSeoi, which permits unmetered first-party access.
 
-```js
-import { createOpenRouterClient } from "./server/openrouter-client.js";
+```ts
+import { createOpenRouterClient } from './server/openrouter-client.ts'
 
 const openrouterClient = createOpenRouterClient();
 const result = await openrouterClient.generateImage({
   prompt: "A romantic-era illustrated map of Hong Kong on textured paper",
-});
+})
 
-console.log(result.contentType);
+console.log(result.contentType)
 ```

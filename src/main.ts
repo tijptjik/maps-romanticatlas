@@ -1,7 +1,7 @@
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import { installAtlasTileInteractions } from './atlas-tiles.js'
-import { hongKongStyle } from './map-style.js'
+import { installAtlasTileInteractions } from './atlas-tiles.ts'
+import { hongKongStyle } from './map-style.ts'
 import './style.css'
 
 const map = new maplibregl.Map({
