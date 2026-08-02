@@ -1,11 +1,12 @@
 import { tilePolygon } from './tile-geometry.ts'
+import { fetchAdmin } from './cached-tile-admin.ts'
 
 const diagnosticSourceId = 'cached-tile-diagnostic'
 const diagnosticLayerId = 'cached-tile-diagnostic-boundary'
 
 export const installCachedTileDiagnostic = async map => {
   try {
-    const response = await fetch('/api/atlas-tiles/cached')
+    const response = await fetchAdmin('/api/atlas-tiles/cached')
     if (!response.ok)
       throw new Error(`Cache manifest request failed with ${response.status}`)
     const { tiles } = await response.json()

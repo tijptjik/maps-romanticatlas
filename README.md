@@ -55,6 +55,7 @@ Open the local URL printed by the server (use `http://localhost:5173`).
 | Command                         | Purpose                                                                                              |
 | ------------------------------- | ---------------------------------------------------------------------------------------------------- |
 | `bun run dev`                   | Start the local Vite-backed server.                                                                  |
+| `bun run dev:remote`            | Build and run the Worker locally with the production R2 bucket.                                     |
 | `bun run build`                 | Build the browser bundle into `dist/`.                                                               |
 | `bun run preview`               | Serve the existing `dist/` build through the production-mode Node server. Run `bun run build` first. |
 | `bun run deploy`                | Build and deploy the static asset Worker with Wrangler.                                              |
@@ -63,6 +64,7 @@ Open the local URL printed by the server (use `http://localhost:5173`).
 | `bun run format`                | Format source files and Markdown.                                                                    |
 | `bun run format:markdown:check` | Check Markdown formatting.                                                                           |
 | `bun run generate:paper`        | Generate `public/romantic-paper-texture.png` through OpenRouter.                                     |
+| `bun run sync:tiles`            | Upload local generated tile images and metadata to the configured R2 bucket.                         |
 
 ## Production build and deployment
 
@@ -100,6 +102,11 @@ panel then prompts for that token and uses a same-origin CSRF cookie for deletio
 The map's tiles, fonts, and sprite assets are loaded from remote services, so it needs
 an internet connection.
 
+To review the remote R2 cache locally, set `ATLAS_ADMIN_TOKEN` in `.dev.vars`, set
+`VITE_DIAGNOSTIC_CACHED_TILES=true` in `.env`, then run `bun run dev:remote`. The remote
+Worker is available at `http://localhost:8787`; add `?version=3` to replay an older cache
+version. To copy the existing local cache to R2, run `bun run sync:tiles`.
+
 The map opens with a Victorian-circus-style introduction. Click or press a key to enter
 the atlas, or open the Cartographer's Note for the artist statement. Press Ctrl+M at any
 time to return to the introduction. After 3 minutes without activity, locally revealed
@@ -129,7 +136,7 @@ elsewhere in the city and asks the visitor to wait around three minutes.
 
 Generated event images are cached in local `generated-tiles/` during development and in
 the configured R2 bucket in production. Current generations use versioned keys such as
-`18/x/y/type.v4.image` and matching metadata. Generation sends the model a full-tile
+`atlas/18/x/y/type.v4.image` and matching metadata. Generation sends the model a full-tile
 source plus a vector-derived safe-zone guide: land is available for transformation,
 while water, roads, paths, boundaries, and tile edges are locked. The same safe mask is
 enforced during compositing, and the original path linework is restored above the

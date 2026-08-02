@@ -703,6 +703,8 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
   }
 
+  const easeOutCubic = progress => 1 - (1 - progress) ** 3
+
   const drawFogMask = (tile, state, time) => {
     const bounds = tileBounds(tile)
     const northWest = map.project([bounds.west, bounds.north])
@@ -762,7 +764,38 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
     maskContext.restore()
   }
 
-  const easeOutCubic = progress => 1 - (1 - progress) ** 3
+  const clearGeneratedTileMask = (tile, state, time) => {
+    const id = tileId(tile)
+    const revealProgress = revealStartedAt.has(id)
+      ? Math.min(1, (time - revealStartedAt.get(id)) / generatedRevealDuration)
+      : state === 'generated'
+        ? 1
+        : 0
+    if (revealProgress <= 0) return
+
+    const bounds = tileBounds(tile)
+    const northWest = map.project([bounds.west, bounds.north])
+    const southEast = map.project([bounds.east, bounds.south])
+    const size = Math.min(southEast.x - northWest.x, southEast.y - northWest.y)
+    const progress = easeOutCubic(revealProgress)
+    const inset = size * 0.5 * (1 - progress)
+
+    // Neighboring fog bodies intentionally spill across tile boundaries. Cut
+    // the generated tile back out after drawing those bodies so the clearing
+    // always identifies the exact tile that opened, even at the cloud edges.
+    maskContext.save()
+    maskContext.globalCompositeOperation = 'destination-out'
+    maskContext.globalAlpha = 1
+    maskContext.filter = `blur(${Math.max(3, size * 0.035)}px)`
+    maskContext.fillStyle = '#ffffff'
+    maskContext.fillRect(
+      northWest.x + inset,
+      northWest.y + inset,
+      Math.max(0, southEast.x - northWest.x - inset * 2),
+      Math.max(0, southEast.y - northWest.y - inset * 2),
+    )
+    maskContext.restore()
+  }
 
   const getWordDurations = (words, baselineDuration) =>
     words.map(word => {
@@ -917,6 +950,8 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
         )
         const isLingering = phase >= wordSequenceDuration
         if (isLingering && phase >= wordSequenceDuration + lingerDuration) return
+        const lingerElapsed = isLingering ? phase - wordSequenceDuration : 0
+        const lingerStartTime = time - lingerElapsed
         let currentWordIndex = 0
         let wordElapsed = phase
         if (isLingering) {
@@ -950,6 +985,7 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
         ) {
           const distance = streamPosition - wordIndex
           const isCurrentWord = wordIndex === currentWordIndex
+          const isLingeringFinalWord = isLingering && isCurrentWord
           const progress = isCurrentWord && !isLingering ? distance : 1
           const word = words[wordIndex]
           loadingContext.font = `600 italic ${fontSize}px 'Cormorant Garamond', Georgia, serif`
@@ -962,11 +998,13 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
             ? easeOutCubic(Math.min(1, progress / 0.55))
             : 0.84 + Math.min(0.1, (2 - distance) * 0.08)
           const scale = isCurrentWord ? 0.84 + easeOutCubic(progress) * 0.16 : 1
-          const wavePhase = time / 1100 + wordIndex * 1.7 + distance * 2.4
-          const floatX = isLingering ? 0 : Math.sin(wavePhase) * size * 0.035
+          const waveTime = isLingering ? lingerStartTime : time
+          const waveDistance = isLingering ? 1 : distance
+          const wavePhase = waveTime / 1100 + wordIndex * 1.7 + waveDistance * 2.4
+          const floatX = Math.sin(wavePhase) * size * 0.035
           const floatY = isLingering ? 0 : Math.cos(wavePhase * 0.72) * size * 0.012
           const wordY = streamBaseline - distance * lineHeight + floatY
-          if (wordY - fittedSize * 0.58 < wordLimitY) continue
+          if (!isLingeringFinalWord && wordY - fittedSize * 0.58 < wordLimitY) continue
           drawCenteredLine(
             word,
             wordY,
@@ -1068,15 +1106,20 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
     maskContext.setTransform(maskScale, 0, 0, maskScale, 0, 0)
     maskContext.clearRect(0, 0, clientWidth, clientHeight)
     visibleFogTiles(map).forEach(tile => {
-      const state = tileState.get(tileId(tile))
-      if (state === 'generating' && !generatingStartedAt.has(tileId(tile))) {
-        generatingStartedAt.set(tileId(tile), time)
+      const id = tileId(tile)
+      const state = tileState.get(id)
+      if (state === 'generating' && !generatingStartedAt.has(id)) {
+        generatingStartedAt.set(id, time)
       }
       if (state !== 'checking' && state !== 'generating' && state !== 'revealing') {
-        pokedAt.delete(tileId(tile))
+        pokedAt.delete(id)
       }
-      if (!isLandTargetable(tile) || !isFogged(tile) || state === 'generated') return
-      drawFogMask(tile, state, time)
+      if (isLandTargetable(tile) && isFogged(tile) && state !== 'generated') {
+        drawFogMask(tile, state, time)
+      }
+      if (state === 'revealing' || state === 'generated') {
+        clearGeneratedTileMask(tile, state, time)
+      }
     })
     uploadMask()
     maskDirty = false
@@ -1169,6 +1212,7 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
 export const installAtlasTileInteractions = (map, maplibregl) => {
   const tileState = new Map()
   const landTargetState = new Map()
+  const revealedTileIds = new Set()
   const generatedTileIds = new Set()
   const titleCards = new Map()
   const clearanceNotice = createClearanceNotice(map)
@@ -1191,9 +1235,10 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
   }
 
   const fog = createFogCanvas(map, tileState, isLandTargetable)
-  const revealGeneratedTile = id => {
+  const revealGeneratedTile = (id, countsAgainstQuota = true) => {
     tileState.set(id, 'revealing')
-    generatedTileIds.add(id)
+    revealedTileIds.add(id)
+    if (countsAgainstQuota) generatedTileIds.add(id)
     fog.beginReveal(id)
 
     const titleCard = titleCards.get(id)?.card
@@ -1225,7 +1270,11 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
       }
 
       tileState.set(id, 'generated')
-      if (generatedTileIds.size === personalClearanceLimit && clearanceStartedAt === undefined) {
+      if (
+        countsAgainstQuota &&
+        generatedTileIds.size === personalClearanceLimit &&
+        clearanceStartedAt === undefined
+      ) {
         clearanceStartedAt = Date.now()
       }
       if (titleCard) {
@@ -1308,19 +1357,6 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
     )
       return
 
-    if (generatedTileIds.size >= personalClearanceLimit) {
-      const remaining = clearanceStartedAt === undefined
-        ? cityClearanceDuration
-        : Math.max(0, cityClearanceDuration - (Date.now() - clearanceStartedAt))
-      if (remaining > 0) {
-        clearanceNotice.show(
-          'Your three clearings are complete. The fog is being cleared elsewhere in the city; it takes around three minutes.',
-        )
-        return
-      }
-      clearanceStartedAt = undefined
-    }
-
     tileState.set(id, 'checking')
     fog.poke(id)
     fog.invalidate()
@@ -1337,11 +1373,28 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
           titleCards,
           cachedUrl.contentBounds,
         )
-        revealGeneratedTile(id)
+        revealGeneratedTile(id, false)
         console.info(
           `[atlas] ${id} loaded from cache in ${Math.round(performance.now() - startedAt)}ms`,
         )
         return
+      }
+
+      if (generatedTileIds.size >= personalClearanceLimit) {
+        const remaining =
+          clearanceStartedAt === undefined
+            ? cityClearanceDuration
+            : Math.max(0, cityClearanceDuration - (Date.now() - clearanceStartedAt))
+        if (remaining > 0) {
+          tileState.delete(id)
+          fog.cancelReveal(id)
+          fog.invalidate()
+          clearanceNotice.show(
+            'Your three clearings are complete. The fog is being cleared elsewhere in the city; it takes around three minutes.',
+          )
+          return
+        }
+        clearanceStartedAt = undefined
       }
 
       tileState.set(id, 'generating')
@@ -1430,13 +1483,13 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
   })
 
   const resetReveals = () => {
-    const revealedLayerIds = [...generatedTileIds]
+    const revealedLayerIds = [...revealedTileIds]
       .map(id => `atlas-tile-${tileFromId(id).x}-${tileFromId(id).y}`)
       .filter(layerId => map.getLayer(layerId))
 
     // Put the fog back over the artwork before the artwork fades away. This
     // makes the reset read as the city disappearing into mist, not as a hard cut.
-    generatedTileIds.forEach(id => {
+    revealedTileIds.forEach(id => {
       fog.cancelReveal(id)
       tileState.set(id, 'resetting')
     })
@@ -1465,12 +1518,13 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
           if (map.getSource(sourceId)) map.removeSource(sourceId)
         })
         titleCards.forEach(({ card, tile }) => {
-          if (generatedTileIds.has(tileId(tile))) {
+          if (revealedTileIds.has(tileId(tile))) {
             card.remove()
             titleCards.delete(tileId(tile))
           }
         })
         generatedTileIds.clear()
+        revealedTileIds.clear()
         tileState.clear()
         clearanceStartedAt = undefined
         clearanceNotice.hide()

@@ -8,6 +8,8 @@
     "build": "vite build",
     "deploy": "bun run build && wrangler deploy",
     "preview": "NODE_ENV=production bun server/index.ts",
+    "dev:remote": "bun run build && wrangler dev --port 8787 --var ATLAS_ALLOWED_ORIGIN:http://localhost:8787 --var ATLAS_LOCAL_DEV:true",
+    "sync:tiles": "bun scripts/sync-generated-tiles.ts",
     "generate:paper": "bun scripts/generate-paper-texture.ts",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.worker.json --noEmit",
     "format": "biome format --write . && bun run format:markdown",

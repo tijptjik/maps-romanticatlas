@@ -93,11 +93,11 @@ map.addControl(new maplibregl.AttributionControl({ compact: true }))
 collapseAttribution()
 map.once('idle', collapseAttribution)
 map.on('mousemove', () => noteActivity())
-map.on('load', () => {
-  installCachedTileAdmin(map)
+map.on('load', async () => {
+  await installCachedTileAdmin(map)
 
   if (import.meta.env.VITE_DIAGNOSTIC_CACHED_TILES === 'true') {
-    installCachedTileDiagnostic(map)
+    await installCachedTileDiagnostic(map)
   }
 
   const atlas = installAtlasTileInteractions(map, maplibregl)

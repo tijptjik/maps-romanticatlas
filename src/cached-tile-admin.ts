@@ -29,7 +29,7 @@ const csrfToken = () =>
     .find(cookie => cookie.startsWith(`${csrfCookieName}=`))
     ?.slice(csrfCookieName.length + 1) ?? null
 
-const fetchAdmin = async (url, options: RequestInit = {}) => {
+export const fetchAdmin = async (url, options: RequestInit = {}) => {
   const makeRequest = token => {
     const headers = new Headers(options.headers)
     if (token) headers.set('authorization', `Bearer ${token}`)

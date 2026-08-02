@@ -210,7 +210,7 @@ const findCachedTile = async (bucket: R2Bucket, position: Omit<Tile, 'scene'>) =
   return cached.length ? randomItem(cached) : null
 }
 
-const listCachedTiles = async (bucket: R2Bucket) => {
+const listCachedTiles = async (bucket: R2Bucket, requested: number | null = null) => {
   const latestVersions = new Map<string, { tile: Tile; version: number }>()
   let cursor: string | undefined
   do {
@@ -228,7 +228,8 @@ const listCachedTiles = async (bucket: R2Bucket) => {
       if (!atlasScenes[scene] || version < 1 || version > generationVersion) continue
       if (numericX >= tileCount || numericY >= tileCount) continue
       const key = `${numericX}/${numericY}/${scene}`
-      if (version > (latestVersions.get(key)?.version ?? 0)) {
+      if (requested !== null && version !== requested) continue
+      if (requested !== null || version > (latestVersions.get(key)?.version ?? 0)) {
         latestVersions.set(key, {
           tile: { scene: scene as Scene, zoom: atlasZoom, x: numericX, y: numericY },
           version,
@@ -454,7 +455,10 @@ const isAllowedApplicationRequest = (request: Request, env: Env) => {
   const requestUrl = new URL(request.url)
   const allowedUrl = new URL(allowedOrigin)
   const origin = request.headers.get('origin')
-  return requestUrl.host === allowedUrl.host && (!origin || origin === allowedOrigin)
+  const isLocalRemoteDev = /^http:\/\/localhost(?::\d+)?$/.test(allowedOrigin)
+  const hostMatches = requestUrl.host === allowedUrl.host ||
+    (isLocalRemoteDev && origin === allowedOrigin)
+  return hostMatches && (!origin || origin === allowedOrigin)
 }
 
 const serveCachedTile = async (request: Request, env: Env, tile: Tile) => {
@@ -572,10 +576,11 @@ export const handleAtlasApi = async (request: Request, env: AtlasEnv): Promise<R
     if (!adminRequestIsAllowed(request, env)) {
       return errorResponse(403, 'Cache administration is restricted to the configured application domain.')
     }
-    const tiles = await listCachedTiles(env.ATLAS_BUCKET)
+    const version = requestedVersion(request)
+    const tiles = await listCachedTiles(env.ATLAS_BUCKET, version)
     const csrf = await csrfToken(env.ATLAS_ADMIN_TOKEN as string)
     const secureCookie = url.protocol === 'https:' ? '; Secure' : ''
-    return json({ adminMode: true, preRenderedCount: tiles.length, tiles }, 200, {
+    return json({ adminMode: true, version, preRenderedCount: tiles.length, tiles }, 200, {
       'set-cookie': `${csrfCookieName}=${csrf}; Path=/; SameSite=Strict${secureCookie}`,
     })
   }

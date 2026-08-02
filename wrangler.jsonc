@@ -18,7 +18,8 @@
 	"r2_buckets": [
 		{
 			"binding": "ATLAS_BUCKET",
-			"bucket_name": "maps-romanticatlas-atlas"
+			"bucket_name": "maps-romanticatlas-atlas",
+			"remote": true
 		},
 		{
 			"bucket_name": "maps-romanticatlas-assets",
