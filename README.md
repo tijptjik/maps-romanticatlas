@@ -112,10 +112,16 @@ while it runs. The fog carries one of 24 short provocations about imagination,
 discovery, possibility, and Romanticism, each paired with a quotation from a Romantic
 author. The text clears once the generated image is ready.
 
+Each client may start two new tile clearings in a rolling three-minute window, with only
+one paid generation active at a time. Requests for the same tile are coalesced while a
+generation is in flight, and cache images and metadata are written atomically. After the
+two personal clearings, the map gives a soft warning that the fog is being cleared
+elsewhere in the city and asks the visitor to wait around three minutes.
+
 Generated event images are cached locally in `generated-tiles/`, which is ignored by
 Git. Current generations use versioned files such as `18/x/y/type.v4.image` and matching
-metadata. Older cache versions remain readable from the public tile endpoint but are
-only superseded by the newest versioned image for each tile in the admin manifest.
+metadata. Older cache versions remain readable from the public tile endpoint but the admin
+manifest uses only the newest versioned cache set.
 Unversioned legacy files are excluded. Generation sends the model a full-tile source plus a
 vector-derived safe-zone guide: land is available for transformation, while water,
 roads, paths, boundaries, and tile edges are locked. The same safe mask is enforced
@@ -143,9 +149,9 @@ The supported environment variables are:
 - `VITE_DIAGNOSTIC_CACHED_TILES`: set to `true` to show red boundaries around cached
   tiles during local development.
 - `ATLAS_ADMIN_MODE`: set to `true` to enable the local cache manifest, image cycling,
-  and deletion UI. The newest versioned cached image for each tile is listed; unversioned
-  legacy images are excluded. Click an image to reveal its controls. The flag gates both
-  the browser UI and the server-side DELETE endpoint.
+  and deletion UI. Only the newest versioned cache set is listed; unversioned legacy
+  images are excluded. Click an image to reveal its controls. The flag gates both the
+  browser UI and the server-side DELETE endpoint.
 - `ATLAS_ADMIN_TOKEN`: required when `ATLAS_ADMIN_MODE=true`; use a long random secret.
   The admin UI prompts for it once per browser session. The server also requires a
   same-origin Origin header and a signed CSRF cookie/header pair for deletion.
