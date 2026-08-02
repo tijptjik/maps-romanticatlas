@@ -1,3 +1,5 @@
+import { createAtlasTitleCard, positionAtlasTitleCard } from './atlas-title-cards.ts'
+
 const atlasZoom = 18
 const adminControlId = 'atlas-admin-delete-control'
 const adminStatusId = 'atlas-admin-status'
@@ -91,6 +93,14 @@ export const installCachedTileAdmin = async map => {
       activeTilesByPosition.set(positionKey, positionTiles.at(-1))
     })
 
+    const titleCards = new Map()
+    tiles.forEach(tile => {
+      const card = createAtlasTitleCard(map.getContainer(), tile.scene)
+      const positionKey = tilePositionKey(tile)
+      card.hidden = activeTilesByPosition.get(positionKey) !== tile
+      titleCards.set(tileKey(tile), { card, tile })
+    })
+
     const container = map.getContainer()
     container.classList.add('atlas-admin-mode')
 
@@ -152,6 +162,11 @@ export const installCachedTileAdmin = async map => {
     }
 
     const positionControl = () => {
+      titleCards.forEach(({ card, tile }) => {
+        const positionKey = tilePositionKey(tile)
+        card.hidden = activeTilesByPosition.get(positionKey) !== tile
+        if (!card.hidden) positionAtlasTitleCard(map, card, tile, tile.contentBounds)
+      })
       countBadges.forEach(({ badge, tile }) => {
         positionOverlay(badge, tile)
       })
@@ -201,6 +216,10 @@ export const installCachedTileAdmin = async map => {
       const nextTile = candidates[(currentIndex + 1) % candidates.length]
       activeTilesByPosition.set(positionKey, nextTile)
       selectedTile = nextTile
+      candidates.forEach(candidate => {
+        const titleCard = titleCards.get(tileKey(candidate))?.card
+        if (titleCard) titleCard.hidden = candidate !== nextTile
+      })
       map.moveLayer(imageLayerId(nextTile))
       deleteControl.textContent = `Delete ${nextTile.scene}`
       positionControl()
@@ -233,6 +252,8 @@ export const installCachedTileAdmin = async map => {
           throw new Error(body?.error ?? `Delete failed with HTTP ${response.status}`)
 
         removeCachedImage(map, tile)
+        titleCards.get(tileKey(tile))?.card.remove()
+        titleCards.delete(tileKey(tile))
         const positionKey = tilePositionKey(tile)
         const remaining = (tilesByPosition.get(positionKey) ?? []).filter(
           candidate => tileKey(candidate) !== tileKey(tile),
