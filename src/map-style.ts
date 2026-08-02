@@ -57,7 +57,11 @@ const romanticPaint = layer => {
 }
 
 const romanticLayers = layers('hongkong-latest', namedFlavor('light'), { lang: 'en' })
-  .filter(layer => !layer.id.startsWith('pois'))
+  .filter(
+    layer =>
+      !layer.id.startsWith('pois') &&
+      !layer.id.startsWith('roads_labels_'),
+  )
   .map(layer => ({
     ...layer,
     paint: { ...layer.paint, ...romanticPaint(layer) },
