@@ -24,7 +24,13 @@ export const installCachedTileDiagnostic = async map => {
     if (!response.ok)
       throw new Error(`Cache manifest request failed with ${response.status}`)
     const { tiles } = await response.json()
-    const features = (Array.isArray(tiles) ? tiles : []).map(tile => ({
+    const uniqueTiles = new Map(
+      (Array.isArray(tiles) ? tiles : []).map(tile => [
+        `${tile.zoom}/${tile.x}/${tile.y}`,
+        tile,
+      ]),
+    )
+    const features = [...uniqueTiles.values()].map(tile => ({
       type: 'Feature',
       properties: {},
       geometry: {
