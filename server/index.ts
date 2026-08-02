@@ -1,31 +1,19 @@
 import { createServer } from 'node:http'
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createServer as createViteServer } from 'vite'
 
 import { createOpenRouterClient } from './openrouter-client.ts'
+import { atlasScenes } from '../src/atlas-scenes.ts'
 
 const rootDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const cacheDirectory = path.join(rootDirectory, 'generated-tiles')
 const productionDirectory = path.join(rootDirectory, 'dist')
 const atlasZoom = 18
 const isProduction = process.env.NODE_ENV === 'production'
-const tileOrigin = 'https://tiles.saanseoi.hk'
-const tileProxyPrefix = '/map-assets/saanseoi'
-const tileJsonPath = `${tileProxyPrefix}/hongkong-latest.json`
-const publicOrigin = 'https://romanticatlas.hype.hk'
 const localOriginPattern = /^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/
 const atlasPromptVersion = 'openai-edit-v1'
-const atlasScenes = {
-  circus: 'a Victorian circus',
-  'balloon-festival': 'a balloon festival',
-  'art-nouveau-palace': 'an elaborate Art Nouveau palace',
-}
-const tileVectorPattern = new RegExp(
-  `^${tileProxyPrefix}/hongkong-latest/(\\d+)/(\\d+)/(\\d+)\\.mvt$`,
-)
-
 const contentTypes = {
   '.css': 'text/css; charset=utf-8',
   '.html': 'text/html; charset=utf-8',
@@ -40,51 +28,6 @@ const sendJson = (response, statusCode, data) => {
 }
 
 const sendError = (response, statusCode, message) => sendJson(response, statusCode, { error: message })
-
-const sendUpstreamResponse = async (response, upstreamResponse) => {
-  const headers = {}
-  for (const header of ['cache-control', 'content-type', 'etag', 'last-modified']) {
-    const value = upstreamResponse.headers.get(header)
-    if (value) headers[header] = value
-  }
-
-  response.writeHead(upstreamResponse.status, headers)
-  response.end(Buffer.from(await upstreamResponse.arrayBuffer()))
-}
-
-const proxyTileJson = async (request, response) => {
-  const upstreamUrl = new URL('/hongkong-latest.json', tileOrigin)
-  const upstreamResponse = await fetch(upstreamUrl, {
-    headers: { Origin: request.headers.origin ?? publicOrigin },
-  })
-  if (!upstreamResponse.ok) {
-    await sendUpstreamResponse(response, upstreamResponse)
-    return
-  }
-
-  const tileJson = await upstreamResponse.json()
-  const forwardedProtocol = request.headers['x-forwarded-proto']
-  const protocol = typeof forwardedProtocol === 'string' ? forwardedProtocol.split(',')[0] : 'http'
-  const proxyOrigin = `${protocol}://${request.headers.host}`
-  tileJson.tiles = tileJson.tiles.map(tileUrl =>
-    (() => {
-      const upstreamTileUrl = new URL(tileUrl, tileOrigin)
-      return upstreamTileUrl.origin === tileOrigin
-        ? `${proxyOrigin}${tileProxyPrefix}${decodeURIComponent(upstreamTileUrl.pathname)}${upstreamTileUrl.search}`
-        : tileUrl
-    })(),
-  )
-  response.writeHead(200, { 'content-type': 'application/json; charset=utf-8' })
-  response.end(JSON.stringify(tileJson))
-}
-
-const proxyVectorTile = async (request, response, pathname) => {
-  const upstreamUrl = new URL(pathname.slice(tileProxyPrefix.length), tileOrigin)
-  const upstreamResponse = await fetch(upstreamUrl, {
-    headers: { Origin: request.headers.origin ?? publicOrigin },
-  })
-  await sendUpstreamResponse(response, upstreamResponse)
-}
 
 const readRequestBody = async request => {
   const chunks = []
@@ -102,10 +45,11 @@ const readRequestBody = async request => {
 }
 
 const parseTileRequest = pathname => {
-  const match = pathname.match(/^\/(?:api\/atlas-tiles|generated-tiles)\/(circus|balloon-festival|art-nouveau-palace)\/(\d+)\/(\d+)\/(\d+)$/)
+  const match = pathname.match(/^\/(?:api\/atlas-tiles|generated-tiles)\/([^/]+)\/(\d+)\/(\d+)\/(\d+)$/)
   if (!match) return null
 
   const [, scene, zoom, x, y] = match
+  if (!atlasScenes[scene]) return null
   const numericZoom = Number(zoom)
   const numericX = Number(x)
   const numericY = Number(y)
@@ -135,14 +79,55 @@ const getCachedTile = async tile => {
   }
 }
 
-const atlasPrompt = scene => `Create ${atlasScenes[scene]} that fits in the center of this tile. Preserve the entire surrounding map, its roads, labels, palette, scale, orientation, and top-down cartographic geometry. The result must be a planimetric, strict overhead view integrated into the map, not a poster or framed illustration. Keep the event centered and contained within the tile. Do not crop, rotate, add a border, or add new text.`
+const listCachedTiles = async () => {
+  const cachedTiles = new Set<string>()
+  try {
+    const scenes = await readdir(path.join(cacheDirectory, atlasPromptVersion), { withFileTypes: true })
+    for (const scene of scenes) {
+      if (!scene.isDirectory() || !atlasScenes[scene.name]) continue
+      const zooms = await readdir(path.join(cacheDirectory, atlasPromptVersion, scene.name), { withFileTypes: true })
+      for (const zoom of zooms) {
+        if (!zoom.isDirectory() || Number(zoom.name) !== atlasZoom) continue
+        const xDirectories = await readdir(path.join(cacheDirectory, atlasPromptVersion, scene.name, zoom.name), { withFileTypes: true })
+        for (const xDirectory of xDirectories) {
+          if (!xDirectory.isDirectory() || !/^\d+$/.test(xDirectory.name)) continue
+          const x = Number(xDirectory.name)
+          const metadataFiles = await readdir(path.join(cacheDirectory, atlasPromptVersion, scene.name, zoom.name, xDirectory.name))
+          for (const metadataFile of metadataFiles) {
+            if (!metadataFile.endsWith('.json') || !/^\d+\.json$/.test(metadataFile)) continue
+            const y = Number(metadataFile.slice(0, -5))
+            const tileCount = 2 ** atlasZoom
+            if (x < tileCount && y < tileCount) cachedTiles.add(`${atlasZoom}/${x}/${y}`)
+          }
+        }
+      }
+    }
+  } catch {
+    // An empty cache is expected on a fresh development server.
+  }
+
+  return [...cachedTiles].map(id => {
+    const [zoom, x, y] = id.split('/').map(Number)
+    return { zoom, x, y }
+  })
+}
+
+const atlasPrompt = (scene, hasSea) => {
+  const seaRule = scene === 'lighthouse'
+    ? hasSea
+      ? 'The tile contains visible sea or coastal water; place the lighthouse beside that water and include a small amount of the sea within the tile.'
+      : 'This tile does not contain visible sea or coastal water. Do not create a lighthouse; preserve the map unchanged.'
+    : ''
+
+  return `Create ${atlasScenes[scene]} that fits this tile leaving a 10% safety margin. Preserve the entire surrounding map, its roads, labels, palette, scale, orientation, and top-down cartographic geometry. The result must be a planimetric, strict overhead view integrated into the map, not a poster or framed illustration. Keep the event strictly contained within the tile. Do not crop, rotate, add a border, or add new text. ${seaRule}`
+}
 
 const generateTile = async (tile, sourceImage) => {
   const cached = await getCachedTile(tile)
   if (cached) return cached
 
   const generatedImage = await createOpenRouterClient().editImage({
-    prompt: atlasPrompt(tile.scene),
+    prompt: atlasPrompt(tile.scene, tile.hasSea),
     sourceImage,
   })
 
@@ -189,6 +174,14 @@ const serveAtlasTileRequest = async (request, response, tile) => {
 const generateAtlasTile = async (request, response, tile) => {
   if (request.method !== 'POST') return false
 
+  // A client may retry generation for a tile that was generated by an earlier
+  // request. Resolve that case before validating the generation request so a
+  // cached tile never depends on OpenRouter configuration.
+  if (await getCachedTile(tile)) {
+    sendJson(response, 200, { url: `/generated-tiles/${tile.scene}/${tile.zoom}/${tile.x}/${tile.y}` })
+    return true
+  }
+
   const origin = request.headers.origin
   const allowedOrigin = process.env.ATLAS_ALLOWED_ORIGIN ?? 'https://romanticatlas.hype.hk'
   const allowedHost = new URL(allowedOrigin).host
@@ -201,13 +194,13 @@ const generateAtlasTile = async (request, response, tile) => {
     return true
   }
 
-  const { sourceImage } = await readRequestBody(request)
+  const { sourceImage, hasSea } = await readRequestBody(request)
   if (typeof sourceImage !== 'string' || !sourceImage.startsWith('data:image/')) {
     sendError(response, 400, 'A PNG or JPEG data URL is required as the tile source image.')
     return true
   }
 
-  await generateTile(tile, sourceImage)
+  await generateTile({ ...tile, hasSea: hasSea === true }, sourceImage)
   sendJson(response, 200, { url: `/generated-tiles/${tile.scene}/${tile.zoom}/${tile.x}/${tile.y}` })
   return true
 }
@@ -242,17 +235,13 @@ const vite = isProduction
 const server = createServer(async (request, response) => {
   try {
     const pathname = new URL(request.url, 'http://localhost').pathname
+
+    if (request.method === 'GET' && pathname === '/api/atlas-tiles/cached') {
+      sendJson(response, 200, { tiles: await listCachedTiles() })
+      return
+    }
+
     const tile = parseTileRequest(pathname)
-
-    if (request.method === 'GET' && pathname === tileJsonPath) {
-      await proxyTileJson(request, response)
-      return
-    }
-
-    if (request.method === 'GET' && tileVectorPattern.test(pathname)) {
-      await proxyVectorTile(request, response, pathname)
-      return
-    }
 
     if (tile && pathname.startsWith('/generated-tiles/')) {
       await serveCachedTile(request, response, tile)
