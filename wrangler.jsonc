@@ -9,8 +9,12 @@
   ],
   "vars": {
     "ATLAS_ALLOWED_ORIGIN": "https://romanticatlas.hype.hk",
-    "OPENROUTER_MODEL": "openai/gpt-5.4-image-2"
+    "OPENROUTER_MODEL": "openai/gpt-5.4-image-2",
+    "ATLAS_ADMIN_MODE": "false"
   },
+  "r2_buckets": [
+    { "binding": "ATLAS_BUCKET", "bucket_name": "maps-visionarymachines-atlas" }
+  ],
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",

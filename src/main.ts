@@ -100,11 +100,9 @@ map.on('load', () => {
     installCachedTileDiagnostic(map)
   }
 
-  if (['127.0.0.1', 'localhost'].includes(window.location.hostname)) {
-    const atlas = installAtlasTileInteractions(map, maplibregl)
-    resetAtlas = async () => {
-      await atlas.resetReveals()
-    }
+  const atlas = installAtlasTileInteractions(map, maplibregl)
+  resetAtlas = async () => {
+    await atlas.resetReveals()
   }
 
   scheduleIdleReset()
