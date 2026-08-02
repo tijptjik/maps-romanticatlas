@@ -375,7 +375,7 @@ const findCachedTile = async tile => {
   return cachedTiles[Math.floor(Math.random() * cachedTiles.length)]
 }
 
-const listCachedTiles = async () => {
+const listCachedTiles = async (requestedVersion = generationVersion) => {
   const cachedTiles = new Set<string>()
   const versionedTiles = []
   try {
@@ -406,14 +406,10 @@ const listCachedTiles = async () => {
       }
     }
 
-    const latestVersion = versionedTiles.reduce(
-      (latest, tile) => Math.max(latest, tile.version),
-      0,
-    )
     const tileCount = 2 ** atlasZoom
     for (const tile of versionedTiles) {
       if (
-        tile.version !== latestVersion ||
+        tile.version !== requestedVersion ||
         !atlasScenes[tile.scene] ||
         tile.x >= tileCount ||
         tile.y >= tileCount
@@ -703,9 +699,14 @@ const server = createServer(async (request, response) => {
       response.setHeader('cache-control', 'no-store')
       if (isAdminModeEnabled && !requireAdminAuthentication(request, response)) return
       if (isAdminModeEnabled) ensureCsrfCookie(request, response)
-      const tiles = await listCachedTiles()
+      const requestedVersion = requestedCacheVersion(request)
+      const version = Number.isInteger(requestedVersion) && requestedVersion >= 1 && requestedVersion <= generationVersion
+        ? requestedVersion
+        : generationVersion
+      const tiles = await listCachedTiles(version)
       sendJson(response, 200, {
         adminMode: isAdminModeEnabled,
+        version,
         preRenderedCount: tiles.length,
         tiles,
       })

@@ -87,7 +87,7 @@ Create the R2 bucket once, then add the OpenRouter key as a Worker secret before
 first deployment:
 
 ```sh
-wrangler r2 bucket create maps-visionarymachines-atlas
+wrangler r2 bucket create maps-romanticatlas-atlas
 wrangler secret put OPENROUTER_API_KEY
 bun run deploy
 ```
@@ -159,7 +159,8 @@ The supported environment variables are:
 - `ATLAS_ADMIN_MODE`: set to `true` to enable the cache manifest, image cycling, and
   deletion UI in either local or production mode. In production, also set the
   `ATLAS_ADMIN_TOKEN` Worker secret. Only the newest versioned cache set is listed;
-  unversioned legacy images are excluded. Click an image to reveal its controls.
+  unversioned legacy images are excluded. Click an image to reveal its controls. Add
+  `?version=3` to the local app URL to review a specific older version.
 - `ATLAS_ADMIN_TOKEN`: required when `ATLAS_ADMIN_MODE=true`; use a long random secret.
   The admin UI prompts for it once per browser session. The server also requires a
   same-origin Origin header and a signed CSRF cookie/header pair for deletion.

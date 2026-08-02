@@ -97,7 +97,11 @@ const removeCachedImage = (map, tile) => {
 
 export const installCachedTileAdmin = async map => {
   try {
-    const response = await fetchAdmin('/api/atlas-tiles/cached')
+    const replayVersion = new URLSearchParams(window.location.search).get('version')
+    const manifestUrl = replayVersion
+      ? `/api/atlas-tiles/cached?version=${encodeURIComponent(replayVersion)}`
+      : '/api/atlas-tiles/cached'
+    const response = await fetchAdmin(manifestUrl)
     if (!response.ok)
       throw new Error(`Cache manifest request failed with ${response.status}`)
     const body = await response.json()
@@ -109,6 +113,7 @@ export const installCachedTileAdmin = async map => {
     let preRenderedCount = Number.isFinite(Number(body.preRenderedCount))
       ? Number(body.preRenderedCount)
       : tiles.length
+    const version = Number.isInteger(Number(body.version)) ? Number(body.version) : null
     const tilesByPosition = new Map()
     const activeTilesByPosition = new Map()
     tiles.forEach(tile => {
@@ -135,7 +140,8 @@ export const installCachedTileAdmin = async map => {
     status.id = adminStatusId
     status.className = 'atlas-admin-status'
     const updateStatus = () => {
-      status.textContent = `ADMIN MODE · PRE-RENDERS: ${preRenderedCount} · click an image to manage it`
+      const versionLabel = version ? ` · VERSION: v${version}` : ''
+      status.textContent = `ADMIN MODE · PRE-RENDERS: ${preRenderedCount}${versionLabel} · click an image to manage it`
     }
     updateStatus()
     container.append(status)

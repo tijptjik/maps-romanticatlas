@@ -963,8 +963,8 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
             : 0.84 + Math.min(0.1, (2 - distance) * 0.08)
           const scale = isCurrentWord ? 0.84 + easeOutCubic(progress) * 0.16 : 1
           const wavePhase = time / 1100 + wordIndex * 1.7 + distance * 2.4
-          const floatX = Math.sin(wavePhase) * size * 0.035
-          const floatY = Math.cos(wavePhase * 0.72) * size * 0.012
+          const floatX = isLingering ? 0 : Math.sin(wavePhase) * size * 0.035
+          const floatY = isLingering ? 0 : Math.cos(wavePhase * 0.72) * size * 0.012
           const wordY = streamBaseline - distance * lineHeight + floatY
           if (wordY - fittedSize * 0.58 < wordLimitY) continue
           drawCenteredLine(

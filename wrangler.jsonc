@@ -1,6 +1,6 @@
 {
 	"$schema": "./node_modules/wrangler/config-schema.json",
-	"name": "maps-visionarymachines",
+	"name": "maps-romanticatlas",
 	"main": "src/worker.ts",
 	"compatibility_date": "2026-07-18",
 	"workers_dev": true,
@@ -18,7 +18,7 @@
 	"r2_buckets": [
 		{
 			"binding": "ATLAS_BUCKET",
-			"bucket_name": "maps-visionarymachines-atlas"
+			"bucket_name": "maps-romanticatlas-atlas"
 		},
 		{
 			"bucket_name": "maps-romanticatlas-assets",
