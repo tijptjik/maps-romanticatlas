@@ -13,7 +13,7 @@ const cacheDirectory = path.join(rootDirectory, 'generated-tiles')
 const productionDirectory = path.join(rootDirectory, 'dist')
 const atlasZoom = 18
 const atlasTileSize = 512
-const generationVersion = 2
+const generationVersion = 3
 const isProduction = process.env.NODE_ENV === 'production'
 const isAdminModeEnabled = process.env.ATLAS_ADMIN_MODE === 'true'
 const localOriginPattern = /^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/
@@ -182,7 +182,7 @@ const listCachedTiles = async () => {
           const metadataFiles = await readdir(directory)
           const scenes = new Set<string>()
           for (const metadataFile of metadataFiles) {
-            const currentMatch = metadataFile.match(/^(.+)\.v2\.json$/)
+            const currentMatch = metadataFile.match(/^(.+)\.v\d+\.json$/)
             const legacyMatch = metadataFile.match(/^(.+)\.json$/)
             const scene = currentMatch?.[1] ?? legacyMatch?.[1]
             if (scene) scenes.add(scene)
@@ -220,7 +220,7 @@ const atlasPrompt = (scene, hasSea) => {
       : 'This tile does not contain visible sea or coastal water. Do not create the sea-side event; preserve the map unchanged.'
     : ''
 
-  return `Create ${atlasScenes[scene]} across the permitted land in this complete single z18 map tile, leaving a 10% safety margin. The first image is the source map. The second image is a zoning guide: green areas are safe to transform, while red areas are locked and must remain unchanged. Use the guide as an instruction, not as artwork. Preserve the exact tile size, orientation, scale, coastline, water, roads, paths, boundaries, and labels. Do not invent, move, bend, widen, recolour, or erase any locked path or road. Do not add text, shadows, gradients, lighting, borders, frames, or tile-shaped background patches. Use a flat, planimetric, strict overhead view integrated into the existing cartography. ${atlasColourDirection} ${seaRule}`
+  return `Create ${atlasScenes[scene]} across the permitted land in this complete single z18 map tile, leaving a 10% safety margin. The first image is the source map. The second image is a zoning guide: green areas are safe to transform, while red areas are locked and must remain unchanged. Use the guide as an instruction, not as artwork. Preserve the exact tile size, orientation, scale, coastline, water, roads, paths, boundaries, and labels. Treat every existing road and path as hard pixel-registered infrastructure: trace its original centerline exactly, keep every junction and curve in the same position, and do not cover it with buildings, scenery, texture, or event artwork. Do not invent, move, bend, widen, recolour, or erase any locked path or road, and do not draw road-like lines in the green areas. Do not add text, shadows, gradients, lighting, borders, frames, or tile-shaped background patches. Use a flat, planimetric, strict overhead view integrated into the existing cartography. ${atlasColourDirection} ${seaRule}`
 }
 
 const normalizeContentBounds = value => {

@@ -76,7 +76,7 @@ UP THIS TILE” treatment while it runs. The fog carries one of 24 short provoca
 about imagination, discovery, possibility, and Romanticism, each paired with a quotation
 from a Romantic author. The text clears once the generated image is ready. Generated
 event images are cached locally in `generated-tiles/`. New generations use versioned
-files such as `zoom/x/y/type.v2.image` and matching metadata, leaving older cached
+files such as `zoom/x/y/type.v3.image` and matching metadata, leaving older cached
 images in place. Generation sends the model a full-tile source plus a vector-derived
 safe-zone guide: land is available for transformation, while water, roads, paths,
 boundaries, and tile edges are locked. The same safe mask is enforced during

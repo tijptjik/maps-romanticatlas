@@ -176,15 +176,33 @@ const tileLandFraction = (map, tile) => {
 
 const atlasTileSize = 512
 
+const firstLabelLayerId = map =>
+  map.getStyle().layers.find(layer => layer.type === 'symbol')?.id
+
 const featureName = feature =>
   `${feature.layer?.id ?? ''} ${feature.sourceLayer ?? ''}`.toLowerCase()
 
 const isWaterFeature = feature =>
   /water|sea|ocean|bay|strait|fjord|river|stream|canal|reservoir/.test(featureName(feature))
 
+const isRoadLineFeature = feature =>
+  feature.layer?.type === 'line' &&
+  /road|street|transport|rail|path|trail/.test(featureName(feature))
+
 const isLockedLineFeature = feature =>
   feature.layer?.type === 'line' &&
   /road|street|transport|rail|boundary|path|trail|water/.test(featureName(feature))
+
+// The generated image is allowed to blend near the safe-zone boundary, so the
+// protected geometry needs a generous hit area. The source pixels inside that
+// area are restored after generation; the extra width therefore protects the
+// street without making the street itself visually wider.
+const lockedLineWidth = (feature, purpose) => {
+  const name = featureName(feature)
+  if (/boundary/.test(name)) return purpose === 'mask' ? 8 : 6
+  if (isRoadLineFeature(feature)) return purpose === 'mask' ? 24 : 18
+  return purpose === 'mask' ? 14 : 10
+}
 
 const drawGeometry = (
   context,
@@ -266,7 +284,7 @@ const createGenerationArtifacts = (map, sourceCanvas, northWest, southEast) => {
   lockedLineFeatures.forEach(feature => {
     drawGeometry(safeContext, feature.geometry, project, {
       stroke: true,
-      lineWidth: /boundary/.test(featureName(feature)) ? 5 : 8,
+      lineWidth: lockedLineWidth(feature, 'mask'),
     })
   })
   safeContext.lineWidth = 24
@@ -277,7 +295,7 @@ const createGenerationArtifacts = (map, sourceCanvas, northWest, southEast) => {
   lockedLineFeatures.forEach(feature => {
     drawGeometry(lineContext, feature.geometry, project, {
       stroke: true,
-      lineWidth: /boundary/.test(featureName(feature)) ? 4 : 6,
+      lineWidth: lockedLineWidth(feature, 'overlay'),
     })
   })
 
@@ -381,18 +399,21 @@ const addGeneratedTile = async (map, tile, url, scene, titleCards, contentBounds
       [bounds.west, bounds.south],
     ],
   })
-  map.addLayer({
-    id,
-    type: 'raster',
-    source: id,
-    paint: {
-      'raster-opacity': 0.94,
-      // These are already decoded, finished atlas tiles. Fading them in makes
-      // a newly added tile feel like it is drifting behind the map while it
-      // catches up with a pan.
-      'raster-fade-duration': 0,
+  map.addLayer(
+    {
+      id,
+      type: 'raster',
+      source: id,
+      paint: {
+        'raster-opacity': 0.94,
+        // These are already decoded, finished atlas tiles. Fading them in makes
+        // a newly added tile feel like it is drifting behind the map while it
+        // catches up with a pan.
+        'raster-fade-duration': 0,
+      },
     },
-  })
+    firstLabelLayerId(map),
+  )
   if (scene && titleCards) {
     const card = createAtlasTitleCard(map.getContainer(), scene)
     titleCards.set(tileId(tile), { card, tile, contentBounds })
