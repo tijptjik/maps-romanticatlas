@@ -21,17 +21,21 @@ const upstreamRequest = (request: Request, pathname: string, search = '') => {
   })
 }
 
-const proxyTileJson = async (request: Request) => {
+const proxyTileJson = async (request: Request, env: Env) => {
   const response = await upstreamRequest(request, tileJsonPath)
   if (!response.ok) return response
 
   const tileJson = await response.json<Record<string, unknown>>()
+  const proxyOrigin = env.ATLAS_ALLOWED_ORIGIN
+    ? new URL(env.ATLAS_ALLOWED_ORIGIN).origin
+    : new URL(request.url).origin
   const tiles = Array.isArray(tileJson.tiles) ? tileJson.tiles : []
   tileJson.tiles = tiles.map(tileUrl => {
     if (typeof tileUrl !== 'string') return tileUrl
     const upstreamTileUrl = new URL(tileUrl, tileOrigin)
     if (upstreamTileUrl.origin !== tileOrigin) return tileUrl
-    return `${tileProxyPrefix}${upstreamTileUrl.pathname}${upstreamTileUrl.search}`
+    const tilePath = decodeURIComponent(upstreamTileUrl.pathname)
+    return `${proxyOrigin}${tileProxyPrefix}${tilePath}${upstreamTileUrl.search}`
   })
 
   const headers = new Headers(response.headers)
@@ -51,7 +55,7 @@ export default {
 
     const url = new URL(request.url)
     if (request.method === 'GET' && url.pathname === tileJsonPath) {
-      return proxyTileJson(request)
+      return proxyTileJson(request, env)
     }
     if (request.method === 'GET' && vectorTilePattern.test(url.pathname)) {
       return proxyVectorTile(request)
