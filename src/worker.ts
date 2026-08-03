@@ -7,7 +7,7 @@ const vectorTilePattern = new RegExp(
   `^${tileProxyPrefix}/hongkong-latest/(\\d+)/(\\d+)/(\\d+)\\.mvt$`,
 )
 
-const upstreamRequest = (request: Request, pathname: string, search = '') => {
+const upstreamRequest = (pathname: string, search = '') => {
   const upstreamUrl = new URL(
     `${pathname.slice(tileProxyPrefix.length)}${search}`,
     tileOrigin,
@@ -22,7 +22,7 @@ const upstreamRequest = (request: Request, pathname: string, search = '') => {
 }
 
 const proxyTileJson = async (request: Request, env: Env) => {
-  const response = await upstreamRequest(request, tileJsonPath)
+  const response = await upstreamRequest(tileJsonPath)
   if (!response.ok) return response
 
   const tileJson = await response.json<Record<string, unknown>>()
@@ -45,7 +45,7 @@ const proxyTileJson = async (request: Request, env: Env) => {
 
 const proxyVectorTile = (request: Request) => {
   const url = new URL(request.url)
-  return upstreamRequest(request, url.pathname, url.search)
+  return upstreamRequest(url.pathname, url.search)
 }
 
 export default {

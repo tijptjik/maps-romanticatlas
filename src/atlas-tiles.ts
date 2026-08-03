@@ -1283,6 +1283,8 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
   const isAdminMode = () => map.getContainer().classList.contains('atlas-admin-mode')
   const mapDataIsReady = () =>
     map.isStyleLoaded() && map.isSourceLoaded('hongkong-latest') && map.areTilesLoaded()
+  const activeGenerationCount = () =>
+    [...tileState.values()].filter(state => state === 'generating').length
 
   const isLandTargetable = tile => {
     const id = tileId(tile)
@@ -1529,6 +1531,20 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
           return
         }
         clearanceStartedAt = undefined
+      }
+
+      // Cache checks may run together, but only three cache misses may reach
+      // the paid image request at once. This is deliberately checked directly
+      // before marking the tile as generating so rapid clicks cannot start a
+      // fourth request while the first three are still in flight.
+      if (activeGenerationCount() >= personalClearanceLimit) {
+        tileState.delete(id)
+        fog.cancelReveal(id)
+        fog.invalidate()
+        clearanceNotice.show(
+          'Three tile clearings are already in progress. Wait for one to finish before clearing more fog.',
+        )
+        return
       }
 
       tileState.set(id, 'generating')

@@ -71,10 +71,6 @@ body {
   pointer-events: none;
 }
 
-.atlas-intro:not(.is-visible) .artist-statement__trigger {
-  pointer-events: none;
-}
-
 .atlas-intro__curtain,
 .atlas-intro__lights,
 .atlas-intro__tent,
@@ -843,6 +839,10 @@ body {
   .artist-statement-ui .artist-statement__trigger,
   .artist-statement-ui .artist-statement__trigger span,
   .artist-statement__close { transition: none; }
+}
+
+.atlas-intro:not(.is-visible) .artist-statement__trigger {
+  pointer-events: none;
 }
 
 .atlas-title-card {
