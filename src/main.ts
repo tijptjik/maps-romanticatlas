@@ -35,7 +35,23 @@ const map = new maplibregl.Map({
   attributionControl: false,
 })
 
+const introFontFaces = [
+  '400 1em "Ewert"',
+  '400 1em "IM Fell English SC"',
+  '700 1em "Cormorant Garamond"',
+]
+
+const waitForIntroFonts = async () => {
+  if (!('fonts' in document)) return
+
+  // Explicitly request the fonts because the splash is not in the document yet,
+  // so relying on document.fonts.ready alone would not necessarily load them.
+  await Promise.allSettled(introFontFaces.map(font => document.fonts.load(font)))
+  await document.fonts.ready
+}
+
 const audio = installAtlasAudio(map.getContainer())
+await waitForIntroFonts()
 const intro = createIntroSplash(map.getContainer(), audio.start)
 installArtistStatement(map.getContainer())
 const idleDelay = 180_000
