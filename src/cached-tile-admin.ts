@@ -1,6 +1,6 @@
 import { createAtlasTitleCard, positionAtlasTitleCard } from './atlas-title-cards.ts'
 import { captureTile, tileHasSea } from './atlas-tiles.ts'
-import { atlasSceneNames, availableAtlasScenes, type AtlasScene } from './atlas-scenes.ts'
+import { atlasSceneNames, pickAtlasScene, type AtlasScene } from './atlas-scenes.ts'
 import { atlasZoom, tileBounds, tileForPosition } from './tile-geometry.ts'
 import { runtimeModeUrl } from './runtime-modes.ts'
 
@@ -252,10 +252,13 @@ export const installCachedTileAdmin = async map => {
 
     let selectedTile = null
     let deleting = false
-    let rerendering = false
-    let renderingTile = null
+    const renderingByPosition = new Map()
+    let captureQueue = Promise.resolve()
 
     const updateRenderingOverlay = (tile, message) => {
+      const rendering = renderingByPosition.get(tilePositionKey(tile))
+      if (rendering) rendering.message = message
+      if (!selectedTile || tilePositionKey(selectedTile) !== tilePositionKey(tile)) return
       renderingTitle.textContent = `Rendering ${sceneLabel(tile.scene)}`
       renderingMessage.textContent = message
     }
@@ -348,12 +351,16 @@ export const installCachedTileAdmin = async map => {
         label.setAttribute('aria-label', `Image version ${activeTile.version}`)
         positionOverlay(label, activeTile, true)
       })
-      if (rerendering && renderingTile) {
+      const rendering = selectedTile
+        ? renderingByPosition.get(tilePositionKey(selectedTile))
+        : null
+      if (rendering) {
         actionBar.hidden = true
         deleteControl.hidden = true
         cycleControl.hidden = true
         rerenderControl.hidden = true
-        positionRenderingOverlay(renderingTile)
+        updateRenderingOverlay(rendering.tile, rendering.message)
+        positionRenderingOverlay(rendering.tile)
         return
       }
       renderingOverlay.hidden = true
@@ -434,6 +441,18 @@ export const installCachedTileAdmin = async map => {
       )
     })
 
+    const captureForRerender = tile => {
+      const capture = captureQueue.then(async () => {
+        updateRenderingOverlay(tile, 'Preparing the map reference…')
+        await focusTileForCapture(tile)
+        return captureTile(map, tile)
+      })
+      // Keep later captures moving if this one fails. The render that owns the
+      // failed capture still receives its rejection and reports the error.
+      captureQueue = capture.catch(() => undefined)
+      return capture
+    }
+
     const installRerenderedTile = tile => {
       const positionKey = tilePositionKey(tile)
       const replacesSelectedTile =
@@ -475,30 +494,24 @@ export const installCachedTileAdmin = async map => {
     rerenderControl.addEventListener('click', async event => {
       event.preventDefault()
       event.stopPropagation()
-      if (!selectedTile || rerendering) return
+      if (!selectedTile) return
 
       const tile = selectedTile
-      const requestedCount = Number.parseInt(
-        window.prompt(
-          `How many new scenes should be rendered for ${tile.x}/${tile.y}?`,
-          '1',
-        ) ?? '',
-        10,
+      const positionKey = tilePositionKey(tile)
+      if (renderingByPosition.has(positionKey)) return
+      if (
+        !window.confirm(
+          `Render a different scene for ${tile.x}/${tile.y} instead of ${sceneLabel(tile.scene)}?`,
+        )
       )
-      if (!Number.isInteger(requestedCount) || requestedCount < 1) return
-      if (!window.confirm(`Queue ${requestedCount} new scene${requestedCount === 1 ? '' : 's'} for ${tile.x}/${tile.y}?`))
         return
 
-      rerendering = true
-      renderingTile = tile
-      deleteControl.disabled = true
-      cycleControl.disabled = true
-      rerenderControl.disabled = true
+      renderingByPosition.set(positionKey, { tile, message: 'Finding an unused scene…' })
       positionControl()
       try {
-        // Cache status uses the same 9×9 scene lookup as ordinary tile
-        // generation. Reserve every chosen scene before the first request so
-        // a batch cannot duplicate itself or an existing nearby scene.
+        // Cache status is the same 9×9 scene lookup used by ordinary tile
+        // generation. It deliberately includes scenes already cached at this
+        // exact coordinate, so rerenders do not duplicate a local event.
         const statusResponse = await fetch(
           `/api/atlas-tiles/cache-status/${tile.zoom}/${tile.x}/${tile.y}`,
           { cache: 'no-store' },
@@ -513,81 +526,64 @@ export const installCachedTileAdmin = async map => {
             )
           : []
 
-        // The selected scene is excluded even if a stale cache-status response
-        // does not contain it. Do not fall back to an excluded scene when the
-        // 9×9 grid has no eligible choices.
-        const availableScenes = availableAtlasScenes(tileHasSea(map, tile), [...scenes, tile.scene])
-        const renderCount = Math.min(requestedCount, availableScenes.length)
-        if (!renderCount) throw new Error('No unused scenes are available in this tile’s 9×9 grid.')
-        const renderScenes = Array.from({ length: renderCount }, () => {
-          const index = Math.floor(Math.random() * availableScenes.length)
-          return availableScenes.splice(index, 1)[0] as AtlasScene
-        })
-
-        updateRenderingOverlay(tile, 'Preparing the map reference…')
-        await focusTileForCapture(tile)
-        const capturedTile = await captureTile(map, tile)
-        const hasSea = tileHasSea(map, tile)
-        let failedCount = 0
-        for (const [index, scene] of renderScenes.entries()) {
-          const renderingScene = { ...tile, scene }
-          updateRenderingOverlay(
-            renderingScene,
-            `Setting scene ${index + 1} of ${renderScenes.length} in ink and watercolour…`,
+        // Always exclude the selected scene too. The status response should
+        // contain it, but this makes a different scene an invariant even if a
+        // stale manifest response omits the current image. Include selected
+        // scenes from active overlapping renders as well: they are not in the
+        // manifest yet, but must still reserve their place in the 9×9 grid.
+        const reservedScenes = [...renderingByPosition.values()]
+          .filter(({ tile: renderingTile }) =>
+            Math.abs(renderingTile.x - tile.x) <= 4 &&
+            Math.abs(renderingTile.y - tile.y) <= 4,
           )
-          try {
-            const response = await fetchAdmin(
-              `/api/atlas-tiles/${tile.zoom}/${tile.x}/${tile.y}/${scene}?rerender=true`,
-              {
-                method: 'POST',
-                headers: {
-                  'content-type': 'application/json',
-                  'x-atlas-csrf-token': csrfToken() ?? '',
-                },
-                body: JSON.stringify({ ...capturedTile, hasSea }),
-              },
-            )
-            const body = await response.json().catch(() => null)
-            if (!response.ok) {
-              throw new Error(body?.error ?? `Rerender failed with HTTP ${response.status}`)
-            }
-            if (typeof body?.url !== 'string' || !atlasSceneNames.includes(body.scene as AtlasScene)) {
-              throw new Error('The rerender response did not include a valid tile image.')
-            }
+          .map(({ tile: renderingTile }) => renderingTile.scene)
+        const scene = pickAtlasScene(tileHasSea(map, tile), [
+          ...scenes,
+          tile.scene,
+          ...reservedScenes,
+        ])
+        const renderingScene = { ...tile, scene }
+        renderingByPosition.set(positionKey, {
+          tile: renderingScene,
+          message: 'Waiting to prepare the map reference…',
+        })
+        positionControl()
+        const capturedTile = await captureForRerender(tile)
+        updateRenderingOverlay(renderingScene, 'Setting the new scene in ink and watercolour…')
+        const response = await fetchAdmin(
+          `/api/atlas-tiles/${tile.zoom}/${tile.x}/${tile.y}/${scene}?rerender=true`,
+          {
+            method: 'POST',
+            headers: {
+              'content-type': 'application/json',
+              'x-atlas-csrf-token': csrfToken() ?? '',
+            },
+            body: JSON.stringify({ ...capturedTile, hasSea: tileHasSea(map, tile) }),
+          },
+        )
+        const body = await response.json().catch(() => null)
+        if (!response.ok) {
+          throw new Error(body?.error ?? `Rerender failed with HTTP ${response.status}`)
+        }
+        if (typeof body?.url !== 'string' || !atlasSceneNames.includes(body.scene as AtlasScene)) {
+          throw new Error('The rerender response did not include a valid tile image.')
+        }
 
-            updateRenderingOverlay(renderingScene, `Placing scene ${index + 1} of ${renderScenes.length}…`)
-            installRerenderedTile({
-              zoom: tile.zoom,
-              x: tile.x,
-              y: tile.y,
-              scene: body.scene as AtlasScene,
-              version: Number.isInteger(body.version) ? body.version : tile.version,
-              variant: typeof body.variant === 'string' ? body.variant : 'default',
-              url: body.url,
-              contentBounds: body.contentBounds ?? null,
-            })
-          } catch (error) {
-            failedCount += 1
-            rerenderControl.title = error instanceof Error ? error.message : 'Rerender failed'
-          }
-        }
-        if (requestedCount > renderCount || failedCount) {
-          rerenderControl.title = [
-            requestedCount > renderCount
-              ? `Only ${renderCount} unused scene${renderCount === 1 ? '' : 's'} were available.`
-              : null,
-            failedCount ? `${failedCount} render${failedCount === 1 ? '' : 's'} failed.` : null,
-          ].filter(Boolean).join(' ')
-        }
+        updateRenderingOverlay(renderingScene, 'Placing the finished atlas plate…')
+        installRerenderedTile({
+          zoom: tile.zoom,
+          x: tile.x,
+          y: tile.y,
+          scene: body.scene as AtlasScene,
+          version: Number.isInteger(body.version) ? body.version : tile.version,
+          variant: typeof body.variant === 'string' ? body.variant : 'default',
+          url: body.url,
+          contentBounds: body.contentBounds ?? null,
+        })
       } catch (error) {
         rerenderControl.title = error instanceof Error ? error.message : 'Rerender failed'
       } finally {
-        rerendering = false
-        renderingTile = null
-        deleteControl.disabled = false
-        cycleControl.disabled = false
-        rerenderControl.disabled = false
-        setControlIcon(rerenderControl, 'rerender', 'Render a new scene')
+        renderingByPosition.delete(positionKey)
         positionControl()
       }
     })

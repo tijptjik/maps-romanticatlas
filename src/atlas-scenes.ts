@@ -69,17 +69,6 @@ export const atlasSceneNames = Object.keys(atlasScenes) as Array<keyof typeof at
 
 export type AtlasScene = keyof typeof atlasScenes
 
-export const availableAtlasScenes = (
-  hasSea: boolean,
-  excluded: Iterable<AtlasScene> = [],
-): AtlasScene[] => {
-  const candidates = hasSea
-    ? atlasSceneNames
-    : atlasSceneNames.filter(scene => !atlasSeaScenes.has(scene))
-  const excludedSet = new Set(excluded)
-  return candidates.filter(scene => !excludedSet.has(scene))
-}
-
 export const pickAtlasScene = (
   hasSea: boolean,
   excluded: Iterable<AtlasScene> = [],
@@ -87,7 +76,8 @@ export const pickAtlasScene = (
   const candidates = hasSea
     ? atlasSceneNames
     : atlasSceneNames.filter(scene => !atlasSeaScenes.has(scene))
-  const unpicked = availableAtlasScenes(hasSea, excluded)
+  const excludedSet = new Set(excluded)
+  const unpicked = candidates.filter(scene => !excludedSet.has(scene))
   const available = unpicked.length ? unpicked : candidates
   return available[Math.floor(Math.random() * available.length)]
 }
