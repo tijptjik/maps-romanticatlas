@@ -4,5 +4,11 @@
     "types": [],
     "lib": ["ES2022", "DOM", "DOM.Iterable"]
   },
-  "include": ["src/worker.ts", "src/worker-api.ts", "src/atlas-scenes.ts", "worker-configuration.d.ts"]
+  "include": [
+    "src/worker.ts",
+    "src/worker-api.ts",
+    "src/atlas-manifest.ts",
+    "src/atlas-scenes.ts",
+    "worker-configuration.d.ts"
+  ]
 }
