@@ -1689,6 +1689,7 @@ export const installAtlasTileInteractions = map => {
         message?: string
         url?: string
         scene?: string
+        variant?: string
         contentBounds?: { x: number; y: number; width: number; height: number } | null
       } | null
       try {

@@ -1,6 +1,7 @@
 export const atlasZoom = 18
 export const atlasTileSize = 512
 export const generationVersion = 4
+export const defaultAtlasVariant = 'default'
 // Keep the current write version stable while allowing every retained cache
 // generation, including the pre-existing v5 set, to be replayed or selected.
 export const readableCacheVersions = [1, 2, 3, 4, 5] as const
@@ -20,6 +21,7 @@ export type AtlasTile<Scene extends string = string> = AtlasPosition & { scene: 
 export type CachedAtlasTile<Scene extends string = string> = {
   tile: AtlasTile<Scene>
   version: number
+  variant: string
   contentType: string
   contentBounds: ContentBounds
 }
@@ -78,19 +80,40 @@ export const requestedCacheVersion = (searchParams: URLSearchParams) => {
   return isSupportedCacheVersion(version) ? version : null
 }
 
+export const requestedAtlasVariant = (searchParams: URLSearchParams) => {
+  const value = searchParams.get('variant')
+  return value && /^[a-z0-9-]{1,64}$/.test(value) ? value : defaultAtlasVariant
+}
+
 export const atlasTileCacheKey = (
   tile: AtlasTile,
   version = generationVersion,
-) => `atlas/${tile.zoom}/${tile.x}/${tile.y}/${tile.scene}.v${version}`
+  variant = defaultAtlasVariant,
+) => `atlas/${tile.zoom}/${tile.x}/${tile.y}/${tile.scene}.v${version}${
+  variant === defaultAtlasVariant ? '' : `.${variant}`
+}`
 
-export const atlasImageKey = (tile: AtlasTile, version = generationVersion) =>
-  `${atlasTileCacheKey(tile, version)}.image`
+export const atlasImageKey = (
+  tile: AtlasTile,
+  version = generationVersion,
+  variant = defaultAtlasVariant,
+) => `${atlasTileCacheKey(tile, version, variant)}.image`
 
-export const atlasMetadataKey = (tile: AtlasTile, version = generationVersion) =>
-  `${atlasTileCacheKey(tile, version)}.json`
+export const atlasMetadataKey = (
+  tile: AtlasTile,
+  version = generationVersion,
+  variant = defaultAtlasVariant,
+) => `${atlasTileCacheKey(tile, version, variant)}.json`
 
-export const atlasTileUrl = (tile: AtlasTile, version = generationVersion) =>
-  `/generated-tiles/${tile.zoom}/${tile.x}/${tile.y}/${tile.scene}?version=${version}`
+export const atlasTileUrl = (
+  tile: AtlasTile,
+  version = generationVersion,
+  variant = defaultAtlasVariant,
+) => {
+  const params = new URLSearchParams({ version: String(version) })
+  if (variant !== defaultAtlasVariant) params.set('variant', variant)
+  return `/generated-tiles/${tile.zoom}/${tile.x}/${tile.y}/${tile.scene}?${params}`
+}
 
 export const normalizeContentBounds = (value: unknown): ContentBounds => {
   const candidate = value as Record<string, unknown> | null | undefined
@@ -212,16 +235,17 @@ export const cacheStatusPayload = <Scene extends string>({
   scenes: Scene[]
 }) => ({
   cached: Boolean(cached),
-  url: cached ? atlasTileUrl(cached.tile, cached.version) : null,
+  url: cached ? atlasTileUrl(cached.tile, cached.version, cached.variant) : null,
   scene: cached?.tile.scene ?? null,
   scenes,
   contentBounds: cached?.contentBounds ?? null,
 })
 
 export const cachedTilePayload = <Scene extends string>(cached: CachedAtlasTile<Scene>) => ({
-  url: atlasTileUrl(cached.tile, cached.version),
+  url: atlasTileUrl(cached.tile, cached.version, cached.variant),
   scene: cached.tile.scene,
   version: cached.version,
+  variant: cached.variant,
   contentBounds: cached.contentBounds ?? null,
 })
 

@@ -25,6 +25,7 @@ import {
   cachedTilesPayload,
   cookieValue,
   csrfCookieName,
+  defaultAtlasVariant,
   generationVersion,
   isAllowedApplicationRequest,
   isReadableCacheVersion,
@@ -34,6 +35,7 @@ import {
   parseAtlasPositionPath,
   parseAtlasTilePath,
   readableCacheVersions,
+  requestedAtlasVariant,
   requestedCacheVersion as parseRequestedCacheVersion,
 } from '../src/atlas-protocol.ts'
 
@@ -310,16 +312,16 @@ const composeTileImage = async (sourceImage, generatedImage, safeMask, lineOverl
   return { contentType: 'image/png', data: tile }
 }
 
-const tilePaths = tile => {
-  return versionedTilePaths(tile, generationVersion)
+const tilePaths = (tile, variant = defaultAtlasVariant) => {
+  return versionedTilePaths(tile, generationVersion, variant)
 }
 
-const versionedTilePaths = (tile, version) => {
+const versionedTilePaths = (tile, version, variant = defaultAtlasVariant) => {
   const directory = path.join(cacheDirectory, String(tile.zoom), String(tile.x), String(tile.y))
   return {
     directory,
-    image: path.join(directory, path.basename(atlasImageKey(tile, version))),
-    metadata: path.join(directory, path.basename(atlasMetadataKey(tile, version))),
+    image: path.join(directory, path.basename(atlasImageKey(tile, version, variant))),
+    metadata: path.join(directory, path.basename(atlasMetadataKey(tile, version, variant))),
   }
 }
 
@@ -348,10 +350,27 @@ const getCachedTile = async tile => {
   return cached ? { ...cached, version: generationVersion } : null
 }
 const getLegacyCachedTile = tile => readCachedTile(legacyTilePaths(tile))
-const getVersionedCachedTile = async (tile, version) => {
+const getVersionedCachedTile = async (tile, version, variant = defaultAtlasVariant) => {
   if (!isSupportedCacheVersion(version)) return null
-  const cached = await readCachedTile(versionedTilePaths(tile, version))
-  return cached ? { ...cached, version } : null
+  const cached = await readCachedTile(versionedTilePaths(tile, version, variant))
+  return cached ? { ...cached, version, variant } : null
+}
+const getVersionedCachedTiles = async (tile, version) => {
+  const directory = versionedTilePaths(tile, version).directory
+  const scenePattern = tile.scene.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  try {
+    const files = await readdir(directory)
+    const variants = files.flatMap(file => {
+      const match = file.match(new RegExp(`^${scenePattern}\\.v${version}(?:\\.([a-z0-9-]{1,64}))?\\.json$`))
+      return match ? [match[1] ?? defaultAtlasVariant] : []
+    })
+    return (await Promise.all(variants.map(async variant => {
+      const cached = await getVersionedCachedTile(tile, version, variant)
+      return cached ? { ...cached, tile } : null
+    }))).filter(Boolean)
+  } catch {
+    return []
+  }
 }
 
 const requestedCacheVersion = request =>
@@ -359,12 +378,10 @@ const requestedCacheVersion = request =>
 
 const findCachedTile = async tile => {
   const cachedTiles = (await Promise.all(
-    readableCacheVersions.flatMap(version => atlasSceneNames.map(async scene => {
-      const candidate = { ...tile, scene }
-      const cached = await getVersionedCachedTile(candidate, version)
-      return cached ? { ...cached, tile: candidate } : null
-    })),
-  )).filter(Boolean)
+    readableCacheVersions.flatMap(version => atlasSceneNames.map(async scene =>
+      getVersionedCachedTiles({ ...tile, scene }, version),
+    )),
+  )).flat()
   if (!cachedTiles.length) return null
   return cachedTiles[Math.floor(Math.random() * cachedTiles.length)]
 }
@@ -388,13 +405,14 @@ const listCachedTiles = async (requestedVersion = generationVersion) => {
           const metadataFiles = await readdir(directory)
           for (const metadataFile of metadataFiles) {
             const currentMatch = metadataFile.match(
-              /^(.+)\.v(\d+)\.json$/,
+              /^(.+)\.v(\d+)(?:\.([a-z0-9-]{1,64}))?\.json$/,
             )
             if (!currentMatch) continue
             const scene = currentMatch[1]
             const version = Number(currentMatch[2])
+            const variant = currentMatch[3] ?? defaultAtlasVariant
             if (isSupportedCacheVersion(version))
-              versionedTiles.push({ scene, zoom: atlasZoom, x, y, version })
+              versionedTiles.push({ scene, zoom: atlasZoom, x, y, version, variant })
           }
         }
       }
@@ -408,11 +426,11 @@ const listCachedTiles = async (requestedVersion = generationVersion) => {
         tile.x >= tileCount ||
         tile.y >= tileCount
       ) continue
-      const cached = await getVersionedCachedTile(tile, tile.version)
+      const cached = await getVersionedCachedTile(tile, tile.version, tile.variant)
       if (cached) {
         cachedTiles.add(JSON.stringify({
           ...tile,
-          url: atlasTileUrl(tile, tile.version),
+          url: atlasTileUrl(tile, tile.version, tile.variant),
           contentBounds: cached.contentBounds ?? null,
         }))
       }
@@ -479,7 +497,8 @@ const generateTile = async (tile, sourceImage, guideImage, safeMask, lineOverlay
   })
   const generatedAt = performance.now()
 
-  const { directory, image, metadata } = tilePaths(tile)
+  const variant = randomUUID()
+  const { directory, image, metadata } = tilePaths(tile, variant)
   const composedImage = await composeTileImage(
     sourceImage,
     generatedImage,
@@ -505,14 +524,15 @@ const generateTile = async (tile, sourceImage, guideImage, safeMask, lineOverlay
       `${Math.round(generatedAt - startedAt)}ms; cached in ` +
       `${Math.round(performance.now() - generatedAt)}ms`,
   )
-  return { ...cacheEntry, tile }
+  return { ...cacheEntry, tile, variant }
 }
 
 const serveCachedTile = async (request, response, tile) => {
   if (request.method !== 'GET') return false
   const requestedVersion = requestedCacheVersion(request)
+  const variant = requestedAtlasVariant(requestSearchParams(request))
   const cached = Number.isInteger(requestedVersion)
-    ? await getVersionedCachedTile(tile, requestedVersion)
+    ? await getVersionedCachedTile(tile, requestedVersion, variant)
     : await getCachedTile(tile) ?? await getLegacyCachedTile(tile)
   if (!cached) {
     sendError(response, 404, 'This atlas tile has not been generated yet.')
@@ -562,8 +582,9 @@ const deleteCachedTile = async (request, response, tile) => {
   const releaseTileLock = await acquireTileLock(tile)
   try {
     const requestedVersion = requestedCacheVersion(request)
+    const variant = requestedAtlasVariant(requestSearchParams(request))
     const cached = Number.isInteger(requestedVersion)
-      ? await getVersionedCachedTile(tile, requestedVersion)
+      ? await getVersionedCachedTile(tile, requestedVersion, variant)
       : await getCachedTile(tile) ?? await getLegacyCachedTile(tile)
     if (!cached) {
       sendError(response, 404, 'This atlas tile is not cached.')
@@ -656,6 +677,7 @@ const generateAtlasTile = async (request, response, tile, force = false) => {
       sendJson(response, 200, cachedTilePayload({
         tile: generated.tile,
         version: generated.generationVersion,
+        variant: generated.variant,
         contentType: generated.contentType,
         contentBounds: generated.contentBounds,
       }))

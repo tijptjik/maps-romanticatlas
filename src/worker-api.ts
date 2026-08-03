@@ -20,6 +20,7 @@ import {
   cachedTilesPayload,
   cookieValue,
   csrfCookieName,
+  defaultAtlasVariant,
   generationVersion,
   isAllowedApplicationRequest,
   isReadableCacheVersion,
@@ -29,6 +30,7 @@ import {
   parseAtlasPositionPath,
   parseAtlasTilePath,
   requestedCacheVersion,
+  requestedAtlasVariant,
   type AtlasTile,
   type CachedAtlasTile,
 } from './atlas-protocol.ts'
@@ -127,10 +129,10 @@ const randomItem = <T>(items: T[]) => {
 }
 
 
-const readCachedTile = async (bucket: R2Bucket, tile: Tile, version: number) => {
-  const imageObject = await bucket.head(atlasImageKey(tile, version))
+const readCachedTile = async (bucket: R2Bucket, tile: Tile, version: number, variant = defaultAtlasVariant) => {
+  const imageObject = await bucket.head(atlasImageKey(tile, version, variant))
   if (!imageObject) return null
-  const metadataObject = await bucket.get(atlasMetadataKey(tile, version))
+  const metadataObject = await bucket.get(atlasMetadataKey(tile, version, variant))
   if (!metadataObject) return null
   try {
     const metadata = await metadataObject.json<{
@@ -140,10 +142,11 @@ const readCachedTile = async (bucket: R2Bucket, tile: Tile, version: number) => 
     return {
       tile,
       version,
+      variant,
       contentType: metadata.contentType ?? 'image/png',
       contentBounds: normalizeContentBounds(metadata.contentBounds),
-      imageKey: atlasImageKey(tile, version),
-      metadataKey: atlasMetadataKey(tile, version),
+      imageKey: atlasImageKey(tile, version, variant),
+      metadataKey: atlasMetadataKey(tile, version, variant),
     } satisfies CachedTile
   } catch {
     return null
@@ -166,10 +169,11 @@ const toCachedTile = (entry: AtlasManifestEntry): CachedTile | null => {
   return {
     tile,
     version: entry.version,
+    variant: entry.variant,
     contentType: entry.contentType,
     contentBounds: entry.contentBounds,
-    imageKey: atlasImageKey(tile, entry.version),
-    metadataKey: atlasMetadataKey(tile, entry.version),
+    imageKey: atlasImageKey(tile, entry.version, entry.variant),
+    metadataKey: atlasMetadataKey(tile, entry.version, entry.variant),
   }
 }
 
@@ -194,11 +198,12 @@ const cachedTileFromManifest = async (
   env: AtlasEnv,
   tile: Tile,
   version: number | null,
+  variant = defaultAtlasVariant,
 ) => {
   const expectedVersion = version ?? generationVersion
   const cached = await manifestEntriesForPosition(env, tile)
   const manifestEntry = cached.find(
-    entry => entry.tile.scene === tile.scene && entry.version === expectedVersion,
+    entry => entry.tile.scene === tile.scene && entry.version === expectedVersion && entry.variant === variant,
   )
   if (manifestEntry) return manifestEntry
 
@@ -206,7 +211,7 @@ const cachedTileFromManifest = async (
   // starts with an empty Durable Object, even when it uses the remote bucket.
   // Keep their stable, versioned image URLs valid until a manifest rebuild has
   // indexed them.
-  return readCachedTile(env.ATLAS_BUCKET, tile, expectedVersion)
+  return readCachedTile(env.ATLAS_BUCKET, tile, expectedVersion, variant)
 }
 
 const publishManifestEntry = async (env: AtlasEnv, cached: CachedTile) => {
@@ -216,6 +221,7 @@ const publishManifestEntry = async (env: AtlasEnv, cached: CachedTile) => {
     y: cached.tile.y,
     scene: cached.tile.scene,
     version: cached.version,
+    variant: cached.variant,
     contentType: cached.contentType,
     contentBounds: cached.contentBounds,
   }
@@ -223,37 +229,37 @@ const publishManifestEntry = async (env: AtlasEnv, cached: CachedTile) => {
 }
 
 const listCachedTiles = async (bucket: R2Bucket, requested: number | null = null) => {
-  const latestVersions = new Map<string, { tile: Tile; version: number }>()
+  const cachedVariants = new Map<string, { tile: Tile; version: number; variant: string }>()
   let cursor: string | undefined
   do {
     const listing = await bucket.list({ prefix: `atlas/${atlasZoom}/`, cursor })
     for (const object of listing.objects) {
       const match = object.key.match(
-        new RegExp(`^atlas/${atlasZoom}/(\\d+)/(\\d+)/(.+)\\.v(\\d+)\\.json$`),
+        new RegExp(`^atlas/${atlasZoom}/(\\d+)/(\\d+)/(.+)\\.v(\\d+)(?:\\.([a-z0-9-]{1,64}))?\\.json$`),
       )
       if (!match) continue
-      const [, x, y, scene, versionText] = match
+      const [, x, y, scene, versionText, variantText] = match
       const version = Number(versionText)
+      const variant = variantText ?? defaultAtlasVariant
       const numericX = Number(x)
       const numericY = Number(y)
       const tileCount = atlasTileCount()
       if (!atlasScenes[scene] || !isSupportedCacheVersion(version)) continue
       if (numericX >= tileCount || numericY >= tileCount) continue
-      const key = `${numericX}/${numericY}/${scene}`
+      const key = `${numericX}/${numericY}/${scene}/${version}/${variant}`
       if (requested !== null && version !== requested) continue
-      if (requested !== null || version > (latestVersions.get(key)?.version ?? 0)) {
-        latestVersions.set(key, {
-          tile: { scene: scene as Scene, zoom: atlasZoom, x: numericX, y: numericY },
-          version,
-        })
-      }
+      cachedVariants.set(key, {
+        tile: { scene: scene as Scene, zoom: atlasZoom, x: numericX, y: numericY },
+        version,
+        variant,
+      })
     }
     cursor = listing.truncated ? listing.cursor : undefined
   } while (cursor)
 
   const cached = await Promise.all(
-    [...latestVersions.values()].map(({ tile, version }) =>
-      readCachedTile(bucket, tile, version),
+    [...cachedVariants.values()].map(({ tile, version, variant }) =>
+      readCachedTile(bucket, tile, version, variant),
     ),
   )
   return cached
@@ -264,7 +270,8 @@ const listCachedTiles = async (bucket: R2Bucket, requested: number | null = null
       x: entry.tile.x,
       y: entry.tile.y,
       version: entry.version,
-      url: atlasTileUrl(entry.tile, entry.version),
+      variant: entry.variant,
+      url: atlasTileUrl(entry.tile, entry.version, entry.variant),
       contentBounds: entry.contentBounds,
     }))
 }
@@ -516,7 +523,12 @@ const applicationRequestIsAllowed = (
 }
 
 const serveCachedTile = async (request: Request, env: AtlasEnv, tile: Tile) => {
-  const cached = await cachedTileFromManifest(env, tile, requestedVersion(request))
+  const cached = await cachedTileFromManifest(
+    env,
+    tile,
+    requestedVersion(request),
+    requestedAtlasVariant(new URL(request.url).searchParams),
+  )
   if (!cached) return errorResponse(404, 'This atlas tile has not been generated yet.')
   const object = await env.ATLAS_BUCKET.get(cached.imageKey)
   if (!object) return errorResponse(404, 'This atlas tile has not been generated yet.')
@@ -573,8 +585,9 @@ const generateTile = async (
       mask: 'vector-safe-zones',
       outputSize: { width: atlasTileSize, height: atlasTileSize },
     }
-    const versionedImageKey = atlasImageKey(tile)
-    const versionedMetadataKey = atlasMetadataKey(tile)
+    const variant = crypto.randomUUID()
+    const versionedImageKey = atlasImageKey(tile, generationVersion, variant)
+    const versionedMetadataKey = atlasMetadataKey(tile, generationVersion, variant)
     await env.ATLAS_BUCKET.put(versionedImageKey, composed, {
       httpMetadata: {
         contentType: 'image/png',
@@ -587,6 +600,7 @@ const generateTile = async (
     await publishManifestEntry(env, {
       tile,
       version: generationVersion,
+      variant,
       contentType: entry.contentType,
       contentBounds,
       imageKey: versionedImageKey,
@@ -595,6 +609,7 @@ const generateTile = async (
     return json(cachedTilePayload({
       tile,
       version: generationVersion,
+      variant,
       contentType: entry.contentType,
       contentBounds,
     }))
@@ -655,7 +670,7 @@ const serveCacheStatus = async (env: AtlasEnv, position: Omit<Tile, 'scene'>) =>
   )
 }
 
-const manifestMetadataKeyPattern = /^atlas\/(\d+)\/(\d+)\/(\d+)\/(.+)\.v(\d+)\.json$/
+const manifestMetadataKeyPattern = /^atlas\/(\d+)\/(\d+)\/(\d+)\/(.+)\.v(\d+)(?:\.([a-z0-9-]{1,64}))?\.json$/
 
 const manifestEntryFromMetadata = async (
   bucket: R2Bucket,
@@ -663,11 +678,12 @@ const manifestEntryFromMetadata = async (
 ): Promise<AtlasManifestEntry | null> => {
   const match = key.match(manifestMetadataKeyPattern)
   if (!match) return null
-  const [, zoomText, xText, yText, scene, versionText] = match
+  const [, zoomText, xText, yText, scene, versionText, variantText] = match
   const zoom = Number(zoomText)
   const x = Number(xText)
   const y = Number(yText)
   const version = Number(versionText)
+  const variant = variantText ?? defaultAtlasVariant
   const tileCount = 2 ** zoom
   if (
     zoom !== atlasZoom ||
@@ -683,7 +699,7 @@ const manifestEntryFromMetadata = async (
   const tile = { scene: scene as Scene, zoom, x, y }
   const [metadataObject, imageObject] = await Promise.all([
     bucket.get(key),
-    bucket.head(atlasImageKey(tile, version)),
+    bucket.head(atlasImageKey(tile, version, variant)),
   ])
   if (!metadataObject || !imageObject) return null
   try {
@@ -697,6 +713,7 @@ const manifestEntryFromMetadata = async (
       y,
       scene,
       version,
+      variant,
       contentType:
         metadata.contentType ?? imageObject.httpMetadata?.contentType ?? 'image/png',
       contentBounds: normalizeContentBounds(metadata.contentBounds),
@@ -778,7 +795,8 @@ const deleteCachedTile = async (request: Request, env: AtlasEnv, tile: Tile) => 
   }
 
   const version = requestedVersion(request) ?? generationVersion
-  const cached = await readCachedTile(env.ATLAS_BUCKET, tile, version)
+  const variant = requestedAtlasVariant(new URL(request.url).searchParams)
+  const cached = await readCachedTile(env.ATLAS_BUCKET, tile, version, variant)
   if (!cached) return errorResponse(404, 'This atlas tile is not cached.')
   await env.ATLAS_BUCKET.delete([cached.imageKey, cached.metadataKey])
   await env.ATLAS_MANIFEST.getByName(manifestShardName(tile)).remove({
@@ -787,6 +805,7 @@ const deleteCachedTile = async (request: Request, env: AtlasEnv, tile: Tile) => 
     y: tile.y,
     scene: tile.scene,
     version,
+    variant,
   })
   return json({ deleted: true, tile })
 }

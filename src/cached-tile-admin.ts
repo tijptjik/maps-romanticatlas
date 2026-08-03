@@ -9,7 +9,7 @@ const adminStatusId = 'atlas-admin-status'
 const adminTokenStorageKey = 'atlas-admin-token'
 const csrfCookieName = 'atlas_csrf'
 
-const tileKey = tile => `${tile.zoom}/${tile.x}/${tile.y}/${tile.scene}`
+const tileKey = tile => `${tile.zoom}/${tile.x}/${tile.y}/${tile.scene}/${tile.variant ?? 'default'}`
 const tilePositionKey = tile => `${tile.zoom}/${tile.x}/${tile.y}`
 const sceneLabel = scene =>
   scene
@@ -460,6 +460,7 @@ export const installCachedTileAdmin = async map => {
           y: tile.y,
           scene: body.scene as AtlasScene,
           version: Number.isInteger(body.version) ? body.version : tile.version,
+          variant: typeof body.variant === 'string' ? body.variant : 'default',
           url: body.url,
           contentBounds: body.contentBounds ?? null,
         })
@@ -493,7 +494,7 @@ export const installCachedTileAdmin = async map => {
       deleteControl.textContent = 'Deleting…'
       try {
         const response = await fetchAdmin(
-          `/api/atlas-tiles/${tile.zoom}/${tile.x}/${tile.y}/${tile.scene}?version=${tile.version}`,
+          `/api/atlas-tiles/${tile.zoom}/${tile.x}/${tile.y}/${tile.scene}?version=${tile.version}&variant=${encodeURIComponent(tile.variant ?? 'default')}`,
           {
             method: 'DELETE',
             headers: {
