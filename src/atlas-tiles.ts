@@ -599,7 +599,9 @@ const fogFragmentShader = `
   uniform sampler2D u_mask;
   uniform float u_time;
   uniform vec2 u_anchor_screen;
-  uniform vec2 u_mask_offset;
+  uniform vec2 u_mask_anchor_screen;
+  uniform float u_mask_scale;
+  uniform float u_map_scale;
   uniform vec2 u_viewport_size;
   varying vec2 v_uv;
 
@@ -628,7 +630,8 @@ const fogFragmentShader = `
     // The mask moves with the map while panning, so screen-space noise would
     // expose a new part of the cloud field and make the fog appear to speed up.
     vec2 screenPosition = vec2(v_uv.x, 1.0 - v_uv.y) * u_viewport_size;
-    vec2 fogUv = (screenPosition - u_anchor_screen) / u_viewport_size + 0.5;
+    vec2 fogUv =
+      (screenPosition - u_anchor_screen) / (u_viewport_size * u_map_scale) + 0.5;
 
     // Gently deform the silhouette as well as moving the internal veils. This
     // keeps the fog from reading as a static set of tile-shaped patches.
@@ -639,7 +642,13 @@ const fogFragmentShader = `
     // The mask is painted into a screen-sized canvas. Compensate for map
     // movement since its last paint so the same fog body stays locked to the
     // same map coordinates between canvas updates.
-    vec2 maskUv = clamp(v_uv - u_mask_offset + maskWarp, 0.0, 1.0);
+    vec2 currentAnchorUv = u_anchor_screen / u_viewport_size;
+    vec2 maskAnchorUv = u_mask_anchor_screen / u_viewport_size;
+    vec2 maskUv = clamp(
+      maskAnchorUv + (v_uv - currentAnchorUv + maskWarp) / u_mask_scale,
+      0.0,
+      1.0
+    );
     float mask = texture2D(u_mask, maskUv).a;
     if (mask < 0.01) discard;
 
@@ -746,18 +755,18 @@ const createFogCanvas = (
   cachedTileIds,
   isFogTileRenderable,
 ) => {
-  const mapDataIsReady = () =>
-    map.isStyleLoaded() && map.isSourceLoaded('hongkong-latest') && map.areTilesLoaded()
   const mapSourceIsReady = () =>
     map.isStyleLoaded() && map.isSourceLoaded('hongkong-latest')
   const canvas = document.createElement('canvas')
   canvas.className = 'atlas-fog'
   canvas.setAttribute('aria-hidden', 'true')
+  canvas.style.transformOrigin = '0 0'
   map.getContainer().append(canvas)
 
   const mistCanvas = document.createElement('canvas')
   mistCanvas.className = 'atlas-fog-cached-mist'
   mistCanvas.setAttribute('aria-hidden', 'true')
+  mistCanvas.style.transformOrigin = '0 0'
   map.getContainer().append(mistCanvas)
   const mistContext = mistCanvas.getContext('2d')
   const cachedColourTileCanvas = document.createElement('canvas')
@@ -766,6 +775,7 @@ const createFogCanvas = (
   const loadingCanvas = document.createElement('canvas')
   loadingCanvas.className = 'atlas-fog-loading'
   loadingCanvas.setAttribute('aria-hidden', 'true')
+  loadingCanvas.style.transformOrigin = '0 0'
   map.getContainer().append(loadingCanvas)
   const loadingContext = loadingCanvas.getContext('2d')
   const maskCanvas = document.createElement('canvas')
@@ -785,11 +795,14 @@ const createFogCanvas = (
   const timeUniform = program && gl?.getUniformLocation(program, 'u_time')
   const anchorScreenUniform =
     program && gl?.getUniformLocation(program, 'u_anchor_screen')
-  const maskOffsetUniform =
-    program && gl?.getUniformLocation(program, 'u_mask_offset')
+  const maskAnchorScreenUniform =
+    program && gl?.getUniformLocation(program, 'u_mask_anchor_screen')
+  const maskScaleUniform = program && gl?.getUniformLocation(program, 'u_mask_scale')
+  const mapScaleUniform = program && gl?.getUniformLocation(program, 'u_map_scale')
   const viewportSizeUniform =
     program && gl?.getUniformLocation(program, 'u_viewport_size')
   const fogAnchor = map.getCenter()
+  const fogAnchorZoom = map.getZoom()
   let clientWidth = 0
   let clientHeight = 0
   let maskScale = 0.5
@@ -805,7 +818,13 @@ const createFogCanvas = (
   let animationTime = 0
   let previousFrameTime: number | undefined
   let isDragging = false
+  let isZooming = false
   let maskAnchorScreen: { x: number; y: number } | undefined
+  let maskAnchorZoom: number | undefined
+  let mistAnchorScreen: { x: number; y: number } | undefined
+  let mistAnchorZoom: number | undefined
+  let loadingAnchorScreen: { x: number; y: number } | undefined
+  let loadingAnchorZoom: number | undefined
   const fogFrameInterval = 1000 / 60
   const maskFrameInterval = 1000 / 60
   const cachedMistFrameInterval = 1000 / 15
@@ -823,6 +842,29 @@ const createFogCanvas = (
       new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]),
       gl.STATIC_DRAW,
     )
+  }
+
+  const resetCanvasTransform = target => {
+    target.style.transform = ''
+  }
+
+  const snapshotCanvasPosition = (target, setAnchor) => {
+    resetCanvasTransform(target)
+    setAnchor(map.project(fogAnchor), map.getZoom())
+  }
+
+  const positionCanvasDuringZoom = (target, anchorScreen, anchorZoom) => {
+    if (!isZooming || !anchorScreen || anchorZoom === undefined) return
+    const scale = 2 ** (map.getZoom() - anchorZoom)
+    const currentAnchorScreen = map.project(fogAnchor)
+    const translateX = currentAnchorScreen.x - anchorScreen.x * scale
+    const translateY = currentAnchorScreen.y - anchorScreen.y * scale
+    target.style.transform = `matrix(${scale}, 0, 0, ${scale}, ${translateX}, ${translateY})`
+  }
+
+  const positionCanvasesDuringZoom = () => {
+    positionCanvasDuringZoom(mistCanvas, mistAnchorScreen, mistAnchorZoom)
+    positionCanvasDuringZoom(loadingCanvas, loadingAnchorScreen, loadingAnchorZoom)
   }
 
   const resize = () => {
@@ -1096,7 +1138,12 @@ const createFogCanvas = (
   }
 
   const renderCachedColourFields = time => {
-    if (!mistContext || map.getContainer().classList.contains('atlas-admin-mode')) return
+    if (
+      !mistContext ||
+      isZooming ||
+      map.getContainer().classList.contains('atlas-admin-mode')
+    )
+      return
     if (
       !cachedMistDirty &&
       time - lastCachedMistTime < cachedMistFrameInterval
@@ -1114,10 +1161,14 @@ const createFogCanvas = (
     })
     lastCachedMistTime = time
     cachedMistDirty = false
+    snapshotCanvasPosition(mistCanvas, (anchorScreen, zoom) => {
+      mistAnchorScreen = anchorScreen
+      mistAnchorZoom = zoom
+    })
   }
 
   const drawLoadingText = time => {
-    if (!loadingContext) return
+    if (!loadingContext || isZooming) return
     const ratio = canvas.width / Math.max(1, clientWidth)
     loadingContext.setTransform(ratio, 0, 0, ratio, 0, 0)
     loadingContext.clearRect(0, 0, clientWidth, clientHeight)
@@ -1354,7 +1405,17 @@ const createFogCanvas = (
       loadingContext.restore()
     })
 
-    if (!fogError) return
+    const snapshotLoadingCanvas = () => {
+      snapshotCanvasPosition(loadingCanvas, (anchorScreen, zoom) => {
+        loadingAnchorScreen = anchorScreen
+        loadingAnchorZoom = zoom
+      })
+    }
+
+    if (!fogError) {
+      snapshotLoadingCanvas()
+      return
+    }
     const tile = tileFromId(fogError.id)
     const bounds = tileBounds(tile)
     const northWest = map.project([bounds.west, bounds.north])
@@ -1367,7 +1428,10 @@ const createFogCanvas = (
       southEast.y >= 0 &&
       northWest.x <= clientWidth &&
       northWest.y <= clientHeight
-    if (!visible || size <= 0) return
+    if (!visible || size <= 0) {
+      snapshotLoadingCanvas()
+      return
+    }
 
     const fadeIn = easeOutCubic(Math.min(1, (time - fogError.startedAt) / 420))
     const titleSize = Math.max(13, Math.min(27, size * 0.1))
@@ -1399,6 +1463,7 @@ const createFogCanvas = (
       loadingContext.fillText(line, centerX, messageTop + index * lineHeight)
     })
     loadingContext.restore()
+    snapshotLoadingCanvas()
   }
 
   const wrapTextForWidth = (context, text, maxWidth, font, maxLines = 2) => {
@@ -1421,6 +1486,10 @@ const createFogCanvas = (
 
   const renderMask = frameTime => {
     maskFrame = undefined
+    // Repainting the blurred mask for every wheel event competes directly with
+    // MapLibre's zoom render. The shader keeps this last mask geographically
+    // aligned until a precise repaint is cheap again at zoom end.
+    if (isZooming) return
     if (frameTime - lastMaskFrame < maskFrameInterval) {
       if (maskDirty) maskFrame = requestAnimationFrame(renderMask)
       return
@@ -1459,6 +1528,7 @@ const createFogCanvas = (
     })
     uploadMask()
     maskAnchorScreen = map.project(fogAnchor)
+    maskAnchorZoom = map.getZoom()
     maskDirty = false
   }
 
@@ -1509,15 +1579,18 @@ const createFogCanvas = (
         // moves. Its animation clock is paused separately during a drag.
         const anchorScreen = map.project(fogAnchor)
         gl.uniform2f(anchorScreenUniform, anchorScreen.x, anchorScreen.y)
-        if (maskOffsetUniform) {
-          const offsetX = maskAnchorScreen
-            ? (anchorScreen.x - maskAnchorScreen.x) / clientWidth
-            : 0
-          const offsetY = maskAnchorScreen
-            ? (anchorScreen.y - maskAnchorScreen.y) / clientHeight
-            : 0
-          gl.uniform2f(maskOffsetUniform, offsetX, offsetY)
+        if (maskAnchorScreenUniform) {
+          gl.uniform2f(
+            maskAnchorScreenUniform,
+            maskAnchorScreen?.x ?? anchorScreen.x,
+            maskAnchorScreen?.y ?? anchorScreen.y,
+          )
         }
+        gl.uniform1f(
+          maskScaleUniform,
+          2 ** (map.getZoom() - (maskAnchorZoom ?? map.getZoom())),
+        )
+        gl.uniform1f(mapScaleUniform, 2 ** (map.getZoom() - fogAnchorZoom))
         gl.uniform2f(viewportSizeUniform, clientWidth, clientHeight)
       }
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
@@ -1537,6 +1610,19 @@ const createFogCanvas = (
   }
   map.on('dragstart', pauseAnimationForDrag)
   map.on('dragend', resumeAnimationAfterDrag)
+  const startZoom = () => {
+    isZooming = true
+    positionCanvasesDuringZoom()
+  }
+  const updateZoomPosition = () => positionCanvasesDuringZoom()
+  const finishZoom = () => {
+    isZooming = false
+    invalidate()
+  }
+  map.on('zoomstart', startZoom)
+  map.on('zoom', updateZoomPosition)
+  map.on('move', updateZoomPosition)
+  map.on('zoomend', finishZoom)
   map.on('data', invalidate)
   map.on('idle', invalidate)
   resize()
@@ -1570,6 +1656,10 @@ const createFogCanvas = (
       })
       map.off('dragstart', pauseAnimationForDrag)
       map.off('dragend', resumeAnimationAfterDrag)
+      map.off('zoomstart', startZoom)
+      map.off('zoom', updateZoomPosition)
+      map.off('move', updateZoomPosition)
+      map.off('zoomend', finishZoom)
       map.off('data', invalidate)
       map.off('idle', invalidate)
       if (animationFrame) cancelAnimationFrame(animationFrame)

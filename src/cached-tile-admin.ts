@@ -200,7 +200,7 @@ export const installCachedTileAdmin = async map => {
     rerenderControl.className = 'atlas-admin-rerender'
     rerenderControl.type = 'button'
     rerenderControl.hidden = true
-    setControlIcon(rerenderControl, 'rerender', 'Rerender this tile')
+    setControlIcon(rerenderControl, 'rerender', 'Render a different scene')
     actionBar.append(rerenderControl)
 
     const renderingOverlay = document.createElement('section')
@@ -214,9 +214,6 @@ export const installCachedTileAdmin = async map => {
     const renderingKicker = document.createElement('span')
     renderingKicker.className = 'atlas-admin-rendering__kicker'
     renderingKicker.textContent = 'Atlas press at work'
-    const renderingSpinner = document.createElement('span')
-    renderingSpinner.className = 'atlas-admin-rendering__spinner'
-    renderingSpinner.setAttribute('aria-hidden', 'true')
     const renderingTitle = document.createElement('strong')
     renderingTitle.className = 'atlas-admin-rendering__title'
     const renderingMessage = document.createElement('p')
@@ -226,7 +223,6 @@ export const installCachedTileAdmin = async map => {
 
     renderingPanel.append(
       renderingKicker,
-      renderingSpinner,
       renderingTitle,
       renderingMessage,
       renderingProgress,
@@ -277,6 +273,10 @@ export const installCachedTileAdmin = async map => {
 
       renderingOverlay.hidden = !visible
       if (!visible) return
+      renderingOverlay.classList.toggle(
+        'atlas-admin-rendering--compact',
+        right - left < 180 || bottom - top < 180,
+      )
       renderingOverlay.style.left = `${left}px`
       renderingOverlay.style.top = `${top}px`
       renderingOverlay.style.width = `${right - left}px`
@@ -366,6 +366,7 @@ export const installCachedTileAdmin = async map => {
       }
       actionBar.hidden = false
       deleteControl.hidden = false
+      setControlIcon(deleteControl, 'delete', `Delete ${sceneLabel(selectedTile.scene)}`)
       const candidates = tilesByPosition.get(tilePositionKey(selectedTile)) ?? []
       cycleControl.hidden = false
       cycleControl.disabled = candidates.length < 2
@@ -375,7 +376,6 @@ export const installCachedTileAdmin = async map => {
     }
 
     const selectTileAt = point => {
-      if (rerendering) return
       const position = tileForPosition(point)
       const positionKey = `${atlasZoom}/${position.x}/${position.y}`
       const candidates = tilesByPosition.get(positionKey)
@@ -436,6 +436,8 @@ export const installCachedTileAdmin = async map => {
 
     const installRerenderedTile = tile => {
       const positionKey = tilePositionKey(tile)
+      const replacesSelectedTile =
+        selectedTile && tilePositionKey(selectedTile) === positionKey
       const candidates = tilesByPosition.get(positionKey) ?? []
       const matchingIndex = candidates.findIndex(
         candidate => tileKey(candidate) === tileKey(tile),
@@ -460,11 +462,13 @@ export const installCachedTileAdmin = async map => {
       const card = createAtlasTitleCard(container, tile.scene)
       titleCards.set(tileKey(tile), { card, tile })
       activeTilesByPosition.set(positionKey, tile)
-      selectedTile = tile
+      // A render recenters the map for capture, but the operator may then pan
+      // to and select another cached tile while the request is in flight. Do
+      // not make the completed request steal that newer selection.
+      if (replacesSelectedTile) selectedTile = tile
       map.moveLayer(imageLayerId(tile))
       updateCountBadge(positionKey, candidates.length)
       updateStatus()
-      setControlIcon(deleteControl, 'delete', `Delete ${sceneLabel(tile.scene)}`)
       positionControl()
     }
 
@@ -476,14 +480,13 @@ export const installCachedTileAdmin = async map => {
       const tile = selectedTile
       if (
         !window.confirm(
-          `Rerender the cached ${sceneLabel(tile.scene)} image for ${tile.x}/${tile.y}?`,
+          `Render a different scene for ${tile.x}/${tile.y} instead of ${sceneLabel(tile.scene)}?`,
         )
       )
         return
 
       rerendering = true
       renderingTile = tile
-      updateRenderingOverlay(tile, 'Preparing the map reference…')
       deleteControl.disabled = true
       cycleControl.disabled = true
       rerenderControl.disabled = true
@@ -506,11 +509,15 @@ export const installCachedTileAdmin = async map => {
             )
           : []
 
-        updateRenderingOverlay(tile, 'Framing the tile for its new illustration…')
+        // Always exclude the selected scene too. The status response should
+        // contain it, but this makes a different scene an invariant even if a
+        // stale manifest response omits the current image.
+        const scene = pickAtlasScene(tileHasSea(map, tile), [...scenes, tile.scene])
+        const renderingScene = { ...tile, scene }
+        updateRenderingOverlay(renderingScene, 'Preparing the map reference…')
         await focusTileForCapture(tile)
         const capturedTile = await captureTile(map, tile)
-        const scene = pickAtlasScene(tileHasSea(map, tile), scenes)
-        updateRenderingOverlay(tile, 'Setting the new scene in ink and watercolour…')
+        updateRenderingOverlay(renderingScene, 'Setting the new scene in ink and watercolour…')
         const response = await fetchAdmin(
           `/api/atlas-tiles/${tile.zoom}/${tile.x}/${tile.y}/${scene}?rerender=true`,
           {
@@ -530,7 +537,7 @@ export const installCachedTileAdmin = async map => {
           throw new Error('The rerender response did not include a valid tile image.')
         }
 
-        updateRenderingOverlay(tile, 'Placing the finished atlas plate…')
+        updateRenderingOverlay(renderingScene, 'Placing the finished atlas plate…')
         installRerenderedTile({
           zoom: tile.zoom,
           x: tile.x,
@@ -549,7 +556,7 @@ export const installCachedTileAdmin = async map => {
         deleteControl.disabled = false
         cycleControl.disabled = false
         rerenderControl.disabled = false
-        setControlIcon(rerenderControl, 'rerender', 'Rerender this tile')
+        setControlIcon(rerenderControl, 'rerender', 'Render a different scene')
         positionControl()
       }
     })
