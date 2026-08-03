@@ -30,7 +30,6 @@ export const atlasScenes = {
   'rocket-launch': 'a retrofuturistic rocket-launch complex with a towering gantry',
   'raver-arena': 'a vast neon raver arena with lasers and geometric dance floors',
   'ferris-wheel': 'a giant illuminated Ferris wheel surrounded by fairground rides',
-  'football-stadium': 'a packed football stadium with a bright green pitch',
   aquarium: 'a monumental aquarium with a central glass dome and branching tanks',
   'water-park': 'a sprawling water park with twisting slides and turquoise pools',
   'race-circuit': 'a motor-racing circuit with grandstands, pit lanes, and hairpin turns',

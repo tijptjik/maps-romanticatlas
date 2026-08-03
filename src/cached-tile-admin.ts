@@ -229,7 +229,7 @@ export const installCachedTileAdmin = async map => {
       const versionLabel = document.createElement('div')
       versionLabel.className = 'atlas-admin-version'
       const activeTile = activeTilesByPosition.get(positionKey)
-      versionLabel.textContent = `IMAGE v${activeTile.version}`
+      versionLabel.textContent = `v${activeTile.version}`
       versionLabel.setAttribute('aria-label', `Image version ${activeTile.version}`)
       container.append(versionLabel)
       versionLabels.set(positionKey, versionLabel)
@@ -295,7 +295,7 @@ export const installCachedTileAdmin = async map => {
         const activeTile = activeTilesByPosition.get(positionKey)
         label.hidden = !activeTile
         if (!activeTile) return
-        label.textContent = `IMAGE v${activeTile.version}`
+        label.textContent = `v${activeTile.version}`
         label.setAttribute('aria-label', `Image version ${activeTile.version}`)
         positionOverlay(label, activeTile, true)
       })

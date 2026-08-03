@@ -189,9 +189,39 @@ const manifestEntriesForPosition = async (
     .map(toCachedTile)
     .filter((entry): entry is CachedTile => entry !== null)
 
+const cachedTilesFromBucket = async (
+  bucket: R2Bucket,
+  position: Omit<Tile, 'scene'>,
+) => {
+  const listing = await bucket.list({
+    prefix: `atlas/${position.zoom}/${position.x}/${position.y}/`,
+  })
+  const metadataPattern = new RegExp(
+    `^atlas/${position.zoom}/${position.x}/${position.y}/(.+)\\.v(\\d+)(?:\\.([a-z0-9-]{1,64}))?\\.json$`,
+  )
+  const entries = listing.objects.flatMap(object => {
+    const match = object.key.match(metadataPattern)
+    if (!match) return []
+    const [, scene, versionText, variantText] = match
+    const version = Number(versionText)
+    if (!atlasScenes[scene] || !isReadableCacheVersion(version)) return []
+    return [{
+      tile: { ...position, scene: scene as Scene },
+      version,
+      variant: variantText ?? defaultAtlasVariant,
+    }]
+  })
+  return (await Promise.all(entries.map(entry =>
+    readCachedTile(bucket, entry.tile, entry.version, entry.variant),
+  ))).filter((entry): entry is CachedTile => entry !== null)
+}
+
 const findCachedTile = async (env: AtlasEnv, position: Omit<Tile, 'scene'>) => {
   const cached = await manifestEntriesForPosition(env, position)
-  return cached.length ? randomItem(cached) : null
+  if (cached.length) return randomItem(cached)
+  if (!localDevelopmentEnabled(env)) return null
+  const recovered = await cachedTilesFromBucket(env.ATLAS_BUCKET, position)
+  return recovered.length ? randomItem(recovered) : null
 }
 
 const cachedTileFromManifest = async (
