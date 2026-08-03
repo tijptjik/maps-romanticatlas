@@ -301,6 +301,33 @@ export const installCachedTileAdmin = async map => {
       element.style.top = `${Math.max(8, Math.min(canvas.clientHeight - 40, northWest.y + 8))}px`
     }
 
+    const positionActionBar = tile => {
+      const bounds = tileBounds(tile)
+      const northWest = map.project([bounds.west, bounds.north])
+      const southEast = map.project([bounds.east, bounds.south])
+      const canvas = map.getCanvas()
+      const tileLeft = Math.max(8, northWest.x)
+      const tileRight = Math.min(canvas.clientWidth - 8, southEast.x)
+      const tileTop = Math.max(8, northWest.y)
+      const tileBottom = Math.min(canvas.clientHeight - 8, southEast.y)
+      const barWidth = actionBar.offsetWidth
+      const barHeight = actionBar.offsetHeight
+      const tileCenter = (tileLeft + tileRight) / 2
+      const left = Math.max(
+        8,
+        Math.min(canvas.clientWidth - barWidth - 8, tileCenter - barWidth / 2),
+      )
+      const top = Math.max(
+        tileTop + 8,
+        Math.min(canvas.clientHeight - barHeight - 8, tileBottom - barHeight - 12),
+      )
+
+      actionBar.style.left = `${left}px`
+      actionBar.style.top = `${top}px`
+      actionBar.style.bottom = 'auto'
+      actionBar.style.transform = 'none'
+    }
+
     const positionControl = () => {
       titleCards.forEach(({ card, tile }) => {
         const positionKey = tilePositionKey(tile)
@@ -341,6 +368,7 @@ export const installCachedTileAdmin = async map => {
       cycleControl.disabled = candidates.length < 2
       cycleControl.title = candidates.length < 2 ? 'No alternate image' : 'Show next image'
       rerenderControl.hidden = false
+      positionActionBar(selectedTile)
     }
 
     const selectTileAt = point => {
