@@ -223,6 +223,71 @@ const tileLandFraction = (map, tile) => {
   return landSamples.filter(Boolean).length / landSamples.length
 }
 
+const pointInRing = (point, ring) => {
+  let inside = false
+  for (let index = 0, previous = ring.length - 1; index < ring.length; previous = index++) {
+    const [x, y] = ring[index]
+    const [previousX, previousY] = ring[previous]
+    const crosses = y > point[1] !== previousY > point[1]
+    if (
+      crosses &&
+      point[0] <
+        ((previousX - x) * (point[1] - y)) / (previousY - y) + x
+    ) {
+      inside = !inside
+    }
+  }
+  return inside
+}
+
+const geometryContainsPoint = (geometry, point) => {
+  if (!geometry) return false
+  if (geometry.type === 'Polygon') {
+    return geometry.coordinates.some(rings =>
+      pointInRing(point, rings[0]) && rings.slice(1).every(ring => !pointInRing(point, ring)),
+    )
+  }
+  if (geometry.type === 'MultiPolygon') {
+    return geometry.coordinates.some(polygon =>
+      polygon.length > 0 &&
+      pointInRing(point, polygon[0]) &&
+      polygon.slice(1).every(ring => !pointInRing(point, ring)),
+    )
+  }
+  if (geometry.type === 'GeometryCollection') {
+    return geometry.geometries.some(child => geometryContainsPoint(child, point))
+  }
+  return false
+}
+
+const sourceTileLandFraction = (map, tile) => {
+  const bounds = tileBounds(tile)
+  const earthFeatures = map.querySourceFeatures('hongkong-latest', {
+    sourceLayer: 'earth',
+  })
+  if (!earthFeatures.length) return null
+  const waterFeatures = map.querySourceFeatures('hongkong-latest', {
+    sourceLayer: 'water',
+  })
+  const landSamples = Array.from({ length: landSampleSize }, (_, row) =>
+    Array.from({ length: landSampleSize }, (_, column) => {
+      const point = [
+        bounds.west + ((bounds.east - bounds.west) * (column + 0.5)) / landSampleSize,
+        bounds.south + ((bounds.north - bounds.south) * (row + 0.5)) / landSampleSize,
+      ]
+      const onEarth = earthFeatures.some(feature =>
+        geometryContainsPoint(feature.geometry, point),
+      )
+      const onWater = waterFeatures.some(feature =>
+        geometryContainsPoint(feature.geometry, point),
+      )
+      return onEarth && !onWater
+    }),
+  ).flat()
+
+  return landSamples.filter(Boolean).length / landSamples.length
+}
+
 const atlasTileSize = 512
 
 const firstLabelLayerId = map =>
@@ -1516,18 +1581,25 @@ export const installAtlasTileInteractions = map => {
     return landTargetState.get(id)
   }
 
-  // Only fully visible tiles can be classified from rendered features and
-  // interacted with. The fog itself needs a one-tile lead around the viewport,
-  // though, so partial and buffered tiles still render their cloud body.
-  const isFogTileRenderable = tile =>
-    !isFullyVisible(map, tile) || isLandTargetable(tile)
+  const fogLandState = new Map()
+  const isFogTileLand = tile => {
+    const id = tileId(tile)
+    if (fogLandState.has(id)) return fogLandState.get(id)
+    if (isFullyVisible(map, tile)) return isLandTargetable(tile)
+
+    const fraction = sourceTileLandFraction(map, tile)
+    if (fraction === null) return false
+    const isLand = fraction >= landTargetThreshold
+    fogLandState.set(id, isLand)
+    return isLand
+  }
 
   const cachedTileIds = new Set()
   const fog = createFogCanvas(
     map,
     tileState,
     cachedTileIds,
-    isFogTileRenderable,
+    isFogTileLand,
   )
   const revealGeneratedTile = (id, countsAgainstQuota = true) => {
     tileState.set(id, 'revealing')
