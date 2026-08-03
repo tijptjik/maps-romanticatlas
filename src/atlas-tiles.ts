@@ -866,7 +866,11 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
     loadingContext.setTransform(ratio, 0, 0, ratio, 0, 0)
     loadingContext.clearRect(0, 0, clientWidth, clientHeight)
     tileState.forEach((state, id) => {
-      if (state !== 'generating') {
+      // Start the loading title as soon as a tile is clicked. Cache lookup is
+      // asynchronous too, so waiting for `generating` made the title appear
+      // only after that lookup (and made cached tiles skip it altogether).
+      const isLoading = state === 'checking' || state === 'generating'
+      if (!isLoading) {
         loadingSequences.delete(id)
         if (state !== 'revealing') generatingStartedAt.delete(id)
         return
@@ -977,9 +981,6 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
         const firstVisibleWord = isLingering
           ? currentWordIndex
           : Math.max(0, currentWordIndex - 2)
-        const lingerProgress = isLingering
-          ? easeOutCubic(Math.min(1, (phase - wordSequenceDuration) / 500))
-          : 0
         const streamPosition = isLingering
           ? currentWordIndex + 1
           : currentWordIndex + wordElapsed / durations[currentWordIndex]
@@ -1010,11 +1011,20 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
           const wavePhase = waveTime / 1100 + wordIndex * 1.7 + waveDistance * 2.4
           const floatX = Math.sin(wavePhase) * size * 0.035
           const floatY = isLingering ? 0 : Math.cos(wavePhase * 0.72) * size * 0.012
+          const isFinalWord = wordIndex === words.length - 1
+          const finalWordEase =
+            isCurrentWord && isFinalWord && !isLingering
+              ? easeOutCubic(progress)
+              : 1
+          const finalWordY =
+            streamBaseline +
+            (wordHoldCenterY - streamBaseline) * finalWordEase +
+            (isCurrentWord && isFinalWord ? floatY * (1 - finalWordEase) : 0)
           const wordY = isLingeringFinalWord
-            ? wordHoldCenterY +
-              (streamBaseline - lineHeight - wordHoldCenterY) *
-                (1 - lingerProgress)
-            : streamBaseline - distance * lineHeight + floatY
+            ? wordHoldCenterY
+            : isCurrentWord && isFinalWord
+              ? finalWordY
+              : streamBaseline - distance * lineHeight + floatY
           if (!isLingeringFinalWord && wordY - fittedSize * 0.58 < wordLimitY) continue
           drawCenteredLine(
             word,
