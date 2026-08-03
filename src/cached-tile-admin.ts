@@ -1,5 +1,8 @@
 import { createAtlasTitleCard, positionAtlasTitleCard } from './atlas-title-cards.ts'
+import { captureTile, tileHasSea } from './atlas-tiles.ts'
+import { atlasSceneNames, pickAtlasScene, type AtlasScene } from './atlas-scenes.ts'
 import { atlasZoom, tileBounds, tileForPosition } from './tile-geometry.ts'
+import { runtimeModeUrl } from './runtime-modes.ts'
 
 const adminControlId = 'atlas-admin-delete-control'
 const adminStatusId = 'atlas-admin-status'
@@ -8,6 +11,11 @@ const csrfCookieName = 'atlas_csrf'
 
 const tileKey = tile => `${tile.zoom}/${tile.x}/${tile.y}/${tile.scene}`
 const tilePositionKey = tile => `${tile.zoom}/${tile.x}/${tile.y}`
+const sceneLabel = scene =>
+  scene
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
 
 const imageLayerId = tile => `atlas-admin-tile-${tileKey(tile).replaceAll('/', '-')}`
 const imageSourceId = tile => `${imageLayerId(tile)}-source`
@@ -33,7 +41,7 @@ export const fetchAdmin = async (url, options: RequestInit = {}) => {
   const makeRequest = token => {
     const headers = new Headers(options.headers)
     if (token) headers.set('authorization', `Bearer ${token}`)
-    return fetch(url, { ...options, headers })
+    return fetch(runtimeModeUrl(url), { ...options, headers })
   }
 
   let token = storedAdminToken()
@@ -163,6 +171,47 @@ export const installCachedTileAdmin = async map => {
     cycleControl.textContent = 'Cycle image'
     container.append(cycleControl)
 
+    const rerenderControl = document.createElement('button')
+    rerenderControl.id = 'atlas-admin-rerender-control'
+    rerenderControl.className = 'atlas-admin-rerender'
+    rerenderControl.type = 'button'
+    rerenderControl.hidden = true
+    rerenderControl.textContent = '↻'
+    rerenderControl.setAttribute('aria-label', 'Rerender this tile')
+    rerenderControl.title = 'Rerender this tile'
+    container.append(rerenderControl)
+
+    const renderingOverlay = document.createElement('section')
+    renderingOverlay.className = 'atlas-admin-rendering'
+    renderingOverlay.hidden = true
+    renderingOverlay.setAttribute('aria-live', 'polite')
+    renderingOverlay.setAttribute('aria-atomic', 'true')
+
+    const renderingPanel = document.createElement('div')
+    renderingPanel.className = 'atlas-admin-rendering__panel'
+    const renderingKicker = document.createElement('span')
+    renderingKicker.className = 'atlas-admin-rendering__kicker'
+    renderingKicker.textContent = 'Atlas press at work'
+    const renderingSpinner = document.createElement('span')
+    renderingSpinner.className = 'atlas-admin-rendering__spinner'
+    renderingSpinner.setAttribute('aria-hidden', 'true')
+    const renderingTitle = document.createElement('strong')
+    renderingTitle.className = 'atlas-admin-rendering__title'
+    const renderingMessage = document.createElement('p')
+    renderingMessage.className = 'atlas-admin-rendering__message'
+    const renderingProgress = document.createElement('span')
+    renderingProgress.className = 'atlas-admin-rendering__progress'
+
+    renderingPanel.append(
+      renderingKicker,
+      renderingSpinner,
+      renderingTitle,
+      renderingMessage,
+      renderingProgress,
+    )
+    renderingOverlay.append(renderingPanel)
+    container.append(renderingOverlay)
+
     const countBadges = new Map()
     tilesByPosition.forEach((positionTiles, positionKey) => {
       const [zoom, x, y] = positionKey.split('/').map(Number)
@@ -176,6 +225,32 @@ export const installCachedTileAdmin = async map => {
 
     let selectedTile = null
     let deleting = false
+    let rerendering = false
+    let renderingTile = null
+
+    const updateRenderingOverlay = (tile, message) => {
+      renderingTitle.textContent = `Rendering ${sceneLabel(tile.scene)}`
+      renderingMessage.textContent = message
+    }
+
+    const positionRenderingOverlay = tile => {
+      const bounds = tileBounds(tile)
+      const northWest = map.project([bounds.west, bounds.north])
+      const southEast = map.project([bounds.east, bounds.south])
+      const canvas = map.getCanvas()
+      const left = Math.max(0, northWest.x)
+      const top = Math.max(0, northWest.y)
+      const right = Math.min(canvas.clientWidth, southEast.x)
+      const bottom = Math.min(canvas.clientHeight, southEast.y)
+      const visible = right > left && bottom > top
+
+      renderingOverlay.hidden = !visible
+      if (!visible) return
+      renderingOverlay.style.left = `${left}px`
+      renderingOverlay.style.top = `${top}px`
+      renderingOverlay.style.width = `${right - left}px`
+      renderingOverlay.style.height = `${bottom - top}px`
+    }
 
     const positionOverlay = (element, tile, alignRight = false) => {
       const bounds = tileBounds(tile)
@@ -204,26 +279,42 @@ export const installCachedTileAdmin = async map => {
       countBadges.forEach(({ badge, tile }) => {
         positionOverlay(badge, tile)
       })
+      if (rerendering && renderingTile) {
+        deleteControl.hidden = true
+        cycleControl.hidden = true
+        rerenderControl.hidden = true
+        positionRenderingOverlay(renderingTile)
+        return
+      }
+      renderingOverlay.hidden = true
       if (!selectedTile) {
         deleteControl.hidden = true
         cycleControl.hidden = true
+        rerenderControl.hidden = true
         return
       }
       positionOverlay(deleteControl, selectedTile, true)
       const candidates = tilesByPosition.get(tilePositionKey(selectedTile)) ?? []
       cycleControl.hidden = candidates.length < 2
+      rerenderControl.hidden = false
+      let nextControlTop = Number.parseFloat(deleteControl.style.top) + deleteControl.offsetHeight + 6
       if (!cycleControl.hidden) {
         positionOverlay(cycleControl, selectedTile, true)
-        cycleControl.style.top = `${Number.parseFloat(deleteControl.style.top) + deleteControl.offsetHeight + 6}px`
+        cycleControl.style.top = `${nextControlTop}px`
+        nextControlTop += cycleControl.offsetHeight + 6
       }
+      positionOverlay(rerenderControl, selectedTile, true)
+      rerenderControl.style.top = `${nextControlTop}px`
     }
 
     const selectTileAt = point => {
+      if (rerendering) return
       const position = tileForPosition(point)
       const positionKey = `${atlasZoom}/${position.x}/${position.y}`
       const candidates = tilesByPosition.get(positionKey)
       selectedTile = activeTilesByPosition.get(positionKey) ?? candidates?.at(-1) ?? null
       deleteControl.hidden = !selectedTile
+      rerenderControl.hidden = !selectedTile
       if (selectedTile) {
         deleteControl.textContent = `Delete ${selectedTile.scene}`
       }
@@ -257,6 +348,132 @@ export const installCachedTileAdmin = async map => {
       map.moveLayer(imageLayerId(nextTile))
       deleteControl.textContent = `Delete ${nextTile.scene}`
       positionControl()
+    })
+
+    const updateCountBadge = (positionKey, count) => {
+      const countBadge = countBadges.get(positionKey)?.badge
+      if (!countBadge) return
+      countBadge.textContent = `${count} PRE-RENDER${count === 1 ? '' : 'S'}`
+      countBadge.setAttribute('aria-label', `${count} pre-rendered images`)
+    }
+
+    const focusTileForCapture = tile => new Promise<void>(resolve => {
+      const bounds = tileBounds(tile)
+      map.once('idle', resolve)
+      map.fitBounds(
+        [[bounds.west, bounds.south], [bounds.east, bounds.north]],
+        { padding: 24, duration: 0, maxZoom: atlasZoom },
+      )
+    })
+
+    const installRerenderedTile = tile => {
+      const positionKey = tilePositionKey(tile)
+      const candidates = tilesByPosition.get(positionKey) ?? []
+      const matchingIndex = candidates.findIndex(candidate => candidate.scene === tile.scene)
+      const replaced = matchingIndex >= 0 ? candidates[matchingIndex] : null
+
+      if (replaced) {
+        removeCachedImage(map, replaced)
+        titleCards.get(tileKey(replaced))?.card.remove()
+        titleCards.delete(tileKey(replaced))
+        candidates.splice(matchingIndex, 1, tile)
+        const index = tiles.findIndex(candidate => tileKey(candidate) === tileKey(replaced))
+        if (index >= 0) tiles.splice(index, 1, tile)
+      } else {
+        candidates.push(tile)
+        tiles.push(tile)
+        preRenderedCount += 1
+      }
+
+      tilesByPosition.set(positionKey, candidates)
+      installCachedImage(map, tile)
+      const card = createAtlasTitleCard(container, tile.scene)
+      titleCards.set(tileKey(tile), { card, tile })
+      activeTilesByPosition.set(positionKey, tile)
+      selectedTile = tile
+      map.moveLayer(imageLayerId(tile))
+      updateCountBadge(positionKey, candidates.length)
+      updateStatus()
+      deleteControl.textContent = `Delete ${tile.scene}`
+      positionControl()
+    }
+
+    rerenderControl.addEventListener('click', async event => {
+      event.preventDefault()
+      event.stopPropagation()
+      if (!selectedTile || rerendering) return
+
+      const tile = selectedTile
+      rerendering = true
+      renderingTile = tile
+      updateRenderingOverlay(tile, 'Preparing the map reference…')
+      deleteControl.disabled = true
+      cycleControl.disabled = true
+      rerenderControl.disabled = true
+      positionControl()
+      try {
+        // Cache status is the same 9×9 scene lookup used by ordinary tile
+        // generation. It deliberately includes scenes already cached at this
+        // exact coordinate, so rerenders do not duplicate a local event.
+        const statusResponse = await fetch(
+          `/api/atlas-tiles/cache-status/${tile.zoom}/${tile.x}/${tile.y}`,
+          { cache: 'no-store' },
+        )
+        const status = await statusResponse.json().catch(() => null)
+        if (!statusResponse.ok) {
+          throw new Error(status?.error ?? `Cache lookup failed with HTTP ${statusResponse.status}`)
+        }
+        const scenes = Array.isArray(status?.scenes)
+          ? status.scenes.filter((scene): scene is AtlasScene =>
+              typeof scene === 'string' && atlasSceneNames.includes(scene as AtlasScene),
+            )
+          : []
+
+        updateRenderingOverlay(tile, 'Framing the tile for its new illustration…')
+        await focusTileForCapture(tile)
+        const capturedTile = await captureTile(map, tile)
+        const scene = pickAtlasScene(tileHasSea(map, tile), scenes)
+        updateRenderingOverlay(tile, 'Setting the new scene in ink and watercolour…')
+        const response = await fetchAdmin(
+          `/api/atlas-tiles/${tile.zoom}/${tile.x}/${tile.y}/${scene}?rerender=true`,
+          {
+            method: 'POST',
+            headers: {
+              'content-type': 'application/json',
+              'x-atlas-csrf-token': csrfToken() ?? '',
+            },
+            body: JSON.stringify({ ...capturedTile, hasSea: tileHasSea(map, tile) }),
+          },
+        )
+        const body = await response.json().catch(() => null)
+        if (!response.ok) {
+          throw new Error(body?.error ?? `Rerender failed with HTTP ${response.status}`)
+        }
+        if (typeof body?.url !== 'string' || !atlasSceneNames.includes(body.scene as AtlasScene)) {
+          throw new Error('The rerender response did not include a valid tile image.')
+        }
+
+        updateRenderingOverlay(tile, 'Placing the finished atlas plate…')
+        installRerenderedTile({
+          zoom: tile.zoom,
+          x: tile.x,
+          y: tile.y,
+          scene: body.scene as AtlasScene,
+          version: Number.isInteger(body.version) ? body.version : tile.version,
+          url: body.url,
+          contentBounds: body.contentBounds ?? null,
+        })
+      } catch (error) {
+        rerenderControl.title = error instanceof Error ? error.message : 'Rerender failed'
+      } finally {
+        rerendering = false
+        renderingTile = null
+        deleteControl.disabled = false
+        cycleControl.disabled = false
+        rerenderControl.disabled = false
+        rerenderControl.textContent = '↻'
+        positionControl()
+      }
     })
 
     deleteControl.addEventListener('click', async event => {

@@ -121,6 +121,24 @@ const createClearanceNotice = map => {
   }
 }
 
+const createFogErrorAnnouncer = map => {
+  const announcement = document.createElement('div')
+  announcement.className = 'atlas-fog-error-announcement'
+  announcement.setAttribute('role', 'alert')
+  announcement.setAttribute('aria-live', 'assertive')
+  map.getContainer().append(announcement)
+
+  return {
+    announce: text => {
+      announcement.textContent = text
+    },
+    clear: () => {
+      announcement.textContent = ''
+    },
+    destroy: () => announcement.remove(),
+  }
+}
+
 const hideTextLabels = map => {
   const hiddenLayerIds = map
     .getStyle()
@@ -137,7 +155,7 @@ const hideTextLabels = map => {
   return hiddenLayerIds
 }
 
-const captureTile = async (map, tile) => {
+export const captureTile = async (map, tile) => {
   const hiddenLayerIds = hideTextLabels(map)
   try {
     await waitForRender(map)
@@ -179,7 +197,7 @@ const captureTile = async (map, tile) => {
   }
 }
 
-const tileHasSea = (map, tile) => {
+export const tileHasSea = (map, tile) => {
   const bounds = tileBounds(tile)
   const northWest = map.project([bounds.west, bounds.north])
   const southEast = map.project([bounds.east, bounds.south])
@@ -222,9 +240,15 @@ const isRoadLineFeature = feature =>
   feature.layer?.type === 'line' &&
   /road|street|transport|rail|path|trail/.test(featureName(feature))
 
+const isFinePathFeature = feature =>
+  /path|trail|footway|pedestrian|steps|cycleway|track/.test(
+    `${featureName(feature)} ${Object.values(feature.properties ?? {}).join(' ')}`.toLowerCase(),
+  )
+
 const isLockedLineFeature = feature =>
   feature.layer?.type === 'line' &&
-  /road|street|transport|rail|boundary|path|trail|water/.test(featureName(feature))
+  !isFinePathFeature(feature) &&
+  /road|street|transport|rail|boundary|water/.test(featureName(feature))
 
 // The generated image is allowed to blend near the safe-zone boundary, so the
 // protected geometry needs a generous hit area. The source pixels inside that
@@ -232,9 +256,10 @@ const isLockedLineFeature = feature =>
 // street without making the street itself visually wider.
 const lockedLineWidth = (feature, purpose) => {
   const name = featureName(feature)
-  if (/boundary/.test(name)) return purpose === 'mask' ? 8 : 6
-  if (isRoadLineFeature(feature)) return purpose === 'mask' ? 40 : 32
-  return purpose === 'mask' ? 18 : 14
+  if (/boundary/.test(name)) return purpose === 'mask' ? 4 : 2
+  if (/rail/.test(name)) return purpose === 'mask' ? 10 : 6
+  if (isRoadLineFeature(feature)) return purpose === 'mask' ? 18 : 10
+  return purpose === 'mask' ? 8 : 4
 }
 
 const drawGeometry = (
@@ -506,6 +531,7 @@ const fogFragmentShader = `
   uniform sampler2D u_mask;
   uniform float u_time;
   uniform vec2 u_anchor_screen;
+  uniform vec2 u_mask_offset;
   uniform vec2 u_viewport_size;
   varying vec2 v_uv;
 
@@ -542,7 +568,11 @@ const fogFragmentShader = `
       sin(u_time * 0.82 + fogUv.y * 16.0 + sin(fogUv.x * 8.0) * 1.2),
       cos(u_time * 0.68 + fogUv.x * 14.0 + cos(fogUv.y * 7.0) * 1.1)
     ) * 0.014;
-    float mask = texture2D(u_mask, clamp(v_uv + maskWarp, 0.0, 1.0)).a;
+    // The mask is painted into a screen-sized canvas. Compensate for map
+    // movement since its last paint so the same fog body stays locked to the
+    // same map coordinates between canvas updates.
+    vec2 maskUv = clamp(v_uv - u_mask_offset + maskWarp, 0.0, 1.0);
+    float mask = texture2D(u_mask, maskUv).a;
     if (mask < 0.01) discard;
 
     // Keep the tile coverage static, but move several veils through it quickly
@@ -629,9 +659,7 @@ const createFogMaskPath = (context, x, y, size, seed, radiusScale = 1) => {
 
 const createFogCanvas = (map, tileState, isLandTargetable) => {
   const mapDataIsReady = () =>
-    map.isStyleLoaded() &&
-    map.isSourceLoaded('hongkong-latest') &&
-    map.areTilesLoaded()
+    map.isStyleLoaded() && map.isSourceLoaded('hongkong-latest') && map.areTilesLoaded()
   const canvas = document.createElement('canvas')
   canvas.className = 'atlas-fog'
   canvas.setAttribute('aria-hidden', 'true')
@@ -659,6 +687,8 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
   const timeUniform = program && gl?.getUniformLocation(program, 'u_time')
   const anchorScreenUniform =
     program && gl?.getUniformLocation(program, 'u_anchor_screen')
+  const maskOffsetUniform =
+    program && gl?.getUniformLocation(program, 'u_mask_offset')
   const viewportSizeUniform =
     program && gl?.getUniformLocation(program, 'u_viewport_size')
   const fogAnchor = map.getCenter()
@@ -671,11 +701,15 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
   let lastFogFrame = -Infinity
   let lastMaskFrame = -Infinity
   let fogTime = 0
+  let animationTime = 0
   let previousFrameTime: number | undefined
+  let isDragging = false
+  let maskAnchorScreen: { x: number; y: number } | undefined
   const fogFrameInterval = 1000 / 60
   const maskFrameInterval = 1000 / 60
   let maskRetryTimer: number | undefined
   const loadingSequences = new Map()
+  let fogError: { id: string; text: string; startedAt: number } | undefined
   const generatingStartedAt = new Map()
   const revealStartedAt = new Map()
   const pokedAt = new Map()
@@ -933,7 +967,7 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
         loadingContext,
         concept.title,
         textWidth,
-        titleSize,
+        `700 ${titleSize}px 'IM Fell English SC', Georgia, serif`,
       )
       const titleLineHeight = titleSize * 0.98
       const titleTop =
@@ -1038,9 +1072,7 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
           const floatY = isLingering ? 0 : Math.cos(wavePhase * 0.72) * size * 0.012
           const isFinalWord = wordIndex === words.length - 1
           const finalWordEase =
-            isCurrentWord && isFinalWord && !isLingering
-              ? easeOutCubic(progress)
-              : 1
+            isCurrentWord && isFinalWord && !isLingering ? easeOutCubic(progress) : 1
           const finalWordY =
             streamBaseline +
             (wordHoldCenterY - streamBaseline) * finalWordEase +
@@ -1121,10 +1153,56 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
       }
       loadingContext.restore()
     })
+
+    if (!fogError) return
+    const tile = tileFromId(fogError.id)
+    const bounds = tileBounds(tile)
+    const northWest = map.project([bounds.west, bounds.north])
+    const southEast = map.project([bounds.east, bounds.south])
+    const size = Math.min(southEast.x - northWest.x, southEast.y - northWest.y)
+    const centerX = northWest.x + (southEast.x - northWest.x) / 2
+    const centerY = northWest.y + (southEast.y - northWest.y) / 2
+    const visible =
+      southEast.x >= 0 &&
+      southEast.y >= 0 &&
+      northWest.x <= clientWidth &&
+      northWest.y <= clientHeight
+    if (!visible || size <= 0) return
+
+    const fadeIn = easeOutCubic(Math.min(1, (time - fogError.startedAt) / 420))
+    const titleSize = Math.max(13, Math.min(27, size * 0.1))
+    const messageSize = Math.max(11, Math.min(19, size * 0.07))
+    const textWidth = size * 0.78
+    const messageFont = `600 italic ${messageSize}px 'Cormorant Garamond', Georgia, serif`
+    const messageLines = wrapTextForWidth(
+      loadingContext,
+      fogError.text,
+      textWidth,
+      messageFont,
+      4,
+    )
+    const lineHeight = messageSize * 1.08
+    const messageTop = centerY - ((messageLines.length - 1) * lineHeight) / 2 + size * 0.08
+
+    loadingContext.save()
+    loadingContext.globalAlpha = fadeIn
+    loadingContext.textAlign = 'center'
+    loadingContext.textBaseline = 'middle'
+    loadingContext.shadowColor = 'rgba(244, 246, 243, 0.9)'
+    loadingContext.shadowBlur = Math.max(2, size * 0.025)
+    loadingContext.fillStyle = '#bf3131'
+    loadingContext.font = `800 ${titleSize}px Inter, ui-sans-serif, system-ui, sans-serif`
+    loadingContext.fillText('ERROR', centerX, centerY - size * 0.16)
+    loadingContext.fillStyle = '#403c3a'
+    loadingContext.font = messageFont
+    messageLines.forEach((line, index) => {
+      loadingContext.fillText(line, centerX, messageTop + index * lineHeight)
+    })
+    loadingContext.restore()
   }
 
-  const wrapTextForWidth = (context, text, maxWidth, fontSize) => {
-    context.font = `700 ${fontSize}px 'IM Fell English SC', Georgia, serif`
+  const wrapTextForWidth = (context, text, maxWidth, font, maxLines = 2) => {
+    context.font = font
     const words = text.split(' ')
     const lines = []
     let line = ''
@@ -1138,16 +1216,16 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
       }
     })
     if (line) lines.push(line)
-    return lines.slice(0, 2)
+    return lines.slice(0, maxLines)
   }
 
-  const renderMask = time => {
+  const renderMask = frameTime => {
     maskFrame = undefined
-    if (time - lastMaskFrame < maskFrameInterval) {
+    if (frameTime - lastMaskFrame < maskFrameInterval) {
       if (maskDirty) maskFrame = requestAnimationFrame(renderMask)
       return
     }
-    lastMaskFrame = time
+    lastMaskFrame = frameTime
     if (!clientWidth || !clientHeight) return
     if (!mapDataIsReady()) {
       // The first render can happen before the vector source has finished its
@@ -1167,19 +1245,20 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
       const id = tileId(tile)
       const state = tileState.get(id)
       if (state === 'generating' && !generatingStartedAt.has(id)) {
-        generatingStartedAt.set(id, time)
+        generatingStartedAt.set(id, animationTime)
       }
       if (state !== 'checking' && state !== 'generating' && state !== 'revealing') {
         pokedAt.delete(id)
       }
       if (isLandTargetable(tile) && isFogged(tile) && state !== 'generated') {
-        drawFogMask(tile, state, time)
+        drawFogMask(tile, state, animationTime)
       }
       if (state === 'revealing' || state === 'generated') {
-        clearGeneratedTileMask(tile, state, time)
+        clearGeneratedTileMask(tile, state, animationTime)
       }
     })
     uploadMask()
+    maskAnchorScreen = map.project(fogAnchor)
     maskDirty = false
   }
 
@@ -1192,13 +1271,18 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
     resize()
     const frameDelta = previousFrameTime === undefined ? 0 : time - previousFrameTime
     previousFrameTime = time
-    // The mask follows the map during a pan. Pause the screen-space shader
-    // animation for that interval so the fog does not appear to move twice.
-    if (!map.isMoving()) fogTime += Math.min(100, frameDelta) / 1000
+    // Freeze every time-based fog effect for the full drag. The mask still
+    // follows the map, but its shape, clearings, and loading copy no longer
+    // advance in response to how quickly the map is moved.
+    if (!isDragging) {
+      const elapsed = Math.min(100, frameDelta)
+      fogTime += elapsed / 1000
+      animationTime += elapsed
+    }
     // Keep the card geometry in lockstep with the map while it is being
     // dragged. Keeping the fog and labels on the same frame cadence prevents
     // either overlay from visibly trailing the raster map or generated artwork.
-    drawLoadingText(time)
+    drawLoadingText(animationTime)
     if (time - lastFogFrame < fogFrameInterval) {
       animationFrame = requestAnimationFrame(render)
       return
@@ -1220,8 +1304,19 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
       gl.uniform1i(maskUniform, 0)
       gl.uniform1f(timeUniform, fogTime)
       if (anchorScreenUniform && viewportSizeUniform) {
+        // Keep the cloud field registered to its geographic anchor as the map
+        // moves. Its animation clock is paused separately during a drag.
         const anchorScreen = map.project(fogAnchor)
         gl.uniform2f(anchorScreenUniform, anchorScreen.x, anchorScreen.y)
+        if (maskOffsetUniform) {
+          const offsetX = maskAnchorScreen
+            ? (anchorScreen.x - maskAnchorScreen.x) / clientWidth
+            : 0
+          const offsetY = maskAnchorScreen
+            ? (anchorScreen.y - maskAnchorScreen.y) / clientHeight
+            : 0
+          gl.uniform2f(maskOffsetUniform, offsetX, offsetY)
+        }
         gl.uniform2f(viewportSizeUniform, clientWidth, clientHeight)
       }
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
@@ -1233,6 +1328,14 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
   mapEvents.forEach(eventName => {
     map.on(eventName, invalidate)
   })
+  const pauseAnimationForDrag = () => {
+    isDragging = true
+  }
+  const resumeAnimationAfterDrag = () => {
+    isDragging = false
+  }
+  map.on('dragstart', pauseAnimationForDrag)
+  map.on('dragend', resumeAnimationAfterDrag)
   map.on('data', invalidate)
   map.on('idle', invalidate)
   resize()
@@ -1241,10 +1344,16 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
   return {
     invalidate,
     poke: id => {
-      pokedAt.set(id, performance.now())
+      pokedAt.set(id, animationTime)
+    },
+    showError: (id, text) => {
+      fogError = { id, text, startedAt: animationTime }
+    },
+    clearError: () => {
+      fogError = undefined
     },
     beginReveal: id => {
-      revealStartedAt.set(id, performance.now())
+      revealStartedAt.set(id, animationTime)
     },
     finishReveal: id => {
       revealStartedAt.delete(id)
@@ -1258,11 +1367,14 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
       mapEvents.forEach(eventName => {
         map.off(eventName, invalidate)
       })
+      map.off('dragstart', pauseAnimationForDrag)
+      map.off('dragend', resumeAnimationAfterDrag)
       map.off('data', invalidate)
       map.off('idle', invalidate)
       if (animationFrame) cancelAnimationFrame(animationFrame)
       if (maskFrame) cancelAnimationFrame(maskFrame)
       if (maskRetryTimer !== undefined) window.clearTimeout(maskRetryTimer)
+      fogError = undefined
       generatingStartedAt.clear()
       revealStartedAt.clear()
       pokedAt.clear()
@@ -1272,13 +1384,14 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
   }
 }
 
-export const installAtlasTileInteractions = (map, maplibregl) => {
+export const installAtlasTileInteractions = map => {
   const tileState = new Map()
   const landTargetState = new Map()
   const revealedTileIds = new Set()
   const generatedTileIds = new Set()
   const titleCards = new Map()
   const clearanceNotice = createClearanceNotice(map)
+  const fogErrorAnnouncer = createFogErrorAnnouncer(map)
   let clearanceStartedAt: number | undefined
   const isAdminMode = () => map.getContainer().classList.contains('atlas-admin-mode')
   const mapDataIsReady = () =>
@@ -1374,7 +1487,6 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
 
     const request = fetch(
       `/api/atlas-tiles/cache-status/${atlasZoom}/${tile.x}/${tile.y}`,
-      { cache: 'no-store' },
     )
       .then(async response => {
         const body = await response.json().catch(() => null)
@@ -1385,14 +1497,20 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
           )
         }
         const scenes = Array.isArray(body?.scenes)
-          ? body.scenes.filter((scene): scene is AtlasScene =>
-              typeof scene === 'string' && atlasSceneNames.includes(scene as AtlasScene),
+          ? body.scenes.filter(
+              (scene): scene is AtlasScene =>
+                typeof scene === 'string' &&
+                atlasSceneNames.includes(scene as AtlasScene),
             )
           : []
         if (body?.cached !== true) {
           return { cached: false, scenes, preparedUrl: undefined }
         }
-        if (typeof body.url !== 'string' || !body.url || typeof body.scene !== 'string') {
+        if (
+          typeof body.url !== 'string' ||
+          !body.url ||
+          typeof body.scene !== 'string'
+        ) {
           throw new Error(
             'The atlas-tile cache lookup returned an invalid cached image URL.',
           )
@@ -1453,9 +1571,11 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
     })
   }
 
-  ;['move', 'moveend', 'resize', 'zoom', 'zoomend', 'data', 'idle'].forEach(eventName => {
-    map.on(eventName, preloadVisibleCachedTiles)
-  })
+  ;['move', 'moveend', 'resize', 'zoom', 'zoomend', 'data', 'idle'].forEach(
+    eventName => {
+      map.on(eventName, preloadVisibleCachedTiles)
+    },
+  )
   preloadVisibleCachedTiles()
 
   map.on('mousemove', event => {
@@ -1491,6 +1611,8 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
     )
       return
 
+    fog.clearError()
+    fogErrorAnnouncer.clear()
     tileState.set(id, 'checking')
     fog.poke(id)
     fog.invalidate()
@@ -1542,7 +1664,7 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
         fog.cancelReveal(id)
         fog.invalidate()
         clearanceNotice.show(
-          'Three tile clearings are already in progress. Wait for one to finish before clearing more fog.',
+          'Three tile clearings are already in progress.\nWait for one to finish before clearing more fog.',
         )
         return
       }
@@ -1617,14 +1739,10 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
       tileState.delete(id)
       fog.invalidate()
       if (!rateLimited) {
-        new maplibregl.Popup({ closeButton: false })
-          .setLngLat(event.lngLat)
-          .setText(
-            error instanceof Error
-              ? error.message
-              : 'Could not generate this atlas tile.',
-          )
-          .addTo(map)
+        const message =
+          error instanceof Error ? error.message : 'Could not generate this atlas tile.'
+        fog.showError(id, message)
+        fogErrorAnnouncer.announce(message)
       }
     }
   })
@@ -1677,6 +1795,8 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
         tileState.clear()
         clearanceStartedAt = undefined
         clearanceNotice.hide()
+        fog.clearError()
+        fogErrorAnnouncer.clear()
         fog.invalidate()
         resolve()
       }

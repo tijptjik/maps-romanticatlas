@@ -6,6 +6,7 @@ import { installCachedTileDiagnostic } from './cached-tile-diagnostic.ts'
 import { createIntroSplash } from './intro-splash.ts'
 import { installArtistStatement } from './artist-statement.ts'
 import { hongKongStyle } from './map-style.ts'
+import { diagnosticsModeEnabled } from './runtime-modes.ts'
 import './style.css'
 
 const initialView = {
@@ -96,11 +97,11 @@ map.on('mousemove', () => noteActivity())
 map.on('load', async () => {
   await installCachedTileAdmin(map)
 
-  if (import.meta.env.VITE_DIAGNOSTIC_CACHED_TILES === 'true') {
+  if (diagnosticsModeEnabled()) {
     await installCachedTileDiagnostic(map)
   }
 
-  const atlas = installAtlasTileInteractions(map, maplibregl)
+  const atlas = installAtlasTileInteractions(map)
   resetAtlas = async () => {
     await atlas.resetReveals()
   }
