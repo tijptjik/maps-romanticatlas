@@ -19,6 +19,33 @@ const themeMelody = [
   [72, -1, 69, 67, 65, -1, 62, -1],
 ]
 
+const revealChimeVariations = [
+  {
+    // A bright, upward opening.
+    notes: [74, 78, 81, 86],
+    offsets: [0, 0.18, 0.39, 0.61],
+    duration: 0.12,
+    volume: 0.12,
+    type: 'sine' as OscillatorType,
+  },
+  {
+    // A falling phrase that turns upward at the end.
+    notes: [91, 86, 81, 83, 88],
+    offsets: [0, 0.16, 0.33, 0.53, 0.7],
+    duration: 0.1,
+    volume: 0.1,
+    type: 'triangle' as OscillatorType,
+  },
+  {
+    // Wider, less regular leaps for a more distant shimmer.
+    notes: [76, 88, 79, 91, 84],
+    offsets: [0, 0.23, 0.38, 0.65, 0.82],
+    duration: 0.14,
+    volume: 0.11,
+    type: 'sine' as OscillatorType,
+  },
+]
+
 const createNoiseBuffer = (context: AudioContext, duration: number) => {
   const buffer = context.createBuffer(
     1,
@@ -40,6 +67,7 @@ export const installAtlasAudio = (mapContainer: HTMLElement): AtlasAudioHooks =>
   let step = 0
   let enabled = false
   let noiseBuffer: AudioBuffer | undefined
+  let revealChimeIndex = 0
 
   const control = document.createElement('button')
   control.className = 'atlas-audio-control'
@@ -123,7 +151,10 @@ export const installAtlasAudio = (mapContainer: HTMLElement): AtlasAudioHooks =>
         'triangle',
       )
     }
-    if (beatInBar % 2 === 0) {
+    const melody = themeMelody[bar % themeMelody.length][beatInBar]
+    // The lead has priority over the arpeggio: two treble notes landing on
+    // the same beat read as a clash rather than as a single clear phrase.
+    if (beatInBar % 2 === 0 && melody < 0) {
       const arpeggioNote = chord[(beatInBar / 2) % chord.length]
       scheduleTone(
         midiToFrequency(arpeggioNote + 12),
@@ -134,7 +165,6 @@ export const installAtlasAudio = (mapContainer: HTMLElement): AtlasAudioHooks =>
       )
     }
 
-    const melody = themeMelody[bar % themeMelody.length][beatInBar]
     if (melody >= 0) {
       scheduleTone(midiToFrequency(melody), at, eighthNote * 1.65, 0.08, 'triangle')
     }
@@ -165,7 +195,10 @@ export const installAtlasAudio = (mapContainer: HTMLElement): AtlasAudioHooks =>
     }
     if (context.state === 'suspended') void context.resume()
     enabled = true
-    setMasterVolume(0.22, context.currentTime)
+    // Keep the synth audible alongside normal desktop audio. The individual
+    // voices remain intentionally soft, so this gain increase does not push
+    // the combined sound into clipping.
+    setMasterVolume(0.55, context.currentTime)
     updateControl()
   }
 
@@ -189,8 +222,18 @@ export const installAtlasAudio = (mapContainer: HTMLElement): AtlasAudioHooks =>
     wind.start(at)
     wind.stop(at + 2.15)
 
-    ;[74, 81, 86, 89].forEach((midi, index) => {
-      scheduleTone(midiToFrequency(midi), at + index * 0.13, 2.1, 0.1, 'sine')
+    // Let the clearing swell peak before the reveal chime answers it.
+    const chime = revealChimeVariations[revealChimeIndex]
+    revealChimeIndex = (revealChimeIndex + 1) % revealChimeVariations.length
+    const chimeAt = at + 1.1
+    chime.notes.forEach((midi, index) => {
+      scheduleTone(
+        midiToFrequency(midi),
+        chimeAt + chime.offsets[index],
+        chime.duration,
+        chime.volume,
+        chime.type,
+      )
     })
   }
 
