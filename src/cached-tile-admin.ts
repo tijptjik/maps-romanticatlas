@@ -22,9 +22,9 @@ const controlIcons = {
   delete:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m-9 0 .8 13h8.4L16 7M10 11v5m4-5v5"/><path d="M3 7h18"/></svg>',
   cycle:
-    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 9.2A7 7 0 0 1 18.8 7M17.9 14.8A7 7 0 0 1 5.2 17"/></svg>',
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h3.2c4.7 0 5 10 9.7 10H20"/><path d="m16 14 4 3-4 3M4 17h3.2c1.8 0 3.1-1.5 4.1-3.3"/><path d="M16 4l4 3-4 3"/></svg>',
   rerender:
-    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.9-4L4 9"/><path d="M4 4v5h5M4 13a8 8 0 0 0 14.9 4L20 15"/><path d="M20 20v-5h-5"/></svg>',
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 19 11.8-11.8 2 2L7 21H5v-2Z"/><path d="m14.8 6.2 1.1-1.1M18.6 7.4h1.6M17.8 4.2v1.6"/><path d="m4 6 1 2.1L7 9l-2 1-1 2.1L3 10 1 9l2-0.9L4 6Z"/></svg>',
 }
 
 const setControlIcon = (control, icon, label) => {
@@ -192,7 +192,7 @@ export const installCachedTileAdmin = async map => {
     cycleControl.className = 'atlas-admin-cycle'
     cycleControl.type = 'button'
     cycleControl.hidden = true
-    setControlIcon(cycleControl, 'cycle', 'Show next image')
+    setControlIcon(cycleControl, 'cycle', 'Shuffle cached images')
     actionBar.append(cycleControl)
 
     const rerenderControl = document.createElement('button')
@@ -200,7 +200,7 @@ export const installCachedTileAdmin = async map => {
     rerenderControl.className = 'atlas-admin-rerender'
     rerenderControl.type = 'button'
     rerenderControl.hidden = true
-    setControlIcon(rerenderControl, 'rerender', 'Render a different scene')
+    setControlIcon(rerenderControl, 'rerender', 'Render a new scene')
     actionBar.append(rerenderControl)
 
     const renderingOverlay = document.createElement('section')
@@ -556,7 +556,7 @@ export const installCachedTileAdmin = async map => {
         deleteControl.disabled = false
         cycleControl.disabled = false
         rerenderControl.disabled = false
-        setControlIcon(rerenderControl, 'rerender', 'Render a different scene')
+        setControlIcon(rerenderControl, 'rerender', 'Render a new scene')
         positionControl()
       }
     })

@@ -181,6 +181,12 @@ export class AtlasManifest extends DurableObject<Env> {
       }))
   }
 
+  // Cache-status requests are made for every visible tile. Keeping the SQL
+  // work inside one Durable Object invocation avoids a round trip per tile.
+  entriesForPositions(positions: AtlasManifestPosition[]): AtlasManifestEntry[] {
+    return positions.flatMap(position => this.entriesForPosition(position))
+  }
+
   scenesInGrid(position: AtlasManifestPosition): string[] {
     const tileCount = 2 ** position.zoom
     const xValues = Array.from(
@@ -204,5 +210,12 @@ export class AtlasManifest extends DurableObject<Env> {
       )
       .toArray()
       .map(entry => entry.scene)
+  }
+
+  scenesInGrids(positions: AtlasManifestPosition[]) {
+    return positions.map(position => ({
+      ...position,
+      scenes: this.scenesInGrid(position),
+    }))
   }
 }

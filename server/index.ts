@@ -30,6 +30,7 @@ import {
   isAllowedApplicationRequest,
   isReadableCacheVersion,
   isSupportedCacheVersion,
+  isValidAtlasPosition,
   modeEnabled,
   normalizeContentBounds,
   parseAtlasPositionPath,
@@ -41,13 +42,16 @@ import {
 
 const rootDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const cacheDirectory = path.join(rootDirectory, 'generated-tiles')
+const sharedMapsDirectory = path.join(rootDirectory, 'shared-maps')
 const productionDirectory = path.join(rootDirectory, 'dist')
 const generationWindowMs = 180_000
 const generationsPerClient = 3
 const concurrentGenerationsPerClient = 3
+const maximumCacheStatusBatchSize = 64
 const isProduction = process.env.NODE_ENV === 'production'
 const adminToken = process.env.ATLAS_ADMIN_TOKEN?.trim() || null
 const allowedOrigin = process.env.ATLAS_ALLOWED_ORIGIN ?? 'https://romanticatlas.hype.hk'
+const shareAssetOrigin = process.env.ATLAS_SHARE_ASSET_ORIGIN?.trim() || null
 const tileOrigin = 'https://tiles.saanseoi.hk'
 const tileProxyPrefix = '/map-assets/saanseoi'
 const tileJsonPath = `${tileProxyPrefix}/hongkong-latest.json`
@@ -270,6 +274,77 @@ const readRequestBody = async request => {
   }
 
   return JSON.parse(Buffer.concat(chunks).toString('utf8'))
+}
+
+const localSharedMapPattern = /^\/shared-maps\/([0-9a-f-]{36})\.png$/
+
+const shareAssetUrl = (request, key) => {
+  if (!isProduction) {
+    return new URL(`/shared-maps/${key}`, `http://${request.headers.host}`).toString()
+  }
+  if (!shareAssetOrigin) return null
+  try {
+    const origin = new URL(shareAssetOrigin)
+    if (
+      origin.protocol !== 'https:' ||
+      origin.username ||
+      origin.password ||
+      origin.pathname !== '/' ||
+      origin.search ||
+      origin.hash
+    )
+      return null
+    return new URL(`shared-maps/${key}`, origin).toString()
+  } catch {
+    return null
+  }
+}
+
+const createSharedMap = async (request, response) => {
+  if (!applicationRequestIsAllowed(request, true)) {
+    sendError(response, 403, 'Map sharing is restricted to the application.')
+    return
+  }
+  const assetUrl = shareAssetUrl(request, 'placeholder.png')
+  if (!assetUrl) {
+    sendError(response, 503, 'Map sharing is not configured with a public R2 asset origin.')
+    return
+  }
+  try {
+    const body = await readRequestBody(request)
+    const image = parseImageDataUrl(
+      body.image,
+      'The shared map image must be a valid PNG data URL.',
+    )
+    if (image.contentType !== 'image/png' || image.data.length > 8_000_000) {
+      sendError(response, 400, 'The shared map image must be a PNG smaller than 8 MB.')
+      return
+    }
+    const key = `${randomUUID()}.png`
+    await mkdir(sharedMapsDirectory, { recursive: true })
+    await atomicWriteFile(path.join(sharedMapsDirectory, key), image.data)
+    sendJson(response, 200, { url: shareAssetUrl(request, key) })
+  } catch (error) {
+    sendError(
+      response,
+      400,
+      error instanceof Error ? error.message : 'Could not save the shared map image.',
+    )
+  }
+}
+
+const serveSharedMap = async (response, filename) => {
+  try {
+    const image = await readFile(path.join(sharedMapsDirectory, filename))
+    response.writeHead(200, {
+      'cache-control': 'public, max-age=31536000, immutable',
+      'content-disposition': 'inline',
+      'content-type': 'image/png',
+    })
+    response.end(image)
+  } catch {
+    sendError(response, 404, 'Shared map image not found.')
+  }
 }
 
 const composeTileImage = async (sourceImage, generatedImage, safeMask, lineOverlay) => {
@@ -566,6 +641,46 @@ const serveCacheStatus = async (request, response, tile) => {
   return true
 }
 
+const serveCacheStatusBatch = async (request, response) => {
+  if (request.method !== 'POST') return false
+  try {
+    const body = await readRequestBody(request)
+    if (!Array.isArray(body.tiles) || !body.tiles.length)
+      throw new Error('At least one atlas tile is required.')
+    if (body.tiles.length > maximumCacheStatusBatchSize)
+      throw new Error(`At most ${maximumCacheStatusBatchSize} atlas tiles can be checked at once.`)
+
+    const positions = new Map()
+    body.tiles.forEach(value => {
+      const position = {
+        zoom: Number(value?.zoom),
+        x: Number(value?.x),
+        y: Number(value?.y),
+      }
+      if (!isValidAtlasPosition(position))
+        throw new Error('The cache-status request contains an invalid atlas tile.')
+      positions.set(`${position.zoom}/${position.x}/${position.y}`, position)
+    })
+    const statuses = await Promise.all(
+      [...positions.values()].map(async position => {
+        const [cached, scenes] = await Promise.all([
+          findCachedTile(position),
+          cachedScenesInGrid(position),
+        ])
+        return cacheStatusPayload({ cached, scenes })
+      }),
+    )
+    sendJson(response, 200, { statuses })
+  } catch (error) {
+    sendError(
+      response,
+      400,
+      error instanceof Error ? error.message : 'Could not read the cache-status request.',
+    )
+  }
+  return true
+}
+
 const applicationRequestIsAllowed = (request, requireOrigin = false) =>
   isAllowedApplicationRequest({
     requestHost: request.headers.host,
@@ -767,6 +882,17 @@ const server = createServer(async (request, response) => {
   try {
     const pathname = new URL(request.url, 'http://localhost').pathname
 
+    if (request.method === 'POST' && pathname === '/api/share-maps') {
+      await createSharedMap(request, response)
+      return
+    }
+
+    const sharedMapMatch = pathname.match(localSharedMapPattern)
+    if (request.method === 'GET' && sharedMapMatch) {
+      await serveSharedMap(response, `${sharedMapMatch[1]}.png`)
+      return
+    }
+
     if (request.method === 'GET' && pathname === '/api/atlas-tiles/cached') {
       response.setHeader('cache-control', 'no-store')
       const adminMode = isAdminModeEnabled(request)
@@ -790,6 +916,11 @@ const server = createServer(async (request, response) => {
         version,
         tiles,
       }))
+      return
+    }
+
+    if (pathname === '/api/atlas-tiles/cache-status') {
+      await serveCacheStatusBatch(request, response)
       return
     }
 

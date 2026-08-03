@@ -416,10 +416,10 @@ const sourceRecordings: Record<string, RecordedSource> = {
     creator: 'kyles',
   },
   waterPark: {
-    sourceUrl: 'https://cdn.freesound.org/previews/703/703250_13504080-lq.mp3',
-    sourcePage: 'https://freesound.org/people/xkeril/sounds/703250/',
-    title: 'Water attack (small)',
-    creator: 'xkeril',
+    sourceUrl: 'https://cdn.freesound.org/previews/333/333223_2364707-lq.mp3',
+    sourcePage: 'https://freesound.org/people/gladkiy/sounds/333223/',
+    title: 'Borneo rain forest ambience near a water stream',
+    creator: 'gladkiy',
   },
   worldFair: {
     sourceUrl: 'https://cdn.freesound.org/previews/516/516660_3662372-lq.mp3',

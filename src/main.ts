@@ -6,6 +6,7 @@ import { installCachedTileDiagnostic } from './cached-tile-diagnostic.ts'
 import { createIntroSplash } from './intro-splash.ts'
 import { installArtistStatement } from './artist-statement.ts'
 import { installAtlasAudio } from './atlas-audio.ts'
+import { installAtlasSharing } from './atlas-sharing.ts'
 import { hongKongStyle } from './map-style.ts'
 import {
   diagnosticsModeEnabled,
@@ -17,7 +18,7 @@ import './style.css'
 
 const initialView = {
   center: [114.1346, 22.28364] as [number, number],
-  zoom: 16.5,
+  zoom: 17,
   bearing: 0,
   pitch: 0,
 }
@@ -38,6 +39,10 @@ const map = new maplibregl.Map({
   maxZoom: 18.5,
   maxBounds: [113.8, 22.1, 114.5, 22.6],
   attributionControl: false,
+  // Keep the share capture sharp on high-density displays without exceeding a
+  // 2× backing canvas.
+  pixelRatio: Math.min(window.devicePixelRatio, 2),
+  canvasContextAttributes: { preserveDrawingBuffer: true },
 })
 
 const introFontFaces = [
@@ -60,6 +65,7 @@ const audio = installAtlasAudio(map.getContainer(), { initiallyMuted: noMusicEna
 if (!skipSplash) await waitForIntroFonts()
 const intro = createIntroSplash(map.getContainer(), audio.start, !skipSplash)
 installArtistStatement(map.getContainer())
+const sharing = installAtlasSharing(map, audio)
 const idleDelay = 180_000
 let idleTimer: number | undefined
 let resetAtlas: (() => Promise<void>) | undefined
@@ -71,6 +77,7 @@ const scheduleIdleReset = () => {
     if (isResetting || !resetAtlas) return
     isResetting = true
     intro.show()
+    sharing.reset()
     map.stop()
     map.easeTo({ ...initialView, duration: 900, essential: true })
     try {
@@ -100,6 +107,8 @@ window.addEventListener(
       event.preventDefault()
       event.stopPropagation()
       intro.show()
+      audio.stop()
+      sharing.reset()
       noteActivity()
     }
   },
@@ -115,7 +124,13 @@ const collapseAttribution = () => {
   attribution?.removeAttribute('open')
 }
 
-map.addControl(new maplibregl.AttributionControl({ compact: true }))
+map.addControl(
+  new maplibregl.AttributionControl({
+    compact: true,
+    customAttribution:
+      '<a href="https://github.com/tijptjik/maps-romanticatlas/blob/main/THIRD_PARTY_NOTICES.md" target="_blank" rel="noopener noreferrer">Sounds</a>',
+  }),
+)
 collapseAttribution()
 map.once('idle', collapseAttribution)
 map.on('mousemove', () => noteActivity())
@@ -128,7 +143,9 @@ map.on('load', async () => {
 
   const atlas = installAtlasTileInteractions(map, audio, {
     noNoise: noNoiseEnabled(),
+    onRevealCountChange: sharing.setRevealCount,
   })
+  sharing.setRevealCount(atlas.getRevealCount())
   resetAtlas = async () => {
     await atlas.resetReveals()
   }

@@ -1,6 +1,11 @@
+import type { AtlasScene } from './atlas-scenes.ts'
+
 type AtlasAudioHooks = {
-  playFogLift: () => void
+  playCameraFlash: () => void
+  playFogLift: (scene?: AtlasScene) => void
+  preloadScene: (scene: AtlasScene) => void
   start: () => void
+  stop: () => void
 }
 
 const midiToFrequency = (midi: number) => 440 * 2 ** ((midi - 69) / 12)
@@ -65,13 +70,17 @@ export const installAtlasAudio = (
 ): AtlasAudioHooks => {
   let context: AudioContext | undefined
   let masterGain: GainNode | undefined
+  let musicGain: GainNode | undefined
   let scheduler: number | undefined
+  let stopTimer: number | undefined
   let nextStepAt = 0
   let step = 0
-  let enabled = false
+  let musicEnabled = false
   let autoStartEnabled = !initiallyMuted
   let noiseBuffer: AudioBuffer | undefined
   let revealChimeIndex = 0
+  const sceneAudio = new Map<AtlasScene, AudioBuffer>()
+  const sceneAudioRequests = new Map<AtlasScene, Promise<AudioBuffer | undefined>>()
 
   const control = document.createElement('button')
   control.className = 'atlas-audio-control'
@@ -91,16 +100,16 @@ export const installAtlasAudio = (
   const updateControl = () => {
     control.setAttribute(
       'aria-label',
-      enabled ? 'Mute the atlas theme' : 'Play the atlas theme',
+      musicEnabled ? 'Mute the atlas theme' : 'Play the atlas theme',
     )
-    control.setAttribute('aria-pressed', `${enabled}`)
-    control.dataset.muted = `${!enabled}`
+    control.setAttribute('aria-pressed', `${musicEnabled}`)
+    control.dataset.muted = `${!musicEnabled}`
   }
 
-  const setMasterVolume = (volume: number, at: number) => {
-    if (!masterGain) return
-    masterGain.gain.cancelScheduledValues(at)
-    masterGain.gain.setTargetAtTime(volume, at, 0.08)
+  const setMusicVolume = (volume: number, at: number) => {
+    if (!musicGain) return
+    musicGain.gain.cancelScheduledValues(at)
+    musicGain.gain.setTargetAtTime(volume, at, 0.08)
   }
 
   const scheduleTone = (
@@ -109,7 +118,7 @@ export const installAtlasAudio = (
     duration: number,
     volume: number,
     type: OscillatorType = 'sine',
-    destination = masterGain,
+    destination = musicGain,
   ) => {
     if (!context || !destination) return
     const oscillator = context.createOscillator()
@@ -122,6 +131,55 @@ export const installAtlasAudio = (
     oscillator.connect(gain).connect(destination)
     oscillator.start(at)
     oscillator.stop(at + duration + 0.12)
+  }
+
+  const scheduleSceneAudio = (buffer: AudioBuffer, at: number) => {
+    if (!context || !masterGain) return
+    const source = context.createBufferSource()
+    const gain = context.createGain()
+    source.buffer = buffer
+    gain.gain.setValueAtTime(0.0001, at)
+    gain.gain.exponentialRampToValueAtTime(0.25, at + 0.04)
+    gain.gain.setTargetAtTime(0.0001, at + buffer.duration * 0.72, 0.12)
+    source.connect(gain).connect(masterGain)
+    source.start(at)
+    source.stop(at + buffer.duration + 0.12)
+  }
+
+  const loadSceneAudio = (scene: AtlasScene): Promise<AudioBuffer | undefined> => {
+    const cached = sceneAudio.get(scene)
+    if (cached) return Promise.resolve(cached)
+    const existingRequest = sceneAudioRequests.get(scene)
+    if (existingRequest) return existingRequest
+    if (!context) return Promise.resolve(undefined)
+
+    const decodingContext = context
+    const request = fetch(
+      new URL(`/atlas-audio/${encodeURIComponent(scene)}.ogg`, window.location.origin),
+    )
+      .then(async response => {
+        if (!response.ok) throw new Error(`Could not load the ${scene} scene cue.`)
+        return decodingContext.decodeAudioData(await response.arrayBuffer())
+      })
+      .then(buffer => {
+        sceneAudio.set(scene, buffer)
+        return buffer
+      })
+      .catch(() => {
+        // The synthesized chime remains the resilient fallback for a missing
+        // or unsupported cue. Do not make an audio fetch failure visible.
+        return undefined
+      })
+      .finally(() => {
+        sceneAudioRequests.delete(scene)
+      })
+    sceneAudioRequests.set(scene, request)
+    return request
+  }
+
+  const preloadScene = (scene: AtlasScene) => {
+    if (!context) return
+    void loadSceneAudio(scene)
   }
 
   const schedulePad = (chord: number[], at: number, duration: number) => {
@@ -137,7 +195,7 @@ export const installAtlasAudio = (
   }
 
   const scheduleMusicStep = (at: number) => {
-    if (!context || !masterGain) return
+    if (!context || !musicGain) return
     const quarterNote = 60 / 72
     const eighthNote = quarterNote / 2
     const stepInLoop = step % 64
@@ -184,36 +242,86 @@ export const installAtlasAudio = (
     }
   }
 
-  const enable = () => {
+  const ensureContext = () => {
     if (!context) {
       const AudioContextConstructor = window.AudioContext || window.webkitAudioContext
-      if (!AudioContextConstructor) return
+      if (!AudioContextConstructor) return false
       context = new AudioContextConstructor()
       masterGain = context.createGain()
-      masterGain.gain.value = 0.0001
+      musicGain = context.createGain()
+      masterGain.gain.value = 0.55
+      musicGain.gain.value = 0.0001
+      musicGain.connect(masterGain)
       masterGain.connect(context.destination)
       noiseBuffer = createNoiseBuffer(context, 2.2)
+    }
+    if (context.state === 'suspended') void context.resume()
+    return true
+  }
+
+  const enable = () => {
+    if (stopTimer !== undefined) {
+      window.clearTimeout(stopTimer)
+      stopTimer = undefined
+    }
+    if (!ensureContext() || !context) return
+    if (scheduler === undefined) {
       nextStepAt = context.currentTime + 0.08
       scheduler = window.setInterval(scheduleAhead, 90)
       scheduleAhead()
     }
-    if (context.state === 'suspended') void context.resume()
-    enabled = true
+    musicEnabled = true
     // Keep the synth audible alongside normal desktop audio. The individual
     // voices remain intentionally soft, so this gain increase does not push
     // the combined sound into clipping.
-    setMasterVolume(0.55, context.currentTime)
+    setMusicVolume(0.55, context.currentTime)
     updateControl()
   }
 
   const start = () => {
-    if (!autoStartEnabled) return
+    // A user gesture must unlock the context even when the URL suppresses the
+    // theme, otherwise later reveal effects would remain blocked by autoplay
+    // policy.
+    if (!ensureContext() || !autoStartEnabled) return
     enable()
   }
 
-  const playFogLift = () => {
+  const stop = () => {
+    if (!context || !musicGain) return
+
+    musicEnabled = false
+    updateControl()
+    const at = context.currentTime
+    setMusicVolume(0.0001, at)
+    if (stopTimer !== undefined) window.clearTimeout(stopTimer)
+    stopTimer = window.setTimeout(() => {
+      if (scheduler !== undefined) {
+        window.clearInterval(scheduler)
+        scheduler = undefined
+      }
+      stopTimer = undefined
+    }, 500)
+  }
+
+  const scheduleFallbackChime = (at: number) => {
+    if (!masterGain) return
+    const chime = revealChimeVariations[revealChimeIndex]
+    revealChimeIndex = (revealChimeIndex + 1) % revealChimeVariations.length
+    chime.notes.forEach((midi, index) => {
+      scheduleTone(
+        midiToFrequency(midi),
+        at + chime.offsets[index],
+        chime.duration,
+        chime.volume,
+        chime.type,
+        masterGain,
+      )
+    })
+  }
+
+  const playFogLift = (scene?: AtlasScene) => {
     start()
-    if (!context || !masterGain || !enabled || !noiseBuffer) return
+    if (!ensureContext() || !context || !masterGain || !noiseBuffer) return
     const at = context.currentTime + 0.02
 
     const wind = context.createBufferSource()
@@ -222,49 +330,99 @@ export const installAtlasAudio = (
     wind.buffer = noiseBuffer
     windFilter.type = 'lowpass'
     windFilter.frequency.setValueAtTime(420, at)
-    windFilter.frequency.exponentialRampToValueAtTime(2200, at + 0.9)
+    windFilter.frequency.exponentialRampToValueAtTime(1500, at + 0.9)
     windFilter.frequency.exponentialRampToValueAtTime(700, at + 2.05)
     windGain.gain.setValueAtTime(0.0001, at)
-    windGain.gain.linearRampToValueAtTime(0.075, at + 0.55)
+    windGain.gain.linearRampToValueAtTime(0.045, at + 0.55)
     windGain.gain.exponentialRampToValueAtTime(0.0001, at + 2.1)
     wind.connect(windFilter).connect(windGain).connect(masterGain)
     wind.start(at)
     wind.stop(at + 2.15)
 
-    // Let the clearing swell peak before the reveal chime answers it.
-    const chime = revealChimeVariations[revealChimeIndex]
-    revealChimeIndex = (revealChimeIndex + 1) % revealChimeVariations.length
     const chimeAt = at + 1.1
-    chime.notes.forEach((midi, index) => {
-      scheduleTone(
-        midiToFrequency(midi),
-        chimeAt + chime.offsets[index],
-        chime.duration,
-        chime.volume,
-        chime.type,
-      )
-    })
+    const sceneCue = scene ? sceneAudio.get(scene) : undefined
+    if (sceneCue) {
+      // The cue belongs to the revealed site; it answers the fog as the tile
+      // artwork becomes visible rather than becoming a second background track.
+      scheduleSceneAudio(sceneCue, chimeAt)
+      return
+    }
+
+    if (scene) {
+      // Do not replace a valid, still-decoding scene cue with the generic
+      // chime. Cache hits commonly reach this point before their preloader
+      // finishes. Keep the fog swell going and play the dedicated cue as soon
+      // as decoding completes instead.
+      void loadSceneAudio(scene).then(cue => {
+        if (!context || !masterGain) return
+        const cueAt = Math.max(chimeAt, context.currentTime + 0.02)
+        if (cue) {
+          scheduleSceneAudio(cue, cueAt)
+          return
+        }
+        scheduleFallbackChime(cueAt)
+      })
+      return
+    }
+
+    // Let the clearing swell peak before the generic chime answers it. This
+    // is used only when there is no dedicated scene cue to play.
+    scheduleFallbackChime(chimeAt)
+  }
+
+  const playCameraFlash = () => {
+    start()
+    if (!ensureContext() || !context || !masterGain || !noiseBuffer) return
+    const at = context.currentTime + 0.01
+
+    // A short, warm mechanical click: the noise is the shutter and the
+    // pitched tail gives it the small pop of an old flash bulb.
+    const shutter = context.createBufferSource()
+    const shutterFilter = context.createBiquadFilter()
+    const shutterGain = context.createGain()
+    shutter.buffer = noiseBuffer
+    shutterFilter.type = 'highpass'
+    shutterFilter.frequency.setValueAtTime(1400, at)
+    shutterGain.gain.setValueAtTime(0.0001, at)
+    shutterGain.gain.exponentialRampToValueAtTime(0.11, at + 0.006)
+    shutterGain.gain.exponentialRampToValueAtTime(0.0001, at + 0.075)
+    shutter.connect(shutterFilter).connect(shutterGain).connect(masterGain)
+    shutter.start(at)
+    shutter.stop(at + 0.08)
+
+    const bulb = context.createOscillator()
+    const bulbGain = context.createGain()
+    bulb.type = 'triangle'
+    bulb.frequency.setValueAtTime(1040, at)
+    bulb.frequency.exponentialRampToValueAtTime(380, at + 0.09)
+    bulbGain.gain.setValueAtTime(0.0001, at)
+    bulbGain.gain.exponentialRampToValueAtTime(0.045, at + 0.008)
+    bulbGain.gain.exponentialRampToValueAtTime(0.0001, at + 0.11)
+    bulb.connect(bulbGain).connect(masterGain)
+    bulb.start(at)
+    bulb.stop(at + 0.12)
   }
 
   control.addEventListener('click', event => {
     event.stopPropagation()
-    if (!context || !enabled) {
+    if (!context || !musicEnabled) {
       autoStartEnabled = true
       enable()
       return
     }
-    enabled = false
+    musicEnabled = false
     autoStartEnabled = false
-    setMasterVolume(0.0001, context.currentTime)
+    setMusicVolume(0.0001, context.currentTime)
     updateControl()
   })
 
   window.addEventListener('pagehide', () => {
-    if (scheduler) window.clearInterval(scheduler)
+    if (scheduler !== undefined) window.clearInterval(scheduler)
+    if (stopTimer !== undefined) window.clearTimeout(stopTimer)
     void context?.close()
   })
 
-  return { playFogLift, start }
+  return { playCameraFlash, playFogLift, preloadScene, start, stop }
 }
 
 declare global {
