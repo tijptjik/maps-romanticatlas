@@ -222,9 +222,9 @@ The supported environment variables are:
 - `?admin=true`: enables the cache manifest, image cycling, rerendering, and deletion UI
   in either local or production mode. The admin listing includes every retained image
   version by default; add `?version=1` through `?version=5` to inspect one version.
-  Unversioned legacy images are excluded. The rerender control selects a scene using the
-  normal 9×9 cached-scene lookup, including images at the selected location. Click an
-  image to reveal its controls.
+  Unversioned legacy images are excluded. The rerender control can queue multiple scenes.
+  Each is selected from the normal 9×9 cached-scene lookup, including images at the
+  selected location, and excludes the active scene. Click an image to reveal its controls.
 - `?diagnostics=true`: shows red boundaries around cached tiles.
 - `ATLAS_ADMIN_TOKEN`: required when using `?admin=true`; use a long random secret. The
   admin UI prompts for it once per browser session. The server also requires a
