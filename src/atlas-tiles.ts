@@ -633,15 +633,12 @@ const fogFragmentShader = `
     vec2 fogUv =
       (screenPosition - u_anchor_screen) / (u_viewport_size * u_map_scale) + 0.5;
 
-    // Gently deform the silhouette as well as moving the internal veils. This
-    // keeps the fog from reading as a static set of tile-shaped patches.
-    vec2 maskWarp = vec2(
-      sin(u_time * 0.82 + fogUv.y * 16.0 + sin(fogUv.x * 8.0) * 1.2),
-      cos(u_time * 0.68 + fogUv.x * 14.0 + cos(fogUv.y * 7.0) * 1.1)
-    ) * 0.014;
-    // The mask is painted into a screen-sized canvas. Compensate for map
-    // movement since its last paint so the same fog body stays locked to the
-    // same map coordinates between canvas updates.
+    // Keep the cloud silhouette stable. The animated veils below still make
+    // the fog feel alive, without reshaping its body as the map is dragged.
+    vec2 maskWarp = vec2(0.0);
+    // A zoom may advance between the low-cost mask paints. Sample the last
+    // mask in its map position so it still covers the newly visible viewport
+    // while the next visible-tile mask is being prepared.
     vec2 currentAnchorUv = u_anchor_screen / u_viewport_size;
     vec2 maskAnchorUv = u_mask_anchor_screen / u_viewport_size;
     vec2 maskUv = clamp(
@@ -827,6 +824,7 @@ const createFogCanvas = (
   let loadingAnchorZoom: number | undefined
   const fogFrameInterval = 1000 / 60
   const maskFrameInterval = 1000 / 60
+  const zoomMaskFrameInterval = 1000 / 20
   const cachedMistFrameInterval = 1000 / 15
   let maskRetryTimer: number | undefined
   const loadingSequences = new Map()
@@ -872,9 +870,10 @@ const createFogCanvas = (
     const nextWidth = mapCanvas.clientWidth
     const nextHeight = mapCanvas.clientHeight
     if (!nextWidth || !nextHeight) return
-    // Fog is intentionally rendered at CSS resolution. The shader and the soft
-    // mask do not benefit from a retina-sized target, and this caps its fill cost.
-    const renderScale = 1
+    // This is a deliberately soft overlay, so rendering above 960px on either
+    // axis only spends GPU time on imperceptible detail. Keeping the target
+    // bounded leaves MapLibre enough frame time to animate zooms smoothly.
+    const renderScale = Math.min(0.75, 960 / Math.max(nextWidth, nextHeight))
     const changed = nextWidth !== clientWidth || nextHeight !== clientHeight
     clientWidth = nextWidth
     clientHeight = nextHeight
@@ -963,7 +962,6 @@ const createFogCanvas = (
     createFogMaskPath(maskContext, x, y, size, seed, radiusScale * 1.1)
     maskContext.fill()
     maskContext.restore()
-
   }
 
   const clearGeneratedTileMask = (tile, state, time) => {
@@ -982,9 +980,9 @@ const createFogCanvas = (
     const progress = easeOutCubic(revealProgress)
     const inset = size * 0.5 * (1 - progress)
 
-    // Neighboring fog bodies intentionally spill across tile boundaries. Cut
-    // the generated tile back out after drawing those bodies so the clearing
-    // always identifies the exact tile that opened, even at the cloud edges.
+    // Neighboring cloud bodies spill across tile boundaries. Cut the
+    // generated tile back out after drawing those bodies so its clearing
+    // continues to match the underlying z18 atlas tile exactly.
     maskContext.save()
     maskContext.globalCompositeOperation = 'destination-out'
     maskContext.globalAlpha = 1
@@ -1486,11 +1484,11 @@ const createFogCanvas = (
 
   const renderMask = frameTime => {
     maskFrame = undefined
-    // Repainting the blurred mask for every wheel event competes directly with
-    // MapLibre's zoom render. The shader keeps this last mask geographically
-    // aligned until a precise repaint is cheap again at zoom end.
-    if (isZooming) return
-    if (frameTime - lastMaskFrame < maskFrameInterval) {
+    // A stale z18 mask becomes visibly wrong as soon as zoom expands the
+    // viewport. During zoom, repaint the visible footprint and one-tile buffer
+    // at a capped cadence instead of stretching the pre-zoom cloud coverage.
+    const frameInterval = isZooming ? zoomMaskFrameInterval : maskFrameInterval
+    if (frameTime - lastMaskFrame < frameInterval) {
       if (maskDirty) maskFrame = requestAnimationFrame(renderMask)
       return
     }
@@ -1510,6 +1508,9 @@ const createFogCanvas = (
     }
     maskContext.setTransform(maskScale, 0, 0, maskScale, 0, 0)
     maskContext.clearRect(0, 0, clientWidth, clientHeight)
+    // Only paint the z18 tiles that can affect the viewport: the visible
+    // footprint plus its one-tile perimeter. This gives zoom-out coverage a
+    // ready cloud border without doing work for distant map tiles.
     visibleFogTiles(map).forEach(tile => {
       const id = tileId(tile)
       const state = tileState.get(id)
