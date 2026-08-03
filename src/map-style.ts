@@ -61,6 +61,7 @@ const romanticLayers = layers('hongkong-latest', namedFlavor('light'), { lang: '
     layer =>
       !layer.id.startsWith('pois') &&
       layer.id !== 'roads_rail' &&
+      layer.id !== 'address_label' &&
       !layer.id.startsWith('roads_labels_'),
   )
   .map(layer => ({

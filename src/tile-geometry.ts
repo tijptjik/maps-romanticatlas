@@ -1,4 +1,6 @@
-export const atlasZoom = 18
+import { atlasZoom } from './atlas-protocol.ts'
+
+export { atlasZoom }
 
 const tileCountAtZoom = zoom => 2 ** zoom
 

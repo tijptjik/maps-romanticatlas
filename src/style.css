@@ -454,6 +454,16 @@ body {
   mix-blend-mode: normal;
 }
 
+.atlas-fog-error-announcement {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .atlas-clearance-notice {
   position: absolute;
   z-index: 6;
@@ -919,6 +929,116 @@ body {
   text-transform: uppercase;
 }
 
+.atlas-admin-rendering {
+  position: absolute;
+  z-index: 8;
+  display: grid;
+  overflow: hidden;
+  min-width: 1px;
+  min-height: 1px;
+  border: 2px solid rgba(246, 214, 142, 0.94);
+  background:
+    linear-gradient(135deg, rgba(66, 40, 28, 0.58), rgba(129, 71, 49, 0.38)),
+    repeating-linear-gradient(
+      -45deg,
+      rgba(255, 246, 214, 0.11) 0 0.7rem,
+      transparent 0.7rem 1.4rem
+    );
+  box-shadow: inset 0 0 0 1px rgba(86, 47, 30, 0.75), inset 0 0 3rem rgba(54, 31, 20, 0.42);
+  place-items: center;
+  pointer-events: none;
+}
+
+.atlas-admin-rendering[hidden] { display: none; }
+
+.atlas-admin-rendering::before {
+  position: absolute;
+  inset: -40%;
+  background: linear-gradient(
+    115deg,
+    transparent 38%,
+    rgba(255, 246, 214, 0.26) 50%,
+    transparent 62%
+  );
+  animation: atlas-admin-rendering-sheen 2.2s ease-in-out infinite;
+  content: '';
+}
+
+.atlas-admin-rendering__panel {
+  position: relative;
+  display: grid;
+  width: min(20rem, calc(100% - 1.5rem));
+  padding: clamp(0.65rem, 2.2vw, 1.15rem);
+  border: 1px solid rgba(248, 237, 207, 0.78);
+  color: #fff1c9;
+  background: rgba(59, 37, 24, 0.76);
+  box-shadow: 0 0.4rem 1.4rem rgba(44, 24, 15, 0.32);
+  gap: 0.32rem;
+  justify-items: center;
+  text-align: center;
+}
+
+.atlas-admin-rendering__kicker {
+  color: #f0c770;
+  font: 700 clamp(0.52rem, 1.2vw, 0.66rem)/1.15 Inter, ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.atlas-admin-rendering__spinner {
+  width: clamp(1.7rem, 5vw, 2.4rem);
+  height: clamp(1.7rem, 5vw, 2.4rem);
+  margin-top: 0.08rem;
+  border: 3px solid rgba(255, 241, 201, 0.3);
+  border-top-color: #f8edcf;
+  border-right-color: #e1aa62;
+  border-radius: 50%;
+  animation: atlas-admin-rendering-spin 0.9s linear infinite;
+}
+
+.atlas-admin-rendering__title {
+  font: 400 clamp(1rem, 2.7vw, 1.55rem)/1 'IM Fell English SC', Georgia, serif;
+  letter-spacing: 0.03em;
+}
+
+.atlas-admin-rendering__message {
+  max-width: 17rem;
+  margin: 0;
+  color: rgba(255, 241, 201, 0.9);
+  font: italic 600 clamp(0.66rem, 1.5vw, 0.8rem)/1.25 'Cormorant Garamond', Georgia, serif;
+}
+
+.atlas-admin-rendering__progress {
+  width: min(11rem, 86%);
+  height: 0.22rem;
+  margin-top: 0.18rem;
+  overflow: hidden;
+  background: rgba(255, 241, 201, 0.28);
+}
+
+.atlas-admin-rendering__progress::after {
+  display: block;
+  width: 45%;
+  height: 100%;
+  background: linear-gradient(90deg, #d79059, #fff1c9, #d79059);
+  animation: atlas-admin-rendering-progress 1.35s ease-in-out infinite;
+  content: '';
+}
+
+@keyframes atlas-admin-rendering-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes atlas-admin-rendering-sheen {
+  from { transform: translateX(-24%); }
+  to { transform: translateX(24%); }
+}
+
+@keyframes atlas-admin-rendering-progress {
+  from { transform: translateX(-115%); }
+  to { transform: translateX(250%); }
+}
+
 .atlas-admin-count {
   position: absolute;
   z-index: 6;
@@ -952,7 +1072,9 @@ body {
 .atlas-admin-delete:hover,
 .atlas-admin-delete:focus-visible,
 .atlas-admin-cycle:hover,
-.atlas-admin-cycle:focus-visible {
+.atlas-admin-cycle:focus-visible,
+.atlas-admin-rerender:hover,
+.atlas-admin-rerender:focus-visible {
   background: #7f2e2c;
 }
 
@@ -971,7 +1093,32 @@ body {
   letter-spacing: 0.02em;
 }
 
-.atlas-admin-delete:disabled {
+.atlas-admin-rerender {
+  position: absolute;
+  z-index: 7;
+  width: 2.55rem;
+  height: 2.55rem;
+  padding: 0;
+  border: 1px solid #8d5d52;
+  border-radius: 50%;
+  color: #f8edcf;
+  background: #67504b;
+  box-shadow: 0 2px 8px rgba(59, 37, 24, 0.35);
+  cursor: pointer;
+  font: 700 1.55rem/1 Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.atlas-admin-delete:disabled,
+.atlas-admin-cycle:disabled,
+.atlas-admin-rerender:disabled {
   cursor: wait;
   opacity: 0.7;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .atlas-admin-rendering::before,
+  .atlas-admin-rendering__spinner,
+  .atlas-admin-rendering__progress::after {
+    animation: none;
+  }
 }
