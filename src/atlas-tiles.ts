@@ -393,10 +393,24 @@ const createGenerationArtifacts = (map, sourceCanvas, northWest, southEast) => {
   }
 }
 
-const fadeTileEdges = async url => {
+const decodedTileImages = new Map()
+const fadedTileUrls = new Map()
+
+const decodeTileImage = url => {
+  if (decodedTileImages.has(url)) return decodedTileImages.get(url)
   const image = new Image()
+  image.decoding = 'async'
   image.src = url
-  await image.decode()
+  const promise = image.decode().then(() => image)
+  decodedTileImages.set(url, promise)
+  promise.catch(() => {
+    if (decodedTileImages.get(url) === promise) decodedTileImages.delete(url)
+  })
+  return promise
+}
+
+const createFadedTileUrl = async url => {
+  const image = await decodeTileImage(url)
 
   const size = 512
   const fade = size * 0.1
@@ -421,6 +435,16 @@ const fadeTileEdges = async url => {
   return canvas.toDataURL('image/png')
 }
 
+const getFadedTileUrl = url => {
+  if (fadedTileUrls.has(url)) return fadedTileUrls.get(url)
+  const promise = createFadedTileUrl(url)
+  fadedTileUrls.set(url, promise)
+  promise.catch(() => {
+    if (fadedTileUrls.get(url) === promise) fadedTileUrls.delete(url)
+  })
+  return promise
+}
+
 const addGeneratedTile = async (
   map,
   tile,
@@ -429,11 +453,12 @@ const addGeneratedTile = async (
   titleCards,
   contentBounds,
   initialOpacity = 0,
+  preparedUrl = undefined,
 ) => {
   const id = `atlas-tile-${tile.x}-${tile.y}`
   if (map.getLayer(id)) return
   const bounds = tileBounds(tile)
-  const fadedUrl = await fadeTileEdges(url)
+  const fadedUrl = preparedUrl ?? (await getFadedTileUrl(url))
   map.addSource(id, {
     type: 'image',
     url: fadedUrl,
@@ -1337,37 +1362,99 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
     map.on(eventName, positionTitleCards)
   })
 
-  const checkCachedTile = async tile => {
-    const response = await fetch(
+  const cachedTileRequests = new Map()
+  const preloadedTileRequests = new Map()
+
+  const checkCachedTile = tile => {
+    const id = tileId(tile)
+    if (preloadedTileRequests.has(id)) return preloadedTileRequests.get(id)
+    if (cachedTileRequests.has(id)) return cachedTileRequests.get(id)
+
+    const request = fetch(
       `/api/atlas-tiles/cache-status/${atlasZoom}/${tile.x}/${tile.y}`,
       { cache: 'no-store' },
     )
-    const body = await response.json().catch(() => null)
-    if (!response.ok) {
-      throw new Error(
-        body?.error ??
-          `The atlas-tile cache lookup failed with HTTP ${response.status}.`,
-      )
-    }
-    const scenes = Array.isArray(body?.scenes)
-      ? body.scenes.filter((scene): scene is AtlasScene =>
-          typeof scene === 'string' && atlasSceneNames.includes(scene as AtlasScene),
-        )
-      : []
-    if (body?.cached !== true) return { cached: false, scenes }
-    if (typeof body.url !== 'string' || !body.url || typeof body.scene !== 'string') {
-      throw new Error(
-        'The atlas-tile cache lookup returned an invalid cached image URL.',
-      )
-    }
-    return {
-      cached: true,
-      url: body.url,
-      scene: body.scene,
-      scenes,
-      contentBounds: body.contentBounds,
-    }
+      .then(async response => {
+        const body = await response.json().catch(() => null)
+        if (!response.ok) {
+          throw new Error(
+            body?.error ??
+              `The atlas-tile cache lookup failed with HTTP ${response.status}.`,
+          )
+        }
+        const scenes = Array.isArray(body?.scenes)
+          ? body.scenes.filter((scene): scene is AtlasScene =>
+              typeof scene === 'string' && atlasSceneNames.includes(scene as AtlasScene),
+            )
+          : []
+        if (body?.cached !== true) {
+          return { cached: false, scenes, preparedUrl: undefined }
+        }
+        if (typeof body.url !== 'string' || !body.url || typeof body.scene !== 'string') {
+          throw new Error(
+            'The atlas-tile cache lookup returned an invalid cached image URL.',
+          )
+        }
+        return {
+          cached: true,
+          url: body.url,
+          scene: body.scene,
+          scenes,
+          contentBounds: body.contentBounds,
+          preparedUrl: undefined,
+        }
+      })
+      .catch(error => {
+        if (cachedTileRequests.get(id) === request) cachedTileRequests.delete(id)
+        throw error
+      })
+    cachedTileRequests.set(id, request)
+    return request
   }
+
+  const preloadCachedTile = tile => {
+    const id = tileId(tile)
+    if (preloadedTileRequests.has(id)) return preloadedTileRequests.get(id)
+
+    const request = checkCachedTile(tile)
+      .then(async status => {
+        if (!status.cached) return status
+        return {
+          ...status,
+          // Do the decode and edge fade while the tile is merely visible. The
+          // click path can then add the ready-to-render image immediately.
+          preparedUrl: await getFadedTileUrl(status.url),
+        }
+      })
+      .catch(error => {
+        if (preloadedTileRequests.get(id) === request) preloadedTileRequests.delete(id)
+        throw error
+      })
+    preloadedTileRequests.set(id, request)
+    return request
+  }
+
+  const preloadVisibleCachedTiles = () => {
+    if (map.getZoom() < minimumFogZoom || !mapDataIsReady()) return
+    visibleFogTiles(map).forEach(tile => {
+      const id = tileId(tile)
+      if (
+        tileState.has(id) ||
+        !isFullyVisible(map, tile) ||
+        !isLandTargetable(tile) ||
+        !isFogged(tile)
+      )
+        return
+      // A miss is cached too, so moving the map does not repeatedly ask the
+      // server about the same visible tile during one visit.
+      preloadCachedTile(tile).catch(() => {})
+    })
+  }
+
+  ;['move', 'moveend', 'resize', 'zoom', 'zoomend', 'data', 'idle'].forEach(eventName => {
+    map.on(eventName, preloadVisibleCachedTiles)
+  })
+  preloadVisibleCachedTiles()
 
   map.on('mousemove', event => {
     if (isAdminMode()) {
@@ -1417,6 +1504,8 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
           cacheStatus.scene,
           titleCards,
           cacheStatus.contentBounds,
+          0,
+          cacheStatus.preparedUrl,
         )
         revealGeneratedTile(id, false)
         console.info(
@@ -1532,6 +1621,8 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
     // Put the fog back over the artwork before the artwork fades away. This
     // makes the reset read as the city disappearing into mist, not as a hard cut.
     revealedTileIds.forEach(id => {
+      cachedTileRequests.delete(id)
+      preloadedTileRequests.delete(id)
       fog.cancelReveal(id)
       tileState.set(id, 'resetting')
     })

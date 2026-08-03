@@ -435,23 +435,38 @@ const listCachedTiles = async (requestedVersion = generationVersion) => {
 const atlasSceneGridRadius = 4
 const atlasTileCount = 2 ** atlasZoom
 
-const wrappedTileDistance = (left, right) => {
-  const distance = Math.abs(left - right)
-  return Math.min(distance, atlasTileCount - distance)
+const sceneGridPositions = position => {
+  const positions = []
+  for (let yOffset = -atlasSceneGridRadius; yOffset <= atlasSceneGridRadius; yOffset += 1) {
+    const y = position.y + yOffset
+    if (y < 0 || y >= atlasTileCount) continue
+    for (let xOffset = -atlasSceneGridRadius; xOffset <= atlasSceneGridRadius; xOffset += 1) {
+      positions.push({
+        x: (position.x + xOffset + atlasTileCount) % atlasTileCount,
+        y,
+      })
+    }
+  }
+  return positions
 }
 
 const cachedScenesInGrid = async position => {
-  const cached = (await Promise.all(
-    readableCacheVersions.map(version => listCachedTiles(version)),
-  )).flat()
-  return [...new Set(
-    cached
-      .filter(tile =>
-        wrappedTileDistance(tile.x, position.x) <= atlasSceneGridRadius &&
-        Math.abs(tile.y - position.y) <= atlasSceneGridRadius,
-      )
-      .map(tile => tile.scene),
-  )]
+  const sceneLists = await Promise.all(sceneGridPositions(position).map(async ({ x, y }) => {
+    try {
+      const files = await readdir(path.join(cacheDirectory, String(atlasZoom), String(x), String(y)))
+      return files.flatMap(fileName => {
+        const match = fileName.match(/^(.+)\.v(\d+)\.json$/)
+        const version = Number(match?.[2])
+        const scene = match?.[1]
+        return scene && atlasScenes[scene] && readableCacheVersions.includes(version)
+          ? [scene]
+          : []
+      })
+    } catch {
+      return []
+    }
+  }))
+  return [...new Set(sceneLists.flat())]
 }
 
 const atlasPrompt = (scene, hasSea) => {

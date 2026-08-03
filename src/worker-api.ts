@@ -261,24 +261,43 @@ const listCachedTiles = async (bucket: R2Bucket, requested: number | null = null
 const atlasSceneGridRadius = 4
 const atlasTileCount = 2 ** atlasZoom
 
-const wrappedTileDistance = (left: number, right: number) => {
-  const distance = Math.abs(left - right)
-  return Math.min(distance, atlasTileCount - distance)
+const sceneGridPositions = (position: Omit<Tile, 'scene'>) => {
+  const positions: Array<{ x: number; y: number }> = []
+  for (let yOffset = -atlasSceneGridRadius; yOffset <= atlasSceneGridRadius; yOffset += 1) {
+    const y = position.y + yOffset
+    if (y < 0 || y >= atlasTileCount) continue
+    for (let xOffset = -atlasSceneGridRadius; xOffset <= atlasSceneGridRadius; xOffset += 1) {
+      positions.push({
+        x: (position.x + xOffset + atlasTileCount) % atlasTileCount,
+        y,
+      })
+    }
+  }
+  return positions
 }
 
 const cachedScenesInGrid = async (
   bucket: R2Bucket,
   position: Omit<Tile, 'scene'>,
 ) => {
-  const cached = await listCachedTiles(bucket)
-  return [...new Set(
-    cached
-      .filter(tile =>
-        wrappedTileDistance(tile.x, position.x) <= atlasSceneGridRadius &&
-        Math.abs(tile.y - position.y) <= atlasSceneGridRadius,
-      )
-      .map(tile => tile.scene),
-  )]
+  const sceneLists = await Promise.all(sceneGridPositions(position).map(async ({ x, y }) => {
+    const scenes: Scene[] = []
+    let cursor: string | undefined
+    do {
+      const listing = await bucket.list({ prefix: `atlas/${atlasZoom}/${x}/${y}/`, cursor })
+      for (const object of listing.objects) {
+        const match = object.key.match(new RegExp(`^atlas/${atlasZoom}/${x}/${y}/(.+)\\.v(\\d+)\\.json$`))
+        const version = Number(match?.[2])
+        const scene = match?.[1]
+        if (scene && atlasScenes[scene] && readableCacheVersions.some(candidate => candidate === version)) {
+          scenes.push(scene as Scene)
+        }
+      }
+      cursor = listing.truncated ? listing.cursor : undefined
+    } while (cursor)
+    return scenes
+  }))
+  return [...new Set(sceneLists.flat())]
 }
 
 const imageDataUrl = /^data:(image\/(?:png|jpe?g));base64,([A-Za-z0-9+/=]+)$/
