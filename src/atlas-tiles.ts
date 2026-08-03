@@ -243,8 +243,11 @@ const pointInRing = (point, ring) => {
 const geometryContainsPoint = (geometry, point) => {
   if (!geometry) return false
   if (geometry.type === 'Polygon') {
-    return geometry.coordinates.some(rings =>
-      pointInRing(point, rings[0]) && rings.slice(1).every(ring => !pointInRing(point, ring)),
+    const rings = geometry.coordinates
+    return (
+      rings.length > 0 &&
+      pointInRing(point, rings[0]) &&
+      rings.slice(1).every(ring => !pointInRing(point, ring))
     )
   }
   if (geometry.type === 'MultiPolygon') {
@@ -636,7 +639,11 @@ const fogFragmentShader = `
     // The mask is painted into a screen-sized canvas. Compensate for map
     // movement since its last paint so the same fog body stays locked to the
     // same map coordinates between canvas updates.
-    vec2 maskUv = clamp(v_uv - u_mask_offset + maskWarp, 0.0, 1.0);
+    vec2 maskUv = v_uv - u_mask_offset + maskWarp;
+    if (
+      maskUv.x < 0.0 || maskUv.x > 1.0 ||
+      maskUv.y < 0.0 || maskUv.y > 1.0
+    ) discard;
     float mask = texture2D(u_mask, maskUv).a;
     if (mask < 0.01) discard;
 
@@ -696,29 +703,54 @@ const createFogProgram = gl => {
   return program
 }
 
-const createFogMaskPath = (context, x, y, size, seed, radiusScale = 1) => {
+const createFogMaskPath = (
+  context,
+  x,
+  y,
+  size,
+  seed,
+  radiusScale = 1,
+  spillScale = 0.9,
+) => {
   // Let each body reach into its neighbors. The irregular radius keeps the
   // overlap cloud-like instead of making a larger, regular tile grid.
   const scaledSize = size * radiusScale
   const offset = (size - scaledSize) / 2
   const scaledX = x + offset
   const scaledY = y + offset
-  const spill = scaledSize * 0.14
+  const localSpillScale = spillScale * (0.86 + seeded(seed + 91.3) * 0.28)
+  const spill = scaledSize * 0.14 * localSpillScale
   const left = scaledX - spill
   const top = scaledY - spill * (0.72 + seeded(seed + 1) * 0.42)
   const width = scaledSize + spill * (1.8 + seeded(seed + 2) * 0.35)
   const height = scaledSize + spill * (1.8 + seeded(seed + 3) * 0.35)
-  const points = 16
+  const points = 20
+  const vertices = []
 
-  context.beginPath()
   for (let index = 0; index < points; index += 1) {
     const angle = (Math.PI * 2 * index) / points
     const radius = 0.72 + seeded(seed + index * 2.41) * 0.42
-    const pointX = left + width * (0.5 + Math.cos(angle) * 0.5 * radius)
-    const pointY = top + height * (0.5 + Math.sin(angle) * 0.5 * radius)
-    if (index === 0) context.moveTo(pointX, pointY)
-    else context.lineTo(pointX, pointY)
+    vertices.push({
+      x: left + width * (0.5 + Math.cos(angle) * 0.5 * radius),
+      y: top + height * (0.5 + Math.sin(angle) * 0.5 * radius),
+    })
   }
+
+  // Quadratic joins keep the irregular body cloud-like instead of exposing
+  // the polygon corners when a tile is viewed at a large zoom.
+  context.beginPath()
+  const first = vertices[0]
+  const second = vertices[1]
+  context.moveTo((first.x + second.x) / 2, (first.y + second.y) / 2)
+  vertices.forEach((vertex, index) => {
+    const next = vertices[(index + 1) % vertices.length]
+    context.quadraticCurveTo(
+      vertex.x,
+      vertex.y,
+      (vertex.x + next.x) / 2,
+      (vertex.y + next.y) / 2,
+    )
+  })
   context.closePath()
 }
 
@@ -730,6 +762,8 @@ const createFogCanvas = (
 ) => {
   const mapDataIsReady = () =>
     map.isStyleLoaded() && map.isSourceLoaded('hongkong-latest') && map.areTilesLoaded()
+  const mapSourceIsReady = () =>
+    map.isStyleLoaded() && map.isSourceLoaded('hongkong-latest')
   const canvas = document.createElement('canvas')
   canvas.className = 'atlas-fog'
   canvas.setAttribute('aria-hidden', 'true')
@@ -740,8 +774,8 @@ const createFogCanvas = (
   mistCanvas.setAttribute('aria-hidden', 'true')
   map.getContainer().append(mistCanvas)
   const mistContext = mistCanvas.getContext('2d')
-  const cachedColourMaskCanvas = document.createElement('canvas')
-  const cachedColourMaskContext = cachedColourMaskCanvas.getContext('2d')
+  const cachedColourTileCanvas = document.createElement('canvas')
+  const cachedColourTileContext = cachedColourTileCanvas.getContext('2d')
 
   const loadingCanvas = document.createElement('canvas')
   loadingCanvas.className = 'atlas-fog-loading'
@@ -774,6 +808,7 @@ const createFogCanvas = (
   let clientHeight = 0
   let maskScale = 0.5
   let maskDirty = true
+  let maskUploaded = false
   let animationFrame: number | undefined
   let maskFrame: number | undefined
   let lastFogFrame = -Infinity
@@ -820,8 +855,8 @@ const createFogCanvas = (
       canvas.height = renderHeight
       mistCanvas.width = renderWidth
       mistCanvas.height = renderHeight
-      cachedColourMaskCanvas.width = renderWidth
-      cachedColourMaskCanvas.height = renderHeight
+      cachedColourTileCanvas.width = renderWidth
+      cachedColourTileCanvas.height = renderHeight
       loadingCanvas.width = renderWidth
       loadingCanvas.height = renderHeight
       if (gl) gl.viewport(0, 0, renderWidth, renderHeight)
@@ -838,6 +873,7 @@ const createFogCanvas = (
       maskCanvas.width = Math.max(1, Math.ceil(clientWidth * maskScale))
       maskCanvas.height = Math.max(1, Math.ceil(clientHeight * maskScale))
       maskContext.setTransform(maskScale, 0, 0, maskScale, 0, 0)
+      uploadMask()
       maskDirty = true
     }
   }
@@ -850,6 +886,7 @@ const createFogCanvas = (
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+    maskUploaded = true
   }
 
   const easeOutCubic = progress => 1 - (1 - progress) ** 3
@@ -891,26 +928,10 @@ const createFogCanvas = (
     }
     maskContext.filter = `blur(${Math.max(3, size * 0.04)}px)`
     maskContext.fillStyle = '#ffffff'
-    createFogMaskPath(maskContext, x, y, size, seed, radiusScale)
+    createFogMaskPath(maskContext, x, y, size, seed, radiusScale * 1.1)
     maskContext.fill()
     maskContext.restore()
 
-    // A broad, offset cloud merges nearby bodies into amorphous shapes instead
-    // of leaving the deterministic fogged-tile pattern visible.
-    maskContext.save()
-    maskContext.globalAlpha = 0.2 * (state === 'revealing' ? 1 - revealProgress : 1)
-    maskContext.filter = `blur(${Math.max(7, size * 0.12)}px)`
-    maskContext.fillStyle = '#ffffff'
-    createFogMaskPath(
-      maskContext,
-      x + (seeded(seed + 7) - 0.5) * size * 0.28,
-      y + (seeded(seed + 8) - 0.5) * size * 0.28,
-      size * (1.18 + seeded(seed + 9) * 0.16),
-      seed + 19,
-      radiusScale,
-    )
-    maskContext.fill()
-    maskContext.restore()
   }
 
   const clearGeneratedTileMask = (tile, state, time) => {
@@ -1003,8 +1024,8 @@ const createFogCanvas = (
     }
   }
 
-  const drawCachedFogMask = (tile, time) => {
-    if (!cachedColourMaskContext) return
+  const drawCachedColourField = (tile, time) => {
+    if (!mistContext || !cachedColourTileContext) return
     const bounds = tileBounds(tile)
     const northWest = map.project([bounds.west, bounds.north])
     const southEast = map.project([bounds.east, bounds.south])
@@ -1017,13 +1038,49 @@ const createFogCanvas = (
     if (!visible || size <= 0) return
 
     const seed = tile.x * 0.47 + tile.y * 0.91
-    cachedColourMaskContext.save()
-    cachedColourMaskContext.globalAlpha = 0.9
-    cachedColourMaskContext.filter = `blur(${Math.max(4, size * 0.05)}px)`
-    cachedColourMaskContext.fillStyle = '#ffffff'
-    createFogMaskPath(cachedColourMaskContext, northWest.x, northWest.y, size, seed)
-    cachedColourMaskContext.fill()
-    cachedColourMaskContext.restore()
+    const centerX = northWest.x + (southEast.x - northWest.x) / 2
+    const centerY = northWest.y + (southEast.y - northWest.y) / 2
+    const baseHue = (time / 16000 * 360 + seeded(seed + 51.7) * 360) % 360
+    const swayPhase = time / 4300 + seeded(seed + 68.2) * Math.PI * 2
+    const swayX = Math.cos(swayPhase) * size * 0.045
+    const swayY = Math.sin(swayPhase * 0.76) * size * 0.035
+
+    cachedColourTileContext.setTransform(1, 0, 0, 1, 0, 0)
+    cachedColourTileContext.clearRect(0, 0, clientWidth, clientHeight)
+    cachedColourTileContext.save()
+    cachedColourTileContext.filter = `blur(${Math.max(2, size * 0.018)}px)`
+    const gradient = cachedColourTileContext.createLinearGradient(
+      centerX - size * 0.82 + swayX,
+      centerY - size * 0.58 + swayY,
+      centerX + size * 0.82 + swayX,
+      centerY + size * 0.58 + swayY,
+    )
+    const secondHue =
+      (baseHue + 78 + seeded(seed + 73.6) * 18) % 360
+    gradient.addColorStop(0, `hsla(${baseHue}, 88%, 67%, 0.28)`)
+    gradient.addColorStop(1, `hsla(${secondHue}, 88%, 67%, 0.32)`)
+    cachedColourTileContext.globalAlpha = 1
+    cachedColourTileContext.fillStyle = gradient
+    cachedColourTileContext.fillRect(0, 0, clientWidth, clientHeight)
+    cachedColourTileContext.restore()
+
+    cachedColourTileContext.save()
+    cachedColourTileContext.globalCompositeOperation = 'destination-in'
+    cachedColourTileContext.globalAlpha = 1
+    cachedColourTileContext.filter = `blur(${Math.max(4, size * 0.05)}px)`
+    cachedColourTileContext.fillStyle = '#ffffff'
+    createFogMaskPath(
+      cachedColourTileContext,
+      northWest.x + swayX,
+      northWest.y + swayY,
+      size,
+      seed,
+      0.86 * 1.07,
+      0.42,
+    )
+    cachedColourTileContext.fill()
+    cachedColourTileContext.restore()
+    mistContext.drawImage(cachedColourTileCanvas, 0, 0)
   }
 
   const drawLoadingText = time => {
@@ -1031,65 +1088,16 @@ const createFogCanvas = (
     const ratio = canvas.width / Math.max(1, clientWidth)
     mistContext?.setTransform(ratio, 0, 0, ratio, 0, 0)
     mistContext?.clearRect(0, 0, clientWidth, clientHeight)
-    cachedColourMaskContext?.setTransform(ratio, 0, 0, ratio, 0, 0)
-    cachedColourMaskContext?.clearRect(0, 0, clientWidth, clientHeight)
     loadingContext.setTransform(ratio, 0, 0, ratio, 0, 0)
     loadingContext.clearRect(0, 0, clientWidth, clientHeight)
 
     const adminMode = map.getContainer().classList.contains('atlas-admin-mode')
-    if (!adminMode && mistContext && cachedColourMaskContext) {
-      const baseHue = (time / 16000 * 360) % 360
-      const fieldSize = Math.max(clientWidth, clientHeight)
-      mistContext.save()
-      mistContext.filter = `blur(${Math.max(4, fieldSize * 0.012)}px)`
-      for (let index = 0; index < 5; index += 1) {
-        const phase = time / 5200 + index * 1.7
-        const centerX = clientWidth * (0.5 + Math.cos(phase) * 0.38)
-        const centerY = clientHeight * (0.5 + Math.sin(phase * 0.83) * 0.38)
-        const radius = fieldSize * (0.52 + Math.sin(phase * 0.7) * 0.04)
-        const hue = (baseHue + index * 72) % 360
-        const gradient = mistContext.createRadialGradient(
-          centerX,
-          centerY,
-          0,
-          centerX,
-          centerY,
-          radius,
-        )
-        gradient.addColorStop(0, `hsla(${hue}, 86%, 68%, 0.28)`)
-        gradient.addColorStop(0.5, `hsla(${hue}, 80%, 70%, 0.17)`)
-        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)')
-        mistContext.globalAlpha = 1
-        mistContext.fillStyle = gradient
-        mistContext.beginPath()
-        mistContext.ellipse(
-          centerX,
-          centerY,
-          radius * 1.35,
-          radius,
-          phase * 0.15,
-          0,
-          Math.PI * 2,
-        )
-        mistContext.fill()
-      }
-      mistContext.restore()
-    }
-
     if (!adminMode) {
       cachedTileIds.forEach(id => {
         const tile = tileFromId(id)
         if (tileState.has(id) || !isFogged(tile)) return
-        drawCachedFogMask(tile, time)
+        drawCachedColourField(tile, time)
       })
-    }
-
-    if (!adminMode && mistContext && cachedColourMaskContext) {
-      mistContext.save()
-      mistContext.globalCompositeOperation = 'destination-in'
-      mistContext.globalAlpha = 1
-      mistContext.drawImage(cachedColourMaskCanvas, 0, 0)
-      mistContext.restore()
     }
 
     tileState.forEach((state, id) => {
@@ -1395,7 +1403,7 @@ const createFogCanvas = (
     }
     lastMaskFrame = frameTime
     if (!clientWidth || !clientHeight) return
-    if (!mapDataIsReady()) {
+    if (!mapSourceIsReady()) {
       // The first render can happen before the vector source has finished its
       // initial request. Keep the mask dirty and retry after the source settles
       // instead of permanently accepting an empty mask.
@@ -1460,7 +1468,7 @@ const createFogCanvas = (
       state => state === 'checking' || state === 'generating' || state === 'revealing',
     )
     if ((maskDirty || fogIsActive) && !maskFrame) renderMask(time)
-    if (gl && program && positionBuffer && maskTexture) {
+    if (maskUploaded && gl && program && positionBuffer && maskTexture) {
       gl.clearColor(0, 0, 0, 0)
       gl.clear(gl.COLOR_BUFFER_BIT)
       gl.useProgram(program)
@@ -1585,7 +1593,9 @@ export const installAtlasTileInteractions = map => {
   const isFogTileLand = tile => {
     const id = tileId(tile)
     if (fogLandState.has(id)) return fogLandState.get(id)
-    if (isFullyVisible(map, tile)) return isLandTargetable(tile)
+    if (isFullyVisible(map, tile) && mapDataIsReady()) {
+      return isLandTargetable(tile)
+    }
 
     const fraction = sourceTileLandFraction(map, tile)
     if (fraction === null) return false
