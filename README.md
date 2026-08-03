@@ -55,7 +55,7 @@ Open the local URL printed by the server (use `http://localhost:5173`).
 | Command                         | Purpose                                                                                              |
 | ------------------------------- | ---------------------------------------------------------------------------------------------------- |
 | `bun run dev`                   | Start the local Vite-backed server.                                                                  |
-| `bun run dev:remote`            | Build and run the Worker locally with the production R2 bucket.                                     |
+| `bun run dev:remote`            | Run the Worker locally with the configured remote R2 buckets.                                        |
 | `bun run build`                 | Build the browser bundle into `dist/`.                                                               |
 | `bun run preview`               | Serve the existing `dist/` build through the production-mode Node server. Run `bun run build` first. |
 | `bun run deploy`                | Build and deploy the static asset Worker with Wrangler.                                              |
@@ -65,6 +65,7 @@ Open the local URL printed by the server (use `http://localhost:5173`).
 | `bun run format:markdown:check` | Check Markdown formatting.                                                                           |
 | `bun run generate:paper`        | Generate `public/romantic-paper-texture.png` through OpenRouter.                                     |
 | `bun run sync:tiles`            | Upload local generated tile images and metadata to the configured R2 bucket.                         |
+| `bun run backfill:manifest`     | Index existing production atlas assets after deploying the manifest migration.                       |
 
 ## Production build and deployment
 
@@ -94,18 +95,33 @@ wrangler secret put OPENROUTER_API_KEY
 bun run deploy
 ```
 
-The bucket name must match `wrangler.jsonc`. Production cache administration is off by
-default. To enable it, set `ATLAS_ADMIN_MODE` to `true` in the Worker configuration and
-set the matching secret with `wrangler secret put ATLAS_ADMIN_TOKEN`; the browser admin
-panel then prompts for that token and uses a same-origin CSRF cookie for deletion.
+The bucket name must match `wrangler.jsonc`. To enable production cache administration,
+set the matching secret with `wrangler secret put ATLAS_ADMIN_TOKEN`, then open the app
+with `?admin=true`. The browser admin panel prompts for that token and uses a
+same-origin CSRF cookie for cache changes.
 
 The map's tiles, fonts, and sprite assets are loaded from remote services, so it needs
 an internet connection.
 
-To review the remote R2 cache locally, set `ATLAS_ADMIN_TOKEN` in `.dev.vars`, set
-`VITE_DIAGNOSTIC_CACHED_TILES=true` in `.env`, then run `bun run dev:remote`. The remote
-Worker is available at `http://localhost:8787`; add `?version=3` to replay an older cache
-version. To copy the existing local cache to R2, run `bun run sync:tiles`.
+To develop the Worker locally against the configured remote R2 buckets, create a
+git-ignored `.dev.vars` file with the local Worker secrets, then run
+`bun run dev:remote`:
+
+```sh
+OPENROUTER_API_KEY=your-openrouter-api-key
+ATLAS_ADMIN_TOKEN=replace-with-a-long-random-admin-token
+```
+
+This executes the atlas API locally and sends only R2 operations to the remote bucket;
+it does not proxy image generation through the deployed Worker, so long OpenRouter edits
+do not hit the remote service-binding timeout. The Durable Object manifest remains local
+because Cloudflare does not support remote Durable Object bindings in local development.
+Tiles generated during the session are written to remote R2 and are immediately usable;
+pre-existing remote tiles can still be fetched by their known image URL, but are not
+included in local manifest lookups until they are encountered or regenerated. Add
+`?admin=true` for cache administration, `?diagnostics=true` for tile outlines, and
+`&version=3` to replay an older cache version. To copy the existing local cache to R2,
+run `bun run sync:tiles`.
 
 The map opens with a Victorian-circus-style introduction. Click or press a key to enter
 the atlas, or open the Cartographer's Note for the artist statement. Press Ctrl+M at any
@@ -128,20 +144,33 @@ while it runs. The fog carries one of 24 short provocations about imagination,
 discovery, possibility, and Romanticism, each paired with a quotation from a Romantic
 author. The text clears once the generated image is ready.
 
-Each client may start three new tile clearings in a rolling three-minute window, with up to
-three paid generations active at a time. Requests for the same tile are coalesced while a
-generation is in flight, and cache images and metadata are written atomically. After the
-three personal clearings, the map gives a soft warning that the fog is being cleared
-elsewhere in the city and asks the visitor to wait around three minutes.
+On the local development server, each client may start three new tile clearings in a
+rolling three-minute window, with up to three paid generations active at a time.
+Requests for the same tile are coalesced while a generation is in flight. The production
+Worker does not currently apply an equivalent cross-request limit or coalescing.
+
+Generated images and metadata are stored separately. In production, the manifest is
+published only after both R2 objects have been stored, so normal manifest-based lookups
+do not expose an incomplete cache entry. After the three local personal clearings, the
+map gives a soft warning that the fog is being cleared elsewhere in the city and asks
+the visitor to wait around three minutes.
 
 Generated event images are cached in local `generated-tiles/` during development and in
-the configured R2 bucket in production. Current generations use versioned keys such as
-`atlas/18/x/y/type.v4.image` and matching metadata. Normal cache lookup draws from the
-available v2, v3, and v4 images; new generation writes v4. Generation sends the model a
-full-tile source plus a vector-derived safe-zone guide: land is available for transformation,
-while water, roads, paths, boundaries, and tile edges are locked. The same safe mask is
-enforced during compositing, and the original path linework is restored above the
-generated artwork.
+the configured R2 bucket in production. Current generations use immutable variant keys
+such as `atlas/18/x/y/type.v4.<variant>.image` and matching metadata. Normal cache
+lookup draws randomly from retained v1–v5 variants; new generation writes a new v4
+variant rather than overwriting an existing asset. Generation sends the model a
+full-tile source plus a vector-derived safe-zone guide: land is available for
+transformation, while water, roads, paths, boundaries, and tile edges are locked. The
+same safe mask is enforced during compositing, and the original path linework is
+restored above the generated artwork.
+
+Production also maintains a sharded Durable Object manifest for these entries. It is the
+source for cache-status and nearby-scene lookups, avoiding per-request R2 probing. The
+manifest is updated only after its image and metadata have been stored. After deploying
+this change against an existing R2 bucket, run
+`ATLAS_MANIFEST_TOKEN=... bun run backfill:manifest` once to index the pre-existing
+assets. Set `ATLAS_MANIFEST_ORIGIN` if your local `.env` points at a development server.
 
 ## OpenRouter image client
 
@@ -153,7 +182,7 @@ key through a `VITE_*` variable or import the server wrapper from browser code.
 
 The default model is `openai/gpt-5.4-image-2`. Generation requests are routed through
 OpenRouter, with the full rendered tile supplied as the edit target. Set
-`OPENROUTER_MODEL` to compare another compatible image model.
+`OPENROUTER_MODEL` to another compatible image-editing model to compare outputs.
 
 The supported environment variables are:
 
@@ -162,13 +191,16 @@ The supported environment variables are:
   `openai/gpt-5.4-image-2`.
 - `ATLAS_ALLOWED_ORIGIN`: optional application origin for server API checks; defaults to
   `https://romanticatlas.hype.hk`.
-- `VITE_DIAGNOSTIC_CACHED_TILES`: set to `true` to show red boundaries around cached
-  tiles during local development.
-- `ATLAS_ADMIN_MODE`: set to `true` to enable the cache manifest, image cycling, and
-  deletion UI in either local or production mode. In production, also set the
-  `ATLAS_ADMIN_TOKEN` Worker secret. Only the newest versioned cache set is listed;
-  unversioned legacy images are excluded. Click an image to reveal its controls. Add
-  `?version=3` to the local app URL to review a specific older version.
-- `ATLAS_ADMIN_TOKEN`: required when `ATLAS_ADMIN_MODE=true`; use a long random secret.
-  The admin UI prompts for it once per browser session. The server also requires a
-  same-origin Origin header and a signed CSRF cookie/header pair for deletion.
+- `?admin=true`: enables the cache manifest, image cycling, rerendering, and deletion UI
+  in either local or production mode. The admin listing defaults to the current write
+  version (v4); add `?version=1` through `?version=5` to inspect another retained
+  version. Unversioned legacy images are excluded. The rerender control selects a scene
+  using the normal 9×9 cached-scene lookup, including images at the selected location.
+  Click an image to reveal its controls.
+- `?diagnostics=true`: shows red boundaries around cached tiles.
+- `ATLAS_ADMIN_TOKEN`: required when using `?admin=true`; use a long random secret. The
+  admin UI prompts for it once per browser session. The server also requires a
+  same-origin Origin header and a signed CSRF cookie/header pair for cache changes.
+
+The browser also exposes `toggle_auth()` and `toggle_diagnostics()` global functions.
+Each toggles its respective URL parameter and reloads the page.
