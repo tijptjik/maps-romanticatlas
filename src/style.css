@@ -1042,17 +1042,36 @@ body {
 .atlas-admin-count {
   position: absolute;
   z-index: 6;
-  min-width: 6.5rem;
-  padding: 0.4rem 0.55rem;
+  display: grid;
+  width: 1.7rem;
+  height: 1.7rem;
   border: 1px solid rgba(141, 93, 82, 0.9);
+  border-radius: 50%;
   color: #3b2518;
   background: rgba(248, 237, 207, 0.92);
   box-shadow: 0 2px 6px rgba(59, 37, 24, 0.3);
-  font: 700 0.68rem/1.2 Inter, ui-sans-serif, system-ui, sans-serif;
+  font: 700 0.72rem/1 Inter, ui-sans-serif, system-ui, sans-serif;
   letter-spacing: 0.04em;
   pointer-events: none;
+  place-items: center;
   text-align: center;
 }
+
+.atlas-admin-version {
+  position: absolute;
+  z-index: 6;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid rgba(141, 93, 82, 0.9);
+  color: #f8edcf;
+  background: rgba(59, 37, 24, 0.9);
+  box-shadow: 0 2px 6px rgba(59, 37, 24, 0.3);
+  font: 700 0.64rem/1.2 Inter, ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0.06em;
+  pointer-events: none;
+  text-transform: uppercase;
+}
+
+.atlas-admin-version[hidden] { display: none; }
 
 .atlas-admin-delete {
   position: absolute;

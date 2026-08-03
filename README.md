@@ -192,11 +192,11 @@ The supported environment variables are:
 - `ATLAS_ALLOWED_ORIGIN`: optional application origin for server API checks; defaults to
   `https://romanticatlas.hype.hk`.
 - `?admin=true`: enables the cache manifest, image cycling, rerendering, and deletion UI
-  in either local or production mode. The admin listing defaults to the current write
-  version (v4); add `?version=1` through `?version=5` to inspect another retained
-  version. Unversioned legacy images are excluded. The rerender control selects a scene
-  using the normal 9×9 cached-scene lookup, including images at the selected location.
-  Click an image to reveal its controls.
+  in either local or production mode. The admin listing includes every retained image
+  version by default; add `?version=1` through `?version=5` to inspect one version.
+  Unversioned legacy images are excluded. The rerender control selects a scene using the
+  normal 9×9 cached-scene lookup, including images at the selected location. Click an
+  image to reveal its controls.
 - `?diagnostics=true`: shows red boundaries around cached tiles.
 - `ATLAS_ADMIN_TOKEN`: required when using `?admin=true`; use a long random secret. The
   admin UI prompts for it once per browser session. The server also requires a

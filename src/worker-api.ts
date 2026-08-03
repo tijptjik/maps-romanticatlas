@@ -859,7 +859,9 @@ export const handleAtlasApi = async (
           error.authenticate ? { 'www-authenticate': 'Bearer realm="atlas-admin"' } : undefined,
         )
     }
-    const version = requestedVersion(request) ?? generationVersion
+    const version = adminMode
+      ? requestedVersion(request)
+      : requestedVersion(request) ?? generationVersion
     const tiles = await listCachedTiles(env.ATLAS_BUCKET, version)
     const csrf = adminMode ? await csrfToken(env.ATLAS_ADMIN_TOKEN as string) : null
     const secureCookie = url.protocol === 'https:' ? '; Secure' : ''

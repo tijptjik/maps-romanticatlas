@@ -9,7 +9,8 @@ const adminStatusId = 'atlas-admin-status'
 const adminTokenStorageKey = 'atlas-admin-token'
 const csrfCookieName = 'atlas_csrf'
 
-const tileKey = tile => `${tile.zoom}/${tile.x}/${tile.y}/${tile.scene}/${tile.variant ?? 'default'}`
+const tileKey = tile =>
+  `${tile.zoom}/${tile.x}/${tile.y}/${tile.scene}/v${tile.version}/${tile.variant ?? 'default'}`
 const tilePositionKey = tile => `${tile.zoom}/${tile.x}/${tile.y}`
 const sceneLabel = scene =>
   scene
@@ -122,7 +123,9 @@ export const installCachedTileAdmin = async map => {
     let preRenderedCount = Number.isFinite(Number(body.preRenderedCount))
       ? Number(body.preRenderedCount)
       : tiles.length
-    const version = Number.isInteger(Number(body.version)) ? Number(body.version) : null
+    const version = typeof body.version === 'number' && Number.isInteger(body.version)
+      ? body.version
+      : null
     const tilesByPosition = new Map()
     const activeTilesByPosition = new Map()
     tiles.forEach(tile => {
@@ -213,14 +216,23 @@ export const installCachedTileAdmin = async map => {
     container.append(renderingOverlay)
 
     const countBadges = new Map()
+    const versionLabels = new Map()
     tilesByPosition.forEach((positionTiles, positionKey) => {
       const [zoom, x, y] = positionKey.split('/').map(Number)
       const badge = document.createElement('div')
       badge.className = 'atlas-admin-count'
       badge.setAttribute('aria-label', `${positionTiles.length} pre-rendered images`)
-      badge.textContent = `${positionTiles.length} PRE-RENDER${positionTiles.length === 1 ? '' : 'S'}`
+      badge.textContent = String(positionTiles.length)
       container.append(badge)
       countBadges.set(positionKey, { badge, tile: { zoom, x, y } })
+
+      const versionLabel = document.createElement('div')
+      versionLabel.className = 'atlas-admin-version'
+      const activeTile = activeTilesByPosition.get(positionKey)
+      versionLabel.textContent = `IMAGE v${activeTile.version}`
+      versionLabel.setAttribute('aria-label', `Image version ${activeTile.version}`)
+      container.append(versionLabel)
+      versionLabels.set(positionKey, versionLabel)
     })
 
     let selectedTile = null
@@ -278,6 +290,14 @@ export const installCachedTileAdmin = async map => {
       })
       countBadges.forEach(({ badge, tile }) => {
         positionOverlay(badge, tile)
+      })
+      versionLabels.forEach((label, positionKey) => {
+        const activeTile = activeTilesByPosition.get(positionKey)
+        label.hidden = !activeTile
+        if (!activeTile) return
+        label.textContent = `IMAGE v${activeTile.version}`
+        label.setAttribute('aria-label', `Image version ${activeTile.version}`)
+        positionOverlay(label, activeTile, true)
       })
       if (rerendering && renderingTile) {
         deleteControl.hidden = true
@@ -353,7 +373,7 @@ export const installCachedTileAdmin = async map => {
     const updateCountBadge = (positionKey, count) => {
       const countBadge = countBadges.get(positionKey)?.badge
       if (!countBadge) return
-      countBadge.textContent = `${count} PRE-RENDER${count === 1 ? '' : 'S'}`
+      countBadge.textContent = String(count)
       countBadge.setAttribute('aria-label', `${count} pre-rendered images`)
     }
 
@@ -369,7 +389,9 @@ export const installCachedTileAdmin = async map => {
     const installRerenderedTile = tile => {
       const positionKey = tilePositionKey(tile)
       const candidates = tilesByPosition.get(positionKey) ?? []
-      const matchingIndex = candidates.findIndex(candidate => candidate.scene === tile.scene)
+      const matchingIndex = candidates.findIndex(
+        candidate => tileKey(candidate) === tileKey(tile),
+      )
       const replaced = matchingIndex >= 0 ? candidates[matchingIndex] : null
 
       if (replaced) {
@@ -522,10 +544,12 @@ export const installCachedTileAdmin = async map => {
           activeTilesByPosition.delete(positionKey)
           countBadges.get(positionKey)?.badge.remove()
           countBadges.delete(positionKey)
+          versionLabels.get(positionKey)?.remove()
+          versionLabels.delete(positionKey)
         }
         const countBadge = countBadges.get(positionKey)?.badge
         if (countBadge) {
-          countBadge.textContent = `${remaining.length} PRE-RENDER${remaining.length === 1 ? '' : 'S'}`
+          countBadge.textContent = String(remaining.length)
           countBadge.setAttribute('aria-label', `${remaining.length} pre-rendered images`)
         }
         const index = tiles.findIndex(candidate => tileKey(candidate) === tileKey(tile))
