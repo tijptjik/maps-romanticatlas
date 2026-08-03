@@ -31,9 +31,6 @@ const map = new maplibregl.Map({
   touchZoomRotate: false,
   touchPitch: false,
   pitchWithRotate: false,
-  // Dense z18 vector geometry is expensive on retina displays. The paper-map
-  // treatment remains crisp at 1.5× while avoiding a 4× framebuffer at 2×.
-  pixelRatio: Math.min(window.devicePixelRatio || 1, 1.5),
   // Atlas interactions use the z18 tile grid. The fog remains visible above it,
   // while generation still requires a complete z18 tile in the viewport.
   minZoom: 16.5,
