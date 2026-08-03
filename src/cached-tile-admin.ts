@@ -18,6 +18,21 @@ const sceneLabel = scene =>
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ')
 
+const controlIcons = {
+  delete:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3m-9 0 .8 13h8.4L16 7M10 11v5m4-5v5"/><path d="M3 7h18"/></svg>',
+  cycle:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M6.1 9.2A7 7 0 0 1 18.8 7M17.9 14.8A7 7 0 0 1 5.2 17"/></svg>',
+  rerender:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 0 0-14.9-4L4 9"/><path d="M4 4v5h5M4 13a8 8 0 0 0 14.9 4L20 15"/><path d="M20 20v-5h-5"/></svg>',
+}
+
+const setControlIcon = (control, icon, label) => {
+  control.innerHTML = controlIcons[icon]
+  control.setAttribute('aria-label', label)
+  control.title = label
+}
+
 const imageLayerId = tile => `atlas-admin-tile-${tileKey(tile).replaceAll('/', '-')}`
 const imageSourceId = tile => `${imageLayerId(tile)}-source`
 const firstLabelLayerId = map =>
@@ -148,6 +163,12 @@ export const installCachedTileAdmin = async map => {
     const container = map.getContainer()
     container.classList.add('atlas-admin-mode')
 
+    const actionBar = document.createElement('div')
+    actionBar.className = 'atlas-admin-actions'
+    actionBar.setAttribute('aria-label', 'Tile actions')
+    actionBar.hidden = true
+    container.append(actionBar)
+
     const status = document.createElement('div')
     status.id = adminStatusId
     status.className = 'atlas-admin-status'
@@ -163,26 +184,24 @@ export const installCachedTileAdmin = async map => {
     deleteControl.className = 'atlas-admin-delete'
     deleteControl.type = 'button'
     deleteControl.hidden = true
-    deleteControl.textContent = 'Delete cached image'
-    container.append(deleteControl)
+    setControlIcon(deleteControl, 'delete', 'Delete cached image')
+    actionBar.append(deleteControl)
 
     const cycleControl = document.createElement('button')
     cycleControl.id = 'atlas-admin-cycle-control'
     cycleControl.className = 'atlas-admin-cycle'
     cycleControl.type = 'button'
     cycleControl.hidden = true
-    cycleControl.textContent = 'Cycle image'
-    container.append(cycleControl)
+    setControlIcon(cycleControl, 'cycle', 'Show next image')
+    actionBar.append(cycleControl)
 
     const rerenderControl = document.createElement('button')
     rerenderControl.id = 'atlas-admin-rerender-control'
     rerenderControl.className = 'atlas-admin-rerender'
     rerenderControl.type = 'button'
     rerenderControl.hidden = true
-    rerenderControl.textContent = '↻'
-    rerenderControl.setAttribute('aria-label', 'Rerender this tile')
-    rerenderControl.title = 'Rerender this tile'
-    container.append(rerenderControl)
+    setControlIcon(rerenderControl, 'rerender', 'Rerender this tile')
+    actionBar.append(rerenderControl)
 
     const renderingOverlay = document.createElement('section')
     renderingOverlay.className = 'atlas-admin-rendering'
@@ -300,6 +319,7 @@ export const installCachedTileAdmin = async map => {
         positionOverlay(label, activeTile, true)
       })
       if (rerendering && renderingTile) {
+        actionBar.hidden = true
         deleteControl.hidden = true
         cycleControl.hidden = true
         rerenderControl.hidden = true
@@ -308,23 +328,19 @@ export const installCachedTileAdmin = async map => {
       }
       renderingOverlay.hidden = true
       if (!selectedTile) {
+        actionBar.hidden = true
         deleteControl.hidden = true
         cycleControl.hidden = true
         rerenderControl.hidden = true
         return
       }
-      positionOverlay(deleteControl, selectedTile, true)
+      actionBar.hidden = false
+      deleteControl.hidden = false
       const candidates = tilesByPosition.get(tilePositionKey(selectedTile)) ?? []
-      cycleControl.hidden = candidates.length < 2
+      cycleControl.hidden = false
+      cycleControl.disabled = candidates.length < 2
+      cycleControl.title = candidates.length < 2 ? 'No alternate image' : 'Show next image'
       rerenderControl.hidden = false
-      let nextControlTop = Number.parseFloat(deleteControl.style.top) + deleteControl.offsetHeight + 6
-      if (!cycleControl.hidden) {
-        positionOverlay(cycleControl, selectedTile, true)
-        cycleControl.style.top = `${nextControlTop}px`
-        nextControlTop += cycleControl.offsetHeight + 6
-      }
-      positionOverlay(rerenderControl, selectedTile, true)
-      rerenderControl.style.top = `${nextControlTop}px`
     }
 
     const selectTileAt = point => {
@@ -334,9 +350,10 @@ export const installCachedTileAdmin = async map => {
       const candidates = tilesByPosition.get(positionKey)
       selectedTile = activeTilesByPosition.get(positionKey) ?? candidates?.at(-1) ?? null
       deleteControl.hidden = !selectedTile
+      cycleControl.hidden = !selectedTile
       rerenderControl.hidden = !selectedTile
       if (selectedTile) {
-        deleteControl.textContent = `Delete ${selectedTile.scene}`
+        setControlIcon(deleteControl, 'delete', `Delete ${sceneLabel(selectedTile.scene)}`)
       }
       positionControl()
     }
@@ -366,7 +383,7 @@ export const installCachedTileAdmin = async map => {
         if (titleCard) titleCard.hidden = candidate !== nextTile
       })
       map.moveLayer(imageLayerId(nextTile))
-      deleteControl.textContent = `Delete ${nextTile.scene}`
+      setControlIcon(deleteControl, 'delete', `Delete ${sceneLabel(nextTile.scene)}`)
       positionControl()
     })
 
@@ -416,7 +433,7 @@ export const installCachedTileAdmin = async map => {
       map.moveLayer(imageLayerId(tile))
       updateCountBadge(positionKey, candidates.length)
       updateStatus()
-      deleteControl.textContent = `Delete ${tile.scene}`
+      setControlIcon(deleteControl, 'delete', `Delete ${sceneLabel(tile.scene)}`)
       positionControl()
     }
 
@@ -426,6 +443,13 @@ export const installCachedTileAdmin = async map => {
       if (!selectedTile || rerendering) return
 
       const tile = selectedTile
+      if (
+        !window.confirm(
+          `Rerender the cached ${sceneLabel(tile.scene)} image for ${tile.x}/${tile.y}?`,
+        )
+      )
+        return
+
       rerendering = true
       renderingTile = tile
       updateRenderingOverlay(tile, 'Preparing the map reference…')
@@ -494,7 +518,7 @@ export const installCachedTileAdmin = async map => {
         deleteControl.disabled = false
         cycleControl.disabled = false
         rerenderControl.disabled = false
-        rerenderControl.textContent = '↻'
+        setControlIcon(rerenderControl, 'rerender', 'Rerender this tile')
         positionControl()
       }
     })
@@ -558,7 +582,10 @@ export const installCachedTileAdmin = async map => {
         selectedTile = remaining.at(-1) ?? null
         updateStatus()
         deleteControl.hidden = !selectedTile
-        if (selectedTile) deleteControl.textContent = `Delete ${selectedTile.scene}`
+        cycleControl.hidden = !selectedTile
+        if (selectedTile) {
+          setControlIcon(deleteControl, 'delete', `Delete ${sceneLabel(selectedTile.scene)}`)
+        }
         positionControl()
       } catch (error) {
         deleteControl.textContent =
@@ -566,6 +593,9 @@ export const installCachedTileAdmin = async map => {
       } finally {
         deleting = false
         deleteControl.disabled = false
+        if (selectedTile) {
+          setControlIcon(deleteControl, 'delete', `Delete ${sceneLabel(selectedTile.scene)}`)
+        }
       }
     })
 
