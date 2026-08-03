@@ -47,8 +47,6 @@ export const atlasScenes = {
   'wind-farm': 'a coastal wind farm with dozens of enormous turbines',
   'lunar-outpost': 'a lunar outpost with domes, rover tracks, and a rocket landing pad',
   'volcano-observatory': 'a dramatic volcano observatory overlooking a glowing crater',
-  'glacier-research-base': 'an isolated polar research base surrounded by crevasses and ice roads',
-  'underwater-city': 'a fantastical underwater city beneath a vast transparent dome',
 } as const
 
 export const atlasSeaScenes = new Set<keyof typeof atlasScenes>([

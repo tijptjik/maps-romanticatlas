@@ -899,9 +899,7 @@ body {
 .atlas-title-card[hidden] { display: none; }
 
 .atlas-admin-mode .atlas-fog,
-.atlas-admin-mode .atlas-fog-loading,
-.atlas-diagnostic-mode .atlas-fog,
-.atlas-diagnostic-mode .atlas-fog-loading {
+.atlas-admin-mode .atlas-fog-loading {
   display: none;
 }
 

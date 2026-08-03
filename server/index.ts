@@ -29,6 +29,12 @@ const allowedOrigin = process.env.ATLAS_ALLOWED_ORIGIN ?? 'https://romanticatlas
 const allowedHost = new URL(allowedOrigin).host
 const isAllowedOrigin = origin =>
   origin === allowedOrigin || (!isProduction && localOriginPattern.test(origin ?? ''))
+const tileOrigin = 'https://tiles.saanseoi.hk'
+const tileProxyPrefix = '/map-assets/saanseoi'
+const tileJsonPath = `${tileProxyPrefix}/hongkong-latest.json`
+const vectorTilePattern = new RegExp(
+  `^${tileProxyPrefix}/hongkong-latest/(\\d+)/(\\d+)/(\\d+)\\.mvt$`,
+)
 const atlasColourDirection = 'Keep the surrounding map and its Victorian-brown palette unchanged. Within the event, use a lively, carefully balanced storybook palette with warm parchment and sandy cream foundations, plus clear accents of cobalt blue, coral vermilion, marigold yellow, leafy sage green, dusty rose, and soft lilac. Keep the colours richly pigmented, crisp, and pleasantly contrasty so the event stands out, while remaining slightly softened and paper-printed rather than neon, fluorescent, garish, or oversaturated.'
 const contentTypes = {
   '.css': 'text/css; charset=utf-8',
@@ -730,6 +736,52 @@ const serveProductionAsset = async (request, response) => {
   response.end(app)
 }
 
+const proxyMapAsset = async (request, response, pathname, search = '') => {
+  const proxyOrigin = new URL(
+    request.url,
+    `http://${request.headers.host ?? 'localhost'}`,
+  ).origin
+  const upstreamUrl = new URL(
+    `${pathname.slice(tileProxyPrefix.length)}${search}`,
+    tileOrigin,
+  )
+  const upstreamResponse = await fetch(upstreamUrl, {
+    headers: {
+      // The basemap service authorizes the production application origin. The
+      // browser still talks to this server same-origin during local dev.
+      Origin: 'https://romanticatlas.hype.hk',
+    },
+  })
+
+  if (pathname === tileJsonPath && upstreamResponse.ok) {
+    const tileJson = await upstreamResponse.json()
+    const tiles = Array.isArray(tileJson.tiles) ? tileJson.tiles : []
+    tileJson.tiles = tiles.map(tileUrl => {
+      if (typeof tileUrl !== 'string') return tileUrl
+      const upstreamTileUrl = new URL(tileUrl, tileOrigin)
+      if (upstreamTileUrl.origin !== tileOrigin) return tileUrl
+      const tilePath = decodeURIComponent(upstreamTileUrl.pathname)
+      return `${proxyOrigin}${tileProxyPrefix}${tilePath}${upstreamTileUrl.search}`
+    })
+
+    response.writeHead(upstreamResponse.status, {
+      'cache-control': upstreamResponse.headers.get('cache-control') ?? 'no-cache',
+      'content-type': 'application/json; charset=utf-8',
+    })
+    response.end(JSON.stringify(tileJson))
+    return
+  }
+
+  const body = Buffer.from(await upstreamResponse.arrayBuffer())
+  const contentType = upstreamResponse.headers.get('content-type')
+  const cacheControl = upstreamResponse.headers.get('cache-control')
+  response.writeHead(upstreamResponse.status, {
+    ...(contentType ? { 'content-type': contentType } : {}),
+    ...(cacheControl ? { 'cache-control': cacheControl } : {}),
+  })
+  response.end(body)
+}
+
 const vite = isProduction
   ? null
   : await createViteServer({ root: rootDirectory, server: { middlewareMode: true } })
@@ -771,6 +823,16 @@ const server = createServer(async (request, response) => {
 
     if (tile && pathname.startsWith('/api/atlas-tiles/')) {
       await serveAtlasTileRequest(request, response, tile)
+      return
+    }
+
+    if (request.method === 'GET' && pathname === tileJsonPath) {
+      await proxyMapAsset(request, response, pathname)
+      return
+    }
+
+    if (request.method === 'GET' && vectorTilePattern.test(pathname)) {
+      await proxyMapAsset(request, response, pathname, new URL(request.url, 'http://localhost').search)
       return
     }
 
