@@ -119,9 +119,10 @@ because Cloudflare does not support remote Durable Object bindings in local deve
 Tiles generated during the session are written to remote R2 and are immediately usable;
 pre-existing remote tiles can still be fetched by their known image URL, but are not
 included in local manifest lookups until they are encountered or regenerated. Add
-`?admin=true` for cache administration, `?diagnostics=true` for tile outlines, and
-`&version=3` to replay an older cache version. To copy the existing local cache to R2,
-run `bun run sync:tiles`.
+`?admin=true` for cache administration, `?diagnostics=true` for tile outlines,
+`?noNoise=true` for smooth fog without the animated cloud noise, and `&version=3` to
+replay an older cache version. To copy the existing local cache to R2, run
+`bun run sync:tiles`.
 
 The map opens with a Victorian-circus-style introduction. Click or press a key to enter
 the atlas, or open the Cartographer's Note for the artist statement. Press Ctrl+M at any
@@ -136,9 +137,10 @@ short filtered wind swell and chime.
 On the local development server and the production Worker, the map is restricted to zoom
 levels 16.5–18.5. At that available zoom range, a drifting fog descends over a
 deterministic half of the fully visible z18 tiles that are at least 75% land. Each fog
-form spills into neighboring gaps and is rendered from a cached mask plus a low-cost
-WebGL noise shader, so the pattern reads as overlapping mist rather than an alternating
-grid.
+form spills into neighboring gaps and is rendered from a cached mask plus a WebGL noise
+shader, so the pattern reads as overlapping mist rather than an alternating grid. The
+shader uses its full detail below zoom 17, one veil from zoom 17 through just under 18,
+and a smooth fog mask at zoom 18 and above.
 
 Click a fully visible fogged land tile to create a strictly top-down cartographic event
 tile from the rendered map. The selected tile gets a “LOOKING UP THIS TILE” treatment

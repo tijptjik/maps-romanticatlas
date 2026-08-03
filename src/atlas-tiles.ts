@@ -7,6 +7,8 @@ const minimumFogZoom = 15
 const landTargetThreshold = 0.75
 const landSampleSize = 10
 const waterLayerIds = ['water', 'water_stream', 'water_river']
+const groundFogMotionSpeed = 1.1
+const groundFogRadiusMultiplier = 1.045
 const fogRadiusDuration = 180_000
 const generatedRevealDuration = 1400
 const generatedTileOpacity = 0.94
@@ -55,12 +57,10 @@ const visibleFogTiles = map => {
   const northWest = tileForPosition({ lng: bounds.getWest(), lat: bounds.getNorth() })
   const southEast = tileForPosition({ lng: bounds.getEast(), lat: bounds.getSouth() })
   const tiles = []
-  for (let y = northWest.y - 1; y <= southEast.y + 1; y += 1) {
-    for (let x = northWest.x - 1; x <= southEast.x + 1; x += 1) {
+  for (let y = northWest.y; y <= southEast.y; y += 1) {
+    for (let x = northWest.x; x <= southEast.x; x += 1) {
       const tile = { x, y }
-      // Keep a fog body while it crosses the viewport edge. The extra padding
-      // accounts for the irregular cloud shape spilling past its tile bounds.
-      if (intersectsViewport(map, tile, 0.3)) tiles.push(tile)
+      if (intersectsViewport(map, tile)) tiles.push(tile)
     }
   }
   return tiles
@@ -268,10 +268,11 @@ const sourceTileLandFraction = (map, tile) => {
   const earthFeatures = map.querySourceFeatures('hongkong-latest', {
     sourceLayer: 'earth',
   })
-  if (!earthFeatures.length) return null
   const waterFeatures = map.querySourceFeatures('hongkong-latest', {
     sourceLayer: 'water',
   })
+  if (!earthFeatures.length && !waterFeatures.length) return null
+  let coveredSampleCount = 0
   const landSamples = Array.from({ length: landSampleSize }, (_, row) =>
     Array.from({ length: landSampleSize }, (_, column) => {
       const point = [
@@ -284,10 +285,15 @@ const sourceTileLandFraction = (map, tile) => {
       const onWater = waterFeatures.some(feature =>
         geometryContainsPoint(feature.geometry, point),
       )
+      if (onEarth || onWater) coveredSampleCount += 1
       return onEarth && !onWater
     }),
   ).flat()
 
+  // querySourceFeatures() can still contain the source tiles from the previous
+  // viewport while a drag exposes a new one. Treat sparse coverage as unknown
+  // instead of misclassifying the newly exposed land as water.
+  if (coveredSampleCount < landSamples.length * 0.75) return null
   return landSamples.filter(Boolean).length / landSamples.length
 }
 
@@ -597,14 +603,15 @@ const fogVertexShader = `
 const fogFragmentShader = `
   precision highp float;
   uniform sampler2D u_mask;
-  uniform sampler2D u_drag_mask;
   uniform float u_time;
-  uniform float u_drag_mask_active;
+  uniform float u_noise_detail;
   uniform vec2 u_anchor_screen;
   uniform vec2 u_mask_anchor_screen;
   uniform float u_mask_scale;
   uniform float u_map_scale;
   uniform vec2 u_viewport_size;
+  uniform vec2 u_canvas_size;
+  uniform vec2 u_canvas_origin;
   varying vec2 v_uv;
 
   float hash(vec2 point) {
@@ -634,7 +641,10 @@ const fogFragmentShader = `
     // v_uv already uses DOM screen coordinates (0 at the top and 1 at the
     // bottom). Keeping that orientation here is essential when anchoring the
     // noise field to MapLibre's projected Y axis during a vertical drag.
-    vec2 screenPosition = v_uv * u_viewport_size;
+    // The fog canvas has a bleed margin beyond the visible map. Work in map
+    // screen coordinates so the blurred mask can continue past the viewport
+    // rather than being cut off at the canvas edge.
+    vec2 screenPosition = v_uv * u_canvas_size + u_canvas_origin;
     vec2 fogUv =
       (screenPosition - u_anchor_screen) / (u_viewport_size * u_map_scale) + 0.5;
 
@@ -647,52 +657,50 @@ const fogFragmentShader = `
     // The mask is painted into a screen-sized canvas. Compensate for map
     // movement since its last paint so the same fog body stays locked to the
     // same map coordinates between canvas updates.
-    vec2 currentAnchorUv = u_anchor_screen / u_viewport_size;
-    vec2 maskAnchorUv = u_mask_anchor_screen / u_viewport_size;
-    vec2 maskUv =
-      maskAnchorUv + (v_uv - currentAnchorUv + maskWarp) / u_mask_scale;
-    vec2 dragMaskUv = v_uv + maskWarp;
-    // Do not stretch the outermost mask pixel over newly exposed map area
-    // while a drag holds this snapshot. The mask texture itself uses
-    // CLAMP_TO_EDGE, so sampling outside its footprint would otherwise turn
-    // the whole viewport edge into fog until the drag ends.
+    vec2 maskScreenPosition = u_mask_anchor_screen +
+      (screenPosition - u_anchor_screen + maskWarp * u_viewport_size) / u_mask_scale;
+    vec2 maskUv = (maskScreenPosition - u_canvas_origin) / u_canvas_size;
     bool maskOutside =
       maskUv.x < 0.0 || maskUv.x > 1.0 ||
       maskUv.y < 0.0 || maskUv.y > 1.0;
-    bool dragMaskOutside =
-      dragMaskUv.x < 0.0 || dragMaskUv.x > 1.0 ||
-      dragMaskUv.y < 0.0 || dragMaskUv.y > 1.0;
-    float mask;
-    if (maskOutside) {
-      if (u_drag_mask_active < 0.5 || dragMaskOutside) discard;
-      mask = texture2D(u_drag_mask, dragMaskUv).a;
-    } else {
-      mask = texture2D(u_mask, maskUv).a;
-    }
+    if (maskOutside) discard;
+    float mask = texture2D(u_mask, maskUv).a;
     if (mask < 0.01) discard;
 
-    // Keep the tile coverage static, but move several veils through it quickly
-    // enough to be apparent during a normal glance at the map.
-    vec2 driftA = vec2(u_time * 0.18, -u_time * 0.11);
-    vec2 driftB = vec2(-u_time * 0.13, u_time * 0.16);
-    float layerA = smoothstep(0.22, 0.76, cloudNoise(fogUv * vec2(4.2, 2.7) + driftA));
-    float layerB = smoothstep(0.26, 0.78, cloudNoise(fogUv * vec2(5.4, 3.4) + driftB));
-    float movingVeil = smoothstep(
-      0.28,
-      0.72,
-      cloudNoise(fogUv * vec2(8.0, 5.0) + driftA * 2.4)
-    );
     // Keep a generous feather around each body so the ground fog reads as a
     // soft veil rather than a set of opaque, tile-sized clouds.
     float softMask = smoothstep(0.06, 0.64, mask);
-    float grain = hash(floor(fogUv * u_viewport_size / 3.0) + floor(driftA * 8.0));
-    float densityA = softMask * (0.90 + layerA * 0.10);
-    float densityB = softMask * (0.22 + layerB * 0.14);
-    float density = 1.0 - (1.0 - densityA) * (1.0 - densityB);
-    density *= 0.90 + movingVeil * 0.15;
+    float density = softMask;
     vec3 pale = vec3(0.91, 0.92, 0.92);
     vec3 deep = vec3(0.67, 0.70, 0.71);
-    vec3 fogColor = mix(deep, pale, 0.28 + layerA * 0.30 + layerB * 0.22 + (grain - 0.5) * 0.08);
+    vec3 fogColor = mix(deep, pale, 0.45);
+    if (u_noise_detail > 0.5) {
+      // Keep the tile coverage static, but move several veils through it
+      // quickly enough to be apparent during a normal glance at the map.
+      vec2 driftA = vec2(u_time * 0.18, -u_time * 0.11);
+      float layerA = smoothstep(0.22, 0.76, cloudNoise(fogUv * vec2(4.2, 2.7) + driftA));
+      density = softMask * (0.90 + layerA * 0.10);
+      fogColor = mix(deep, pale, 0.44 + layerA * 0.26);
+
+      if (u_noise_detail > 1.5) {
+        vec2 driftB = vec2(-u_time * 0.13, u_time * 0.16);
+        float layerB = smoothstep(0.26, 0.78, cloudNoise(fogUv * vec2(5.4, 3.4) + driftB));
+        float movingVeil = smoothstep(
+          0.28,
+          0.72,
+          cloudNoise(fogUv * vec2(8.0, 5.0) + driftA * 2.4)
+        );
+        float grain = hash(floor(fogUv * u_viewport_size / 3.0) + floor(driftA * 8.0));
+        float densityB = softMask * (0.22 + layerB * 0.14);
+        density = 1.0 - (1.0 - density) * (1.0 - densityB);
+        density *= 0.90 + movingVeil * 0.15;
+        fogColor = mix(
+          deep,
+          pale,
+          0.28 + layerA * 0.30 + layerB * 0.22 + (grain - 0.5) * 0.08
+        );
+      }
+    }
     gl_FragColor = vec4(fogColor, min(1.0, density * 0.96));
   }
 `
@@ -773,6 +781,7 @@ const createFogCanvas = (
   tileState,
   cachedTileIds,
   isFogTileRenderable,
+  noNoise = false,
 ) => {
   const mapSourceIsReady = () =>
     map.isStyleLoaded() && map.isSourceLoaded('hongkong-latest')
@@ -799,8 +808,6 @@ const createFogCanvas = (
   const loadingContext = loadingCanvas.getContext('2d')
   const maskCanvas = document.createElement('canvas')
   const maskContext = maskCanvas.getContext('2d')
-  const dragMaskCanvas = document.createElement('canvas')
-  const dragMaskContext = dragMaskCanvas.getContext('2d')
   const gl = canvas.getContext('webgl', {
     alpha: true,
     antialias: false,
@@ -810,14 +817,11 @@ const createFogCanvas = (
   })
   const program = gl && createFogProgram(gl)
   const maskTexture = gl?.createTexture()
-  const dragMaskTexture = gl?.createTexture()
   const positionBuffer = gl?.createBuffer()
   const positionAttribute = program && gl?.getAttribLocation(program, 'a_position')
   const maskUniform = program && gl?.getUniformLocation(program, 'u_mask')
-  const dragMaskUniform = program && gl?.getUniformLocation(program, 'u_drag_mask')
   const timeUniform = program && gl?.getUniformLocation(program, 'u_time')
-  const dragMaskActiveUniform =
-    program && gl?.getUniformLocation(program, 'u_drag_mask_active')
+  const noiseDetailUniform = program && gl?.getUniformLocation(program, 'u_noise_detail')
   const anchorScreenUniform =
     program && gl?.getUniformLocation(program, 'u_anchor_screen')
   const maskAnchorScreenUniform =
@@ -826,14 +830,24 @@ const createFogCanvas = (
   const mapScaleUniform = program && gl?.getUniformLocation(program, 'u_map_scale')
   const viewportSizeUniform =
     program && gl?.getUniformLocation(program, 'u_viewport_size')
+  const canvasSizeUniform = program && gl?.getUniformLocation(program, 'u_canvas_size')
+  const canvasOriginUniform =
+    program && gl?.getUniformLocation(program, 'u_canvas_origin')
   const fogAnchor = map.getCenter()
   const fogAnchorZoom = map.getZoom()
+  const isMapMoving = () => isDragging || map.isMoving()
+  const noiseDetail = () => {
+    if (noNoise || isMapMoving() || map.getZoom() >= 18) return 0
+    return map.getZoom() >= 17 ? 1 : 2
+  }
   let clientWidth = 0
   let clientHeight = 0
+  let fogBleed = 0
+  let fogCanvasWidth = 0
+  let fogCanvasHeight = 0
   let maskScale = 0.5
   let maskDirty = true
   let maskUploaded = false
-  let dragMaskUploaded = false
   let cachedMistDirty = true
   let lastCachedMistTime = -Infinity
   let animationFrame: number | undefined
@@ -853,8 +867,8 @@ const createFogCanvas = (
   let loadingAnchorZoom: number | undefined
   const fogFrameInterval = 1000 / 60
   const maskFrameInterval = 1000 / 60
-  const dragMaskFrameInterval = 1000 / 30
   const cachedMistFrameInterval = 1000 / 15
+  const zoomFrameInterval = 1000 / 60
   let maskRetryTimer: number | undefined
   const loadingSequences = new Map()
   let fogError: { id: string; text: string; startedAt: number } | undefined
@@ -875,24 +889,51 @@ const createFogCanvas = (
     target.style.transform = ''
   }
 
+  const setFogCanvasBounds = target => {
+    target.style.inset = 'auto'
+    target.style.left = `${-fogBleed}px`
+    target.style.top = `${-fogBleed}px`
+    target.style.width = `${fogCanvasWidth}px`
+    target.style.height = `${fogCanvasHeight}px`
+  }
+
+  const setOverlayContextTransform = (context, scale = 1) => {
+    context.setTransform(
+      scale,
+      0,
+      0,
+      scale,
+      fogBleed * scale,
+      fogBleed * scale,
+    )
+  }
+
+  const clearOverlayContext = context => {
+    context.save()
+    context.setTransform(1, 0, 0, 1, 0, 0)
+    context.clearRect(0, 0, context.canvas.width, context.canvas.height)
+    context.restore()
+  }
+
   const snapshotCanvasPosition = (target, setAnchor) => {
     resetCanvasTransform(target)
     setAnchor(map.project(fogAnchor), map.getZoom())
   }
 
   const positionCanvasDuringMapMotion = (target, anchorScreen, anchorZoom) => {
-    if ((!isZooming && !isDragging) || !anchorScreen || anchorZoom === undefined) return
+    if (!isZooming || !anchorScreen || anchorZoom === undefined) return
     const scale = isZooming ? 2 ** (map.getZoom() - anchorZoom) : 1
     const currentAnchorScreen = map.project(fogAnchor)
-    const translateX = currentAnchorScreen.x - anchorScreen.x * scale
-    const translateY = currentAnchorScreen.y - anchorScreen.y * scale
+    const translateX =
+      currentAnchorScreen.x - anchorScreen.x * scale - (scale - 1) * fogBleed
+    const translateY =
+      currentAnchorScreen.y - anchorScreen.y * scale - (scale - 1) * fogBleed
     target.style.transform = `matrix(${scale}, 0, 0, ${scale}, ${translateX}, ${translateY})`
   }
 
   const positionCanvasesDuringMapMotion = () => {
-    // The colour field's animation is paused during a drag. Move its existing
-    // pixels with the map between redraws so it stays registered to the WebGL
-    // fog instead of visibly stepping at the redraw cadence.
+    // Zoom temporarily scales the overlays between their current-coordinate
+    // redraws. Dragging redraws them directly instead of using a snapshot.
     positionCanvasDuringMapMotion(mistCanvas, mistAnchorScreen, mistAnchorZoom)
     positionCanvasDuringMapMotion(loadingCanvas, loadingAnchorScreen, loadingAnchorZoom)
   }
@@ -909,8 +950,14 @@ const createFogCanvas = (
     clientWidth = nextWidth
     clientHeight = nextHeight
 
-    const renderWidth = Math.ceil(clientWidth * renderScale)
-    const renderHeight = Math.ceil(clientHeight * renderScale)
+    // Keep the actual map viewport as the logical coordinate system, but give
+    // every fog canvas an invisible border. Canvas filters otherwise clip at
+    // x/y 0 and make cloud bodies read as hard-edged at the map boundary.
+    fogBleed = Math.min(192, Math.max(96, Math.ceil(Math.max(clientWidth, clientHeight) * 0.18)))
+    fogCanvasWidth = clientWidth + fogBleed * 2
+    fogCanvasHeight = clientHeight + fogBleed * 2
+    const renderWidth = Math.ceil(fogCanvasWidth * renderScale)
+    const renderHeight = Math.ceil(fogCanvasHeight * renderScale)
     if (canvas.width !== renderWidth || canvas.height !== renderHeight) {
       canvas.width = renderWidth
       canvas.height = renderHeight
@@ -922,23 +969,16 @@ const createFogCanvas = (
       loadingCanvas.height = renderHeight
       if (gl) gl.viewport(0, 0, renderWidth, renderHeight)
     }
-    canvas.style.width = `${clientWidth}px`
-    canvas.style.height = `${clientHeight}px`
-    mistCanvas.style.width = `${clientWidth}px`
-    mistCanvas.style.height = `${clientHeight}px`
-    loadingCanvas.style.width = `${clientWidth}px`
-    loadingCanvas.style.height = `${clientHeight}px`
+    setFogCanvasBounds(canvas)
+    setFogCanvasBounds(mistCanvas)
+    setFogCanvasBounds(loadingCanvas)
 
     if (changed || !maskCanvas.width || !maskCanvas.height) {
-      maskScale = Math.min(0.5, 768 / Math.max(clientWidth, clientHeight))
-      maskCanvas.width = Math.max(1, Math.ceil(clientWidth * maskScale))
-      maskCanvas.height = Math.max(1, Math.ceil(clientHeight * maskScale))
-      dragMaskCanvas.width = maskCanvas.width
-      dragMaskCanvas.height = maskCanvas.height
-      maskContext.setTransform(maskScale, 0, 0, maskScale, 0, 0)
-      dragMaskContext?.setTransform(maskScale, 0, 0, maskScale, 0, 0)
+      maskScale = Math.min(0.5, 768 / Math.max(fogCanvasWidth, fogCanvasHeight))
+      maskCanvas.width = Math.max(1, Math.ceil(fogCanvasWidth * maskScale))
+      maskCanvas.height = Math.max(1, Math.ceil(fogCanvasHeight * maskScale))
+      setOverlayContextTransform(maskContext, maskScale)
       uploadMask()
-      dragMaskUploaded = false
       maskDirty = true
     }
   }
@@ -957,10 +997,6 @@ const createFogCanvas = (
   const uploadMask = () => {
     if (!uploadMaskTexture(maskTexture, maskCanvas)) return
     maskUploaded = true
-  }
-
-  const uploadDragMask = () => {
-    dragMaskUploaded = uploadMaskTexture(dragMaskTexture, dragMaskCanvas)
   }
 
   const easeOutCubic = progress => 1 - (1 - progress) ** 3
@@ -1002,7 +1038,14 @@ const createFogCanvas = (
     }
     context.filter = `blur(${Math.max(4, size * 0.055)}px)`
     context.fillStyle = '#ffffff'
-    createFogMaskPath(context, x, y, size, seed, radiusScale * 1.1)
+    createFogMaskPath(
+      context,
+      x,
+      y,
+      size,
+      seed,
+      radiusScale * 1.1 * groundFogRadiusMultiplier,
+    )
     context.fill()
     context.restore()
 
@@ -1165,7 +1208,7 @@ const createFogCanvas = (
       colourSpill,
       size,
       seed,
-      0.9,
+      0.9 * groundFogRadiusMultiplier,
       0.9,
     )
     cachedColourTileContext.fill()
@@ -1179,27 +1222,32 @@ const createFogCanvas = (
     )
   }
 
-  const renderCachedColourFields = time => {
+  const renderCachedColourFields = (frameTime, visualTime) => {
     if (
       !mistContext ||
-      isZooming ||
       map.getContainer().classList.contains('atlas-admin-mode')
     )
       return
-    // A map move changes the projection even while animationTime is frozen.
-    // Repaint on each move so the colour field and the fog use the same
-    // projection; the canvas transform covers the short gap until this frame.
-    if (!cachedMistDirty && time - lastCachedMistTime < cachedMistFrameInterval) return
+    // Keep the colour field in the same current map coordinates as the fog.
+    // During a drag both redraw at the animation-frame cadence; at rest the
+    // colour field can use its lower-cost update cadence.
+    const frameInterval =
+      isMapMoving() || isZooming ? zoomFrameInterval : cachedMistFrameInterval
+    if (
+      (!cachedMistDirty || isZooming) &&
+      frameTime - lastCachedMistTime < frameInterval
+    )
+      return
 
-    const ratio = canvas.width / Math.max(1, clientWidth)
-    mistContext.setTransform(ratio, 0, 0, ratio, 0, 0)
-    mistContext.clearRect(0, 0, clientWidth, clientHeight)
+    const ratio = canvas.width / Math.max(1, fogCanvasWidth)
+    clearOverlayContext(mistContext)
+    setOverlayContextTransform(mistContext, ratio)
     cachedTileIds.forEach(id => {
       const tile = tileFromId(id)
       if (tileState.has(id) || !isFogged(tile)) return
-      drawCachedColourField(tile, time)
+      drawCachedColourField(tile, visualTime)
     })
-    lastCachedMistTime = time
+    lastCachedMistTime = frameTime
     cachedMistDirty = false
     snapshotCanvasPosition(mistCanvas, (anchorScreen, zoom) => {
       mistAnchorScreen = anchorScreen
@@ -1209,11 +1257,9 @@ const createFogCanvas = (
 
   const drawLoadingText = time => {
     if (!loadingContext || isZooming) return
-    const ratio = canvas.width / Math.max(1, clientWidth)
-    loadingContext.setTransform(ratio, 0, 0, ratio, 0, 0)
-    loadingContext.clearRect(0, 0, clientWidth, clientHeight)
-
-    renderCachedColourFields(time)
+    const ratio = canvas.width / Math.max(1, fogCanvasWidth)
+    clearOverlayContext(loadingContext)
+    setOverlayContextTransform(loadingContext, ratio)
 
     tileState.forEach((state, id) => {
       // Start the loading title as soon as a tile is clicked. Cache lookup is
@@ -1525,8 +1571,8 @@ const createFogCanvas = (
   }
 
   const paintMask = context => {
-    context.setTransform(maskScale, 0, 0, maskScale, 0, 0)
-    context.clearRect(0, 0, clientWidth, clientHeight)
+    setOverlayContextTransform(context, maskScale)
+    context.clearRect(-fogBleed, -fogBleed, fogCanvasWidth, fogCanvasHeight)
     visibleFogTiles(map).forEach(tile => {
       const id = tileId(tile)
       const state = tileState.get(id)
@@ -1547,19 +1593,17 @@ const createFogCanvas = (
 
   const renderMask = frameTime => {
     maskFrame = undefined
-    // A zoom can safely reuse the existing spatial mask. A pan cannot: it
-    // exposes new territory, so repaint at a capped cadence while keeping the
-    // animation clock frozen. That preserves the cloud's visual state without
-    // stretching the old mask across the newly visible map.
-    if (isZooming) return
-    const frameInterval = isDragging ? dragMaskFrameInterval : maskFrameInterval
+    // Repaint the primary mask from the current viewport on every animation
+    // frame. A drag must never keep a transformed mask snapshot while newly
+    // visible map tiles are still loading.
+    const frameInterval = maskFrameInterval
     if (frameTime - lastMaskFrame < frameInterval) {
       if (maskDirty) maskFrame = requestAnimationFrame(renderMask)
       return
     }
     lastMaskFrame = frameTime
     if (!clientWidth || !clientHeight) return
-    if (!mapSourceIsReady()) {
+    if (!mapSourceIsReady() && !isMapMoving()) {
       // The first render can happen before the vector source has finished its
       // initial request. Keep the mask dirty and retry after the source settles
       // instead of permanently accepting an empty mask.
@@ -1571,16 +1615,10 @@ const createFogCanvas = (
       }
       return
     }
-    if (isDragging) {
-      if (!dragMaskContext) return
-      paintMask(dragMaskContext)
-      uploadDragMask()
-    } else {
-      paintMask(maskContext)
-      uploadMask()
-      maskAnchorScreen = map.project(fogAnchor)
-      maskAnchorZoom = map.getZoom()
-    }
+    paintMask(maskContext)
+    uploadMask()
+    maskAnchorScreen = map.project(fogAnchor)
+    maskAnchorZoom = map.getZoom()
     maskDirty = false
   }
 
@@ -1594,14 +1632,10 @@ const createFogCanvas = (
     resize()
     const frameDelta = previousFrameTime === undefined ? 0 : time - previousFrameTime
     previousFrameTime = time
-    // Freeze every time-based fog effect for the full drag. The mask still
-    // follows the map, but its shape, clearings, and loading copy no longer
-    // advance in response to how quickly the map is moved.
-    if (!isDragging) {
-      const elapsed = Math.min(100, frameDelta)
-      fogTime += elapsed / 1000
-      animationTime += elapsed
-    }
+    const elapsed = Math.min(100, frameDelta)
+    fogTime += (elapsed / 1000) * groundFogMotionSpeed
+    animationTime += elapsed
+    renderCachedColourFields(time, animationTime)
     // Keep the card geometry in lockstep with the map while it is being
     // dragged. Keeping the fog and labels on the same frame cadence prevents
     // either overlay from visibly trailing the raster map or generated artwork.
@@ -1625,21 +1659,11 @@ const createFogCanvas = (
       gl.activeTexture(gl.TEXTURE0)
       gl.bindTexture(gl.TEXTURE_2D, maskTexture)
       gl.uniform1i(maskUniform, 0)
-      if (dragMaskTexture && dragMaskUniform) {
-        gl.activeTexture(gl.TEXTURE1)
-        gl.bindTexture(gl.TEXTURE_2D, dragMaskTexture)
-        gl.uniform1i(dragMaskUniform, 1)
-      }
       gl.uniform1f(timeUniform, fogTime)
-      if (dragMaskActiveUniform) {
-        gl.uniform1f(
-          dragMaskActiveUniform,
-          isDragging && dragMaskUploaded ? 1 : 0,
-        )
-      }
+      if (noiseDetailUniform) gl.uniform1f(noiseDetailUniform, noiseDetail())
       if (anchorScreenUniform && viewportSizeUniform) {
         // Keep the cloud field registered to its geographic anchor as the map
-        // moves. Its animation clock is paused separately during a drag.
+        // moves. Its animation clock continues while the map is in motion.
         const anchorScreen = map.project(fogAnchor)
         gl.uniform2f(anchorScreenUniform, anchorScreen.x, anchorScreen.y)
         if (maskAnchorScreenUniform) {
@@ -1655,6 +1679,12 @@ const createFogCanvas = (
         )
         gl.uniform1f(mapScaleUniform, 2 ** (map.getZoom() - fogAnchorZoom))
         gl.uniform2f(viewportSizeUniform, clientWidth, clientHeight)
+        if (canvasSizeUniform) {
+          gl.uniform2f(canvasSizeUniform, fogCanvasWidth, fogCanvasHeight)
+        }
+        if (canvasOriginUniform) {
+          gl.uniform2f(canvasOriginUniform, -fogBleed, -fogBleed)
+        }
       }
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
     }
@@ -1667,7 +1697,6 @@ const createFogCanvas = (
   })
   const pauseAnimationForDrag = () => {
     isDragging = true
-    dragMaskUploaded = false
     invalidate()
   }
   const resumeAnimationAfterDrag = () => {
@@ -1742,7 +1771,11 @@ const createFogCanvas = (
   }
 }
 
-export const installAtlasTileInteractions = (map, audio?: { playFogLift: () => void }) => {
+export const installAtlasTileInteractions = (
+  map,
+  audio?: { playFogLift: () => void },
+  { noNoise = false } = {},
+) => {
   const tileState = new Map()
   const landTargetState = new Map()
   const revealedTileIds = new Set()
@@ -1775,7 +1808,9 @@ export const installAtlasTileInteractions = (map, audio?: { playFogLift: () => v
     const id = tileId(tile)
     if (fogLandState.has(id)) return fogLandState.get(id)
     if (isFullyVisible(map, tile) && mapDataIsReady()) {
-      return isLandTargetable(tile)
+      const isLand = isLandTargetable(tile)
+      fogLandState.set(id, isLand)
+      return isLand
     }
 
     const fraction = sourceTileLandFraction(map, tile)
@@ -1791,6 +1826,7 @@ export const installAtlasTileInteractions = (map, audio?: { playFogLift: () => v
     tileState,
     cachedTileIds,
     isFogTileLand,
+    noNoise,
   )
   const revealGeneratedTile = (id, countsAgainstQuota = true) => {
     audio?.playFogLift()
@@ -1943,12 +1979,11 @@ export const installAtlasTileInteractions = (map, audio?: { playFogLift: () => v
   }
 
   const preloadVisibleCachedTiles = () => {
-    if (map.getZoom() < minimumFogZoom || !mapDataIsReady()) return
+    if (map.getZoom() < minimumFogZoom) return
     visibleFogTiles(map).forEach(tile => {
       const id = tileId(tile)
-      // visibleFogTiles() includes a one-tile buffer around the viewport, so
-      // cached images can be decoded before their fog body reaches the edge.
-      if (tileState.has(id) || !isFogged(tile)) return
+      // Check every currently visible fog tile as the viewport moves.
+      if (tileState.has(id) || !isFogged(tile) || !isFogTileLand(tile)) return
       // A miss is cached too, so moving the map does not repeatedly ask the
       // server about the same visible tile during one visit.
       preloadCachedTile(tile).catch(() => {})

@@ -10,6 +10,7 @@ import { hongKongStyle } from './map-style.ts'
 import {
   diagnosticsModeEnabled,
   noMusicEnabled,
+  noNoiseEnabled,
   noSplashEnabled,
 } from './runtime-modes.ts'
 import './style.css'
@@ -125,7 +126,9 @@ map.on('load', async () => {
     await installCachedTileDiagnostic(map)
   }
 
-  const atlas = installAtlasTileInteractions(map, audio)
+  const atlas = installAtlasTileInteractions(map, audio, {
+    noNoise: noNoiseEnabled(),
+  })
   resetAtlas = async () => {
     await atlas.resetReveals()
   }

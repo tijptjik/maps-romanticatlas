@@ -9,6 +9,8 @@ export const noSplashEnabled = () => modeEnabled('noSplash')
 
 export const noMusicEnabled = () => new URLSearchParams(window.location.search).has('noMusic')
 
+export const noNoiseEnabled = () => modeEnabled('noNoise')
+
 export const runtimeModeUrl = (path: string) => {
   const url = new URL(path, window.location.origin)
   if (adminModeEnabled()) url.searchParams.set('admin', 'true')
