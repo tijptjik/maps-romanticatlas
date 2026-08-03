@@ -639,11 +639,7 @@ const fogFragmentShader = `
     // The mask is painted into a screen-sized canvas. Compensate for map
     // movement since its last paint so the same fog body stays locked to the
     // same map coordinates between canvas updates.
-    vec2 maskUv = v_uv - u_mask_offset + maskWarp;
-    if (
-      maskUv.x < 0.0 || maskUv.x > 1.0 ||
-      maskUv.y < 0.0 || maskUv.y > 1.0
-    ) discard;
+    vec2 maskUv = clamp(v_uv - u_mask_offset + maskWarp, 0.0, 1.0);
     float mask = texture2D(u_mask, maskUv).a;
     if (mask < 0.01) discard;
 
@@ -736,20 +732,10 @@ const createFogMaskPath = (
     })
   }
 
-  // Quadratic joins keep the irregular body cloud-like instead of exposing
-  // the polygon corners when a tile is viewed at a large zoom.
   context.beginPath()
-  const first = vertices[0]
-  const second = vertices[1]
-  context.moveTo((first.x + second.x) / 2, (first.y + second.y) / 2)
   vertices.forEach((vertex, index) => {
-    const next = vertices[(index + 1) % vertices.length]
-    context.quadraticCurveTo(
-      vertex.x,
-      vertex.y,
-      (vertex.x + next.x) / 2,
-      (vertex.y + next.y) / 2,
-    )
+    if (index === 0) context.moveTo(vertex.x, vertex.y)
+    else context.lineTo(vertex.x, vertex.y)
   })
   context.closePath()
 }
@@ -809,6 +795,8 @@ const createFogCanvas = (
   let maskScale = 0.5
   let maskDirty = true
   let maskUploaded = false
+  let cachedMistDirty = true
+  let lastCachedMistTime = -Infinity
   let animationFrame: number | undefined
   let maskFrame: number | undefined
   let lastFogFrame = -Infinity
@@ -820,6 +808,7 @@ const createFogCanvas = (
   let maskAnchorScreen: { x: number; y: number } | undefined
   const fogFrameInterval = 1000 / 60
   const maskFrameInterval = 1000 / 60
+  const cachedMistFrameInterval = 1000 / 15
   let maskRetryTimer: number | undefined
   const loadingSequences = new Map()
   let fogError: { id: string; text: string; startedAt: number } | undefined
@@ -860,6 +849,7 @@ const createFogCanvas = (
       loadingCanvas.width = renderWidth
       loadingCanvas.height = renderHeight
       if (gl) gl.viewport(0, 0, renderWidth, renderHeight)
+      cachedMistDirty = true
     }
     canvas.style.width = `${clientWidth}px`
     canvas.style.height = `${clientHeight}px`
@@ -1038,22 +1028,36 @@ const createFogCanvas = (
     if (!visible || size <= 0) return
 
     const seed = tile.x * 0.47 + tile.y * 0.91
-    const centerX = northWest.x + (southEast.x - northWest.x) / 2
-    const centerY = northWest.y + (southEast.y - northWest.y) / 2
     const baseHue = (time / 16000 * 360 + seeded(seed + 51.7) * 360) % 360
     const swayPhase = time / 4300 + seeded(seed + 68.2) * Math.PI * 2
     const swayX = Math.cos(swayPhase) * size * 0.045
     const swayY = Math.sin(swayPhase * 0.76) * size * 0.035
 
+    const tileWidth = southEast.x - northWest.x
+    const tileHeight = southEast.y - northWest.y
+    // The fog mask intentionally overlaps neighbouring tiles. Give the colour
+    // field the same breathing room before compositing it onto the map canvas,
+    // otherwise its soft edge is cut off by this intermediate tile buffer.
+    const colourSpill = Math.max(tileWidth, tileHeight) * 0.48
+    const renderWidth = Math.max(1, Math.ceil(tileWidth + colourSpill * 2))
+    const renderHeight = Math.max(1, Math.ceil(tileHeight + colourSpill * 2))
+    if (
+      cachedColourTileCanvas.width !== renderWidth ||
+      cachedColourTileCanvas.height !== renderHeight
+    ) {
+      cachedColourTileCanvas.width = renderWidth
+      cachedColourTileCanvas.height = renderHeight
+    }
+
     cachedColourTileContext.setTransform(1, 0, 0, 1, 0, 0)
-    cachedColourTileContext.clearRect(0, 0, clientWidth, clientHeight)
+    cachedColourTileContext.clearRect(0, 0, renderWidth, renderHeight)
     cachedColourTileContext.save()
     cachedColourTileContext.filter = `blur(${Math.max(2, size * 0.018)}px)`
     const gradient = cachedColourTileContext.createLinearGradient(
-      centerX - size * 0.82 + swayX,
-      centerY - size * 0.58 + swayY,
-      centerX + size * 0.82 + swayX,
-      centerY + size * 0.58 + swayY,
+      colourSpill - tileWidth * 0.32 + swayX,
+      colourSpill - tileHeight * 0.08 + swayY,
+      colourSpill + tileWidth * 1.32 + swayX,
+      colourSpill + tileHeight * 0.92 + swayY,
     )
     const secondHue =
       (baseHue + 78 + seeded(seed + 73.6) * 18) % 360
@@ -1061,44 +1065,64 @@ const createFogCanvas = (
     gradient.addColorStop(1, `hsla(${secondHue}, 88%, 67%, 0.32)`)
     cachedColourTileContext.globalAlpha = 1
     cachedColourTileContext.fillStyle = gradient
-    cachedColourTileContext.fillRect(0, 0, clientWidth, clientHeight)
+    cachedColourTileContext.fillRect(0, 0, renderWidth, renderHeight)
     cachedColourTileContext.restore()
 
     cachedColourTileContext.save()
     cachedColourTileContext.globalCompositeOperation = 'destination-in'
     cachedColourTileContext.globalAlpha = 1
-    cachedColourTileContext.filter = `blur(${Math.max(4, size * 0.05)}px)`
+    // Keep a little of the neutral ground fog around the colour field, then
+    // feather that transition so it dissolves into the surrounding mist.
+    cachedColourTileContext.filter = `blur(${Math.max(5, size * 0.085)}px)`
     cachedColourTileContext.fillStyle = '#ffffff'
     createFogMaskPath(
       cachedColourTileContext,
-      northWest.x + swayX,
-      northWest.y + swayY,
+      colourSpill,
+      colourSpill,
       size,
       seed,
-      0.86 * 1.07,
-      0.42,
+      0.9,
+      0.9,
     )
     cachedColourTileContext.fill()
     cachedColourTileContext.restore()
-    mistContext.drawImage(cachedColourTileCanvas, 0, 0)
+    mistContext.drawImage(
+      cachedColourTileCanvas,
+      northWest.x - colourSpill,
+      northWest.y - colourSpill,
+      renderWidth,
+      renderHeight,
+    )
+  }
+
+  const renderCachedColourFields = time => {
+    if (!mistContext || map.getContainer().classList.contains('atlas-admin-mode')) return
+    if (
+      !cachedMistDirty &&
+      time - lastCachedMistTime < cachedMistFrameInterval
+    ) {
+      return
+    }
+
+    const ratio = canvas.width / Math.max(1, clientWidth)
+    mistContext.setTransform(ratio, 0, 0, ratio, 0, 0)
+    mistContext.clearRect(0, 0, clientWidth, clientHeight)
+    cachedTileIds.forEach(id => {
+      const tile = tileFromId(id)
+      if (tileState.has(id) || !isFogged(tile)) return
+      drawCachedColourField(tile, time)
+    })
+    lastCachedMistTime = time
+    cachedMistDirty = false
   }
 
   const drawLoadingText = time => {
     if (!loadingContext) return
     const ratio = canvas.width / Math.max(1, clientWidth)
-    mistContext?.setTransform(ratio, 0, 0, ratio, 0, 0)
-    mistContext?.clearRect(0, 0, clientWidth, clientHeight)
     loadingContext.setTransform(ratio, 0, 0, ratio, 0, 0)
     loadingContext.clearRect(0, 0, clientWidth, clientHeight)
 
-    const adminMode = map.getContainer().classList.contains('atlas-admin-mode')
-    if (!adminMode) {
-      cachedTileIds.forEach(id => {
-        const tile = tileFromId(id)
-        if (tileState.has(id) || !isFogged(tile)) return
-        drawCachedColourField(tile, time)
-      })
-    }
+    renderCachedColourFields(time)
 
     tileState.forEach((state, id) => {
       // Start the loading title as soon as a tile is clicked. Cache lookup is
@@ -1440,6 +1464,7 @@ const createFogCanvas = (
 
   const invalidate = () => {
     maskDirty = true
+    cachedMistDirty = true
     if (!maskFrame) maskFrame = requestAnimationFrame(renderMask)
   }
 
@@ -1561,7 +1586,7 @@ const createFogCanvas = (
   }
 }
 
-export const installAtlasTileInteractions = map => {
+export const installAtlasTileInteractions = (map, audio?: { playFogLift: () => void }) => {
   const tileState = new Map()
   const landTargetState = new Map()
   const revealedTileIds = new Set()
@@ -1612,6 +1637,7 @@ export const installAtlasTileInteractions = map => {
     isFogTileLand,
   )
   const revealGeneratedTile = (id, countsAgainstQuota = true) => {
+    audio?.playFogLift()
     tileState.set(id, 'revealing')
     revealedTileIds.add(id)
     if (countsAgainstQuota) generatedTileIds.add(id)
@@ -1738,9 +1764,11 @@ export const installAtlasTileInteractions = map => {
       .then(async status => {
         if (!status.cached) {
           cachedTileIds.delete(id)
+          fog.invalidate()
           return status
         }
         cachedTileIds.add(id)
+        fog.invalidate()
         return {
           ...status,
           // Do the decode and edge fade while the tile is merely visible. The
@@ -1750,6 +1778,7 @@ export const installAtlasTileInteractions = map => {
       })
       .catch(error => {
         cachedTileIds.delete(id)
+        fog.invalidate()
         if (preloadedTileRequests.get(id) === request) preloadedTileRequests.delete(id)
         throw error
       })
