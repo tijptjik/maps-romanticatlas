@@ -2,10 +2,14 @@ import { atlasSceneNames, pickAtlasScene, type AtlasScene } from './atlas-scenes
 import { createAtlasTitleCard, positionAtlasTitleCard } from './atlas-title-cards.ts'
 import { loadingConcepts } from './loading-concepts.ts'
 import { atlasZoom, tileBounds, tileForPosition } from './tile-geometry.ts'
+import { VectorTile } from '@mapbox/vector-tile'
+import Pbf from 'pbf'
 
 const minimumFogZoom = 15
 const landTargetThreshold = 0.75
 const landSampleSize = 10
+const sourceLandZoom = 15
+const sourceLandTileSpan = 2 ** (atlasZoom - sourceLandZoom)
 const waterLayerIds = ['water', 'water_stream', 'water_river']
 const groundFogMotionSpeed = 1.1
 const groundFogRadiusMultiplier = 1.045
@@ -18,6 +22,7 @@ const personalClearanceLimit = 3
 const cityClearanceDuration = 180_000
 
 const tileId = ({ x, y }) => `${atlasZoom}/${x}/${y}`
+const sourceLandTileId = ({ x, y }) => `${sourceLandZoom}/${x}/${y}`
 const tileFromId = id => {
   const [, x, y] = id.split('/').map(Number)
   return { x, y }
@@ -73,6 +78,83 @@ const seeded = value => {
   return noise - Math.floor(noise)
 }
 const clampUnit = value => Math.max(0, Math.min(1, value))
+
+const sourceLandTileRequests = new Map()
+const loadSourceLandTile = async tile => {
+  const sourceTile = {
+    x: Math.floor(tile.x / sourceLandTileSpan),
+    y: Math.floor(tile.y / sourceLandTileSpan),
+  }
+  const id = sourceLandTileId(sourceTile)
+  if (sourceLandTileRequests.has(id)) return sourceLandTileRequests.get(id)
+
+  const request = fetch(
+    `/map-assets/saanseoi/hongkong-latest/${sourceLandZoom}/${sourceTile.x}/${sourceTile.y}.mvt`,
+  )
+    .then(async response => {
+      if (!response.ok) throw new Error(`Could not load land tile ${id}.`)
+      return new VectorTile(new Pbf(await response.arrayBuffer()))
+    })
+    .catch(error => {
+      sourceLandTileRequests.delete(id)
+      throw error
+    })
+  sourceLandTileRequests.set(id, request)
+  return request
+}
+
+const vectorRingContainsPoint = (point, ring) => {
+  let inside = false
+  for (let index = 0, previous = ring.length - 1; index < ring.length; previous = index++) {
+    const current = ring[index]
+    const prior = ring[previous]
+    const crosses = current.y > point.y !== prior.y > point.y
+    if (
+      crosses &&
+      point.x < ((prior.x - current.x) * (point.y - current.y)) / (prior.y - current.y) + current.x
+    ) {
+      inside = !inside
+    }
+  }
+  return inside
+}
+
+const vectorFeatureContainsPoint = (feature, point) => {
+  if (feature.type !== 3) return false
+  return feature.loadGeometry().reduce(
+    (inside, ring) => (vectorRingContainsPoint(point, ring) ? !inside : inside),
+    false,
+  )
+}
+
+const vectorTileLandFraction = (sourceTile, tile) => {
+  const earthLayer = sourceTile.layers.earth
+  const waterLayer = sourceTile.layers.water
+  if (!earthLayer) return null
+
+  const sourceTileSize = earthLayer.extent / sourceLandTileSpan
+  const originX = (tile.x % sourceLandTileSpan) * sourceTileSize
+  const originY = (tile.y % sourceLandTileSpan) * sourceTileSize
+  const earthFeatures = Array.from({ length: earthLayer.length }, (_, index) =>
+    earthLayer.feature(index),
+  )
+  const waterFeatures = waterLayer
+    ? Array.from({ length: waterLayer.length }, (_, index) => waterLayer.feature(index))
+    : []
+  const landSamples = Array.from({ length: landSampleSize }, (_, row) =>
+    Array.from({ length: landSampleSize }, (_, column) => {
+      const point = {
+        x: originX + ((column + 0.5) * sourceTileSize) / landSampleSize,
+        y: originY + ((row + 0.5) * sourceTileSize) / landSampleSize,
+      }
+      const onEarth = earthFeatures.some(feature => vectorFeatureContainsPoint(feature, point))
+      const onWater = waterFeatures.some(feature => vectorFeatureContainsPoint(feature, point))
+      return onEarth && !onWater
+    }),
+  ).flat()
+
+  return landSamples.filter(Boolean).length / landSamples.length
+}
 
 // Choose the opening concept once at map initialization, then walk the full
 // collection in order so a loading sequence never repeats early.
@@ -670,10 +752,12 @@ const fogFragmentShader = `
     // Keep a generous feather around each body so the ground fog reads as a
     // soft veil rather than a set of opaque, tile-sized clouds.
     float softMask = smoothstep(0.06, 0.64, mask);
-    float density = softMask;
+    // When detail is disabled, match this baseline to the detailed fog's
+    // average density instead of falling back to a fully dense mask.
+    float density = softMask * 0.94;
     vec3 pale = vec3(0.91, 0.92, 0.92);
     vec3 deep = vec3(0.67, 0.70, 0.71);
-    vec3 fogColor = mix(deep, pale, 0.45);
+    vec3 fogColor = mix(deep, pale, 0.55);
     if (u_noise_detail > 0.5) {
       // Keep the tile coverage static, but move several veils through it
       // quickly enough to be apparent during a normal glance at the map.
@@ -837,8 +921,8 @@ const createFogCanvas = (
   const fogAnchorZoom = map.getZoom()
   const isMapMoving = () => isDragging || map.isMoving()
   const noiseDetail = () => {
-    if (noNoise || isMapMoving() || map.getZoom() >= 18) return 0
-    return map.getZoom() >= 17 ? 1 : 2
+    if (noNoise || map.getZoom() > 18) return 0
+    return 2
   }
   let clientWidth = 0
   let clientHeight = 0
@@ -921,7 +1005,7 @@ const createFogCanvas = (
   }
 
   const positionCanvasDuringMapMotion = (target, anchorScreen, anchorZoom) => {
-    if (!isZooming || !anchorScreen || anchorZoom === undefined) return
+    if ((!isZooming && !isDragging) || !anchorScreen || anchorZoom === undefined) return
     const scale = isZooming ? 2 ** (map.getZoom() - anchorZoom) : 1
     const currentAnchorScreen = map.project(fogAnchor)
     const translateX =
@@ -932,8 +1016,9 @@ const createFogCanvas = (
   }
 
   const positionCanvasesDuringMapMotion = () => {
-    // Zoom temporarily scales the overlays between their current-coordinate
-    // redraws. Dragging redraws them directly instead of using a snapshot.
+    // Keep the colour and loading overlays registered to the map between their
+    // current-coordinate redraws, so they do not lag a moving basemap by one
+    // animation frame.
     positionCanvasDuringMapMotion(mistCanvas, mistAnchorScreen, mistAnchorZoom)
     positionCanvasDuringMapMotion(loadingCanvas, loadingAnchorScreen, loadingAnchorZoom)
   }
@@ -1633,7 +1718,7 @@ const createFogCanvas = (
     const frameDelta = previousFrameTime === undefined ? 0 : time - previousFrameTime
     previousFrameTime = time
     const elapsed = Math.min(100, frameDelta)
-    fogTime += (elapsed / 1000) * groundFogMotionSpeed
+    if (!isMapMoving()) fogTime += (elapsed / 1000) * groundFogMotionSpeed
     animationTime += elapsed
     renderCachedColourFields(time, animationTime)
     // Keep the card geometry in lockstep with the map while it is being
@@ -1663,7 +1748,7 @@ const createFogCanvas = (
       if (noiseDetailUniform) gl.uniform1f(noiseDetailUniform, noiseDetail())
       if (anchorScreenUniform && viewportSizeUniform) {
         // Keep the cloud field registered to its geographic anchor as the map
-        // moves. Its animation clock continues while the map is in motion.
+        // moves while its animation clock is frozen.
         const anchorScreen = map.project(fogAnchor)
         gl.uniform2f(anchorScreenUniform, anchorScreen.x, anchorScreen.y)
         if (maskAnchorScreenUniform) {
@@ -1804,6 +1889,26 @@ export const installAtlasTileInteractions = (
   }
 
   const fogLandState = new Map()
+  const fogLandRequests = new Map()
+  let invalidateFog = () => {}
+  const requestFogLandClassification = tile => {
+    const id = tileId(tile)
+    if (fogLandState.has(id) || fogLandRequests.has(id)) return
+
+    const request = loadSourceLandTile(tile)
+      .then(sourceTile => {
+        const fraction = vectorTileLandFraction(sourceTile, tile)
+        if (fraction !== null) {
+          fogLandState.set(id, fraction >= landTargetThreshold)
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        fogLandRequests.delete(id)
+        invalidateFog()
+      })
+    fogLandRequests.set(id, request)
+  }
   const isFogTileLand = tile => {
     const id = tileId(tile)
     if (fogLandState.has(id)) return fogLandState.get(id)
@@ -1814,10 +1919,14 @@ export const installAtlasTileInteractions = (
     }
 
     const fraction = sourceTileLandFraction(map, tile)
-    if (fraction === null) return false
-    const isLand = fraction >= landTargetThreshold
-    fogLandState.set(id, isLand)
-    return isLand
+    if (fraction !== null) {
+      const isLand = fraction >= landTargetThreshold
+      fogLandState.set(id, isLand)
+      return isLand
+    }
+
+    requestFogLandClassification(tile)
+    return false
   }
 
   const cachedTileIds = new Set()
@@ -1828,6 +1937,7 @@ export const installAtlasTileInteractions = (
     isFogTileLand,
     noNoise,
   )
+  invalidateFog = fog.invalidate
   const revealGeneratedTile = (id, countsAgainstQuota = true) => {
     audio?.playFogLift()
     tileState.set(id, 'revealing')
