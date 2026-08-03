@@ -1,12 +1,13 @@
 import { handleAtlasApi } from './worker-api.ts'
 
+export { AtlasManifest } from './atlas-manifest.ts'
+
 const tileOrigin = 'https://tiles.saanseoi.hk'
 const tileProxyPrefix = '/map-assets/saanseoi'
 const tileJsonPath = `${tileProxyPrefix}/hongkong-latest.json`
 const vectorTilePattern = new RegExp(
   `^${tileProxyPrefix}/hongkong-latest/(\\d+)/(\\d+)/(\\d+)\\.mvt$`,
 )
-
 const upstreamRequest = (pathname: string, search = '') => {
   const upstreamUrl = new URL(
     `${pathname.slice(tileProxyPrefix.length)}${search}`,
@@ -50,10 +51,10 @@ const proxyVectorTile = (request: Request) => {
 
 export default {
   async fetch(request, env) {
+    const url = new URL(request.url)
     const apiResponse = await handleAtlasApi(request, env)
     if (apiResponse) return apiResponse
 
-    const url = new URL(request.url)
     if (request.method === 'GET' && url.pathname === tileJsonPath) {
       return proxyTileJson(request, env)
     }

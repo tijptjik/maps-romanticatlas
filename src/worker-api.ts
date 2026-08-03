@@ -1,24 +1,52 @@
 import { PhotonImage, SamplingFilter, resize } from '@cf-wasm/photon/workerd'
-import { atlasSeaScenes, atlasSceneNames, atlasScenes } from './atlas-scenes.ts'
+import {
+  manifestShardName,
+  manifestShardNamesForGrid,
+  type AtlasManifestEntry,
+} from './atlas-manifest.ts'
+import { atlasSeaScenes, atlasScenes } from './atlas-scenes.ts'
+import {
+  adminAccessError,
+  atlasErrorPayload,
+  atlasImageKey,
+  atlasMetadataKey,
+  atlasTileCount,
+  atlasTileSize,
+  atlasTileUrl,
+  atlasZoom,
+  bearerToken,
+  cacheStatusPayload,
+  cachedTilePayload,
+  cachedTilesPayload,
+  cookieValue,
+  csrfCookieName,
+  generationVersion,
+  isAllowedApplicationRequest,
+  isReadableCacheVersion,
+  isSupportedCacheVersion,
+  modeEnabled,
+  normalizeContentBounds,
+  parseAtlasPositionPath,
+  parseAtlasTilePath,
+  requestedCacheVersion,
+  type AtlasTile,
+  type CachedAtlasTile,
+} from './atlas-protocol.ts'
 
-const atlasZoom = 18
-const atlasTileSize = 512
-const generationVersion = 4
-const readableCacheVersions = [2, 3, 4] as const
 const maximumRequestBytes = 12_000_000
 const maximumImageBytes = 4_000_000
 const openrouterApiUrl = 'https://openrouter.ai/api/v1/chat/completions'
-const atlasColourDirection = 'Keep the surrounding map and its Victorian-brown palette unchanged. Within the event, use a lively, carefully balanced storybook palette with warm parchment and sandy cream foundations, plus clear accents of cobalt blue, coral vermilion, marigold yellow, leafy sage green, dusty rose, and soft lilac. Keep the colours richly pigmented, crisp, and pleasantly contrasty so the event stands out, while remaining slightly softened and paper-printed rather than neon, fluorescent, garish, or oversaturated.'
+const atlasColourDirection =
+  'Keep the surrounding map and its Victorian-brown palette unchanged. Within the event, use a lively, carefully balanced storybook palette with warm parchment and sandy cream foundations, plus clear accents of cobalt blue, coral vermilion, marigold yellow, leafy sage green, dusty rose, and soft lilac. Keep the colours richly pigmented, crisp, and pleasantly contrasty so the event stands out, while remaining slightly softened and paper-printed rather than neon, fluorescent, garish, or oversaturated.'
 
 type Scene = keyof typeof atlasScenes
-type Tile = { scene: Scene; zoom: number; x: number; y: number }
-type AtlasEnv = Env & { ATLAS_ADMIN_TOKEN?: string; ATLAS_LOCAL_DEV?: string }
-type ContentBounds = { x: number; y: number; width: number; height: number } | null
-type CachedTile = {
-  tile: Tile
-  version: number
-  contentType: string
-  contentBounds: ContentBounds
+type Tile = AtlasTile<Scene>
+type AtlasEnv = Env & {
+  ATLAS_ADMIN_TOKEN?: string
+  ATLAS_LOCAL_DEV?: string
+  OPENROUTER_API_KEY?: string
+}
+type CachedTile = CachedAtlasTile<Scene> & {
   imageKey: string
   metadataKey: string
 }
@@ -33,18 +61,17 @@ const json = (data: unknown, status = 200, headers: Record<string, string> = {})
     },
   })
 
-const errorResponse = (status: number, error: string, headers?: Record<string, string>) =>
-  json({ error }, status, headers)
-
-const bearerToken = (request: Request) => {
-  const value = request.headers.get('authorization')
-  return value?.match(/^Bearer\s+([^\s]+)$/i)?.[1] ?? null
-}
+const errorResponse = (
+  status: number,
+  error: string,
+  headers?: Record<string, string>,
+) => json(atlasErrorPayload(error), status, headers)
 
 const constantTimeEqual = (left: Uint8Array, right: Uint8Array) => {
   if (left.length !== right.length) return false
   let difference = 0
-  for (let index = 0; index < left.length; index += 1) difference |= left[index] ^ right[index]
+  for (let index = 0; index < left.length; index += 1)
+    difference |= left[index] ^ right[index]
   return difference === 0
 }
 
@@ -56,31 +83,27 @@ const hmac = async (secret: string, value: string) => {
     false,
     ['sign'],
   )
-  return new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(value)))
+  return new Uint8Array(
+    await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(value)),
+  )
 }
 
 const adminTokenIsValid = async (request: Request, env: AtlasEnv) => {
   const configuredToken = env.ATLAS_ADMIN_TOKEN?.trim()
-  const suppliedToken = bearerToken(request)
+  const suppliedToken = bearerToken(request.headers.get('authorization'))
   if (!configuredToken || !suppliedToken) return false
   const expected = await hmac(configuredToken, configuredToken)
   const actual = await hmac(configuredToken, suppliedToken)
   return constantTimeEqual(expected, actual)
 }
 
-const cookieValue = (request: Request, name: string) =>
-  request.headers.get('cookie')
-    ?.split(';')
-    .map(cookie => cookie.trim())
-    .find(cookie => cookie.startsWith(`${name}=`))
-    ?.slice(name.length + 1) ?? null
-
-const csrfCookieName = 'atlas_csrf'
 const csrfToken = async (secret: string) => {
   const nonceBytes = new Uint8Array(32)
   crypto.getRandomValues(nonceBytes)
-  const nonce = [...nonceBytes].map(value => value.toString(16).padStart(2, '0')).join('')
-  const signature = [...await hmac(secret, nonce)]
+  const nonce = [...nonceBytes]
+    .map(value => value.toString(16).padStart(2, '0'))
+    .join('')
+  const signature = [...(await hmac(secret, nonce))]
     .map(value => value.toString(16).padStart(2, '0'))
     .join('')
   return `${nonce}.${signature}`
@@ -91,23 +114,11 @@ const csrfTokenIsValid = async (token: string | null, secret: string | undefined
   const match = token.match(/^([a-f0-9]{64})\.([a-f0-9]{64})$/)
   if (!match) return false
   const expected = await hmac(secret, match[1])
-  const actual = Uint8Array.from(match[2].match(/../g) ?? [], value => Number.parseInt(value, 16))
+  const actual = Uint8Array.from(match[2].match(/../g) ?? [], value =>
+    Number.parseInt(value, 16),
+  )
   return constantTimeEqual(expected, actual)
 }
-
-const adminRequestIsAllowed = (request: Request, env: AtlasEnv, requireOrigin = false) => {
-  return (!requireOrigin || Boolean(request.headers.get('origin'))) &&
-    isAllowedApplicationRequest(request, env)
-}
-
-const tileKey = (tile: Tile, version = generationVersion) =>
-  `atlas/${tile.zoom}/${tile.x}/${tile.y}/${tile.scene}.v${version}`
-
-const imageKey = (tile: Tile, version = generationVersion) => `${tileKey(tile, version)}.image`
-const metadataKey = (tile: Tile, version = generationVersion) => `${tileKey(tile, version)}.json`
-
-const tileUrl = (tile: Tile, version: number) =>
-  `/generated-tiles/${tile.zoom}/${tile.x}/${tile.y}/${tile.scene}?version=${version}`
 
 const randomItem = <T>(items: T[]) => {
   const random = new Uint32Array(1)
@@ -115,69 +126,11 @@ const randomItem = <T>(items: T[]) => {
   return items[random[0] % items.length]
 }
 
-const parseTilePath = (pathname: string): Tile | null => {
-  const match = pathname.match(/^\/api\/atlas-tiles\/(\d+)\/(\d+)\/(\d+)\/([^/]+)$/)
-  if (!match) return null
-  const [, zoom, x, y, scene] = match
-  const numericZoom = Number(zoom)
-  const numericX = Number(x)
-  const numericY = Number(y)
-  const tileCount = 2 ** numericZoom
-  if (
-    numericZoom !== atlasZoom ||
-    numericX < 0 ||
-    numericY < 0 ||
-    numericX >= tileCount ||
-    numericY >= tileCount ||
-    !atlasScenes[scene]
-  ) return null
-  return { scene: scene as Scene, zoom: numericZoom, x: numericX, y: numericY }
-}
-
-const parsePositionPath = (pathname: string) => {
-  const match = pathname.match(/^\/api\/atlas-tiles\/cache-status\/(\d+)\/(\d+)\/(\d+)$/)
-  if (!match) return null
-  const [, zoom, x, y] = match
-  const numericZoom = Number(zoom)
-  const numericX = Number(x)
-  const numericY = Number(y)
-  const tileCount = 2 ** numericZoom
-  if (
-    numericZoom !== atlasZoom ||
-    numericX < 0 ||
-    numericY < 0 ||
-    numericX >= tileCount ||
-    numericY >= tileCount
-  ) return null
-  return { zoom: numericZoom, x: numericX, y: numericY }
-}
-
-const requestedVersion = (request: Request) => {
-  const value = new URL(request.url).searchParams.get('version')
-  if (value === null || !/^\d+$/.test(value)) return null
-  const version = Number(value)
-  return Number.isInteger(version) && version >= 1 && version <= generationVersion ? version : null
-}
-
-const normalizeContentBounds = (value: unknown): ContentBounds => {
-  const candidate = value as Record<string, unknown> | null | undefined
-  const x = Number(candidate?.x)
-  const y = Number(candidate?.y)
-  const width = Number(candidate?.width)
-  const height = Number(candidate?.height)
-  if (![x, y, width, height].every(Number.isFinite) || width <= 0 || height <= 0) return null
-
-  const left = Math.max(0, Math.min(atlasTileSize - 1, Math.floor(x)))
-  const top = Math.max(0, Math.min(atlasTileSize - 1, Math.floor(y)))
-  const right = Math.max(left + 1, Math.min(atlasTileSize, Math.ceil(x + width)))
-  const bottom = Math.max(top + 1, Math.min(atlasTileSize, Math.ceil(y + height)))
-  return { x: left, y: top, width: right - left, height: bottom - top }
-}
 
 const readCachedTile = async (bucket: R2Bucket, tile: Tile, version: number) => {
-  const imageObject = await bucket.head(imageKey(tile, version))
+  const imageObject = await bucket.head(atlasImageKey(tile, version))
   if (!imageObject) return null
-  const metadataObject = await bucket.get(metadataKey(tile, version))
+  const metadataObject = await bucket.get(atlasMetadataKey(tile, version))
   if (!metadataObject) return null
   try {
     const metadata = await metadataObject.json<{
@@ -189,28 +142,84 @@ const readCachedTile = async (bucket: R2Bucket, tile: Tile, version: number) => 
       version,
       contentType: metadata.contentType ?? 'image/png',
       contentBounds: normalizeContentBounds(metadata.contentBounds),
-      imageKey: imageKey(tile, version),
-      metadataKey: metadataKey(tile, version),
+      imageKey: atlasImageKey(tile, version),
+      metadataKey: atlasMetadataKey(tile, version),
     } satisfies CachedTile
   } catch {
     return null
   }
 }
 
-const getCachedTile = (bucket: R2Bucket, tile: Tile) =>
-  readCachedTile(bucket, tile, generationVersion)
+const toCachedTile = (entry: AtlasManifestEntry): CachedTile | null => {
+  if (
+    !atlasScenes[entry.scene] ||
+    !isReadableCacheVersion(entry.version)
+  ) {
+    return null
+  }
+  const tile = {
+    scene: entry.scene as Scene,
+    zoom: entry.zoom,
+    x: entry.x,
+    y: entry.y,
+  }
+  return {
+    tile,
+    version: entry.version,
+    contentType: entry.contentType,
+    contentBounds: entry.contentBounds,
+    imageKey: atlasImageKey(tile, entry.version),
+    metadataKey: atlasMetadataKey(tile, entry.version),
+  }
+}
 
-const getVersionedCachedTile = (bucket: R2Bucket, tile: Tile, version: number | null) =>
-  version === null ? getCachedTile(bucket, tile) : readCachedTile(bucket, tile, version)
-
-const findCachedTile = async (bucket: R2Bucket, position: Omit<Tile, 'scene'>) => {
-  const candidates = await Promise.all(
-    readableCacheVersions.flatMap(version =>
-      atlasSceneNames.map(scene => readCachedTile(bucket, { ...position, scene }, version)),
-    ),
+const manifestEntriesForPosition = async (
+  env: AtlasEnv,
+  position: Omit<Tile, 'scene'>,
+) =>
+  (
+    await env.ATLAS_MANIFEST.getByName(manifestShardName(position)).entriesForPosition(
+      position,
+    )
   )
-  const cached = candidates.filter((candidate): candidate is CachedTile => candidate !== null)
+    .map(toCachedTile)
+    .filter((entry): entry is CachedTile => entry !== null)
+
+const findCachedTile = async (env: AtlasEnv, position: Omit<Tile, 'scene'>) => {
+  const cached = await manifestEntriesForPosition(env, position)
   return cached.length ? randomItem(cached) : null
+}
+
+const cachedTileFromManifest = async (
+  env: AtlasEnv,
+  tile: Tile,
+  version: number | null,
+) => {
+  const expectedVersion = version ?? generationVersion
+  const cached = await manifestEntriesForPosition(env, tile)
+  const manifestEntry = cached.find(
+    entry => entry.tile.scene === tile.scene && entry.version === expectedVersion,
+  )
+  if (manifestEntry) return manifestEntry
+
+  // Existing R2 tiles predate the manifest. A local Wrangler instance also
+  // starts with an empty Durable Object, even when it uses the remote bucket.
+  // Keep their stable, versioned image URLs valid until a manifest rebuild has
+  // indexed them.
+  return readCachedTile(env.ATLAS_BUCKET, tile, expectedVersion)
+}
+
+const publishManifestEntry = async (env: AtlasEnv, cached: CachedTile) => {
+  const entry: AtlasManifestEntry = {
+    zoom: cached.tile.zoom,
+    x: cached.tile.x,
+    y: cached.tile.y,
+    scene: cached.tile.scene,
+    version: cached.version,
+    contentType: cached.contentType,
+    contentBounds: cached.contentBounds,
+  }
+  await env.ATLAS_MANIFEST.getByName(manifestShardName(entry)).upsert([entry])
 }
 
 const listCachedTiles = async (bucket: R2Bucket, requested: number | null = null) => {
@@ -227,8 +236,8 @@ const listCachedTiles = async (bucket: R2Bucket, requested: number | null = null
       const version = Number(versionText)
       const numericX = Number(x)
       const numericY = Number(y)
-      const tileCount = 2 ** atlasZoom
-      if (!atlasScenes[scene] || version < 1 || version > generationVersion) continue
+      const tileCount = atlasTileCount()
+      if (!atlasScenes[scene] || !isSupportedCacheVersion(version)) continue
       if (numericX >= tileCount || numericY >= tileCount) continue
       const key = `${numericX}/${numericY}/${scene}`
       if (requested !== null && version !== requested) continue
@@ -247,57 +256,17 @@ const listCachedTiles = async (bucket: R2Bucket, requested: number | null = null
       readCachedTile(bucket, tile, version),
     ),
   )
-  return cached.filter((entry): entry is CachedTile => entry !== null).map(entry => ({
-    scene: entry.tile.scene,
-    zoom: entry.tile.zoom,
-    x: entry.tile.x,
-    y: entry.tile.y,
-    version: entry.version,
-    url: tileUrl(entry.tile, entry.version),
-    contentBounds: entry.contentBounds,
-  }))
-}
-
-const atlasSceneGridRadius = 4
-const atlasTileCount = 2 ** atlasZoom
-
-const sceneGridPositions = (position: Omit<Tile, 'scene'>) => {
-  const positions: Array<{ x: number; y: number }> = []
-  for (let yOffset = -atlasSceneGridRadius; yOffset <= atlasSceneGridRadius; yOffset += 1) {
-    const y = position.y + yOffset
-    if (y < 0 || y >= atlasTileCount) continue
-    for (let xOffset = -atlasSceneGridRadius; xOffset <= atlasSceneGridRadius; xOffset += 1) {
-      positions.push({
-        x: (position.x + xOffset + atlasTileCount) % atlasTileCount,
-        y,
-      })
-    }
-  }
-  return positions
-}
-
-const cachedScenesInGrid = async (
-  bucket: R2Bucket,
-  position: Omit<Tile, 'scene'>,
-) => {
-  const sceneLists = await Promise.all(sceneGridPositions(position).map(async ({ x, y }) => {
-    const scenes: Scene[] = []
-    let cursor: string | undefined
-    do {
-      const listing = await bucket.list({ prefix: `atlas/${atlasZoom}/${x}/${y}/`, cursor })
-      for (const object of listing.objects) {
-        const match = object.key.match(new RegExp(`^atlas/${atlasZoom}/${x}/${y}/(.+)\\.v(\\d+)\\.json$`))
-        const version = Number(match?.[2])
-        const scene = match?.[1]
-        if (scene && atlasScenes[scene] && readableCacheVersions.some(candidate => candidate === version)) {
-          scenes.push(scene as Scene)
-        }
-      }
-      cursor = listing.truncated ? listing.cursor : undefined
-    } while (cursor)
-    return scenes
-  }))
-  return [...new Set(sceneLists.flat())]
+  return cached
+    .filter((entry): entry is CachedTile => entry !== null)
+    .map(entry => ({
+      scene: entry.tile.scene,
+      zoom: entry.tile.zoom,
+      x: entry.tile.x,
+      y: entry.tile.y,
+      version: entry.version,
+      url: atlasTileUrl(entry.tile, entry.version),
+      contentBounds: entry.contentBounds,
+    }))
 }
 
 const imageDataUrl = /^data:(image\/(?:png|jpe?g));base64,([A-Za-z0-9+/=]+)$/
@@ -386,12 +355,23 @@ const composeTileImage = (
 
     const blurredAlpha = blurMask(safeAlpha)
     const outputPixels = new Uint8Array(sourcePixels.length)
-    for (let pixel = 0, offset = 0; pixel < blurredAlpha.length; pixel += 1, offset += 4) {
-      const generatedOpacity = (blurredAlpha[pixel] * generatedPixels[offset + 3]) / 65_025
+    for (
+      let pixel = 0, offset = 0;
+      pixel < blurredAlpha.length;
+      pixel += 1, offset += 4
+    ) {
+      const generatedOpacity =
+        (blurredAlpha[pixel] * generatedPixels[offset + 3]) / 65_025
       const sourceOpacity = 1 - generatedOpacity
-      let red = sourcePixels[offset] * sourceOpacity + generatedPixels[offset] * generatedOpacity
-      let green = sourcePixels[offset + 1] * sourceOpacity + generatedPixels[offset + 1] * generatedOpacity
-      let blue = sourcePixels[offset + 2] * sourceOpacity + generatedPixels[offset + 2] * generatedOpacity
+      let red =
+        sourcePixels[offset] * sourceOpacity +
+        generatedPixels[offset] * generatedOpacity
+      let green =
+        sourcePixels[offset + 1] * sourceOpacity +
+        generatedPixels[offset + 1] * generatedOpacity
+      let blue =
+        sourcePixels[offset + 2] * sourceOpacity +
+        generatedPixels[offset + 2] * generatedOpacity
       const lineOpacity = lineAlpha[pixel] / 255
       red = red * (1 - lineOpacity) + overlayPixels[offset] * lineOpacity
       green = green * (1 - lineOpacity) + overlayPixels[offset + 1] * lineOpacity
@@ -424,7 +404,12 @@ const atlasPrompt = (scene: Scene, hasSea: boolean) => {
   return `Create ${atlasScenes[scene]} across the permitted land in this complete single z18 map tile, leaving a 10% safety margin. The first image is the source map. The second image is a zoning guide: green areas are safe to transform, while red areas are locked and must remain unchanged. Use the guide as an instruction, not as artwork. Preserve the exact tile size, orientation, scale, coastline, water, roads, paths, boundaries, and labels. Treat every existing road and path as hard pixel-registered infrastructure: trace its original centerline exactly, keep every junction and curve in the same position, and do not cover it with buildings, scenery, texture, or event artwork. Do not invent, move, bend, widen, recolour, or erase any locked path or road, and do not draw road-like lines in the green areas. Do not add text, shadows, gradients, lighting, borders, frames, or tile-shaped background patches. Use a flat, planimetric, strict overhead view integrated into the existing cartography. ${atlasColourDirection} ${seaRule}`
 }
 
-const openrouterImage = async (env: Env, prompt: string, sourceImage: string, guideImage: string) => {
+const openrouterImage = async (
+  env: AtlasEnv,
+  prompt: string,
+  sourceImage: string,
+  guideImage: string,
+) => {
   if (!env.OPENROUTER_API_KEY) {
     throw new Error('OpenRouter is not configured for this deployment.')
   }
@@ -439,20 +424,22 @@ const openrouterImage = async (env: Env, prompt: string, sourceImage: string, gu
     body: JSON.stringify({
       model: env.OPENROUTER_MODEL ?? 'openai/gpt-5.4-image-2',
       modalities: ['text', 'image'],
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'text', text: prompt },
-          { type: 'image_url', image_url: { url: sourceImage } },
-          { type: 'image_url', image_url: { url: guideImage } },
-        ],
-      }],
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: prompt },
+            { type: 'image_url', image_url: { url: sourceImage } },
+            { type: 'image_url', image_url: { url: guideImage } },
+          ],
+        },
+      ],
     }),
   })
   if (!response.ok) {
     throw new Error(`OpenRouter image generation failed (${response.status}).`)
   }
-  const result = await response.json() as {
+  const result = (await response.json()) as {
     choices?: Array<{
       message?: {
         images?: Array<{ image_url?: { url?: string } }>
@@ -461,7 +448,8 @@ const openrouterImage = async (env: Env, prompt: string, sourceImage: string, gu
     }>
   }
   const message = result.choices?.[0]?.message
-  const imageUrl = message?.images?.find(image => image.image_url?.url)?.image_url?.url ??
+  const imageUrl =
+    message?.images?.find(image => image.image_url?.url)?.image_url?.url ??
     message?.content?.find(image => image.image_url?.url)?.image_url?.url
   const parsed = decodeDataUrl(imageUrl, 'OpenRouter image')
   return parsed.bytes
@@ -469,7 +457,8 @@ const openrouterImage = async (env: Env, prompt: string, sourceImage: string, gu
 
 const readJsonBody = async (request: Request) => {
   const contentLength = Number(request.headers.get('content-length') ?? 0)
-  if (contentLength > maximumRequestBytes) throw new Error('The tile generation payload is too large.')
+  if (contentLength > maximumRequestBytes)
+    throw new Error('The tile generation payload is too large.')
   if (!request.body) throw new Error('A JSON request body is required.')
   const reader = request.body.getReader()
   const chunks: Uint8Array[] = []
@@ -479,7 +468,8 @@ const readJsonBody = async (request: Request) => {
       const { done, value } = await reader.read()
       if (done) break
       size += value.byteLength
-      if (size > maximumRequestBytes) throw new Error('The tile generation payload is too large.')
+      if (size > maximumRequestBytes)
+        throw new Error('The tile generation payload is too large.')
       chunks.push(value)
     }
   } finally {
@@ -494,33 +484,39 @@ const readJsonBody = async (request: Request) => {
   return JSON.parse(new TextDecoder().decode(body)) as Record<string, unknown>
 }
 
-const isAllowedApplicationRequest = (request: Request, env: AtlasEnv) => {
-  const allowedOrigin = env.ATLAS_ALLOWED_ORIGIN
-  if (!allowedOrigin) return false
-  const origin = request.headers.get('origin')
-  const requestUrl = new URL(request.url)
-  const allowedUrl = new URL(allowedOrigin)
-  const isLocalHost = (host: string) => /^(?:localhost|127\.0\.0\.1)(?::\d+)?$/.test(host)
-  const localDevelopment = env.ATLAS_LOCAL_DEV === 'true'
-  // A Wrangler dev server is always loopback, even when its configured origin
-  // is inherited from the production config. The production Worker cannot
-  // receive a loopback request, so accepting loopback here does not weaken the
-  // deployed host check.
-  const hostMatches = requestUrl.host === allowedUrl.host ||
-    (localDevelopment && (isLocalHost(requestUrl.host) || isLocalHost(allowedUrl.host)))
-  const originMatches = !origin || origin === allowedOrigin ||
-    (localDevelopment && (() => {
-      try {
-        return isLocalHost(new URL(origin).host)
-      } catch {
-        return false
-      }
-    })())
-  return hostMatches && originMatches
+const requestedVersion = (request: Request) =>
+  requestedCacheVersion(new URL(request.url).searchParams)
+
+const adminModeEnabled = (request: Request) =>
+  modeEnabled(new URL(request.url).searchParams, 'admin')
+
+const diagnosticsModeEnabled = (request: Request) =>
+  modeEnabled(new URL(request.url).searchParams, 'diagnostics')
+
+const localDevelopmentEnabled = (env: AtlasEnv) =>
+  String(env.ATLAS_LOCAL_DEV) === 'true'
+
+const applicationRequestIsAllowed = (
+  request: Request,
+  env: AtlasEnv,
+  requireOrigin = false,
+) => {
+  // Wrangler's remote-binding proxy presents the configured production route
+  // to the local Worker. ATLAS_LOCAL_DEV is set only by the local dev command,
+  // so it is the reliable boundary for accepting those localhost requests.
+  if (localDevelopmentEnabled(env)) return true
+
+  return isAllowedApplicationRequest({
+    requestHost: request.headers.get('host') ?? new URL(request.url).host,
+    origin: request.headers.get('origin'),
+    allowedOrigin: env.ATLAS_ALLOWED_ORIGIN,
+    localDevelopment: false,
+    requireOrigin,
+  })
 }
 
-const serveCachedTile = async (request: Request, env: Env, tile: Tile) => {
-  const cached = await getVersionedCachedTile(env.ATLAS_BUCKET, tile, requestedVersion(request))
+const serveCachedTile = async (request: Request, env: AtlasEnv, tile: Tile) => {
+  const cached = await cachedTileFromManifest(env, tile, requestedVersion(request))
   if (!cached) return errorResponse(404, 'This atlas tile has not been generated yet.')
   const object = await env.ATLAS_BUCKET.get(cached.imageKey)
   if (!object) return errorResponse(404, 'This atlas tile has not been generated yet.')
@@ -533,17 +529,19 @@ const serveCachedTile = async (request: Request, env: Env, tile: Tile) => {
   })
 }
 
-const generateTile = async (request: Request, env: Env, tile: Tile) => {
-  const existing = await findCachedTile(env.ATLAS_BUCKET, tile)
-  if (existing) {
-    return json({
-      url: tileUrl(existing.tile, existing.version),
-      scene: existing.tile.scene,
-      contentBounds: existing.contentBounds,
-    })
-  }
-  if (!isAllowedApplicationRequest(request, env)) {
-    return errorResponse(403, 'Image generation is restricted to the configured application domain.')
+const generateTile = async (
+  request: Request,
+  env: AtlasEnv,
+  tile: Tile,
+  force = false,
+) => {
+  const existing = force ? null : await findCachedTile(env, tile)
+  if (existing) return json(cachedTilePayload(existing))
+  if (!applicationRequestIsAllowed(request, env)) {
+    return errorResponse(
+      403,
+      'Image generation is restricted to the configured application domain.',
+    )
   }
 
   let body: Record<string, unknown>
@@ -561,7 +559,12 @@ const generateTile = async (request: Request, env: Env, tile: Tile) => {
       String(body.sourceImage),
       String(body.guideImage),
     )
-    const composed = composeTileImage(source.bytes, generated, mask.bytes, overlay.bytes)
+    const composed = composeTileImage(
+      source.bytes,
+      generated,
+      mask.bytes,
+      overlay.bytes,
+    )
     const entry = {
       contentType: 'image/png',
       generationVersion,
@@ -570,97 +573,310 @@ const generateTile = async (request: Request, env: Env, tile: Tile) => {
       mask: 'vector-safe-zones',
       outputSize: { width: atlasTileSize, height: atlasTileSize },
     }
-    const versionedImageKey = imageKey(tile)
-    const versionedMetadataKey = metadataKey(tile)
+    const versionedImageKey = atlasImageKey(tile)
+    const versionedMetadataKey = atlasMetadataKey(tile)
     await env.ATLAS_BUCKET.put(versionedImageKey, composed, {
-      httpMetadata: { contentType: 'image/png', cacheControl: 'public, max-age=31536000, immutable' },
+      httpMetadata: {
+        contentType: 'image/png',
+        cacheControl: 'public, max-age=31536000, immutable',
+      },
     })
     await env.ATLAS_BUCKET.put(versionedMetadataKey, JSON.stringify(entry), {
       httpMetadata: { contentType: 'application/json; charset=utf-8' },
     })
-    return json({
-      url: tileUrl(tile, generationVersion),
-      scene: tile.scene,
+    await publishManifestEntry(env, {
+      tile,
+      version: generationVersion,
+      contentType: entry.contentType,
       contentBounds,
+      imageKey: versionedImageKey,
+      metadataKey: versionedMetadataKey,
     })
+    return json(cachedTilePayload({
+      tile,
+      version: generationVersion,
+      contentType: entry.contentType,
+      contentBounds,
+    }))
   } catch (error) {
-    return errorResponse(400, error instanceof Error ? error.message : 'Could not generate this atlas tile.')
+    return errorResponse(
+      400,
+      error instanceof Error ? error.message : 'Could not generate this atlas tile.',
+    )
   }
 }
 
-const serveCacheStatus = async (env: AtlasEnv, position: Omit<Tile, 'scene'>) => {
-  const [cached, scenes] = await Promise.all([
-    findCachedTile(env.ATLAS_BUCKET, position),
-    cachedScenesInGrid(env.ATLAS_BUCKET, position),
-  ])
-  return json({
-    cached: Boolean(cached),
-    url: cached ? tileUrl(cached.tile, cached.version) : null,
-    scene: cached?.tile.scene ?? null,
-    scenes,
-    contentBounds: cached?.contentBounds ?? null,
+const adminMutationIsAllowed = async (request: Request, env: AtlasEnv) => {
+  const csrfHeader = request.headers.get('x-atlas-csrf-token')
+  const csrfCookie = cookieValue(request.headers.get('cookie'), csrfCookieName)
+  return adminAccessError({
+    adminMode: adminModeEnabled(request),
+    authenticationConfigured: Boolean(env.ATLAS_ADMIN_TOKEN?.trim()),
+    authenticated: await adminTokenIsValid(request, env),
+    applicationRequestAllowed: applicationRequestIsAllowed(request, env, true),
+    csrfValid:
+      (await csrfTokenIsValid(csrfCookie, env.ATLAS_ADMIN_TOKEN)) &&
+      (await csrfTokenIsValid(csrfHeader, env.ATLAS_ADMIN_TOKEN)) &&
+      csrfHeader === csrfCookie,
+    requireCsrf: true,
   })
 }
 
-const deleteCachedTile = async (request: Request, env: AtlasEnv, tile: Tile) => {
-  if (env.ATLAS_ADMIN_MODE !== 'true') return errorResponse(403, 'Atlas admin mode is disabled.')
-  if (!await adminTokenIsValid(request, env)) {
-    return errorResponse(401, 'Atlas admin authentication is required.', {
-      'www-authenticate': 'Bearer realm="atlas-admin"',
-    })
+const rerenderCachedTile = async (request: Request, env: AtlasEnv, tile: Tile) => {
+  const error = await adminMutationIsAllowed(request, env)
+  if (error) {
+    return errorResponse(
+      error.status,
+      error.error,
+      error.authenticate ? { 'www-authenticate': 'Bearer realm="atlas-admin"' } : undefined,
+    )
   }
-  const csrfHeader = request.headers.get('x-atlas-csrf-token')
-  if (!adminRequestIsAllowed(request, env, true) ||
-    !await csrfTokenIsValid(cookieValue(request, csrfCookieName), env.ATLAS_ADMIN_TOKEN) ||
-    !await csrfTokenIsValid(csrfHeader, env.ATLAS_ADMIN_TOKEN) ||
-    csrfHeader !== cookieValue(request, csrfCookieName)) {
-    return errorResponse(403, 'Cache management is restricted to the configured application domain.')
+  return generateTile(request, env, tile, true)
+}
+
+const serveCacheStatus = async (env: AtlasEnv, position: Omit<Tile, 'scene'>) => {
+  const [cached, sceneLists] = await Promise.all([
+    findCachedTile(env, position),
+    Promise.all(
+      manifestShardNamesForGrid(position).map(shardName =>
+        env.ATLAS_MANIFEST.getByName(shardName).scenesInGrid(position),
+      ),
+    ),
+  ])
+  const scenes = [...new Set(sceneLists.flat())].filter((scene): scene is Scene =>
+    Boolean(atlasScenes[scene]),
+  )
+  return json(
+    cacheStatusPayload({ cached, scenes }),
+    200,
+    // A short TTL makes cache hits cheap without making a freshly published
+    // tile take long to appear to a visitor who previously saw a cache miss.
+    { 'cache-control': 'public, max-age=10, stale-while-revalidate=30' },
+  )
+}
+
+const manifestMetadataKeyPattern = /^atlas\/(\d+)\/(\d+)\/(\d+)\/(.+)\.v(\d+)\.json$/
+
+const manifestEntryFromMetadata = async (
+  bucket: R2Bucket,
+  key: string,
+): Promise<AtlasManifestEntry | null> => {
+  const match = key.match(manifestMetadataKeyPattern)
+  if (!match) return null
+  const [, zoomText, xText, yText, scene, versionText] = match
+  const zoom = Number(zoomText)
+  const x = Number(xText)
+  const y = Number(yText)
+  const version = Number(versionText)
+  const tileCount = 2 ** zoom
+  if (
+    zoom !== atlasZoom ||
+    x < 0 ||
+    y < 0 ||
+    x >= tileCount ||
+    y >= tileCount ||
+    !atlasScenes[scene] ||
+    !isReadableCacheVersion(version)
+  )
+    return null
+
+  const tile = { scene: scene as Scene, zoom, x, y }
+  const [metadataObject, imageObject] = await Promise.all([
+    bucket.get(key),
+    bucket.head(atlasImageKey(tile, version)),
+  ])
+  if (!metadataObject || !imageObject) return null
+  try {
+    const metadata = await metadataObject.json<{
+      contentType?: string
+      contentBounds?: unknown
+    }>()
+    return {
+      zoom,
+      x,
+      y,
+      scene,
+      version,
+      contentType:
+        metadata.contentType ?? imageObject.httpMetadata?.contentType ?? 'image/png',
+      contentBounds: normalizeContentBounds(metadata.contentBounds),
+    }
+  } catch {
+    return null
+  }
+}
+
+const mapConcurrently = async <Input, Output>(
+  values: Input[],
+  limit: number,
+  mapper: (value: Input) => Promise<Output>,
+) => {
+  const results: Output[] = []
+  let cursor = 0
+  const next = async () => {
+    while (cursor < values.length) {
+      const value = values[cursor]
+      cursor += 1
+      results.push(await mapper(value))
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, values.length) }, next))
+  return results
+}
+
+const rebuildManifest = async (env: AtlasEnv) => {
+  const metadataKeys: string[] = []
+  let cursor: string | undefined
+  do {
+    const listing = await env.ATLAS_BUCKET.list({
+      prefix: `atlas/${atlasZoom}/`,
+      cursor,
+    })
+    metadataKeys.push(
+      ...listing.objects
+        .map(object => object.key)
+        .filter(key => manifestMetadataKeyPattern.test(key)),
+    )
+    cursor = listing.truncated ? listing.cursor : undefined
+  } while (cursor)
+
+  const entries = (
+    await mapConcurrently(metadataKeys, 16, key =>
+      manifestEntryFromMetadata(env.ATLAS_BUCKET, key),
+    )
+  ).filter((entry): entry is AtlasManifestEntry => entry !== null)
+  const entriesByShard = new Map<string, AtlasManifestEntry[]>()
+  entries.forEach(entry => {
+    const shard = manifestShardName(entry)
+    const shardEntries = entriesByShard.get(shard) ?? []
+    shardEntries.push(entry)
+    entriesByShard.set(shard, shardEntries)
+  })
+  await Promise.all(
+    [...entriesByShard].map(async ([shard, shardEntries]) => {
+      const stub = env.ATLAS_MANIFEST.getByName(shard)
+      for (let offset = 0; offset < shardEntries.length; offset += 100) {
+        await stub.upsert(shardEntries.slice(offset, offset + 100))
+      }
+    }),
+  )
+  return {
+    scannedMetadata: metadataKeys.length,
+    indexed: entries.length,
+    shards: entriesByShard.size,
+  }
+}
+
+const deleteCachedTile = async (request: Request, env: AtlasEnv, tile: Tile) => {
+  const error = await adminMutationIsAllowed(request, env)
+  if (error) {
+    return errorResponse(
+      error.status,
+      error.error,
+      error.authenticate ? { 'www-authenticate': 'Bearer realm="atlas-admin"' } : undefined,
+    )
   }
 
   const version = requestedVersion(request) ?? generationVersion
   const cached = await readCachedTile(env.ATLAS_BUCKET, tile, version)
   if (!cached) return errorResponse(404, 'This atlas tile is not cached.')
   await env.ATLAS_BUCKET.delete([cached.imageKey, cached.metadataKey])
+  await env.ATLAS_MANIFEST.getByName(manifestShardName(tile)).remove({
+    zoom: tile.zoom,
+    x: tile.x,
+    y: tile.y,
+    scene: tile.scene,
+    version,
+  })
   return json({ deleted: true, tile })
 }
 
-export const handleAtlasApi = async (request: Request, env: AtlasEnv): Promise<Response | null> => {
+const manifestBackfillIsAllowed = async (request: Request, env: AtlasEnv) =>
+  !adminAccessError({
+    adminMode: adminModeEnabled(request),
+    authenticationConfigured: Boolean(env.ATLAS_ADMIN_TOKEN?.trim()),
+    authenticated: await adminTokenIsValid(request, env),
+    applicationRequestAllowed: applicationRequestIsAllowed(request, env, true),
+  })
+
+export const handleAtlasApi = async (
+  request: Request,
+  env: AtlasEnv,
+): Promise<Response | null> => {
   const url = new URL(request.url)
+  if (
+    request.method === 'POST' &&
+    url.pathname === '/api/atlas-tiles/manifest/rebuild'
+  ) {
+    if (!(await manifestBackfillIsAllowed(request, env))) {
+      return errorResponse(
+        403,
+        'Atlas manifest backfill is restricted to cache administrators.',
+      )
+    }
+    return json(await rebuildManifest(env))
+  }
   if (request.method === 'GET' && url.pathname === '/api/atlas-tiles/cached') {
-    if (env.ATLAS_ADMIN_MODE !== 'true') {
-      return json({ adminMode: false, preRenderedCount: 0, tiles: [] })
+    const adminMode = adminModeEnabled(request)
+    if (!adminMode && !diagnosticsModeEnabled(request)) {
+      return json(cachedTilesPayload({
+        adminMode: false,
+        diagnosticsMode: false,
+        version: null,
+        tiles: [],
+      }))
     }
-    if (!await adminTokenIsValid(request, env)) {
-      return errorResponse(401, 'Atlas admin authentication is required.', {
-        'www-authenticate': 'Bearer realm="atlas-admin"',
+    if (adminMode) {
+      const error = adminAccessError({
+        adminMode,
+        authenticationConfigured: Boolean(env.ATLAS_ADMIN_TOKEN?.trim()),
+        authenticated: await adminTokenIsValid(request, env),
+        applicationRequestAllowed: applicationRequestIsAllowed(request, env),
       })
+      if (error)
+        return errorResponse(
+          error.status,
+          error.error,
+          error.authenticate ? { 'www-authenticate': 'Bearer realm="atlas-admin"' } : undefined,
+        )
     }
-    if (!adminRequestIsAllowed(request, env)) {
-      return errorResponse(403, 'Cache administration is restricted to the configured application domain.')
-    }
-    const version = requestedVersion(request)
+    const version = requestedVersion(request) ?? generationVersion
     const tiles = await listCachedTiles(env.ATLAS_BUCKET, version)
-    const csrf = await csrfToken(env.ATLAS_ADMIN_TOKEN as string)
+    const csrf = adminMode ? await csrfToken(env.ATLAS_ADMIN_TOKEN as string) : null
     const secureCookie = url.protocol === 'https:' ? '; Secure' : ''
-    return json({ adminMode: true, version, preRenderedCount: tiles.length, tiles }, 200, {
-      'set-cookie': `${csrfCookieName}=${csrf}; Path=/; SameSite=Strict${secureCookie}`,
-    })
+    return json(
+      cachedTilesPayload({
+        adminMode,
+        diagnosticsMode: diagnosticsModeEnabled(request),
+        version,
+        tiles,
+      }),
+      200,
+      csrf
+        ? { 'set-cookie': `${csrfCookieName}=${csrf}; Path=/; SameSite=Strict${secureCookie}` }
+        : undefined,
+    )
   }
 
-  const position = parsePositionPath(url.pathname)
+  const position = parseAtlasPositionPath(url.pathname)
   if (position && request.method === 'GET') return serveCacheStatus(env, position)
 
   if (url.pathname.startsWith('/generated-tiles/')) {
-    const tile = parseTilePath(url.pathname.replace('/generated-tiles/', '/api/atlas-tiles/'))
-    if (!tile || request.method !== 'GET') return errorResponse(404, 'Atlas tile not found.')
+    const tile = parseAtlasTilePath(url.pathname, (scene): scene is Scene => Boolean(atlasScenes[scene]))
+    if (!tile || request.method !== 'GET')
+      return errorResponse(404, 'Atlas tile not found.')
     return serveCachedTile(request, env, tile)
   }
 
   if (url.pathname.startsWith('/api/atlas-tiles/')) {
-    const tile = parseTilePath(url.pathname)
+    const tile = parseAtlasTilePath(url.pathname, (scene): scene is Scene => Boolean(atlasScenes[scene]))
     if (!tile) return errorResponse(404, 'Atlas tile not found.')
     if (request.method === 'GET') return serveCachedTile(request, env, tile)
-    if (request.method === 'POST') return generateTile(request, env, tile)
+    if (request.method === 'POST') {
+      return new URL(request.url).searchParams.get('rerender') === 'true'
+        ? rerenderCachedTile(request, env, tile)
+        : generateTile(request, env, tile)
+    }
     if (request.method === 'DELETE') return deleteCachedTile(request, env, tile)
     return errorResponse(405, 'This atlas endpoint does not support that method.')
   }

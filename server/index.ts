@@ -9,26 +9,43 @@ import { createServer as createViteServer } from 'vite'
 import { parseImageDataUrl } from './image-data-url.ts'
 import { createOpenRouterClient } from './openrouter-client.ts'
 import { atlasSeaScenes, atlasSceneNames, atlasScenes } from '../src/atlas-scenes.ts'
+import {
+  adminAccessError,
+  atlasErrorPayload,
+  atlasImageKey,
+  atlasMetadataKey,
+  atlasSceneGridRadius,
+  atlasTileCount,
+  atlasTileSize,
+  atlasTileUrl,
+  atlasZoom,
+  bearerToken,
+  cacheStatusPayload,
+  cachedTilePayload,
+  cachedTilesPayload,
+  cookieValue,
+  csrfCookieName,
+  generationVersion,
+  isAllowedApplicationRequest,
+  isReadableCacheVersion,
+  isSupportedCacheVersion,
+  modeEnabled,
+  normalizeContentBounds,
+  parseAtlasPositionPath,
+  parseAtlasTilePath,
+  readableCacheVersions,
+  requestedCacheVersion as parseRequestedCacheVersion,
+} from '../src/atlas-protocol.ts'
 
 const rootDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const cacheDirectory = path.join(rootDirectory, 'generated-tiles')
 const productionDirectory = path.join(rootDirectory, 'dist')
-const atlasZoom = 18
-const atlasTileSize = 512
-const generationVersion = 4
-const readableCacheVersions = [2, 3, 4]
 const generationWindowMs = 180_000
 const generationsPerClient = 3
 const concurrentGenerationsPerClient = 3
 const isProduction = process.env.NODE_ENV === 'production'
-const isAdminModeEnabled = process.env.ATLAS_ADMIN_MODE === 'true'
 const adminToken = process.env.ATLAS_ADMIN_TOKEN?.trim() || null
-const csrfCookieName = 'atlas_csrf'
-const localOriginPattern = /^https?:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/
 const allowedOrigin = process.env.ATLAS_ALLOWED_ORIGIN ?? 'https://romanticatlas.hype.hk'
-const allowedHost = new URL(allowedOrigin).host
-const isAllowedOrigin = origin =>
-  origin === allowedOrigin || (!isProduction && localOriginPattern.test(origin ?? ''))
 const tileOrigin = 'https://tiles.saanseoi.hk'
 const tileProxyPrefix = '/map-assets/saanseoi'
 const tileJsonPath = `${tileProxyPrefix}/hongkong-latest.json`
@@ -46,6 +63,14 @@ const contentTypes = {
 
 const tileLocks = new Map<string, Promise<void>>()
 const clientGenerationState = new Map<string, { active: number; startedAt: number[] }>()
+
+const requestSearchParams = request =>
+  new URL(request.url ?? '/', 'http://localhost').searchParams
+
+const isAdminModeEnabled = request => modeEnabled(requestSearchParams(request), 'admin')
+
+const diagnosticsModeEnabled = request =>
+  modeEnabled(requestSearchParams(request), 'diagnostics')
 
 const tileLockKey = tile => `${tile.zoom}/${tile.x}/${tile.y}`
 
@@ -145,12 +170,17 @@ const atomicWriteFile = async (filePath, data) => {
   }
 }
 
-const sendJson = (response, statusCode, data) => {
-  response.writeHead(statusCode, { 'content-type': 'application/json; charset=utf-8' })
+const sendJson = (response, statusCode, data, headers = {}) => {
+  response.writeHead(statusCode, {
+    'cache-control': 'no-store',
+    'content-type': 'application/json; charset=utf-8',
+    ...headers,
+  })
   response.end(JSON.stringify(data))
 }
 
-const sendError = (response, statusCode, message) => sendJson(response, statusCode, { error: message })
+const sendError = (response, statusCode, message) =>
+  sendJson(response, statusCode, atlasErrorPayload(message))
 
 const isPathWithin = (directory, candidate) => {
   const relativePath = path.relative(directory, candidate)
@@ -167,34 +197,8 @@ const tokensMatch = (left, right) => {
   return leftBuffer.length === rightBuffer.length && timingSafeEqual(leftBuffer, rightBuffer)
 }
 
-const getBearerToken = request => {
-  const authorization = request.headers.authorization
-  if (typeof authorization !== 'string') return null
-  const match = authorization.match(/^Bearer\s+([^\s]+)$/i)
-  return match?.[1] ?? null
-}
-
-const requireAdminAuthentication = (request, response) => {
-  if (!adminToken) {
-    sendError(response, 503, 'Atlas admin authentication is not configured.')
-    return false
-  }
-
-  if (!tokensMatch(getBearerToken(request) ?? '', adminToken)) {
-    response.setHeader('www-authenticate', 'Bearer realm="atlas-admin"')
-    sendError(response, 401, 'Atlas admin authentication is required.')
-    return false
-  }
-
-  return true
-}
-
-const getCookie = (request, name) => {
-  const cookieHeader = request.headers.cookie
-  if (typeof cookieHeader !== 'string') return null
-  const cookie = cookieHeader.split(';').find(entry => entry.trim().startsWith(`${name}=`))
-  return cookie ? cookie.trim().slice(name.length + 1) : null
-}
+const adminTokenIsValid = request =>
+  Boolean(adminToken) && tokensMatch(bearerToken(request.headers.authorization) ?? '', adminToken)
 
 const createCsrfToken = () => {
   const nonce = randomBytes(32).toString('hex')
@@ -212,7 +216,7 @@ const isValidCsrfToken = token => {
 }
 
 const ensureCsrfCookie = (request, response) => {
-  const existingToken = getCookie(request, csrfCookieName)
+  const existingToken = cookieValue(request.headers.cookie, csrfCookieName)
   if (isValidCsrfToken(existingToken)) return existingToken
 
   const token = createCsrfToken()
@@ -226,9 +230,29 @@ const ensureCsrfCookie = (request, response) => {
 
 const hasValidCsrfRequest = request => {
   const headerToken = request.headers['x-atlas-csrf-token']
-  const cookieToken = getCookie(request, csrfCookieName)
+  const cookieToken = cookieValue(request.headers.cookie, csrfCookieName)
   return typeof headerToken === 'string' && isValidCsrfToken(cookieToken) &&
     tokensMatch(headerToken, cookieToken)
+}
+
+const rejectAdminAccess = (
+  request,
+  response,
+  options: { requireOrigin?: boolean; requireCsrf?: boolean } = {},
+) => {
+  const error = adminAccessError({
+    adminMode: isAdminModeEnabled(request),
+    authenticationConfigured: Boolean(adminToken),
+    authenticated: adminTokenIsValid(request),
+    applicationRequestAllowed: applicationRequestIsAllowed(request, options.requireOrigin),
+    csrfValid: !options.requireCsrf || hasValidCsrfRequest(request),
+    requireCsrf: options.requireCsrf,
+  })
+  if (!error) return false
+  if (error.authenticate)
+    response.setHeader('www-authenticate', 'Bearer realm="atlas-admin"')
+  sendError(response, error.status, error.error)
+  return true
 }
 
 const readRequestBody = async request => {
@@ -286,39 +310,6 @@ const composeTileImage = async (sourceImage, generatedImage, safeMask, lineOverl
   return { contentType: 'image/png', data: tile }
 }
 
-const parseTileRequest = pathname => {
-  const match = pathname.match(/^\/(?:api\/atlas-tiles|generated-tiles)\/(\d+)\/(\d+)\/(\d+)\/([^/]+)$/)
-  if (!match) return null
-
-  const [, zoom, x, y, scene] = match
-  if (!atlasScenes[scene]) return null
-  const numericZoom = Number(zoom)
-  const numericX = Number(x)
-  const numericY = Number(y)
-  const tileCount = 2 ** numericZoom
-  if (numericZoom !== atlasZoom || numericX < 0 || numericY < 0 || numericX >= tileCount || numericY >= tileCount) {
-    return null
-  }
-
-  return { scene, zoom: numericZoom, x: numericX, y: numericY }
-}
-
-const parseTilePositionRequest = pathname => {
-  const match = pathname.match(/^\/api\/atlas-tiles\/cache-status\/(\d+)\/(\d+)\/(\d+)$/)
-  if (!match) return null
-
-  const [, zoom, x, y] = match
-  const numericZoom = Number(zoom)
-  const numericX = Number(x)
-  const numericY = Number(y)
-  const tileCount = 2 ** numericZoom
-  if (numericZoom !== atlasZoom || numericX < 0 || numericY < 0 || numericX >= tileCount || numericY >= tileCount) {
-    return null
-  }
-
-  return { zoom: numericZoom, x: numericX, y: numericY }
-}
-
 const tilePaths = tile => {
   return versionedTilePaths(tile, generationVersion)
 }
@@ -327,8 +318,8 @@ const versionedTilePaths = (tile, version) => {
   const directory = path.join(cacheDirectory, String(tile.zoom), String(tile.x), String(tile.y))
   return {
     directory,
-    image: path.join(directory, `${tile.scene}.v${version}.image`),
-    metadata: path.join(directory, `${tile.scene}.v${version}.json`),
+    image: path.join(directory, path.basename(atlasImageKey(tile, version))),
+    metadata: path.join(directory, path.basename(atlasMetadataKey(tile, version))),
   }
 }
 
@@ -358,18 +349,13 @@ const getCachedTile = async tile => {
 }
 const getLegacyCachedTile = tile => readCachedTile(legacyTilePaths(tile))
 const getVersionedCachedTile = async (tile, version) => {
-  if (!Number.isInteger(version) || version < 1 || version > generationVersion) return null
+  if (!isSupportedCacheVersion(version)) return null
   const cached = await readCachedTile(versionedTilePaths(tile, version))
   return cached ? { ...cached, version } : null
 }
 
-const cachedTileUrl = (tile, version = generationVersion) =>
-  `/generated-tiles/${tile.zoom}/${tile.x}/${tile.y}/${tile.scene}?version=${version}`
-
-const requestedCacheVersion = request => {
-  const value = new URL(request.url, 'http://localhost').searchParams.get('version')
-  return value === null ? null : Number(value)
-}
+const requestedCacheVersion = request =>
+  parseRequestedCacheVersion(requestSearchParams(request))
 
 const findCachedTile = async tile => {
   const cachedTiles = (await Promise.all(
@@ -407,7 +393,7 @@ const listCachedTiles = async (requestedVersion = generationVersion) => {
             if (!currentMatch) continue
             const scene = currentMatch[1]
             const version = Number(currentMatch[2])
-            if (version <= generationVersion)
+            if (isSupportedCacheVersion(version))
               versionedTiles.push({ scene, zoom: atlasZoom, x, y, version })
           }
         }
@@ -426,7 +412,7 @@ const listCachedTiles = async (requestedVersion = generationVersion) => {
       if (cached) {
         cachedTiles.add(JSON.stringify({
           ...tile,
-          url: cachedTileUrl(tile, tile.version),
+          url: atlasTileUrl(tile, tile.version),
           contentBounds: cached.contentBounds ?? null,
         }))
       }
@@ -438,17 +424,16 @@ const listCachedTiles = async (requestedVersion = generationVersion) => {
   return [...cachedTiles].map(entry => JSON.parse(entry))
 }
 
-const atlasSceneGridRadius = 4
-const atlasTileCount = 2 ** atlasZoom
+const atlasTilesAtZoom = atlasTileCount()
 
 const sceneGridPositions = position => {
   const positions = []
   for (let yOffset = -atlasSceneGridRadius; yOffset <= atlasSceneGridRadius; yOffset += 1) {
     const y = position.y + yOffset
-    if (y < 0 || y >= atlasTileCount) continue
+    if (y < 0 || y >= atlasTilesAtZoom) continue
     for (let xOffset = -atlasSceneGridRadius; xOffset <= atlasSceneGridRadius; xOffset += 1) {
       positions.push({
-        x: (position.x + xOffset + atlasTileCount) % atlasTileCount,
+        x: (position.x + xOffset + atlasTilesAtZoom) % atlasTilesAtZoom,
         y,
       })
     }
@@ -464,7 +449,7 @@ const cachedScenesInGrid = async position => {
         const match = fileName.match(/^(.+)\.v(\d+)\.json$/)
         const version = Number(match?.[2])
         const scene = match?.[1]
-        return scene && atlasScenes[scene] && readableCacheVersions.includes(version)
+        return scene && atlasScenes[scene] && isReadableCacheVersion(version)
           ? [scene]
           : []
       })
@@ -485,24 +470,7 @@ const atlasPrompt = (scene, hasSea) => {
   return `Create ${atlasScenes[scene]} across the permitted land in this complete single z18 map tile, leaving a 10% safety margin. The first image is the source map. The second image is a zoning guide: green areas are safe to transform, while red areas are locked and must remain unchanged. Use the guide as an instruction, not as artwork. Preserve the exact tile size, orientation, scale, coastline, water, roads, paths, boundaries, and labels. Treat every existing road and path as hard pixel-registered infrastructure: trace its original centerline exactly, keep every junction and curve in the same position, and do not cover it with buildings, scenery, texture, or event artwork. Do not invent, move, bend, widen, recolour, or erase any locked path or road, and do not draw road-like lines in the green areas. Do not add text, shadows, gradients, lighting, borders, frames, or tile-shaped background patches. Use a flat, planimetric, strict overhead view integrated into the existing cartography. ${atlasColourDirection} ${seaRule}`
 }
 
-const normalizeContentBounds = value => {
-  const x = Number(value?.x)
-  const y = Number(value?.y)
-  const width = Number(value?.width)
-  const height = Number(value?.height)
-  if (![x, y, width, height].every(Number.isFinite) || width <= 0 || height <= 0) return null
-
-  const left = Math.max(0, Math.min(atlasTileSize - 1, Math.floor(x)))
-  const top = Math.max(0, Math.min(atlasTileSize - 1, Math.floor(y)))
-  const right = Math.max(left + 1, Math.min(atlasTileSize, Math.ceil(x + width)))
-  const bottom = Math.max(top + 1, Math.min(atlasTileSize, Math.ceil(y + height)))
-  return { x: left, y: top, width: right - left, height: bottom - top }
-}
-
 const generateTile = async (tile, sourceImage, guideImage, safeMask, lineOverlay, contentBounds) => {
-  const cached = await findCachedTile(tile)
-  if (cached) return cached
-
   const startedAt = performance.now()
   const generatedImage = await createOpenRouterClient().editImage({
     prompt: atlasPrompt(tile.scene, tile.hasSea),
@@ -569,37 +537,27 @@ const serveCacheStatus = async (request, response, tile) => {
     findCachedTile(tile),
     cachedScenesInGrid(tile),
   ])
-  sendJson(response, 200, {
-    cached: Boolean(cached),
-    url: cached ? cachedTileUrl(cached.tile, cached.version) : null,
-    scene: cached?.tile.scene ?? null,
-    scenes,
-    contentBounds: cached?.contentBounds ?? null,
-  })
+  sendJson(
+    response,
+    200,
+    cacheStatusPayload({ cached, scenes }),
+    { 'cache-control': 'public, max-age=10, stale-while-revalidate=30' },
+  )
   return true
 }
 
-const isAllowedApplicationRequest = (request, requireOrigin = false) => {
-  const origin = request.headers.origin
-  const hostIsAllowed = request.headers.host === allowedHost ||
-    (!isProduction && /^(?:localhost|127\.0\.0\.1)(?::\d+)?$/.test(request.headers.host ?? ''))
-  const originIsAllowed = requireOrigin
-    ? isAllowedOrigin(origin)
-    : !origin || isAllowedOrigin(origin)
-  return originIsAllowed && hostIsAllowed
-}
+const applicationRequestIsAllowed = (request, requireOrigin = false) =>
+  isAllowedApplicationRequest({
+    requestHost: request.headers.host,
+    origin: request.headers.origin,
+    allowedOrigin,
+    localDevelopment: !isProduction,
+    requireOrigin,
+  })
 
 const deleteCachedTile = async (request, response, tile) => {
   if (request.method !== 'DELETE') return false
-  if (!isAdminModeEnabled) {
-    sendError(response, 403, 'Atlas admin mode is disabled.')
-    return true
-  }
-  if (!requireAdminAuthentication(request, response)) return true
-  if (!isAllowedApplicationRequest(request, true) || !hasValidCsrfRequest(request)) {
-    sendError(response, 403, 'Cache management is restricted to the configured application domain.')
-    return true
-  }
+  if (rejectAdminAccess(request, response, { requireOrigin: true, requireCsrf: true })) return true
 
   const releaseTileLock = await acquireTileLock(tile)
   try {
@@ -636,26 +594,26 @@ const serveAtlasTileRequest = async (request, response, tile) => {
     return true
   }
 
-  return generateAtlasTile(request, response, tile)
+  const rerender = new URL(request.url, 'http://localhost').searchParams.get('rerender') === 'true'
+  if (rerender) {
+    if (rejectAdminAccess(request, response, { requireOrigin: true, requireCsrf: true })) return true
+  }
+  return generateAtlasTile(request, response, tile, rerender)
 }
 
-const generateAtlasTile = async (request, response, tile) => {
+const generateAtlasTile = async (request, response, tile, force = false) => {
   if (request.method !== 'POST') return false
 
   // A client may retry generation for a tile that was generated by an earlier
   // request. Resolve that case before validating the generation request so a
   // cached tile never depends on OpenRouter configuration.
-  const cached = await findCachedTile(tile)
+  const cached = force ? null : await findCachedTile(tile)
   if (cached) {
-    sendJson(response, 200, {
-      url: cachedTileUrl(cached.tile, cached.version),
-      scene: cached.tile.scene,
-      contentBounds: cached.contentBounds ?? null,
-    })
+    sendJson(response, 200, cachedTilePayload(cached))
     return true
   }
 
-  if (!isAllowedApplicationRequest(request)) {
+  if (!applicationRequestIsAllowed(request)) {
     sendError(response, 403, 'Image generation is restricted to the configured application domain.')
     return true
   }
@@ -674,13 +632,9 @@ const generateAtlasTile = async (request, response, tile) => {
   // this position waits and then receives the newly cached result.
   const releaseTileLock = await acquireTileLock(tile)
   try {
-    const lockedCached = await findCachedTile(tile)
+    const lockedCached = force ? null : await findCachedTile(tile)
     if (lockedCached) {
-      sendJson(response, 200, {
-        url: cachedTileUrl(lockedCached.tile, lockedCached.version),
-        scene: lockedCached.tile.scene,
-        contentBounds: lockedCached.contentBounds ?? null,
-      })
+      sendJson(response, 200, cachedTilePayload(lockedCached))
       return true
     }
 
@@ -699,11 +653,12 @@ const generateAtlasTile = async (request, response, tile) => {
         lineOverlay,
         contentBounds,
       )
-      sendJson(response, 200, {
-        url: cachedTileUrl(generated.tile, generated.generationVersion),
-        scene: generated.tile.scene,
+      sendJson(response, 200, cachedTilePayload({
+        tile: generated.tile,
+        version: generated.generationVersion,
+        contentType: generated.contentType,
         contentBounds: generated.contentBounds,
-      })
+      }))
       return true
     } finally {
       reservation.release()
@@ -792,29 +747,40 @@ const server = createServer(async (request, response) => {
 
     if (request.method === 'GET' && pathname === '/api/atlas-tiles/cached') {
       response.setHeader('cache-control', 'no-store')
-      if (isAdminModeEnabled && !requireAdminAuthentication(request, response)) return
-      if (isAdminModeEnabled) ensureCsrfCookie(request, response)
-      const requestedVersion = requestedCacheVersion(request)
-      const version = Number.isInteger(requestedVersion) && requestedVersion >= 1 && requestedVersion <= generationVersion
-        ? requestedVersion
-        : generationVersion
+      const adminMode = isAdminModeEnabled(request)
+      const diagnosticsMode = diagnosticsModeEnabled(request)
+      if (!adminMode && !diagnosticsMode) {
+        sendJson(response, 200, cachedTilesPayload({
+          adminMode: false,
+          diagnosticsMode: false,
+          version: null,
+          tiles: [],
+        }))
+        return
+      }
+      if (adminMode && rejectAdminAccess(request, response)) return
+      if (adminMode) ensureCsrfCookie(request, response)
+      const version = requestedCacheVersion(request) ?? generationVersion
       const tiles = await listCachedTiles(version)
-      sendJson(response, 200, {
-        adminMode: isAdminModeEnabled,
+      sendJson(response, 200, cachedTilesPayload({
+        adminMode,
+        diagnosticsMode,
         version,
-        preRenderedCount: tiles.length,
         tiles,
-      })
+      }))
       return
     }
 
-    const tilePosition = parseTilePositionRequest(pathname)
+    const tilePosition = parseAtlasPositionPath(pathname)
     if (tilePosition) {
       await serveCacheStatus(request, response, tilePosition)
       return
     }
 
-    const tile = parseTileRequest(pathname)
+    const tile = parseAtlasTilePath(
+      pathname,
+      (scene): scene is keyof typeof atlasScenes => Boolean(atlasScenes[scene]),
+    )
 
     if (tile && pathname.startsWith('/generated-tiles/')) {
       await serveCachedTile(request, response, tile)
