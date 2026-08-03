@@ -1420,7 +1420,7 @@ const createFogCanvas = (
         titleTop + (titleLines.length - 1) * titleLineHeight + titleSize * 0.55
       const wordLimitY = titleBottom + size * 0.08
       const titleVisualCenterY = (titleTop + titleBottom) / 2
-      const wordHoldCenterY = centerY + (centerY - titleVisualCenterY)
+      const wordHoldCenterY = centerY + (centerY - titleVisualCenterY) - 32
       const questionBaseline = centerY + size * 0.22
       const quoteBaseline = centerY + size * 0.22
 
