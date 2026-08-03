@@ -657,7 +657,12 @@ const createFogMaskPath = (context, x, y, size, seed, radiusScale = 1) => {
   context.closePath()
 }
 
-const createFogCanvas = (map, tileState, isLandTargetable, cachedTileIds) => {
+const createFogCanvas = (
+  map,
+  tileState,
+  cachedTileIds,
+  isFogTileRenderable,
+) => {
   const mapDataIsReady = () =>
     map.isStyleLoaded() && map.isSourceLoaded('hongkong-latest') && map.areTilesLoaded()
   const canvas = document.createElement('canvas')
@@ -966,7 +971,8 @@ const createFogCanvas = (map, tileState, isLandTargetable, cachedTileIds) => {
     loadingContext.setTransform(ratio, 0, 0, ratio, 0, 0)
     loadingContext.clearRect(0, 0, clientWidth, clientHeight)
 
-    if (mistContext && cachedColourMaskContext) {
+    const adminMode = map.getContainer().classList.contains('atlas-admin-mode')
+    if (!adminMode && mistContext && cachedColourMaskContext) {
       const baseHue = (time / 16000 * 360) % 360
       const fieldSize = Math.max(clientWidth, clientHeight)
       mistContext.save()
@@ -1005,13 +1011,15 @@ const createFogCanvas = (map, tileState, isLandTargetable, cachedTileIds) => {
       mistContext.restore()
     }
 
-    cachedTileIds.forEach(id => {
-      const tile = tileFromId(id)
-      if (tileState.has(id) || !isFogged(tile)) return
-      drawCachedFogMask(tile, time)
-    })
+    if (!adminMode) {
+      cachedTileIds.forEach(id => {
+        const tile = tileFromId(id)
+        if (tileState.has(id) || !isFogged(tile)) return
+        drawCachedFogMask(tile, time)
+      })
+    }
 
-    if (mistContext && cachedColourMaskContext) {
+    if (!adminMode && mistContext && cachedColourMaskContext) {
       mistContext.save()
       mistContext.globalCompositeOperation = 'destination-in'
       mistContext.globalAlpha = 1
@@ -1345,7 +1353,7 @@ const createFogCanvas = (map, tileState, isLandTargetable, cachedTileIds) => {
       if (state !== 'checking' && state !== 'generating' && state !== 'revealing') {
         pokedAt.delete(id)
       }
-      if (isLandTargetable(tile) && isFogged(tile) && state !== 'generated') {
+      if (isFogTileRenderable(tile) && isFogged(tile) && state !== 'generated') {
         drawFogMask(tile, state, animationTime)
       }
       if (state === 'revealing' || state === 'generated') {
@@ -1508,8 +1516,19 @@ export const installAtlasTileInteractions = map => {
     return landTargetState.get(id)
   }
 
+  // Only fully visible tiles can be classified from rendered features and
+  // interacted with. The fog itself needs a one-tile lead around the viewport,
+  // though, so partial and buffered tiles still render their cloud body.
+  const isFogTileRenderable = tile =>
+    !isFullyVisible(map, tile) || isLandTargetable(tile)
+
   const cachedTileIds = new Set()
-  const fog = createFogCanvas(map, tileState, isLandTargetable, cachedTileIds)
+  const fog = createFogCanvas(
+    map,
+    tileState,
+    cachedTileIds,
+    isFogTileRenderable,
+  )
   const revealGeneratedTile = (id, countsAgainstQuota = true) => {
     tileState.set(id, 'revealing')
     revealedTileIds.add(id)
