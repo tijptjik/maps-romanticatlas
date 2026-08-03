@@ -258,6 +258,29 @@ const listCachedTiles = async (bucket: R2Bucket, requested: number | null = null
   }))
 }
 
+const atlasSceneGridRadius = 4
+const atlasTileCount = 2 ** atlasZoom
+
+const wrappedTileDistance = (left: number, right: number) => {
+  const distance = Math.abs(left - right)
+  return Math.min(distance, atlasTileCount - distance)
+}
+
+const cachedScenesInGrid = async (
+  bucket: R2Bucket,
+  position: Omit<Tile, 'scene'>,
+) => {
+  const cached = await listCachedTiles(bucket)
+  return [...new Set(
+    cached
+      .filter(tile =>
+        wrappedTileDistance(tile.x, position.x) <= atlasSceneGridRadius &&
+        Math.abs(tile.y - position.y) <= atlasSceneGridRadius,
+      )
+      .map(tile => tile.scene),
+  )]
+}
+
 const imageDataUrl = /^data:(image\/(?:png|jpe?g));base64,([A-Za-z0-9+/=]+)$/
 
 const decodeDataUrl = (value: unknown, label: string) => {
@@ -547,11 +570,15 @@ const generateTile = async (request: Request, env: Env, tile: Tile) => {
 }
 
 const serveCacheStatus = async (env: AtlasEnv, position: Omit<Tile, 'scene'>) => {
-  const cached = await findCachedTile(env.ATLAS_BUCKET, position)
+  const [cached, scenes] = await Promise.all([
+    findCachedTile(env.ATLAS_BUCKET, position),
+    cachedScenesInGrid(env.ATLAS_BUCKET, position),
+  ])
   return json({
     cached: Boolean(cached),
     url: cached ? tileUrl(cached.tile, cached.version) : null,
     scene: cached?.tile.scene ?? null,
+    scenes,
     contentBounds: cached?.contentBounds ?? null,
   })
 }

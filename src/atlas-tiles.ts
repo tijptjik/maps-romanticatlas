@@ -1,4 +1,4 @@
-import { atlasSeaScenes, atlasSceneNames } from './atlas-scenes.ts'
+import { atlasSceneNames, pickAtlasScene, type AtlasScene } from './atlas-scenes.ts'
 import { createAtlasTitleCard, positionAtlasTitleCard } from './atlas-title-cards.ts'
 import { loadingConcepts } from './loading-concepts.ts'
 import { atlasZoom, tileBounds, tileForPosition } from './tile-geometry.ts'
@@ -1349,13 +1349,24 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
           `The atlas-tile cache lookup failed with HTTP ${response.status}.`,
       )
     }
-    if (body?.cached !== true) return null
+    const scenes = Array.isArray(body?.scenes)
+      ? body.scenes.filter((scene): scene is AtlasScene =>
+          typeof scene === 'string' && atlasSceneNames.includes(scene as AtlasScene),
+        )
+      : []
+    if (body?.cached !== true) return { cached: false, scenes }
     if (typeof body.url !== 'string' || !body.url || typeof body.scene !== 'string') {
       throw new Error(
         'The atlas-tile cache lookup returned an invalid cached image URL.',
       )
     }
-    return { url: body.url, scene: body.scene, contentBounds: body.contentBounds }
+    return {
+      cached: true,
+      url: body.url,
+      scene: body.scene,
+      scenes,
+      contentBounds: body.contentBounds,
+    }
   }
 
   map.on('mousemove', event => {
@@ -1397,15 +1408,15 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
     const startedAt = performance.now()
     let rateLimited = false
     try {
-      const cachedUrl = await checkCachedTile(tile)
-      if (cachedUrl) {
+      const cacheStatus = await checkCachedTile(tile)
+      if (cacheStatus.cached) {
         await addGeneratedTile(
           map,
           tile,
-          cachedUrl.url,
-          cachedUrl.scene,
+          cacheStatus.url,
+          cacheStatus.scene,
           titleCards,
-          cachedUrl.contentBounds,
+          cacheStatus.contentBounds,
         )
         revealGeneratedTile(id, false)
         console.info(
@@ -1436,10 +1447,7 @@ export const installAtlasTileInteractions = (map, maplibregl) => {
       const capturedTile = await captureTile(map, tile)
       const capturedAt = performance.now()
       const hasSea = tileHasSea(map, tile)
-      const availableScenes = hasSea
-        ? atlasSceneNames
-        : atlasSceneNames.filter(scene => !atlasSeaScenes.has(scene))
-      const scene = availableScenes[Math.floor(Math.random() * availableScenes.length)]
+      const scene = pickAtlasScene(hasSea, cacheStatus.scenes)
       const response = await fetch(
         `/api/atlas-tiles/${atlasZoom}/${tile.x}/${tile.y}/${scene}`,
         {
