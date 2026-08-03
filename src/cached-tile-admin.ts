@@ -310,6 +310,9 @@ export const installCachedTileAdmin = async map => {
       const tileRight = Math.min(canvas.clientWidth - 8, southEast.x)
       const tileTop = Math.max(8, northWest.y)
       const tileBottom = Math.min(canvas.clientHeight - 8, southEast.y)
+      const tileWidth = Math.abs(southEast.x - northWest.x)
+      const maxActionBarWidth = Math.max(1, tileWidth * 0.82)
+      actionBar.style.maxWidth = `${maxActionBarWidth}px`
       const barWidth = actionBar.offsetWidth
       const barHeight = actionBar.offsetHeight
       const tileCenter = (tileLeft + tileRight) / 2

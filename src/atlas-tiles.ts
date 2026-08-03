@@ -657,13 +657,21 @@ const createFogMaskPath = (context, x, y, size, seed, radiusScale = 1) => {
   context.closePath()
 }
 
-const createFogCanvas = (map, tileState, isLandTargetable) => {
+const createFogCanvas = (map, tileState, isLandTargetable, cachedTileIds) => {
   const mapDataIsReady = () =>
     map.isStyleLoaded() && map.isSourceLoaded('hongkong-latest') && map.areTilesLoaded()
   const canvas = document.createElement('canvas')
   canvas.className = 'atlas-fog'
   canvas.setAttribute('aria-hidden', 'true')
   map.getContainer().append(canvas)
+
+  const mistCanvas = document.createElement('canvas')
+  mistCanvas.className = 'atlas-fog-cached-mist'
+  mistCanvas.setAttribute('aria-hidden', 'true')
+  map.getContainer().append(mistCanvas)
+  const mistContext = mistCanvas.getContext('2d')
+  const cachedColourMaskCanvas = document.createElement('canvas')
+  const cachedColourMaskContext = cachedColourMaskCanvas.getContext('2d')
 
   const loadingCanvas = document.createElement('canvas')
   loadingCanvas.className = 'atlas-fog-loading'
@@ -740,12 +748,18 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
     if (canvas.width !== renderWidth || canvas.height !== renderHeight) {
       canvas.width = renderWidth
       canvas.height = renderHeight
+      mistCanvas.width = renderWidth
+      mistCanvas.height = renderHeight
+      cachedColourMaskCanvas.width = renderWidth
+      cachedColourMaskCanvas.height = renderHeight
       loadingCanvas.width = renderWidth
       loadingCanvas.height = renderHeight
       if (gl) gl.viewport(0, 0, renderWidth, renderHeight)
     }
     canvas.style.width = `${clientWidth}px`
     canvas.style.height = `${clientHeight}px`
+    mistCanvas.style.width = `${clientWidth}px`
+    mistCanvas.style.height = `${clientHeight}px`
     loadingCanvas.style.width = `${clientWidth}px`
     loadingCanvas.style.height = `${clientHeight}px`
 
@@ -919,11 +933,92 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
     }
   }
 
+  const drawCachedFogMask = (tile, time) => {
+    if (!cachedColourMaskContext) return
+    const bounds = tileBounds(tile)
+    const northWest = map.project([bounds.west, bounds.north])
+    const southEast = map.project([bounds.east, bounds.south])
+    const size = Math.min(southEast.x - northWest.x, southEast.y - northWest.y)
+    const visible =
+      southEast.x >= 0 &&
+      southEast.y >= 0 &&
+      northWest.x <= clientWidth &&
+      northWest.y <= clientHeight
+    if (!visible || size <= 0) return
+
+    const seed = tile.x * 0.47 + tile.y * 0.91
+    cachedColourMaskContext.save()
+    cachedColourMaskContext.globalAlpha = 0.9
+    cachedColourMaskContext.filter = `blur(${Math.max(4, size * 0.05)}px)`
+    cachedColourMaskContext.fillStyle = '#ffffff'
+    createFogMaskPath(cachedColourMaskContext, northWest.x, northWest.y, size, seed)
+    cachedColourMaskContext.fill()
+    cachedColourMaskContext.restore()
+  }
+
   const drawLoadingText = time => {
     if (!loadingContext) return
     const ratio = canvas.width / Math.max(1, clientWidth)
+    mistContext?.setTransform(ratio, 0, 0, ratio, 0, 0)
+    mistContext?.clearRect(0, 0, clientWidth, clientHeight)
+    cachedColourMaskContext?.setTransform(ratio, 0, 0, ratio, 0, 0)
+    cachedColourMaskContext?.clearRect(0, 0, clientWidth, clientHeight)
     loadingContext.setTransform(ratio, 0, 0, ratio, 0, 0)
     loadingContext.clearRect(0, 0, clientWidth, clientHeight)
+
+    if (mistContext && cachedColourMaskContext) {
+      const baseHue = (time / 16000 * 360) % 360
+      const fieldSize = Math.max(clientWidth, clientHeight)
+      mistContext.save()
+      mistContext.filter = `blur(${Math.max(4, fieldSize * 0.012)}px)`
+      for (let index = 0; index < 5; index += 1) {
+        const phase = time / 5200 + index * 1.7
+        const centerX = clientWidth * (0.5 + Math.cos(phase) * 0.38)
+        const centerY = clientHeight * (0.5 + Math.sin(phase * 0.83) * 0.38)
+        const radius = fieldSize * (0.52 + Math.sin(phase * 0.7) * 0.04)
+        const hue = (baseHue + index * 72) % 360
+        const gradient = mistContext.createRadialGradient(
+          centerX,
+          centerY,
+          0,
+          centerX,
+          centerY,
+          radius,
+        )
+        gradient.addColorStop(0, `hsla(${hue}, 86%, 68%, 0.28)`)
+        gradient.addColorStop(0.5, `hsla(${hue}, 80%, 70%, 0.17)`)
+        gradient.addColorStop(1, 'rgba(255, 255, 255, 0)')
+        mistContext.globalAlpha = 1
+        mistContext.fillStyle = gradient
+        mistContext.beginPath()
+        mistContext.ellipse(
+          centerX,
+          centerY,
+          radius * 1.35,
+          radius,
+          phase * 0.15,
+          0,
+          Math.PI * 2,
+        )
+        mistContext.fill()
+      }
+      mistContext.restore()
+    }
+
+    cachedTileIds.forEach(id => {
+      const tile = tileFromId(id)
+      if (tileState.has(id) || !isFogged(tile)) return
+      drawCachedFogMask(tile, time)
+    })
+
+    if (mistContext && cachedColourMaskContext) {
+      mistContext.save()
+      mistContext.globalCompositeOperation = 'destination-in'
+      mistContext.globalAlpha = 1
+      mistContext.drawImage(cachedColourMaskCanvas, 0, 0)
+      mistContext.restore()
+    }
+
     tileState.forEach((state, id) => {
       // Start the loading title as soon as a tile is clicked. Cache lookup is
       // asynchronous too, so waiting for `generating` made the title appear
@@ -1379,6 +1474,7 @@ const createFogCanvas = (map, tileState, isLandTargetable) => {
       revealStartedAt.clear()
       pokedAt.clear()
       canvas.remove()
+      mistCanvas.remove()
       loadingCanvas.remove()
     },
   }
@@ -1412,7 +1508,8 @@ export const installAtlasTileInteractions = map => {
     return landTargetState.get(id)
   }
 
-  const fog = createFogCanvas(map, tileState, isLandTargetable)
+  const cachedTileIds = new Set()
+  const fog = createFogCanvas(map, tileState, isLandTargetable, cachedTileIds)
   const revealGeneratedTile = (id, countsAgainstQuota = true) => {
     tileState.set(id, 'revealing')
     revealedTileIds.add(id)
@@ -1538,7 +1635,11 @@ export const installAtlasTileInteractions = map => {
 
     const request = checkCachedTile(tile)
       .then(async status => {
-        if (!status.cached) return status
+        if (!status.cached) {
+          cachedTileIds.delete(id)
+          return status
+        }
+        cachedTileIds.add(id)
         return {
           ...status,
           // Do the decode and edge fade while the tile is merely visible. The
@@ -1547,6 +1648,7 @@ export const installAtlasTileInteractions = map => {
         }
       })
       .catch(error => {
+        cachedTileIds.delete(id)
         if (preloadedTileRequests.get(id) === request) preloadedTileRequests.delete(id)
         throw error
       })
@@ -1558,13 +1660,9 @@ export const installAtlasTileInteractions = map => {
     if (map.getZoom() < minimumFogZoom || !mapDataIsReady()) return
     visibleFogTiles(map).forEach(tile => {
       const id = tileId(tile)
-      if (
-        tileState.has(id) ||
-        !isFullyVisible(map, tile) ||
-        !isLandTargetable(tile) ||
-        !isFogged(tile)
-      )
-        return
+      // visibleFogTiles() includes a one-tile buffer around the viewport, so
+      // cached images can be decoded before their fog body reaches the edge.
+      if (tileState.has(id) || !isFogged(tile)) return
       // A miss is cached too, so moving the map does not repeatedly ask the
       // server about the same visible tile during one visit.
       preloadCachedTile(tile).catch(() => {})
