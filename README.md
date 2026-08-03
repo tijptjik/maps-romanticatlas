@@ -52,20 +52,21 @@ Open the local URL printed by the server (use `http://localhost:5173`).
 
 ## Commands
 
-| Command                         | Purpose                                                                                              |
-| ------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `bun run dev`                   | Start the local Vite-backed server.                                                                  |
-| `bun run dev:remote`            | Run the Worker locally with the configured remote R2 buckets.                                        |
-| `bun run build`                 | Build the browser bundle into `dist/`.                                                               |
-| `bun run preview`               | Serve the existing `dist/` build through the production-mode Node server. Run `bun run build` first. |
-| `bun run deploy`                | Build and deploy the static asset Worker with Wrangler.                                              |
-| `bun run typecheck`             | Run TypeScript checking without emitting files.                                                      |
-| `bun run lint`                  | Run Biome linting.                                                                                   |
-| `bun run format`                | Format source files and Markdown.                                                                    |
-| `bun run format:markdown:check` | Check Markdown formatting.                                                                           |
-| `bun run generate:paper`        | Generate `public/romantic-paper-texture.png` through OpenRouter.                                     |
-| `bun run sync:tiles`            | Upload local generated tile images and metadata to the configured R2 bucket.                         |
-| `bun run backfill:manifest`     | Index existing production atlas assets after deploying the manifest migration.                       |
+| Command                         | Purpose                                                                                                      |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `bun run dev`                   | Start the local Vite-backed server.                                                                          |
+| `bun run dev:remote`            | Run the Worker locally with the configured remote R2 buckets.                                                |
+| `bun run build`                 | Build the browser bundle into `dist/`.                                                                       |
+| `bun run preview`               | Serve the existing `dist/` build through the production-mode Node server. Run `bun run build` first.         |
+| `bun run deploy`                | Build and deploy the static asset Worker with Wrangler.                                                      |
+| `bun run typecheck`             | Run TypeScript checking without emitting files.                                                              |
+| `bun run lint`                  | Run Biome linting.                                                                                           |
+| `bun run format`                | Format source files and Markdown.                                                                            |
+| `bun run format:markdown:check` | Check Markdown formatting.                                                                                   |
+| `bun run generate:paper`        | Generate `public/romantic-paper-texture.png` through OpenRouter.                                             |
+| `bun run generate:audio`        | Render scene cues and clip the recorded CC0 excerpts in `public/atlas-audio/`; see `THIRD_PARTY_NOTICES.md`. |
+| `bun run sync:tiles`            | Upload local generated tile images and metadata to the configured R2 bucket.                                 |
+| `bun run backfill:manifest`     | Index existing production atlas assets after deploying the manifest migration.                               |
 
 ## Production build and deployment
 
@@ -79,6 +80,15 @@ Deploy the built app and Worker with:
 ```sh
 bun run deploy
 ```
+
+To enable visitor map sharing, make the existing `maps-romanticatlas-assets` bucket
+public through an R2 custom domain (or its `r2.dev` public-development URL), then set
+`ATLAS_SHARE_ASSET_ORIGIN` to that origin with no path, query string, or trailing asset
+name. For this deployment, use `https://romanticassets.hype.hk`. The app writes each
+1080×1350 PNG to `shared-maps/` in that bucket and the QR code contains the direct R2
+asset URL only; it never contains the application URL. Set the value in the deployed
+Worker environment (for example, `wrangler secret put ATLAS_SHARE_ASSET_ORIGIN`) before
+deploying the sharing feature.
 
 `bun run deploy` deploys `src/worker.ts` and the `dist/` directory to Cloudflare. The
 Worker serves the browser assets and the production atlas API. On-demand image
@@ -110,6 +120,7 @@ git-ignored `.dev.vars` file with the local Worker secrets, then run
 ```sh
 OPENROUTER_API_KEY=your-openrouter-api-key
 ATLAS_ADMIN_TOKEN=replace-with-a-long-random-admin-token
+ATLAS_SHARE_ASSET_ORIGIN=https://romanticassets.hype.hk
 ```
 
 This executes the atlas API locally and sends only R2 operations to the remote bucket;
@@ -119,9 +130,14 @@ because Cloudflare does not support remote Durable Object bindings in local deve
 Tiles generated during the session are written to remote R2 and are immediately usable;
 pre-existing remote tiles can still be fetched by their known image URL, but are not
 included in local manifest lookups until they are encountered or regenerated. Add
-`?admin=true` for cache administration, `?diagnostics=true` for tile outlines, and
-`&version=3` to replay an older cache version. To copy the existing local cache to R2,
-run `bun run sync:tiles`.
+`?admin=true` for cache administration, `?diagnostics=true` for tile outlines,
+`?noNoise=true` for smooth fog without the animated cloud noise, and `&version=3` to
+replay an older cache version. To copy the existing local cache to R2, run
+`bun run sync:tiles`.
+
+For an on-phone QR test, use `bun run dev:remote` with the public R2 origin above. The
+local Worker uploads the image to the remote bucket, so the scanned QR opens the direct
+R2 image on the phone; the phone does not need access to `localhost`.
 
 The map opens with a Victorian-circus-style introduction. Click or press a key to enter
 the atlas, or open the Cartographer's Note for the artist statement. Press Ctrl+M at any
@@ -129,16 +145,24 @@ time to return to the introduction. After 3 minutes without activity, locally re
 tiles fade back into the fog, the view returns to its starting position, and the
 introduction animates in again. A small in-browser theme begins after the first visitor
 gesture; the volume control at bottom left mutes it. Successfully revealed tiles add a
-short filtered wind swell and chime.
+short filtered wind swell and a scene-specific sound cue. The synthesized chime remains
+as a fallback while a cue loads or when playback is unsupported.
+
+After five revealed tiles, visitors can choose **Share your map**. The centred 4:5
+portrait frame shows exactly what will be exported, with all controls omitted. They can
+pan and zoom to compose it, tap the camera-obscura shutter, then scan the resulting QR
+code on their phone to open the image directly and post it to Instagram. **Retake**
+returns to the framing view and creates a fresh image and QR code.
 
 ## On-demand romantic atlas tiles
 
 On the local development server and the production Worker, the map is restricted to zoom
 levels 16.5–18.5. At that available zoom range, a drifting fog descends over a
 deterministic half of the fully visible z18 tiles that are at least 75% land. Each fog
-form spills into neighboring gaps and is rendered from a cached mask plus a low-cost
-WebGL noise shader, so the pattern reads as overlapping mist rather than an alternating
-grid.
+form spills into neighboring gaps and is rendered from a cached mask plus a WebGL noise
+shader, so the pattern reads as overlapping mist rather than an alternating grid. The
+shader uses its full detail below zoom 17, one veil from zoom 17 through just under 18,
+and a smooth fog mask at zoom 18 and above.
 
 Click a fully visible fogged land tile to create a strictly top-down cartographic event
 tile from the rendered map. The selected tile gets a “LOOKING UP THIS TILE” treatment
@@ -193,6 +217,8 @@ The supported environment variables are:
   `openai/gpt-5.4-image-2`.
 - `ATLAS_ALLOWED_ORIGIN`: optional application origin for server API checks; defaults to
   `https://romanticatlas.hype.hk`.
+- `ATLAS_SHARE_ASSET_ORIGIN`: required in production for map sharing; the HTTPS public
+  R2 origin that serves the `maps-romanticatlas-assets` bucket directly.
 - `?admin=true`: enables the cache manifest, image cycling, rerendering, and deletion UI
   in either local or production mode. The admin listing includes every retained image
   version by default; add `?version=1` through `?version=5` to inspect one version.

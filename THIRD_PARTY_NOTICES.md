@@ -1,0 +1,69 @@
+# Third-party audio notices
+
+Every scene cue is a 2.35-second excerpt from public-domain material. Freesound
+recordings are published under the
+[CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/) dedication; the
+NASA recording is United States government public-domain material. The local Ogg files
+are clipped and transcoded versions of the linked source recordings.
+
+| Local cue                                          | Source recording                                                                                                      | Creator              | Licence              |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | -------------------- | -------------------- |
+| `public/atlas-audio/circus.ogg`                    | [circus-normal.wav](https://freesound.org/people/balloonhead/sounds/448105/)                                          | balloonhead          | CC0 1.0              |
+| `public/atlas-audio/balloon-festival.ogg`          | [gas vuur dakwerken gasbrander luchtballon.wav](https://freesound.org/people/NickPeeters/sounds/243763/)              | NickPeeters          | CC0 1.0              |
+| `public/atlas-audio/art-nouveau-palace.ogg`        | [Museum Gallery, Children in Other Room](https://freesound.org/people/ecfike/sounds/478368/)                          | ecfike               | CC0 1.0              |
+| `public/atlas-audio/ironworks.ogg`                 | [Metallic_Clanking.mp3](https://freesound.org/people/Ntar10/sounds/565602/)                                           | Ntar10               | CC0 1.0              |
+| `public/atlas-audio/steam-railway.ogg`             | [Train Passing By with Bells, Horn, Screeching, Steam](https://freesound.org/people/FunWithSound/sounds/593088/)      | FunWithSound         | CC0 1.0              |
+| `public/atlas-audio/suspension-bridge.ogg`         | [INDUSTRY CONSTRUCTION SITE 01.wav](https://freesound.org/people/sengjinn/sounds/193351/)                             | sengjinn             | CC0 1.0              |
+| `public/atlas-audio/canal-lock.ogg`                | [WATRFlow Outdoor, Canal, Lock, Filling Water](https://freesound.org/people/JW_Audio/sounds/829021/)                  | JW_Audio             | CC0 1.0              |
+| `public/atlas-audio/lighthouse.ogg`                | [Foggy morning at Weston Shore](https://freesound.org/people/richwise/sounds/477643/)                                 | richwise             | CC0 1.0              |
+| `public/atlas-audio/textile-mill.ogg`              | [navette de métier à tisser.wav](https://freesound.org/people/Na%C3%AFma/sounds/510266/)                              | Naïma                | CC0 1.0              |
+| `public/atlas-audio/luddite-rally.ogg`             | [Protest cortege with crowd and percussion fanfare](https://freesound.org/people/Mathias.Arrignon/sounds/686012/)     | Mathias.Arrignon     | CC0 1.0              |
+| `public/atlas-audio/printworks.ogg`                | [printing press machine start running slow and fast](https://freesound.org/people/kyles/sounds/405009/)               | kyles                | CC0 1.0              |
+| `public/atlas-audio/shipyard.ogg`                  | [Shipyard Construction Ambience – Saint-Nazaire](https://freesound.org/people/WattnotSounds/sounds/831634/)           | WattnotSounds        | CC0 1.0              |
+| `public/atlas-audio/telegraph-office.ogg`          | [AGUILLON Anastasia MorseCode.wav](https://freesound.org/people/univ_lyon3/sounds/443014/)                            | univ_lyon3           | CC0 1.0              |
+| `public/atlas-audio/photography-studio.ogg`        | [Yunon YN500 Camera Shutter](https://freesound.org/people/yfjesse/sounds/579884/)                                     | yfjesse              | CC0 1.0              |
+| `public/atlas-audio/mechanical-theatre.ogg`        | [Clockwork Timer 01](https://freesound.org/people/apintofmild/sounds/641577/)                                         | apintofmild          | CC0 1.0              |
+| `public/atlas-audio/automata.ogg`                  | [Mechanical alarm clock is ticking (SLAVA).wav](https://freesound.org/people/ST303/sounds/171043/)                    | ST303                | CC0 1.0              |
+| `public/atlas-audio/anatomical-museum.ogg`         | [Suburban hospital ambience - Moscow region](https://freesound.org/people/gladkiy/sounds/348110/)                     | gladkiy              | CC0 1.0              |
+| `public/atlas-audio/mesmerist-salon.ogg`           | [elderly_meeting.wav](https://freesound.org/people/cormi/sounds/143904/)                                              | cormi                | CC0 1.0              |
+| `public/atlas-audio/hall-of-mirrors.ogg`           | [Sports Hall Ambience, Walla](https://freesound.org/people/Kinoton/sounds/506454/)                                    | Kinoton              | CC0 1.0              |
+| `public/atlas-audio/botanical-laboratory.ogg`      | [Rain Falling On The Greenhouse](https://freesound.org/people/WhiteNoiseSleeper/sounds/725603/)                       | WhiteNoiseSleeper    | CC0 1.0              |
+| `public/atlas-audio/electrical-laboratory.ogg`     | [Electricity, Arcs, Sparks, long](https://freesound.org/people/julianmateo_/sounds/522690/)                           | julianmateo_         | CC0 1.0              |
+| `public/atlas-audio/observatory.ogg`               | [Astronomy Instrument - Rattle](https://freesound.org/people/Vrymaa/sounds/785121/)                                   | Vrymaa               | CC0 1.0              |
+| `public/atlas-audio/weather-station.ogg`           | [Rain with thunder.wav](https://freesound.org/people/Techienanna/sounds/400988/)                                      | Techienanna          | CC0 1.0              |
+| `public/atlas-audio/orrery-hall.ogg`               | [OLOMUC Astronomical Clock Olomuc main square at noon.wav](https://freesound.org/people/SoundEnsemble/sounds/550851/) | SoundEnsemble        | CC0 1.0              |
+| `public/atlas-audio/analytical-engine.ogg`         | [Rail Grinding Machine with Rythmic Clang Berlin Night](https://freesound.org/people/giuliorasi/sounds/812360/)       | giuliorasi           | CC0 1.0              |
+| `public/atlas-audio/utopian-garden.ogg`            | [garden afternoon light birds crickets fountain water](https://freesound.org/people/kyles/sounds/637582/)             | kyles                | CC0 1.0              |
+| `public/atlas-audio/theme-park.ogg`                | [Theme Park Terra Mittica Benidorm.WAV](https://freesound.org/people/sapjjr/sounds/269246/)                           | sapjjr               | CC0 1.0              |
+| `public/atlas-audio/zoo.ogg`                       | [Big Lion Roar](https://freesound.org/people/_justMonke_/sounds/611721/)                                              | _justMonke_          | CC0 1.0              |
+| `public/atlas-audio/rocket-launch.ogg`             | [Rocket launch](https://freesound.org/people/Sanderboah/sounds/803852/)                                               | Sanderboah           | CC0 1.0              |
+| `public/atlas-audio/raver-arena.ogg`               | [Dj Club Crowd Party Atmo Peoples Reverb DeeJay Dance Mix](https://freesound.org/people/szegvari/sounds/607876/)      | szegvari             | CC0 1.0              |
+| `public/atlas-audio/ferris-wheel.ogg`              | [carousel_brighton.wav](https://freesound.org/people/OneTwo_BER/sounds/474195/)                                       | OneTwo_BER           | CC0 1.0              |
+| `public/atlas-audio/aquarium.ogg`                  | [toy_bubbling_underwater.flac](https://freesound.org/people/wjoojoo/sounds/199538/)                                   | wjoojoo              | CC0 1.0              |
+| `public/atlas-audio/water-park.ogg`                | [Borneo rain forest ambience near a water stream](https://freesound.org/people/gladkiy/sounds/333223/)                | gladkiy              | CC0 1.0              |
+| `public/atlas-audio/race-circuit.ogg`              | [Racing Car Roar.wav](https://freesound.org/people/jumpbug99/sounds/701101/)                                          | jumpbug99            | CC0 1.0              |
+| `public/atlas-audio/medieval-castle.ogg`           | [Hawk crows Headingley castle joust.wav](https://freesound.org/people/Cheeseheadburger/sounds/244519/)                | Cheeseheadburger     | CC0 1.0              |
+| `public/atlas-audio/pirate-harbour.ogg`            | [pirate Arr! 2](https://freesound.org/people/JD_Brick_Productions/sounds/476325/)                                     | JD_Brick_Productions | CC0 1.0              |
+| `public/atlas-audio/dinosaur-park.ogg`             | [dinosaur roar 1](https://freesound.org/people/Logicogonist/sounds/810951/)                                           | Logicogonist         | CC0 1.0              |
+| `public/atlas-audio/film-backlot.ogg`              | [Film Projector - Long Run with Finish](https://freesound.org/people/Stefan021/sounds/412145/)                        | Stefan021            | CC0 1.0              |
+| `public/atlas-audio/ancient-temple.ogg`            | [Bell at Daitokuji temple, Kyoto.wav](https://freesound.org/people/nahmandub/sounds/131348/)                          | nahmandub            | CC0 1.0              |
+| `public/atlas-audio/japanese-garden.ogg`           | [water-spout-japanese-garden-botanical-gardens.wav](https://freesound.org/people/keithpeter/sounds/107226/)           | keithpeter           | CC0 1.0              |
+| `public/atlas-audio/maze-garden.ogg`               | [Denver Botanic Gardens eveningtime insects](https://freesound.org/people/chromakei/sounds/399865/)                   | chromakei            | CC0 1.0              |
+| `public/atlas-audio/floating-market.ogg`           | [fishermen busy pier near fish market shouting voices](https://freesound.org/people/kyles/sounds/451392/)             | kyles                | CC0 1.0              |
+| `public/atlas-audio/spaceport.ogg`                 | [Space Ambience.wav](https://freesound.org/people/Sonicfreak/sounds/174450/)                                          | Sonicfreak           | CC0 1.0              |
+| `public/atlas-audio/solar-farm.ogg`                | [electric crackle buzz high tension powerline hydro dam](https://freesound.org/people/kyles/sounds/637511/)           | kyles                | CC0 1.0              |
+| `public/atlas-audio/wind-farm.ogg`                 | [wind_turbine](https://freesound.org/people/nicola_ariutti/sounds/648493/)                                            | nicola_ariutti       | CC0 1.0              |
+| `public/atlas-audio/lunar-outpost.ogg`             | [One Small Step](https://commons.wikimedia.org/wiki/File:One_Small_Step_-_NASA.webm)                                  | NASA                 | Public domain (NASA) |
+| `public/atlas-audio/volcano-observatory.ogg`       | [earth rumble.wav](https://freesound.org/people/Reitanna/sounds/217657/)                                              | Reitanna             | CC0 1.0              |
+| `public/atlas-audio/grand-exhibition.ogg`          | [Voices - Biennale Exhibition Venice 2025](https://freesound.org/people/bassimat/sounds/842242/)                      | bassimat             | CC0 1.0              |
+| `public/atlas-audio/market-quarter.ogg`            | [2022-11-12-binaural-london-market-ambience.wav](https://freesound.org/people/ilmari_freesound/sounds/659634/)        | ilmari_freesound     | CC0 1.0              |
+| `public/atlas-audio/steampunk-city.ogg`            | [industrial steam pipes hiss hum](https://freesound.org/people/kyles/sounds/453462/)                                  | kyles                | CC0 1.0              |
+| `public/atlas-audio/civic-centre.ogg`              | [Argument.wav](https://freesound.org/people/Ambientsoundapp/sounds/537989/)                                           | Ambientsoundapp      | CC0 1.0              |
+| `public/atlas-audio/worlds-fair.ogg`               | [DELHI ATMO World Book Fair inside indoor crowd](https://freesound.org/people/SoundEnsemble/sounds/516660/)           | SoundEnsemble        | CC0 1.0              |
+| `public/atlas-audio/floating-city.ogg`             | [City river ambience 2 (chatter)](https://freesound.org/people/peridactyloptrix/sounds/194437/)                       | peridactyloptrix     | CC0 1.0              |
+| `public/atlas-audio/arcology.ogg`                  | [Blade Runner ambient 03 - vehicles outside the streets](https://freesound.org/people/Simonus18/sounds/727078/)       | Simonus18            | CC0 1.0              |
+| `public/atlas-audio/robot-factory.ogg`             | [Robot / Mech movement](https://freesound.org/people/Breviceps/sounds/505670/)                                        | Breviceps            | CC0 1.0              |
+| `public/atlas-audio/festival-city.ogg`             | [Ganpati street festival large exterior crowd](https://freesound.org/people/kyles/sounds/451445/)                     | kyles                | CC0 1.0              |
+| `public/atlas-audio/giant-fairground.ogg`          | [Fairground Ambience](https://freesound.org/people/HECKFRICKER/sounds/635159/)                                        | HECKFRICKER          | CC0 1.0              |
+| `public/atlas-audio/botanical-city.ogg`            | [Singapore Botanic Gardens - Ambiance](https://freesound.org/people/nyoz/sounds/426570/)                              | nyoz                 | CC0 1.0              |
+| `public/atlas-audio/archaeological-excavation.ogg` | [digging dirt ground and dried leaves with metal spades](https://freesound.org/people/kyles/sounds/451001/)           | kyles                | CC0 1.0              |

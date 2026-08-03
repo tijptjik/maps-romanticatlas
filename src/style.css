@@ -57,7 +57,7 @@ body {
     linear-gradient(105deg, rgba(32, 20, 24, 0.92), rgba(84, 29, 35, 0.88) 48%, rgba(29, 23, 31, 0.94));
   opacity: 0;
   pointer-events: none;
-  transition: opacity 650ms ease;
+  transition: opacity 650ms ease, transform 700ms cubic-bezier(0.48, 0, 0.2, 1);
 }
 
 .atlas-intro.is-visible {
@@ -67,8 +67,26 @@ body {
 }
 
 .atlas-intro.is-exiting {
+  /* Lift the entire proscenium away so the map is uncovered from the bottom up. */
+  opacity: 1;
+  pointer-events: none;
+  transform: translateY(-100%);
+}
+
+/* Keep a dismissed splash above the viewport. Without this resting state,
+   removing .is-exiting transitions the splash back into view as it fades out. */
+.atlas-intro.is-dismissed {
   opacity: 0;
   pointer-events: none;
+  transform: translateY(-100%);
+  transition: none;
+}
+
+.atlas-intro.is-resetting {
+  opacity: 0;
+  pointer-events: none;
+  transform: none;
+  transition: none;
 }
 
 .atlas-intro__curtain,
@@ -424,6 +442,7 @@ body {
   .atlas-intro,
   .atlas-intro__enter,
   .atlas-intro__enter span,
+  .atlas-fog-cached-mist,
   :where(.atlas-intro__actions) .artist-statement__trigger { transition: none; }
   .atlas-intro.is-entering .atlas-intro__board,
   .atlas-intro.is-entering .atlas-intro__enter,
@@ -450,7 +469,13 @@ body {
   inset: 0;
   width: 100%;
   height: 100%;
+  opacity: 0;
   pointer-events: none;
+  transition: opacity 1.4s ease-out;
+}
+
+.atlas-fog-cached-mist.is-visible {
+  opacity: 1;
 }
 
 .atlas-fog-loading {
@@ -514,6 +539,443 @@ body {
   background: rgba(248, 237, 207, 0.8);
 }
 
+.atlas-share-ui {
+  position: absolute;
+  z-index: 30;
+  inset: 0;
+  pointer-events: none;
+}
+
+.atlas-share-flash {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  pointer-events: none;
+  background: #fff7dc;
+  opacity: 0;
+}
+
+.atlas-share-flash.is-flashing {
+  animation: atlas-share-flash 420ms ease-out;
+}
+
+@keyframes atlas-share-flash {
+  0% { opacity: 0; }
+  10% { opacity: 0.84; }
+  32% { opacity: 0.38; }
+  100% { opacity: 0; }
+}
+
+.atlas-share-button,
+.atlas-share-retake,
+.atlas-share-close {
+  border: 1px solid rgba(96, 50, 47, 0.88);
+  color: #f8edcf;
+  background: #74343c;
+  box-shadow: 0 0.2rem 0 rgba(59, 37, 24, 0.38), 0 0.4rem 1rem rgba(59, 37, 24, 0.2);
+  cursor: pointer;
+  font: 700 0.68rem/1 Inter, ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.atlas-share-button {
+  position: absolute;
+  bottom: max(clamp(1rem, 3vw, 2.5rem), env(safe-area-inset-bottom));
+  left: 50%;
+  padding: 0.85rem 1rem;
+  opacity: 0;
+  pointer-events: auto;
+  transform: translate(-50%, calc(100% + 5rem));
+  transition: opacity 560ms ease, transform 680ms cubic-bezier(0.2, 0.82, 0.28, 1), background 180ms ease;
+}
+
+.atlas-share-button.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.atlas-share-button--trigger {
+  display: inline-flex;
+  min-width: min(18rem, calc(100vw - 2rem));
+  align-items: center;
+  justify-content: center;
+  gap: 0.62rem;
+  padding: 1rem 1.35rem 0.92rem;
+  border: 1px solid #e4b66b;
+  color: #f7e4b2;
+  background:
+    linear-gradient(90deg, rgba(73, 29, 38, 0.25), transparent 24%, transparent 76%, rgba(73, 29, 38, 0.25)),
+    #6f303b;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 235, 177, 0.26),
+    inset 0 -1px 0 rgba(47, 20, 29, 0.42),
+    0 0.28rem 0 #2b1923,
+    0 0.7rem 1.3rem rgba(44, 24, 29, 0.36);
+  font-size: clamp(0.7rem, 1.6vw, 0.84rem);
+  letter-spacing: 0.16em;
+}
+
+.atlas-share-button--trigger::before,
+.atlas-share-button--trigger::after {
+  width: 0.42rem;
+  height: 0.42rem;
+  border: 1px solid rgba(245, 205, 127, 0.88);
+  border-radius: 50%;
+  background: #bd783e;
+  box-shadow: inset 1px 1px 1px rgba(255, 241, 191, 0.65);
+  content: '';
+}
+
+.atlas-share-button__ornament {
+  color: #e8b965;
+  font-size: 1.05em;
+  line-height: 1;
+}
+
+.atlas-share-button__label {
+  text-shadow: 0 1px 0 rgba(42, 21, 29, 0.65);
+}
+
+.atlas-share-button__arrow {
+  display: inline-block;
+  font-size: 1.3em;
+  line-height: 0.7;
+  transition: transform 180ms ease;
+}
+
+.atlas-share-button--snap {
+  opacity: 1;
+  transform: none;
+}
+
+.atlas-share-button:hover,
+.atlas-share-retake:hover,
+.atlas-share-close:hover {
+  background: #8d4446;
+  outline: none;
+}
+
+.atlas-share-button:focus-visible,
+.atlas-share-retake:focus-visible,
+.atlas-share-close:focus-visible {
+  background: #8d4446;
+  outline: 2px solid #f3c36e;
+  outline-offset: 3px;
+}
+
+.atlas-share-button--trigger:hover,
+.atlas-share-button--trigger:focus-visible {
+  background:
+    linear-gradient(90deg, rgba(73, 29, 38, 0.2), transparent 24%, transparent 76%, rgba(73, 29, 38, 0.2)),
+    #8c3e46;
+  transform: translate(-50%, -2px);
+}
+
+.atlas-share-button--trigger:hover .atlas-share-button__arrow,
+.atlas-share-button--trigger:focus-visible .atlas-share-button__arrow {
+  transform: translate(2px, -2px);
+}
+
+.atlas-share-button:disabled {
+  cursor: wait;
+  opacity: 0.76;
+}
+
+.atlas-share-frame {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border: 2px solid rgba(248, 237, 207, 0.98);
+  outline: 1px solid rgba(59, 37, 24, 0.8);
+  box-shadow: 0 0 0 100vmax rgba(25, 18, 17, 0.34), 0 0 1.8rem rgba(26, 16, 24, 0.7);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.atlas-share-frame::before,
+.atlas-share-frame::after {
+  position: absolute;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-color: #f3c36e;
+  border-style: solid;
+  content: '';
+}
+
+.atlas-share-frame::before {
+  top: -0.35rem;
+  left: -0.35rem;
+  border-width: 0.24rem 0 0 0.24rem;
+}
+
+.atlas-share-frame::after {
+  right: -0.35rem;
+  bottom: -0.35rem;
+  border-width: 0 0.24rem 0.24rem 0;
+}
+
+.atlas-share-compose {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  pointer-events: none;
+  text-align: center;
+}
+
+.atlas-share-compose__hint {
+  position: absolute;
+  top: calc(var(--atlas-share-frame-top, 1rem) + var(--atlas-share-frame-height, 5.2rem));
+  left: 50%;
+  width: min(28rem, calc(100% - 2rem));
+  margin: 0;
+  padding: 0.8rem 1rem;
+  border: 1px solid rgba(158, 102, 87, 0.82);
+  color: #3b2518;
+  background:
+    linear-gradient(rgba(248, 237, 207, 0.97), rgba(239, 220, 175, 0.97)),
+    url('/romantic-paper-texture.png');
+  box-shadow: 0 0.25rem 1rem rgba(59, 37, 24, 0.28);
+  font: italic 600 clamp(1rem, 2vw, 1.15rem)/1.1 'Cormorant Garamond', Georgia, serif;
+  transform: translate(-50%, -50%);
+}
+
+.atlas-share-compose-close {
+  position: absolute;
+  top: calc(var(--atlas-share-frame-top, 1rem) + 24px);
+  right: calc(100% - var(--atlas-share-frame-right, 100%) + 24px);
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  place-items: center;
+  border: 1px solid #f3c36e;
+  border-radius: 50%;
+  color: #f8edcf;
+  background: rgba(69, 35, 48, 0.92);
+  box-shadow: 0 0.15rem 0 rgba(43, 25, 35, 0.88), 0 0.25rem 0.7rem rgba(43, 25, 35, 0.36);
+  cursor: pointer;
+  font: 400 1.7rem/0.8 Georgia, serif;
+  pointer-events: auto;
+}
+
+.atlas-share-compose-close:hover,
+.atlas-share-compose-close:focus-visible {
+  color: #fff1c6;
+  background: #8d4446;
+  outline: 2px solid #f3c36e;
+  outline-offset: 3px;
+}
+
+.atlas-share-button--snap {
+  position: absolute;
+  top: calc(var(--atlas-share-frame-top, 1rem) + var(--atlas-share-frame-height, 5.2rem) - 8rem);
+  left: 50%;
+  display: grid;
+  width: 5.2rem;
+  height: 5.2rem;
+  padding: 0.28rem;
+  place-items: center;
+  border: 1px solid #e4b66b;
+  border-radius: 50%;
+  color: #f7e4b2;
+  background:
+    radial-gradient(circle at 33% 27%, rgba(255, 235, 177, 0.28), transparent 22%),
+    radial-gradient(circle, #86424a 0 54%, #582c39 55% 67%, #bd783e 68% 72%, #331f2c 73%);
+  box-shadow:
+    inset 0 0 0 0.18rem rgba(255, 224, 153, 0.26),
+    inset 0 0 0 0.37rem rgba(46, 24, 35, 0.48),
+    0 0.24rem 0 #2b1923,
+    0 0.58rem 1.1rem rgba(44, 24, 29, 0.3);
+  pointer-events: auto;
+  transform: translateX(-50%);
+  transition: background 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.atlas-share-button--snap:not(.is-saving):hover,
+.atlas-share-button--snap:not(.is-saving):focus-visible {
+  background:
+    radial-gradient(circle at 33% 27%, rgba(255, 235, 177, 0.34), transparent 22%),
+    radial-gradient(circle, #9b4d51 0 54%, #693340 55% 67%, #e3a955 68% 72%, #331f2c 73%);
+  transform: translateX(-50%) rotate(7deg) scale(1.04);
+}
+
+.atlas-share-error {
+  position: absolute;
+  right: 1rem;
+  top: calc(var(--atlas-share-frame-top, 1rem) + var(--atlas-share-frame-height, 5.2rem) - 9rem);
+  left: 1rem;
+  margin: 0;
+  color: #f8edcf;
+  font: italic 600 1rem/1.15 'Cormorant Garamond', Georgia, serif;
+  text-shadow: 0 1px 0 rgba(42, 21, 29, 0.8), 0 0 0.6rem rgba(42, 21, 29, 0.72);
+}
+
+.atlas-camera-obscura {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.atlas-camera-obscura__rim,
+.atlas-camera-obscura__beading,
+.atlas-camera-obscura__filigree,
+.atlas-camera-obscura__body,
+.atlas-camera-obscura__top,
+.atlas-camera-obscura__lens-ring,
+.atlas-camera-obscura__shine,
+.atlas-camera-obscura__rays {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.atlas-camera-obscura__rim {
+  stroke: #f3c36e;
+  stroke-width: 1.25;
+}
+
+.atlas-camera-obscura__beading {
+  stroke: rgba(255, 221, 147, 0.76);
+  stroke-dasharray: 0.6 4.25;
+  stroke-linecap: round;
+  stroke-width: 2.1;
+}
+
+.atlas-camera-obscura__filigree {
+  stroke: rgba(245, 195, 110, 0.7);
+  stroke-width: 0.9;
+}
+
+.atlas-camera-obscura__body {
+  fill: #4d2834;
+  stroke: #f7d187;
+  stroke-width: 1.7;
+}
+
+.atlas-camera-obscura__top,
+.atlas-camera-obscura__shine,
+.atlas-camera-obscura__rays {
+  stroke: #f7d187;
+  stroke-width: 1.45;
+}
+
+.atlas-camera-obscura__lens-ring {
+  fill: #c88142;
+  stroke: #f9dc9c;
+  stroke-width: 1.45;
+}
+
+.atlas-camera-obscura__lens {
+  fill: #241c2a;
+  stroke: #7cc0bc;
+  stroke-width: 1.1;
+}
+
+.atlas-share-button--snap.is-saving {
+  opacity: 1;
+  box-shadow:
+    inset 0 0 0 0.18rem rgba(255, 224, 153, 0.36),
+    inset 0 0 0 0.37rem rgba(46, 24, 35, 0.48),
+    0 0.24rem 0 #2b1923,
+    0 0 1.4rem rgba(243, 195, 110, 0.7);
+}
+
+.atlas-share-button--snap.is-saving .atlas-camera-obscura__lens-ring,
+.atlas-share-button--snap.is-saving .atlas-camera-obscura__lens {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: atlas-camera-obscura-develop 1.25s ease-in-out infinite;
+}
+
+.atlas-share-button--snap.is-saving .atlas-camera-obscura__rays {
+  animation: atlas-camera-obscura-glimmer 1.25s ease-in-out infinite;
+}
+
+@keyframes atlas-camera-obscura-develop {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.16); }
+}
+
+@keyframes atlas-camera-obscura-glimmer {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* The splash is a lock screen; sharing becomes available only after it clears. */
+.atlas-intro.is-visible ~ .atlas-share-ui,
+.atlas-intro.is-exiting ~ .atlas-share-ui {
+  visibility: hidden;
+}
+
+.atlas-share-result {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  width: min(25rem, calc(100% - 2rem));
+  align-items: center;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1.25rem;
+  border: 0.25rem solid #bd783e;
+  color: #3b2518;
+  background:
+    linear-gradient(rgba(248, 237, 207, 0.98), rgba(239, 220, 175, 0.98)),
+    url('/romantic-paper-texture.png');
+  box-shadow: inset 0 0 0 0.12rem #6e3540, 0 0.7rem 2rem rgba(20, 13, 18, 0.5);
+  pointer-events: auto;
+  text-align: center;
+  transform: translate(-50%, -50%);
+}
+
+.atlas-share-result h2,
+.atlas-share-result p {
+  margin: 0;
+}
+
+.atlas-share-result h2 {
+  font: 400 clamp(1.5rem, 4vw, 2.15rem)/0.95 'IM Fell English SC', Georgia, serif;
+}
+
+.atlas-share-result p {
+  max-width: 19rem;
+  font: italic 600 1.1rem/1.15 'Cormorant Garamond', Georgia, serif;
+}
+
+.atlas-share-qr {
+  display: block;
+  box-sizing: content-box;
+  width: min(13rem, 64vw);
+  height: auto;
+  aspect-ratio: 1;
+  padding: 0.55rem;
+  border: 2px solid #bd783e;
+  outline: 1px solid #6e3540;
+  outline-offset: 0.18rem;
+  background: #f8edcf;
+  box-shadow: 0 0.25rem 0.7rem rgba(59, 37, 24, 0.2);
+}
+
+.atlas-share-retake,
+.atlas-share-close {
+  width: min(15rem, 100%);
+  padding: 0.72rem 0.9rem;
+}
+
+.atlas-share-close {
+  color: #5f382d;
+  background: transparent;
+  box-shadow: none;
+}
+
+.atlas-share-button[hidden],
+.atlas-share-frame[hidden],
+.atlas-share-compose[hidden],
+.atlas-share-result[hidden] {
+  display: none;
+}
+
 .atlas-fog-error-announcement {
   position: absolute;
   width: 1px;
@@ -569,7 +1031,12 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .atlas-clearance-notice,
-  .atlas-audio-control { transition: none; }
+  .atlas-audio-control,
+  .atlas-share-button,
+  .atlas-share-button__arrow { transition: none; }
+  .atlas-share-button--snap.is-saving .atlas-camera-obscura__lens-ring,
+  .atlas-share-button--snap.is-saving .atlas-camera-obscura__lens,
+  .atlas-share-button--snap.is-saving .atlas-camera-obscura__rays { animation: none; }
 }
 
 .maplibregl-ctrl.maplibregl-ctrl-attrib {

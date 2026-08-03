@@ -45,9 +45,15 @@ const splashMarkup = `
   </p>
 `
 
-export const createIntroSplash = (mapContainer, onEnter = () => {}) => {
+export const createIntroSplash = (
+  mapContainer,
+  onEnter = () => {},
+  initiallyVisible = true,
+) => {
   const splash = document.createElement('section')
-  splash.className = 'atlas-intro is-visible is-entering'
+  splash.className = initiallyVisible
+    ? 'atlas-intro is-visible is-entering'
+    : 'atlas-intro'
   splash.setAttribute('aria-label', "A Romantic's Atlas of Hong Kong")
   splash.innerHTML = splashMarkup
   mapContainer.append(splash)
@@ -61,13 +67,16 @@ export const createIntroSplash = (mapContainer, onEnter = () => {}) => {
     splash.classList.add('is-exiting')
     window.setTimeout(() => {
       splash.classList.remove('is-exiting')
+      splash.classList.add('is-dismissed')
     }, 700)
   }
 
   const show = () => {
-    splash.classList.remove('is-exiting', 'is-visible', 'is-entering')
+    splash.classList.remove('is-dismissed', 'is-exiting', 'is-visible', 'is-entering')
+    splash.classList.add('is-resetting')
     // Force a new animation cycle every time the idle reset returns the boards.
     void splash.offsetWidth
+    splash.classList.remove('is-resetting')
     splash.classList.add('is-visible', 'is-entering')
   }
 

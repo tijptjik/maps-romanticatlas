@@ -25,6 +25,7 @@ import {
   isAllowedApplicationRequest,
   isReadableCacheVersion,
   isSupportedCacheVersion,
+  isValidAtlasPosition,
   modeEnabled,
   normalizeContentBounds,
   parseAtlasPositionPath,
@@ -36,7 +37,9 @@ import {
 } from './atlas-protocol.ts'
 
 const maximumRequestBytes = 12_000_000
+const maximumCacheStatusBatchSize = 64
 const maximumImageBytes = 4_000_000
+const maximumShareImageBytes = 8_000_000
 const openrouterApiUrl = 'https://openrouter.ai/api/v1/chat/completions'
 const atlasColourDirection =
   'Keep the surrounding map and its Victorian-brown palette unchanged. Within the event, use a lively, carefully balanced storybook palette with warm parchment and sandy cream foundations, plus clear accents of cobalt blue, coral vermilion, marigold yellow, leafy sage green, dusty rose, and soft lilac. Keep the colours richly pigmented, crisp, and pleasantly contrasty so the event stands out, while remaining slightly softened and paper-printed rather than neon, fluorescent, garish, or oversaturated.'
@@ -47,6 +50,7 @@ type AtlasEnv = Env & {
   ATLAS_ADMIN_TOKEN?: string
   ATLAS_LOCAL_DEV?: string
   OPENROUTER_API_KEY?: string
+  ATLAS_SHARE_ASSET_ORIGIN?: string
 }
 type CachedTile = CachedAtlasTile<Scene> & {
   imageKey: string
@@ -224,6 +228,30 @@ const findCachedTile = async (env: AtlasEnv, position: Omit<Tile, 'scene'>) => {
   return recovered.length ? randomItem(recovered) : null
 }
 
+const positionId = (position: Omit<Tile, 'scene'>) =>
+  `${position.zoom}/${position.x}/${position.y}`
+
+const positionsFromCacheStatusRequest = (body: Record<string, unknown>) => {
+  if (!Array.isArray(body.tiles) || !body.tiles.length)
+    throw new Error('At least one atlas tile is required.')
+  if (body.tiles.length > maximumCacheStatusBatchSize)
+    throw new Error(`At most ${maximumCacheStatusBatchSize} atlas tiles can be checked at once.`)
+
+  const positions = new Map<string, Omit<Tile, 'scene'>>()
+  body.tiles.forEach(value => {
+    const candidate = value as Record<string, unknown>
+    const position = {
+      zoom: Number(candidate?.zoom),
+      x: Number(candidate?.x),
+      y: Number(candidate?.y),
+    }
+    if (!isValidAtlasPosition(position))
+      throw new Error('The cache-status request contains an invalid atlas tile.')
+    positions.set(positionId(position), position)
+  })
+  return [...positions.values()]
+}
+
 const cachedTileFromManifest = async (
   env: AtlasEnv,
   tile: Tile,
@@ -308,12 +336,12 @@ const listCachedTiles = async (bucket: R2Bucket, requested: number | null = null
 
 const imageDataUrl = /^data:(image\/(?:png|jpe?g));base64,([A-Za-z0-9+/=]+)$/
 
-const decodeDataUrl = (value: unknown, label: string) => {
+const decodeDataUrl = (value: unknown, label: string, maximumBytes = maximumImageBytes) => {
   if (typeof value !== 'string') throw new Error(`${label} must be an image data URL.`)
   const match = value.match(imageDataUrl)
   if (!match) throw new Error(`${label} must be a PNG or JPEG data URL.`)
   const binary = atob(match[2])
-  if (binary.length > maximumImageBytes) throw new Error(`${label} is too large.`)
+  if (binary.length > maximumBytes) throw new Error(`${label} is too large.`)
   const bytes = Uint8Array.from(binary, character => character.charCodeAt(0))
   return { bytes, contentType: match[1] }
 }
@@ -552,6 +580,60 @@ const applicationRequestIsAllowed = (
   })
 }
 
+const shareAssetUrl = (env: AtlasEnv, key: string) => {
+  const configuredOrigin = env.ATLAS_SHARE_ASSET_ORIGIN?.trim()
+  if (!configuredOrigin) return null
+  try {
+    const origin = new URL(configuredOrigin)
+    if (
+      origin.protocol !== 'https:' ||
+      origin.username ||
+      origin.password ||
+      origin.pathname !== '/' ||
+      origin.search ||
+      origin.hash
+    )
+      return null
+    return new URL(key, origin).toString()
+  } catch {
+    return null
+  }
+}
+
+const createShareMap = async (request: Request, env: AtlasEnv) => {
+  if (!applicationRequestIsAllowed(request, env, true)) {
+    return errorResponse(403, 'Map sharing is restricted to the application.')
+  }
+  const assetOrigin = shareAssetUrl(env, 'shared-maps/')
+  if (!assetOrigin) {
+    return errorResponse(
+      503,
+      'Map sharing is not configured with a public R2 asset origin.',
+    )
+  }
+  try {
+    const body = await readJsonBody(request)
+    const image = decodeDataUrl(body.image, 'The shared map image', maximumShareImageBytes)
+    if (image.contentType !== 'image/png') {
+      return errorResponse(400, 'The shared map image must be a PNG.')
+    }
+    const key = `shared-maps/${crypto.randomUUID()}.png`
+    await env.maps_romanticatlas_assets.put(key, image.bytes, {
+      httpMetadata: {
+        contentType: 'image/png',
+        contentDisposition: 'inline',
+        cacheControl: 'public, max-age=31536000, immutable',
+      },
+    })
+    return json({ url: shareAssetUrl(env, key) })
+  } catch (error) {
+    return errorResponse(
+      400,
+      error instanceof Error ? error.message : 'Could not save the shared map image.',
+    )
+  }
+}
+
 const serveCachedTile = async (request: Request, env: AtlasEnv, tile: Tile) => {
   const cached = await cachedTileFromManifest(
     env,
@@ -698,6 +780,80 @@ const serveCacheStatus = async (env: AtlasEnv, position: Omit<Tile, 'scene'>) =>
     // tile take long to appear to a visitor who previously saw a cache miss.
     { 'cache-control': 'public, max-age=10, stale-while-revalidate=30' },
   )
+}
+
+const serveCacheStatusBatch = async (
+  env: AtlasEnv,
+  positions: Omit<Tile, 'scene'>[],
+) => {
+  const positionsByShard = new Map<string, Omit<Tile, 'scene'>[]>()
+  const scenePositionsByShard = new Map<string, Omit<Tile, 'scene'>[]>()
+  positions.forEach(position => {
+    const shard = manifestShardName(position)
+    const shardPositions = positionsByShard.get(shard) ?? []
+    shardPositions.push(position)
+    positionsByShard.set(shard, shardPositions)
+
+    manifestShardNamesForGrid(position).forEach(sceneShard => {
+      const scenePositions = scenePositionsByShard.get(sceneShard) ?? []
+      scenePositions.push(position)
+      scenePositionsByShard.set(sceneShard, scenePositions)
+    })
+  })
+
+  const cachedByPosition = new Map<string, CachedTile[]>()
+  await Promise.all(
+    [...positionsByShard].map(async ([shard, shardPositions]) => {
+      const entries = await env.ATLAS_MANIFEST.getByName(shard).entriesForPositions(
+        shardPositions,
+      )
+      entries.map(toCachedTile).forEach(entry => {
+        if (!entry) return
+        const id = positionId(entry.tile)
+        const cached = cachedByPosition.get(id) ?? []
+        cached.push(entry)
+        cachedByPosition.set(id, cached)
+      })
+    }),
+  )
+
+  if (localDevelopmentEnabled(env)) {
+    await Promise.all(
+      positions.map(async position => {
+        const id = positionId(position)
+        if (cachedByPosition.has(id)) return
+        const recovered = await cachedTilesFromBucket(env.ATLAS_BUCKET, position)
+        if (recovered.length) cachedByPosition.set(id, recovered)
+      }),
+    )
+  }
+
+  const scenesByPosition = new Map<string, Set<Scene>>()
+  await Promise.all(
+    [...scenePositionsByShard].map(async ([shard, shardPositions]) => {
+      const sceneLists = await env.ATLAS_MANIFEST.getByName(shard).scenesInGrids(
+        shardPositions,
+      )
+      sceneLists.forEach(({ zoom, x, y, scenes }) => {
+        const id = positionId({ zoom, x, y })
+        const collected = scenesByPosition.get(id) ?? new Set<Scene>()
+        scenes.forEach(scene => {
+          if (atlasScenes[scene]) collected.add(scene as Scene)
+        })
+        scenesByPosition.set(id, collected)
+      })
+    }),
+  )
+
+  return json({
+    statuses: positions.map(position => {
+      const cached = cachedByPosition.get(positionId(position))
+      return cacheStatusPayload({
+        cached: cached?.length ? randomItem(cached) : null,
+        scenes: [...(scenesByPosition.get(positionId(position)) ?? [])],
+      })
+    }),
+  })
 }
 
 const manifestMetadataKeyPattern = /^atlas\/(\d+)\/(\d+)\/(\d+)\/(.+)\.v(\d+)(?:\.([a-z0-9-]{1,64}))?\.json$/
@@ -853,6 +1009,9 @@ export const handleAtlasApi = async (
   env: AtlasEnv,
 ): Promise<Response | null> => {
   const url = new URL(request.url)
+  if (request.method === 'POST' && url.pathname === '/api/share-maps') {
+    return createShareMap(request, env)
+  }
   if (
     request.method === 'POST' &&
     url.pathname === '/api/atlas-tiles/manifest/rebuild'
@@ -907,6 +1066,17 @@ export const handleAtlasApi = async (
         ? { 'set-cookie': `${csrfCookieName}=${csrf}; Path=/; SameSite=Strict${secureCookie}` }
         : undefined,
     )
+  }
+
+  if (request.method === 'POST' && url.pathname === '/api/atlas-tiles/cache-status') {
+    try {
+      return serveCacheStatusBatch(env, positionsFromCacheStatusRequest(await readJsonBody(request)))
+    } catch (error) {
+      return errorResponse(
+        400,
+        error instanceof Error ? error.message : 'Could not read the cache-status request.',
+      )
+    }
   }
 
   const position = parseAtlasPositionPath(url.pathname)

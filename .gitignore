@@ -7,4 +7,5 @@ dist/
 .dev.vars
 .dev.vars.*
 generated-tiles/
+shared-maps/
 .wrangler/
