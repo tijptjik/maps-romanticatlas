@@ -7,7 +7,11 @@ import { createIntroSplash } from './intro-splash.ts'
 import { installArtistStatement } from './artist-statement.ts'
 import { installAtlasAudio } from './atlas-audio.ts'
 import { hongKongStyle } from './map-style.ts'
-import { diagnosticsModeEnabled } from './runtime-modes.ts'
+import {
+  diagnosticsModeEnabled,
+  noMusicEnabled,
+  noSplashEnabled,
+} from './runtime-modes.ts'
 import './style.css'
 
 const initialView = {
@@ -27,6 +31,9 @@ const map = new maplibregl.Map({
   touchZoomRotate: false,
   touchPitch: false,
   pitchWithRotate: false,
+  // Dense z18 vector geometry is expensive on retina displays. The paper-map
+  // treatment remains crisp at 1.5× while avoiding a 4× framebuffer at 2×.
+  pixelRatio: Math.min(window.devicePixelRatio || 1, 1.5),
   // Atlas interactions use the z18 tile grid. The fog remains visible above it,
   // while generation still requires a complete z18 tile in the viewport.
   minZoom: 16.5,
@@ -50,9 +57,10 @@ const waitForIntroFonts = async () => {
   await document.fonts.ready
 }
 
-const audio = installAtlasAudio(map.getContainer())
-await waitForIntroFonts()
-const intro = createIntroSplash(map.getContainer(), audio.start)
+const skipSplash = noSplashEnabled()
+const audio = installAtlasAudio(map.getContainer(), { initiallyMuted: noMusicEnabled() })
+if (!skipSplash) await waitForIntroFonts()
+const intro = createIntroSplash(map.getContainer(), audio.start, !skipSplash)
 installArtistStatement(map.getContainer())
 const idleDelay = 180_000
 let idleTimer: number | undefined

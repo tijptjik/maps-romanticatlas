@@ -45,9 +45,15 @@ const splashMarkup = `
   </p>
 `
 
-export const createIntroSplash = (mapContainer, onEnter = () => {}) => {
+export const createIntroSplash = (
+  mapContainer,
+  onEnter = () => {},
+  initiallyVisible = true,
+) => {
   const splash = document.createElement('section')
-  splash.className = 'atlas-intro is-visible is-entering'
+  splash.className = initiallyVisible
+    ? 'atlas-intro is-visible is-entering'
+    : 'atlas-intro'
   splash.setAttribute('aria-label', "A Romantic's Atlas of Hong Kong")
   splash.innerHTML = splashMarkup
   mapContainer.append(splash)

@@ -59,13 +59,17 @@ const createNoiseBuffer = (context: AudioContext, duration: number) => {
   return buffer
 }
 
-export const installAtlasAudio = (mapContainer: HTMLElement): AtlasAudioHooks => {
+export const installAtlasAudio = (
+  mapContainer: HTMLElement,
+  { initiallyMuted = false }: { initiallyMuted?: boolean } = {},
+): AtlasAudioHooks => {
   let context: AudioContext | undefined
   let masterGain: GainNode | undefined
   let scheduler: number | undefined
   let nextStepAt = 0
   let step = 0
   let enabled = false
+  let autoStartEnabled = !initiallyMuted
   let noiseBuffer: AudioBuffer | undefined
   let revealChimeIndex = 0
 
@@ -180,7 +184,7 @@ export const installAtlasAudio = (mapContainer: HTMLElement): AtlasAudioHooks =>
     }
   }
 
-  const start = () => {
+  const enable = () => {
     if (!context) {
       const AudioContextConstructor = window.AudioContext || window.webkitAudioContext
       if (!AudioContextConstructor) return
@@ -200,6 +204,11 @@ export const installAtlasAudio = (mapContainer: HTMLElement): AtlasAudioHooks =>
     // the combined sound into clipping.
     setMasterVolume(0.55, context.currentTime)
     updateControl()
+  }
+
+  const start = () => {
+    if (!autoStartEnabled) return
+    enable()
   }
 
   const playFogLift = () => {
@@ -240,10 +249,12 @@ export const installAtlasAudio = (mapContainer: HTMLElement): AtlasAudioHooks =>
   control.addEventListener('click', event => {
     event.stopPropagation()
     if (!context || !enabled) {
-      start()
+      autoStartEnabled = true
+      enable()
       return
     }
     enabled = false
+    autoStartEnabled = false
     setMasterVolume(0.0001, context.currentTime)
     updateControl()
   })
