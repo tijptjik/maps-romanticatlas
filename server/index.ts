@@ -432,6 +432,28 @@ const listCachedTiles = async (requestedVersion = generationVersion) => {
   return [...cachedTiles].map(entry => JSON.parse(entry))
 }
 
+const atlasSceneGridRadius = 4
+const atlasTileCount = 2 ** atlasZoom
+
+const wrappedTileDistance = (left, right) => {
+  const distance = Math.abs(left - right)
+  return Math.min(distance, atlasTileCount - distance)
+}
+
+const cachedScenesInGrid = async position => {
+  const cached = (await Promise.all(
+    readableCacheVersions.map(version => listCachedTiles(version)),
+  )).flat()
+  return [...new Set(
+    cached
+      .filter(tile =>
+        wrappedTileDistance(tile.x, position.x) <= atlasSceneGridRadius &&
+        Math.abs(tile.y - position.y) <= atlasSceneGridRadius,
+      )
+      .map(tile => tile.scene),
+  )]
+}
+
 const atlasPrompt = (scene, hasSea) => {
   const seaRule = atlasSeaScenes.has(scene)
     ? hasSea
@@ -522,11 +544,15 @@ const serveCacheStatus = async (request, response, tile) => {
     sendError(response, 405, 'Cache status only supports GET requests.')
     return true
   }
-  const cached = await findCachedTile(tile)
+  const [cached, scenes] = await Promise.all([
+    findCachedTile(tile),
+    cachedScenesInGrid(tile),
+  ])
   sendJson(response, 200, {
     cached: Boolean(cached),
     url: cached ? cachedTileUrl(cached.tile, cached.version) : null,
     scene: cached?.tile.scene ?? null,
+    scenes,
     contentBounds: cached?.contentBounds ?? null,
   })
   return true
