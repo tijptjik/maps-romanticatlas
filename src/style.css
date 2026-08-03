@@ -463,6 +463,57 @@ body {
   mix-blend-mode: normal;
 }
 
+.atlas-audio-control {
+  position: absolute;
+  z-index: 3;
+  bottom: max(10px, env(safe-area-inset-bottom));
+  left: 10px;
+  display: grid;
+  width: 29px;
+  height: 29px;
+  place-items: center;
+  padding: 0;
+  border: 1px solid rgba(168, 111, 91, 0.82);
+  border-radius: 50%;
+  color: #a86f5b;
+  background: rgba(248, 237, 207, 0.86);
+  cursor: pointer;
+  transition: background 180ms ease, color 180ms ease;
+}
+
+.atlas-audio-control svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+.atlas-audio-control__waves,
+.atlas-audio-control__muted {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.35;
+}
+
+.atlas-audio-control__muted { display: none; }
+
+.atlas-audio-control[data-muted='true'] .atlas-audio-control__waves { display: none; }
+
+.atlas-audio-control[data-muted='true'] .atlas-audio-control__muted { display: block; }
+
+.atlas-audio-control:hover,
+.atlas-audio-control:focus-visible {
+  color: #a86f5b;
+  background: rgba(248, 237, 207, 0.96);
+  outline: none;
+}
+
+.atlas-audio-control[aria-pressed='true'] {
+  color: #a86f5b;
+  background: rgba(248, 237, 207, 0.8);
+}
+
 .atlas-fog-error-announcement {
   position: absolute;
   width: 1px;
@@ -517,7 +568,8 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .atlas-clearance-notice { transition: none; }
+  .atlas-clearance-notice,
+  .atlas-audio-control { transition: none; }
 }
 
 .maplibregl-ctrl.maplibregl-ctrl-attrib {

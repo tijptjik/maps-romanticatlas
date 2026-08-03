@@ -45,7 +45,7 @@ const splashMarkup = `
   </p>
 `
 
-export const createIntroSplash = mapContainer => {
+export const createIntroSplash = (mapContainer, onEnter = () => {}) => {
   const splash = document.createElement('section')
   splash.className = 'atlas-intro is-visible is-entering'
   splash.setAttribute('aria-label', "A Romantic's Atlas of Hong Kong")
@@ -56,6 +56,7 @@ export const createIntroSplash = mapContainer => {
 
   const dismiss = () => {
     if (!splash.classList.contains('is-visible')) return
+    onEnter()
     splash.classList.remove('is-visible', 'is-entering')
     splash.classList.add('is-exiting')
     window.setTimeout(() => {
@@ -72,6 +73,7 @@ export const createIntroSplash = mapContainer => {
 
   enterButton?.addEventListener('click', event => {
     event.stopPropagation()
+    onEnter()
     dismiss()
   })
 

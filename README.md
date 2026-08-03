@@ -127,7 +127,9 @@ The map opens with a Victorian-circus-style introduction. Click or press a key t
 the atlas, or open the Cartographer's Note for the artist statement. Press Ctrl+M at any
 time to return to the introduction. After 3 minutes without activity, locally revealed
 tiles fade back into the fog, the view returns to its starting position, and the
-introduction animates in again.
+introduction animates in again. A small in-browser theme begins after the first visitor
+gesture; the volume control at bottom left mutes it. Successfully revealed tiles add a
+short filtered wind swell and chime.
 
 ## On-demand romantic atlas tiles
 

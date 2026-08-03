@@ -5,6 +5,7 @@ import { installCachedTileAdmin } from './cached-tile-admin.ts'
 import { installCachedTileDiagnostic } from './cached-tile-diagnostic.ts'
 import { createIntroSplash } from './intro-splash.ts'
 import { installArtistStatement } from './artist-statement.ts'
+import { installAtlasAudio } from './atlas-audio.ts'
 import { hongKongStyle } from './map-style.ts'
 import { diagnosticsModeEnabled } from './runtime-modes.ts'
 import './style.css'
@@ -34,7 +35,8 @@ const map = new maplibregl.Map({
   attributionControl: false,
 })
 
-const intro = createIntroSplash(map.getContainer())
+const audio = installAtlasAudio(map.getContainer())
+const intro = createIntroSplash(map.getContainer(), audio.start)
 installArtistStatement(map.getContainer())
 const idleDelay = 180_000
 let idleTimer: number | undefined
@@ -65,6 +67,7 @@ const noteActivity = (dismissIntro = false) => {
 }
 
 window.addEventListener('pointerdown', () => noteActivity(true), { passive: true })
+window.addEventListener('click', () => audio.start(), { once: true, passive: true })
 window.addEventListener('pointermove', () => noteActivity(), { passive: true })
 window.addEventListener('wheel', () => noteActivity(), { passive: true })
 window.addEventListener('touchstart', () => noteActivity(true), { passive: true })
@@ -101,7 +104,7 @@ map.on('load', async () => {
     await installCachedTileDiagnostic(map)
   }
 
-  const atlas = installAtlasTileInteractions(map)
+  const atlas = installAtlasTileInteractions(map, audio)
   resetAtlas = async () => {
     await atlas.resetReveals()
   }
