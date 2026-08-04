@@ -148,9 +148,10 @@ the atlas, or open the Cartographer's Note for the artist statement. Press Ctrl+
 time to return to the introduction. After 3 minutes without activity, locally revealed
 tiles fade back into the fog, the view returns to its starting position, and the
 introduction animates in again. A quiet, looping ambient theme begins after the first
-visitor gesture; the volume control at bottom left mutes it. Successfully revealed tiles
-add a short filtered wind swell and a scene-specific sound cue. The synthesized chime
-remains as a fallback while a cue loads or when playback is unsupported.
+visitor gesture. The bottom-left sound control cycles through all sounds on, music off
+(while reveal effects remain on), and all sounds off. Successfully revealed tiles add a
+short filtered wind swell and a scene-specific sound cue. The synthesized chime remains
+as a fallback while a cue loads or when playback is unsupported.
 
 After five revealed tiles, visitors can choose **Share your map**. The centred 4:5
 portrait frame shows exactly what will be exported, with all controls omitted. They can
