@@ -41,6 +41,13 @@
       "new_sqlite_classes": ["AtlasManifest"]
     }
   ],
+  "observability": {
+    "enabled": true,
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true
+    }
+  },
   "assets": {
     "directory": "./dist",
     "binding": "ASSETS",
