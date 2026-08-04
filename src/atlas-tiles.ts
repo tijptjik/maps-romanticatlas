@@ -6,6 +6,7 @@ import { VectorTile } from '@mapbox/vector-tile'
 import Pbf from 'pbf'
 
 const minimumFogZoom = 15
+const loadingLayoutZoom = 17.5
 const landTargetThreshold = 0.75
 const landSampleSize = 10
 const sourceLandZoom = 15
@@ -17,6 +18,8 @@ const fogRadiusDuration = 180_000
 const generatedRevealDuration = 1400
 const generatedTileOpacity = 0.94
 const revealedTileFocusZoom = 18.3
+const revealedTileFocusDuration = 1500
+const titleCardFocusLeadTime = 500
 const fogPokeDuration = 900
 const fogPokeExpansion = 0.16
 const personalClearanceLimit = 3
@@ -1032,11 +1035,10 @@ const createFogCanvas = (
   }
 
   const positionCanvasesDuringMapMotion = () => {
-    // Keep the colour and loading overlays registered to the map between their
-    // current-coordinate redraws, so they do not lag a moving basemap by one
-    // animation frame.
+    // The colour field can use a transformed snapshot between its lower-rate
+    // redraws. Loading copy redraws every frame so it can keep its fixed
+    // physical layout rather than scaling with the map during a zoom.
     positionCanvasDuringMapMotion(mistCanvas, mistAnchorScreen, mistAnchorZoom)
-    positionCanvasDuringMapMotion(loadingCanvas, loadingAnchorScreen, loadingAnchorZoom)
   }
 
   const resize = () => {
@@ -1116,6 +1118,8 @@ const createFogCanvas = (
   }
 
   const easeOutCubic = progress => 1 - (1 - progress) ** 3
+  const easeInOutSine = progress =>
+    -(Math.cos(Math.PI * clampUnit(progress)) - 1) / 2
 
   const drawFogMask = (context, tile, state, time) => {
     const bounds = tileBounds(tile)
@@ -1227,9 +1231,10 @@ const createFogCanvas = (
       (total, duration) => total + duration,
       0,
     )
-    const titleInDuration = 1530
-    const titleHoldDuration = 1785
-    const questionStart = titleInDuration + titleHoldDuration
+    const titleInDuration = 1200
+    const titleHoldDuration = 600
+    const titleLiftDuration = 1800
+    const questionStart = titleInDuration + titleHoldDuration + titleLiftDuration
     const questionEnd = questionStart + questionDuration
     const questionLastWordHold = 1800
     const questionQuotePause = 1800
@@ -1245,6 +1250,8 @@ const createFogCanvas = (
       questionDurations,
       quoteDurations,
       titleInDuration,
+      titleHoldDuration,
+      titleLiftDuration,
       questionStart,
       questionEnd,
       questionLastWordHold,
@@ -1375,7 +1382,7 @@ const createFogCanvas = (
   }
 
   const drawLoadingText = time => {
-    if (!loadingContext || isZooming) return
+    if (!loadingContext) return
     const ratio = loadingCanvas.width / Math.max(1, fogCanvasWidth)
     clearOverlayContext(loadingContext)
     setOverlayContextTransform(loadingContext, ratio)
@@ -1399,7 +1406,13 @@ const createFogCanvas = (
       const bounds = tileBounds(tile)
       const northWest = map.project([bounds.west, bounds.north])
       const southEast = map.project([bounds.east, bounds.south])
-      const size = southEast.x - northWest.x
+      const tileSize = southEast.x - northWest.x
+      // Let the composition remain registered to the ground fog. The type
+      // reaches its intended design size at z17.5, then grows with the map
+      // rather than being held at a viewport-sized font cap.
+      const textScale = 2 ** Math.max(0, map.getZoom() - loadingLayoutZoom)
+      const textLayoutSize = tileSize / textScale
+      const size = tileSize
       const sequence = loadingSequences.get(id)
       let concept = sequence.concept
       let elapsed = time - sequence.startedAt
@@ -1411,14 +1424,17 @@ const createFogCanvas = (
         elapsed = time - sequence.startedAt
         timing = getLoadingTiming(concept, size)
       }
-      const centerX = northWest.x + size / 2
-      const centerY = northWest.y + size / 2
+      const centerX = northWest.x + tileSize / 2
+      const centerY = northWest.y + tileSize / 2
       const textWidth = size * 0.86
-      const titleSize = Math.max(14, Math.min(30, size * 0.12))
-      const questionSize = Math.max(12, Math.min(23, size * 0.09))
-      const quoteSize = Math.max(11, Math.min(20, size * 0.075))
+      const titleSize =
+        Math.max(14, Math.min(30, textLayoutSize * 0.12)) * textScale
+      const questionSize =
+        Math.max(12, Math.min(23, textLayoutSize * 0.09)) * textScale
+      const quoteSize =
+        Math.max(11, Math.min(20, textLayoutSize * 0.075)) * textScale
       const titleProgress = Math.min(1, elapsed / timing.titleInDuration)
-      const titleEase = easeOutCubic(titleProgress)
+      const titleEase = easeInOutSine(titleProgress)
       const titleLines = wrapTextForWidth(
         loadingContext,
         concept.title,
@@ -1432,6 +1448,11 @@ const createFogCanvas = (
         titleTop + (titleLines.length - 1) * titleLineHeight + titleSize * 0.55
       const wordLimitY = titleBottom + size * 0.08
       const titleVisualCenterY = (titleTop + titleBottom) / 2
+      const titleLiftStart = timing.titleInDuration + timing.titleHoldDuration
+      const titleLiftProgress = clampUnit(
+        (elapsed - titleLiftStart) / timing.titleLiftDuration,
+      )
+      const titleLiftEase = easeInOutSine(titleLiftProgress)
       const wordHoldCenterY = centerY + (centerY - titleVisualCenterY) - 32
       const questionBaseline = centerY + size * 0.22
       const quoteBaseline = centerY + size * 0.22
@@ -1555,14 +1576,16 @@ const createFogCanvas = (
       loadingContext.textAlign = 'center'
       loadingContext.textBaseline = 'middle'
       titleLines.forEach((line, index) => {
-        const y = titleTop + index * titleLineHeight
+        const restingY = titleTop + index * titleLineHeight
+        const centeredY = centerY + restingY - titleVisualCenterY
+        const y = centeredY + (restingY - centeredY) * titleLiftEase
         drawCenteredLine(
           line,
           y,
           `700 ${titleSize}px 'IM Fell English SC', Georgia, serif`,
           '#3b2518',
           0.9 * titleEase,
-          { scale: 0.84 + titleEase * 0.16 },
+          { scale: 0.9 + titleEase * 0.1 },
         )
       })
 
@@ -1972,15 +1995,37 @@ export const installAtlasTileInteractions = (
   const cachedTileIds = new Set()
   const fog = createFogCanvas(map, tileState, cachedTileIds, isFogTileLand, noNoise)
   invalidateFog = fog.invalidate
-  const focusRevealedTile = tile => {
+  const focusRevealedTile = (tile, onApproach?: () => void) => {
     const bounds = tileBounds(tile)
-    map.flyTo({
+    map.easeTo({
       center: [(bounds.west + bounds.east) / 2, (bounds.north + bounds.south) / 2],
       zoom: Math.max(map.getZoom(), revealedTileFocusZoom),
-      duration: 1200,
+      duration: revealedTileFocusDuration,
       essential: true,
     })
+    if (onApproach)
+      window.setTimeout(onApproach, revealedTileFocusDuration - titleCardFocusLeadTime)
   }
+  const focusTileForCapture = tile =>
+    new Promise<void>(resolve => {
+      const bounds = tileBounds(tile)
+      const canvas = map.getCanvas()
+      // A z18 tile is 512 CSS pixels wide at zoom 18. Leave a small frame so
+      // the canvas crop remains complete even on a narrow display.
+      const availableSize = Math.max(1, Math.min(canvas.clientWidth, canvas.clientHeight) - 32)
+      const captureSafeZoom = atlasZoom + Math.log2(availableSize / 512)
+      // Preserve the visitor's zoom whenever it can contain the tile. This
+      // is a local pan, not a dramatic reveal flight; only zoom out when a
+      // full canvas capture would otherwise be impossible.
+      const zoom = Math.max(minimumFogZoom, Math.min(map.getZoom(), captureSafeZoom))
+      map.once('moveend', resolve)
+      map.easeTo({
+        center: [(bounds.west + bounds.east) / 2, (bounds.north + bounds.south) / 2],
+        zoom,
+        duration: 500,
+        essential: true,
+      })
+    })
   const revealGeneratedTile = (
     id,
     scene: AtlasScene | undefined,
@@ -1993,10 +2038,6 @@ export const installAtlasTileInteractions = (
     fog.beginReveal(id)
 
     const titleCard = titleCards.get(id)?.card
-    if (titleCard) {
-      titleCard.style.opacity = '0'
-      titleCard.style.transform = 'rotate(-1.2deg) translateY(0.4rem) scale(0.96)'
-    }
 
     const startedAt = performance.now()
     const reveal = time => {
@@ -2009,12 +2050,6 @@ export const installAtlasTileInteractions = (
       const layerId = `atlas-tile-${tile.x}-${tile.y}`
       if (map.getLayer(layerId)) {
         map.setPaintProperty(layerId, 'raster-opacity', generatedTileOpacity * progress)
-      }
-      if (titleCard) {
-        titleCard.style.opacity = `${progress}`
-        titleCard.style.transform =
-          `rotate(-1.2deg) translateY(${(1 - progress) * 0.4}rem) ` +
-          `scale(${0.96 + progress * 0.04})`
       }
       fog.invalidate()
 
@@ -2034,13 +2069,9 @@ export const installAtlasTileInteractions = (
       ) {
         clearanceStartedAt = Date.now()
       }
-      if (titleCard) {
-        titleCard.style.opacity = ''
-        titleCard.style.transform = ''
-      }
       fog.finishReveal(id)
       fog.invalidate()
-      focusRevealedTile(tile)
+      focusRevealedTile(tile, () => titleCard?.classList.remove('is-awaiting-focus'))
     }
     requestAnimationFrame(reveal)
   }
@@ -2223,13 +2254,14 @@ export const installAtlasTileInteractions = (
       return
     }
     const tile = tileForPosition(event.lngLat)
+    const state = tileState.get(tileId(tile))
+    const isPartiallyVisible = !isFullyVisible(map, tile)
     map.getCanvas().style.cursor =
       map.getZoom() >= minimumFogZoom &&
-      isLandTargetable(tile) &&
-      isFogged(tile) &&
-      isFullyVisible(map, tile) &&
-      tileState.get(tileId(tile)) !== 'generated' &&
-      tileState.get(tileId(tile)) !== 'revealing'
+      (state === 'generated' ||
+        (isFogged(tile) &&
+          state !== 'revealing' &&
+          (isPartiallyVisible || isLandTargetable(tile))))
         ? 'pointer'
         : ''
   })
@@ -2239,6 +2271,16 @@ export const installAtlasTileInteractions = (
     if (map.getZoom() < minimumFogZoom) return
     const tile = tileForPosition(event.lngLat)
     const id = tileId(tile)
+    if (tileState.get(id) === 'generated') {
+      focusRevealedTile(tile)
+      return
+    }
+    if (!isFullyVisible(map, tile)) {
+      if (tileState.has(id)) return
+      tileState.set(id, 'focusing')
+      await focusTileForCapture(tile)
+      tileState.delete(id)
+    }
     if (
       !isLandTargetable(tile) ||
       !isFogged(tile) ||

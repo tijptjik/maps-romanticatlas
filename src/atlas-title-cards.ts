@@ -9,7 +9,7 @@ const titleCase = value =>
 
 export const createAtlasTitleCard = (container, scene) => {
   const card = document.createElement('aside')
-  card.className = 'atlas-title-card'
+  card.className = 'atlas-title-card is-awaiting-focus'
   card.setAttribute('aria-label', `${titleCase(scene)}: ${atlasScenes[scene]}`)
 
   const title = document.createElement('strong')
