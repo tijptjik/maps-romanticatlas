@@ -10,20 +10,6 @@ type AtlasAudioHooks = {
 
 const midiToFrequency = (midi: number) => 440 * 2 ** ((midi - 69) / 12)
 
-const themeChords = [
-  [50, 57, 62, 65], // D minor
-  [46, 53, 58, 62], // B-flat major
-  [41, 48, 53, 57], // F major
-  [48, 55, 60, 64], // C major
-]
-
-const themeMelody = [
-  [69, -1, 74, 72, 69, -1, 67, -1],
-  [65, -1, 69, 72, 74, -1, 72, -1],
-  [69, -1, 72, 74, 77, -1, 74, -1],
-  [72, -1, 69, 67, 65, -1, 62, -1],
-]
-
 const revealChimeVariations = [
   {
     // A bright, upward opening.
@@ -71,14 +57,14 @@ export const installAtlasAudio = (
   let context: AudioContext | undefined
   let masterGain: GainNode | undefined
   let musicGain: GainNode | undefined
-  let scheduler: number | undefined
   let stopTimer: number | undefined
-  let nextStepAt = 0
-  let step = 0
   let musicEnabled = false
   let autoStartEnabled = !initiallyMuted
   let noiseBuffer: AudioBuffer | undefined
   let revealChimeIndex = 0
+  let themeAudio: AudioBuffer | undefined
+  let themeAudioRequest: Promise<AudioBuffer | undefined> | undefined
+  let themeSource: AudioBufferSourceNode | undefined
   const sceneAudio = new Map<AtlasScene, AudioBuffer>()
   const sceneAudioRequests = new Map<AtlasScene, Promise<AudioBuffer | undefined>>()
 
@@ -182,66 +168,6 @@ export const installAtlasAudio = (
     void loadSceneAudio(scene)
   }
 
-  const schedulePad = (chord: number[], at: number, duration: number) => {
-    chord.forEach((midi, index) => {
-      scheduleTone(
-        midiToFrequency(midi),
-        at + index * 0.018,
-        duration,
-        0.03,
-        index % 2 ? 'sine' : 'triangle',
-      )
-    })
-  }
-
-  const scheduleMusicStep = (at: number) => {
-    if (!context || !musicGain) return
-    const quarterNote = 60 / 72
-    const eighthNote = quarterNote / 2
-    const stepInLoop = step % 64
-    const bar = Math.floor(stepInLoop / 8)
-    const beatInBar = stepInLoop % 8
-    const chord = themeChords[Math.floor(bar / 2)]
-
-    if (beatInBar === 0) schedulePad(chord, at, quarterNote * 7.7)
-    if (beatInBar === 0 || beatInBar === 4) {
-      scheduleTone(
-        midiToFrequency(chord[0] - 12),
-        at,
-        quarterNote * 1.7,
-        0.07,
-        'triangle',
-      )
-    }
-    const melody = themeMelody[bar % themeMelody.length][beatInBar]
-    // The lead has priority over the arpeggio: two treble notes landing on
-    // the same beat read as a clash rather than as a single clear phrase.
-    if (beatInBar % 2 === 0 && melody < 0) {
-      const arpeggioNote = chord[(beatInBar / 2) % chord.length]
-      scheduleTone(
-        midiToFrequency(arpeggioNote + 12),
-        at,
-        eighthNote * 1.6,
-        0.035,
-        'sine',
-      )
-    }
-
-    if (melody >= 0) {
-      scheduleTone(midiToFrequency(melody), at, eighthNote * 1.65, 0.08, 'triangle')
-    }
-    step += 1
-  }
-
-  const scheduleAhead = () => {
-    if (!context) return
-    const horizon = context.currentTime + 0.18
-    while (nextStepAt < horizon) {
-      scheduleMusicStep(nextStepAt)
-      nextStepAt += 60 / 72 / 2
-    }
-  }
-
   const ensureContext = () => {
     if (!context) {
       const AudioContextConstructor = window.AudioContext || window.webkitAudioContext
@@ -259,22 +185,62 @@ export const installAtlasAudio = (
     return true
   }
 
+  const loadThemeAudio = (): Promise<AudioBuffer | undefined> => {
+    if (themeAudio) return Promise.resolve(themeAudio)
+    if (themeAudioRequest) return themeAudioRequest
+    if (!context) return Promise.resolve(undefined)
+
+    const decodingContext = context
+    themeAudioRequest = fetch(new URL('/atlas-audio/awestruck.ogg', window.location.origin))
+      .then(async response => {
+        if (!response.ok) throw new Error('Could not load the atlas theme.')
+        return decodingContext.decodeAudioData(await response.arrayBuffer())
+      })
+      .then(buffer => {
+        themeAudio = buffer
+        return buffer
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        themeAudioRequest = undefined
+      })
+    return themeAudioRequest
+  }
+
+  const startTheme = async () => {
+    if (!context || !musicGain || !musicEnabled || themeSource) return
+    const buffer = await loadThemeAudio()
+    if (!context || !musicGain || !musicEnabled || themeSource || !buffer) return
+
+    const source = context.createBufferSource()
+    source.buffer = buffer
+    source.loop = true
+    source.connect(musicGain)
+    source.addEventListener('ended', () => {
+      if (themeSource === source) themeSource = undefined
+    })
+    themeSource = source
+    source.start()
+    setMusicVolume(0.13, context.currentTime)
+  }
+
+  const stopTheme = () => {
+    if (!themeSource) return
+    themeSource.stop()
+    themeSource = undefined
+  }
+
   const enable = () => {
     if (stopTimer !== undefined) {
       window.clearTimeout(stopTimer)
       stopTimer = undefined
     }
     if (!ensureContext() || !context) return
-    if (scheduler === undefined) {
-      nextStepAt = context.currentTime + 0.08
-      scheduler = window.setInterval(scheduleAhead, 90)
-      scheduleAhead()
-    }
     musicEnabled = true
-    // Keep the synth audible alongside normal desktop audio. The individual
-    // voices remain intentionally soft, so this gain increase does not push
-    // the combined sound into clipping.
-    setMusicVolume(0.55, context.currentTime)
+    // This is deliberately tucked beneath the map's reveal cues: it should
+    // feel like atmosphere, not demand the listener's attention.
+    if (themeSource) setMusicVolume(0.13, context.currentTime)
+    else void startTheme()
     updateControl()
   }
 
@@ -295,10 +261,7 @@ export const installAtlasAudio = (
     setMusicVolume(0.0001, at)
     if (stopTimer !== undefined) window.clearTimeout(stopTimer)
     stopTimer = window.setTimeout(() => {
-      if (scheduler !== undefined) {
-        window.clearInterval(scheduler)
-        scheduler = undefined
-      }
+      stopTheme()
       stopTimer = undefined
     }, 500)
   }
@@ -410,15 +373,13 @@ export const installAtlasAudio = (
       enable()
       return
     }
-    musicEnabled = false
     autoStartEnabled = false
-    setMusicVolume(0.0001, context.currentTime)
-    updateControl()
+    stop()
   })
 
   window.addEventListener('pagehide', () => {
-    if (scheduler !== undefined) window.clearInterval(scheduler)
     if (stopTimer !== undefined) window.clearTimeout(stopTimer)
+    stopTheme()
     void context?.close()
   })
 

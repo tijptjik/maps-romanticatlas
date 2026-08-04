@@ -1,10 +1,15 @@
 # Third-party audio notices
 
-Every scene cue is a 2.35-second excerpt from public-domain material. Freesound
-recordings are published under the
+The background theme is a full, seamlessly looping CC0 track from OpenGameArt. Every
+scene cue is a 2.35-second excerpt from public-domain material. Freesound recordings are
+published under the
 [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/) dedication; the
 NASA recording is United States government public-domain material. The local Ogg files
 are clipped and transcoded versions of the linked source recordings.
+
+| Local track                        | Source                                                 | Creator   | Licence |
+| ---------------------------------- | ------------------------------------------------------ | --------- | ------- |
+| `public/atlas-audio/awestruck.ogg` | [Awestruck](https://opengameart.org/content/awestruck) | isaiah658 | CC0     |
 
 | Local cue                                          | Source recording                                                                                                      | Creator              | Licence              |
 | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | -------------------- | -------------------- |
