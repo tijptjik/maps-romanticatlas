@@ -81,6 +81,10 @@ Deploy the built app and Worker with:
 bun run deploy
 ```
 
+The deployment command records the current Git commit in the built app. Open the
+deployed map with `?admin=true` to see its abbreviated commit hash in the lower-left
+corner; hovering it reveals the complete hash.
+
 To enable visitor map sharing, make the existing `maps-romanticatlas-assets` bucket
 public through an R2 custom domain (or its `r2.dev` public-development URL), then set
 `ATLAS_SHARE_ASSET_ORIGIN` to that origin with no path, query string, or trailing asset

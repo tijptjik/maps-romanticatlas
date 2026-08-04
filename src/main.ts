@@ -9,6 +9,7 @@ import { installAtlasAudio } from './atlas-audio.ts'
 import { installAtlasSharing } from './atlas-sharing.ts'
 import { hongKongStyle } from './map-style.ts'
 import {
+  adminModeEnabled,
   diagnosticsModeEnabled,
   noMusicEnabled,
   noNoiseEnabled,
@@ -44,6 +45,20 @@ const map = new maplibregl.Map({
   pixelRatio: Math.min(window.devicePixelRatio, 2),
   canvasContextAttributes: { preserveDrawingBuffer: true },
 })
+
+const installDeployCommit = (mapContainer: HTMLElement) => {
+  if (!adminModeEnabled()) return
+
+  const commit = import.meta.env.VITE_DEPLOY_COMMIT?.trim()
+  const label = document.createElement('output')
+  label.className = 'atlas-deploy-commit'
+  label.textContent = `DEPLOY ${commit ? commit.slice(0, 7) : 'UNKNOWN'}`
+  label.title = commit ? `Deployed commit: ${commit}` : 'Deployed commit unavailable'
+  label.setAttribute('aria-label', label.title)
+  mapContainer.append(label)
+}
+
+installDeployCommit(map.getContainer())
 
 const introFontFaces = [
   '400 1em "Ewert"',

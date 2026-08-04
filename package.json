@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "bun server/index.ts",
     "build": "vite build",
-    "deploy": "bun run build && wrangler deploy",
+    "deploy": "VITE_DEPLOY_COMMIT=$(git rev-parse --verify HEAD) bun run build && wrangler deploy",
     "preview": "NODE_ENV=production bun server/index.ts",
     "dev:remote": "bun run build && wrangler dev --port 8787 --var ATLAS_ALLOWED_ORIGIN:http://localhost:8787 --var ATLAS_LOCAL_DEV:true",
     "sync:tiles": "bun scripts/sync-generated-tiles.ts",
