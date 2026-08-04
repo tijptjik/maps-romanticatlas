@@ -8,6 +8,8 @@ type AtlasAudioHooks = {
   stop: () => void
 }
 
+type AudioMode = 'all-on' | 'music-off' | 'all-off'
+
 const midiToFrequency = (midi: number) => 440 * 2 ** ((midi - 69) / 12)
 
 const revealChimeVariations = [
@@ -59,7 +61,7 @@ export const installAtlasAudio = (
   let musicGain: GainNode | undefined
   let stopTimer: number | undefined
   let musicEnabled = false
-  let autoStartEnabled = !initiallyMuted
+  let audioMode: AudioMode = initiallyMuted ? 'music-off' : 'all-on'
   let noiseBuffer: AudioBuffer | undefined
   let revealChimeIndex = 0
   let themeAudio: AudioBuffer | undefined
@@ -71,9 +73,6 @@ export const installAtlasAudio = (
   const control = document.createElement('button')
   control.className = 'atlas-audio-control'
   control.type = 'button'
-  control.setAttribute('aria-label', 'Play the atlas theme')
-  control.setAttribute('aria-pressed', 'false')
-  control.dataset.muted = 'true'
   control.innerHTML = `
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       <path d="M3 10v4h3l4 3V7l-4 3H3Z" />
@@ -84,18 +83,30 @@ export const installAtlasAudio = (
   mapContainer.append(control)
 
   const updateControl = () => {
-    control.setAttribute(
-      'aria-label',
-      musicEnabled ? 'Mute the atlas theme' : 'Play the atlas theme',
-    )
-    control.setAttribute('aria-pressed', `${musicEnabled}`)
-    control.dataset.muted = `${!musicEnabled}`
+    const labels: Record<AudioMode, string> = {
+      'all-on': 'All atlas sounds on. Activate to turn off music only.',
+      'music-off': 'Atlas music off; sound effects remain on. Activate to turn off all sounds.',
+      'all-off': 'All atlas sounds off. Activate to turn on music and sound effects.',
+    }
+    control.setAttribute('aria-label', labels[audioMode])
+    control.setAttribute('aria-pressed', `${audioMode === 'all-on'}`)
+    control.dataset.audioMode = audioMode
   }
 
   const setMusicVolume = (volume: number, at: number) => {
     if (!musicGain) return
     musicGain.gain.cancelScheduledValues(at)
     musicGain.gain.setTargetAtTime(volume, at, 0.08)
+  }
+
+  const setEffectsVolume = (volume: number, at: number) => {
+    if (!masterGain) return
+    masterGain.gain.cancelScheduledValues(at)
+    if (volume === 0.0001) {
+      masterGain.gain.setValueAtTime(volume, at)
+      return
+    }
+    masterGain.gain.setTargetAtTime(volume, at, 0.08)
   }
 
   const scheduleTone = (
@@ -241,22 +252,11 @@ export const installAtlasAudio = (
     // feel like atmosphere, not demand the listener's attention.
     if (themeSource) setMusicVolume(0.13, context.currentTime)
     else void startTheme()
-    updateControl()
-  }
-
-  const start = () => {
-    // A user gesture must unlock the context even when the URL suppresses the
-    // theme, otherwise later reveal effects would remain blocked by autoplay
-    // policy.
-    if (!ensureContext() || !autoStartEnabled) return
-    enable()
   }
 
   const stop = () => {
-    if (!context || !musicGain) return
-
     musicEnabled = false
-    updateControl()
+    if (!context || !musicGain) return
     const at = context.currentTime
     setMusicVolume(0.0001, at)
     if (stopTimer !== undefined) window.clearTimeout(stopTimer)
@@ -264,6 +264,31 @@ export const installAtlasAudio = (
       stopTheme()
       stopTimer = undefined
     }, 500)
+  }
+
+  const syncAudioMode = () => {
+    // A user gesture must unlock the context even with music disabled, so
+    // reveal effects can play in the music-off state.
+    if (!ensureContext() || !context) return
+
+    setEffectsVolume(audioMode === 'all-off' ? 0.0001 : 0.55, context.currentTime)
+    if (audioMode === 'all-on') enable()
+    else stop()
+  }
+
+  const start = () => {
+    syncAudioMode()
+  }
+
+  const cycleAudioMode = () => {
+    audioMode =
+      audioMode === 'all-on'
+        ? 'music-off'
+        : audioMode === 'music-off'
+          ? 'all-off'
+          : 'all-on'
+    updateControl()
+    syncAudioMode()
   }
 
   const scheduleFallbackChime = (at: number) => {
@@ -368,13 +393,7 @@ export const installAtlasAudio = (
 
   control.addEventListener('click', event => {
     event.stopPropagation()
-    if (!context || !musicEnabled) {
-      autoStartEnabled = true
-      enable()
-      return
-    }
-    autoStartEnabled = false
-    stop()
+    cycleAudioMode()
   })
 
   window.addEventListener('pagehide', () => {
@@ -382,6 +401,8 @@ export const installAtlasAudio = (
     stopTheme()
     void context?.close()
   })
+
+  updateControl()
 
   return { playCameraFlash, playFogLift, preloadScene, start, stop }
 }

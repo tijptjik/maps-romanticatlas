@@ -523,15 +523,35 @@ body {
 
 .atlas-audio-control__muted { display: none; }
 
-.atlas-audio-control[data-muted='true'] .atlas-audio-control__waves { display: none; }
+.atlas-audio-control[data-audio-mode='music-off'] {
+  color: #7f827d;
+  border-color: rgba(127, 130, 125, 0.72);
+}
 
-.atlas-audio-control[data-muted='true'] .atlas-audio-control__muted { display: block; }
+.atlas-audio-control[data-audio-mode='music-off'] .atlas-audio-control__waves,
+.atlas-audio-control[data-audio-mode='all-off'] .atlas-audio-control__waves { display: none; }
+
+.atlas-audio-control[data-audio-mode='all-off'] {
+  color: #7f827d;
+  border-color: rgba(127, 130, 125, 0.72);
+  background: rgba(225, 223, 218, 0.88);
+}
+
+.atlas-audio-control[data-audio-mode='all-off'] .atlas-audio-control__muted { display: block; }
 
 .atlas-audio-control:hover,
 .atlas-audio-control:focus-visible {
   color: #a86f5b;
   background: rgba(248, 237, 207, 0.96);
   outline: none;
+}
+
+.atlas-audio-control[data-audio-mode='music-off']:hover,
+.atlas-audio-control[data-audio-mode='music-off']:focus-visible,
+.atlas-audio-control[data-audio-mode='all-off']:hover,
+.atlas-audio-control[data-audio-mode='all-off']:focus-visible {
+  color: #5f625d;
+  background: rgba(239, 237, 231, 0.96);
 }
 
 .atlas-audio-control[aria-pressed='true'] {
