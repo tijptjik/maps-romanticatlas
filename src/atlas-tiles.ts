@@ -1453,7 +1453,6 @@ const createFogCanvas = (
         (elapsed - titleLiftStart) / timing.titleLiftDuration,
       )
       const titleLiftEase = easeInOutSine(titleLiftProgress)
-      const wordHoldCenterY = centerY + (centerY - titleVisualCenterY) - 32
       const questionBaseline = centerY + size * 0.22
       const quoteBaseline = centerY + size * 0.22
 
@@ -1548,17 +1547,24 @@ const createFogCanvas = (
           const floatX = Math.sin(wavePhase) * size * 0.035
           const floatY = isLingering ? 0 : Math.cos(wavePhase * 0.72) * size * 0.012
           const isFinalWord = wordIndex === words.length - 1
-          const finalWordEase =
-            isCurrentWord && isFinalWord && !isLingering ? easeOutCubic(progress) : 1
-          const finalWordY =
-            streamBaseline +
-            (wordHoldCenterY - streamBaseline) * finalWordEase +
-            (isCurrentWord && isFinalWord ? floatY * (1 - finalWordEase) : 0)
-          const wordY = isLingeringFinalWord
-            ? wordHoldCenterY
-            : isCurrentWord && isFinalWord
-              ? finalWordY
-              : streamBaseline - distance * lineHeight + floatY
+          // Let the final word finish the stream's usual one-line ascent, then
+          // carry it a small distance farther as it settles into its linger.
+          // Its horizontal drift remains exactly as drawn above.
+          const finalWordSettleDuration = Math.min(900, lingerDuration * 0.5)
+          const finalWordSettleProgress = isLingeringFinalWord
+            ? easeOutCubic(
+                Math.min(1, lingerElapsed / Math.max(1, finalWordSettleDuration)),
+              )
+            : 0
+          const finalWordExtraRise = isFinalWord
+            ? lineHeight * 0.15 * finalWordSettleProgress
+            : 0
+          const finalWordFloatY =
+            isFinalWord && !isLingering
+              ? floatY * (1 - easeOutCubic(progress))
+              : floatY
+          const wordY =
+            streamBaseline - distance * lineHeight + finalWordFloatY - finalWordExtraRise
           if (!isLingeringFinalWord && wordY - fittedSize * 0.58 < wordLimitY) continue
           drawCenteredLine(
             word,
