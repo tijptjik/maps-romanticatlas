@@ -143,10 +143,10 @@ The map opens with a Victorian-circus-style introduction. Click or press a key t
 the atlas, or open the Cartographer's Note for the artist statement. Press Ctrl+M at any
 time to return to the introduction. After 3 minutes without activity, locally revealed
 tiles fade back into the fog, the view returns to its starting position, and the
-introduction animates in again. A small in-browser theme begins after the first visitor
-gesture; the volume control at bottom left mutes it. Successfully revealed tiles add a
-short filtered wind swell and a scene-specific sound cue. The synthesized chime remains
-as a fallback while a cue loads or when playback is unsupported.
+introduction animates in again. A quiet, looping ambient theme begins after the first
+visitor gesture; the volume control at bottom left mutes it. Successfully revealed tiles
+add a short filtered wind swell and a scene-specific sound cue. The synthesized chime
+remains as a fallback while a cue loads or when playback is unsupported.
 
 After five revealed tiles, visitors can choose **Share your map**. The centred 4:5
 portrait frame shows exactly what will be exported, with all controls omitted. They can
@@ -224,8 +224,8 @@ The supported environment variables are:
   version by default; add `?version=1` through `?version=5` to inspect one version.
   Unversioned legacy images are excluded. The rerender control selects a scene using the
   normal 9×9 cached-scene lookup, including images at the selected location. Click an
-  image to reveal its controls. Different tile coordinates can render independently, while
-  a coordinate accepts only one active render at a time.
+  image to reveal its controls. Different tile coordinates can render independently,
+  while a coordinate accepts only one active render at a time.
 - `?diagnostics=true`: shows red boundaries around cached tiles.
 - `ATLAS_ADMIN_TOKEN`: required when using `?admin=true`; use a long random secret. The
   admin UI prompts for it once per browser session. The server also requires a

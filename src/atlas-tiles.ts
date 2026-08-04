@@ -16,6 +16,7 @@ const groundFogRadiusMultiplier = 1.045
 const fogRadiusDuration = 180_000
 const generatedRevealDuration = 1400
 const generatedTileOpacity = 0.94
+const revealedTileFocusZoom = 18.3
 const fogPokeDuration = 900
 const fogPokeExpansion = 0.16
 const personalClearanceLimit = 3
@@ -1062,6 +1063,12 @@ const createFogCanvas = (
     fogCanvasHeight = clientHeight + fogBleed * 2
     const renderWidth = Math.ceil(fogCanvasWidth * renderScale)
     const renderHeight = Math.ceil(fogCanvasHeight * renderScale)
+    // Loading copy has sharp edges, unlike the intentionally soft fog. Keep
+    // its backing store at the map canvas's pixel density so CSS never has to
+    // enlarge the letters after they have been rasterised.
+    const loadingRenderScale = Math.max(1, mapCanvas.width / nextWidth)
+    const loadingRenderWidth = Math.ceil(fogCanvasWidth * loadingRenderScale)
+    const loadingRenderHeight = Math.ceil(fogCanvasHeight * loadingRenderScale)
     if (canvas.width !== renderWidth || canvas.height !== renderHeight) {
       canvas.width = renderWidth
       canvas.height = renderHeight
@@ -1069,9 +1076,14 @@ const createFogCanvas = (
       mistCanvas.height = renderHeight
       cachedColourTileCanvas.width = renderWidth
       cachedColourTileCanvas.height = renderHeight
-      loadingCanvas.width = renderWidth
-      loadingCanvas.height = renderHeight
       if (gl) gl.viewport(0, 0, renderWidth, renderHeight)
+    }
+    if (
+      loadingCanvas.width !== loadingRenderWidth ||
+      loadingCanvas.height !== loadingRenderHeight
+    ) {
+      loadingCanvas.width = loadingRenderWidth
+      loadingCanvas.height = loadingRenderHeight
     }
     setFogCanvasBounds(canvas)
     setFogCanvasBounds(mistCanvas)
@@ -1364,7 +1376,7 @@ const createFogCanvas = (
 
   const drawLoadingText = time => {
     if (!loadingContext || isZooming) return
-    const ratio = canvas.width / Math.max(1, fogCanvasWidth)
+    const ratio = loadingCanvas.width / Math.max(1, fogCanvasWidth)
     clearOverlayContext(loadingContext)
     setOverlayContextTransform(loadingContext, ratio)
 
@@ -1960,6 +1972,15 @@ export const installAtlasTileInteractions = (
   const cachedTileIds = new Set()
   const fog = createFogCanvas(map, tileState, cachedTileIds, isFogTileLand, noNoise)
   invalidateFog = fog.invalidate
+  const focusRevealedTile = tile => {
+    const bounds = tileBounds(tile)
+    map.flyTo({
+      center: [(bounds.west + bounds.east) / 2, (bounds.north + bounds.south) / 2],
+      zoom: Math.max(map.getZoom(), revealedTileFocusZoom),
+      duration: 1200,
+      essential: true,
+    })
+  }
   const revealGeneratedTile = (
     id,
     scene: AtlasScene | undefined,
@@ -2019,6 +2040,7 @@ export const installAtlasTileInteractions = (
       }
       fog.finishReveal(id)
       fog.invalidate()
+      focusRevealedTile(tile)
     }
     requestAnimationFrame(reveal)
   }
