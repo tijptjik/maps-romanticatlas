@@ -188,8 +188,8 @@ the visitor to wait around three minutes.
 
 Generated event images are cached in local `generated-tiles/` during development and in
 the configured R2 bucket in production. Current generations use immutable variant keys
-such as `atlas/18/x/y/type.v4.<variant>.image` and matching metadata. Normal cache
-lookup draws randomly from retained v1–v5 variants; new generation writes a new v4
+such as `atlas/18/x/y/type.v5.<variant>.image` and matching metadata. Normal cache
+lookup draws randomly from retained v1–v5 variants; new generation writes a new v5
 variant rather than overwriting an existing asset. Generation sends the model a
 full-tile source plus a vector-derived safe-zone guide: land is available for
 transformation, while water, roads, paths, boundaries, and tile edges are locked. The
@@ -211,8 +211,9 @@ production equivalent runs in `src/worker-api.ts`. Copy `.env.example` to `.env`
 texture. For production, use `wrangler secret put OPENROUTER_API_KEY`. Never expose the
 key through a `VITE_*` variable or import the server wrapper from browser code.
 
-The default model is `openai/gpt-5.4-image-2`. Generation requests are routed through
-OpenRouter, with the full rendered tile supplied as the edit target. Set
+The default model is `openai/gpt-5.4-image-2`. Generation requests use OpenRouter's
+Images API, with the full rendered tile and zoning guide supplied as image references.
+The response is requested as a square PNG for reliable tile composition. Set
 `OPENROUTER_MODEL` to another compatible image-editing model to compare outputs.
 
 The supported environment variables are:
