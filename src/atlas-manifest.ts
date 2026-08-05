@@ -109,18 +109,25 @@ export class AtlasManifest extends DurableObject<Env> {
           INSERT INTO atlas_manifest_schema_migrations (id) VALUES (2);
         `)
       }
+      if (current < 3) {
+        this.ctx.storage.sql.exec(`
+          ALTER TABLE atlas_manifest_variants ADD COLUMN published_at INTEGER;
+          INSERT INTO atlas_manifest_schema_migrations (id) VALUES (3);
+        `)
+      }
     })
   }
 
-  upsert(entries: AtlasManifestEntry[]) {
+  upsert(entries: AtlasManifestEntry[], publishedAt = Date.now()) {
     for (const entry of entries) {
       this.ctx.storage.sql.exec(
         `INSERT INTO atlas_manifest_variants
-          (zoom, x, y, scene, version, variant, content_type, content_bounds)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          (zoom, x, y, scene, version, variant, content_type, content_bounds, published_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(zoom, x, y, scene, version, variant) DO UPDATE SET
            content_type = excluded.content_type,
-           content_bounds = excluded.content_bounds`,
+           content_bounds = excluded.content_bounds,
+           published_at = excluded.published_at`,
         entry.zoom,
         entry.x,
         entry.y,
@@ -129,8 +136,24 @@ export class AtlasManifest extends DurableObject<Env> {
         entry.variant,
         entry.contentType,
         entry.contentBounds ? JSON.stringify(entry.contentBounds) : null,
+        publishedAt,
       )
     }
+  }
+
+  // A rebuild is based on an R2 listing, so its first batch removes stale rows
+  // from this shard while retaining entries written after the listing began.
+  replaceFromRebuild(
+    entries: AtlasManifestEntry[],
+    rebuildStartedAt: number,
+    removeStale = false,
+  ) {
+    if (removeStale)
+      this.ctx.storage.sql.exec(
+        'DELETE FROM atlas_manifest_variants WHERE published_at IS NULL OR published_at < ?',
+        rebuildStartedAt,
+      )
+    this.upsert(entries, rebuildStartedAt)
   }
 
   remove(entry: Pick<AtlasManifestEntry, 'zoom' | 'x' | 'y' | 'scene' | 'version' | 'variant'>) {
