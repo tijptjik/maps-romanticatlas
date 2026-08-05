@@ -1,11 +1,18 @@
 import { parseImageDataUrl } from './image-data-url.ts'
 
-const openrouterApiUrl = 'https://openrouter.ai/api/v1/chat/completions'
+const openrouterImagesApiUrl = 'https://openrouter.ai/api/v1/images'
 
-const findImageUrl = message => {
-  const imagePart = message?.images?.find(part => part.image_url?.url)
-    ?? message?.content?.find?.(part => part.image_url?.url)
-  return imagePart?.image_url?.url
+const parseGeneratedImage = (value, mediaType) => {
+  if (mediaType && mediaType !== 'image/png') {
+    throw new Error(`OpenRouter returned an unsupported image format (${mediaType}).`)
+  }
+  if (typeof value !== 'string' || !/^[A-Za-z0-9+/]+={0,2}$/.test(value)) {
+    throw new Error('OpenRouter returned invalid image data.')
+  }
+  return parseImageDataUrl(
+    `data:image/png;base64,${value}`,
+    'OpenRouter returned invalid image data.',
+  )
 }
 
 export const createOpenRouterClient = ({
@@ -17,13 +24,11 @@ export const createOpenRouterClient = ({
   }
 
   const requestImage = async (prompt, sourceImage, referenceImages = []) => {
-    const content: Array<Record<string, string | Record<string, string>>> = [{ type: 'text', text: prompt }]
-    if (sourceImage) content.push({ type: 'image_url', image_url: { url: sourceImage } })
-    referenceImages.forEach(image => {
-      content.push({ type: 'image_url', image_url: { url: image } })
-    })
+    const inputReferences = [sourceImage, ...referenceImages]
+      .filter(Boolean)
+      .map(image => ({ type: 'image_url', image_url: { url: image } }))
 
-    const response = await fetch(openrouterApiUrl, {
+    const response = await fetch(openrouterImagesApiUrl, {
       method: 'POST',
       headers: {
         authorization: `Bearer ${apiKey}`,
@@ -33,8 +38,11 @@ export const createOpenRouterClient = ({
       },
       body: JSON.stringify({
         model,
-        modalities: ['text', 'image'],
-        messages: [{ role: 'user', content }],
+        prompt,
+        ...(inputReferences.length ? { input_references: inputReferences } : {}),
+        aspect_ratio: '1:1',
+        n: 1,
+        output_format: 'png',
       }),
     })
 
@@ -43,9 +51,9 @@ export const createOpenRouterClient = ({
     }
 
     const result = await response.json()
-    const imageUrl = findImageUrl(result.choices?.[0]?.message)
-    if (!imageUrl) throw new Error('OpenRouter returned no image for the requested prompt.')
-    return parseImageDataUrl(imageUrl, 'OpenRouter returned an invalid image data URL.')
+    const image = result.data?.find(item => item?.b64_json)
+    if (!image) throw new Error('OpenRouter returned no image for the requested prompt.')
+    return parseGeneratedImage(image.b64_json, image.media_type)
   }
 
   return {
