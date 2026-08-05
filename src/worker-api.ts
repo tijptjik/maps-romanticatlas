@@ -39,8 +39,9 @@ import {
 const maximumRequestBytes = 12_000_000
 const maximumCacheStatusBatchSize = 64
 const maximumImageBytes = 4_000_000
+const maximumGeneratedImageBytes = 8_000_000
 const maximumShareImageBytes = 8_000_000
-const openrouterApiUrl = 'https://openrouter.ai/api/v1/chat/completions'
+const openrouterImagesApiUrl = 'https://openrouter.ai/api/v1/images'
 const atlasColourDirection =
   'Keep the surrounding map and its Victorian-brown palette unchanged. Within the event, use a lively, carefully balanced storybook palette with warm parchment and sandy cream foundations, plus clear accents of cobalt blue, coral vermilion, marigold yellow, leafy sage green, dusty rose, and soft lilac. Keep the colours richly pigmented, crisp, and pleasantly contrasty so the event stands out, while remaining slightly softened and paper-printed rather than neon, fluorescent, garish, or oversaturated.'
 
@@ -346,6 +347,24 @@ const decodeDataUrl = (value: unknown, label: string, maximumBytes = maximumImag
   return { bytes, contentType: match[1] }
 }
 
+const decodeGeneratedImage = (value: unknown, mediaType: unknown) => {
+  if (mediaType && mediaType !== 'image/png') {
+    throw new Error(`OpenRouter returned an unsupported image format (${mediaType}).`)
+  }
+  if (typeof value !== 'string' || !/^[A-Za-z0-9+/]+={0,2}$/.test(value)) {
+    throw new Error('OpenRouter returned invalid image data.')
+  }
+  try {
+    return decodeDataUrl(
+      `data:image/png;base64,${value}`,
+      'OpenRouter returned invalid image data.',
+      maximumGeneratedImageBytes,
+    )
+  } catch {
+    throw new Error('OpenRouter returned invalid image data.')
+  }
+}
+
 const resizeToTile = (bytes: Uint8Array, label: string) => {
   const source = PhotonImage.new_from_byteslice(bytes)
   if (source.get_width() === atlasTileSize && source.get_height() === atlasTileSize) {
@@ -478,45 +497,51 @@ const openrouterImage = async (
   if (!env.OPENROUTER_API_KEY) {
     throw new Error('OpenRouter is not configured for this deployment.')
   }
-  const response = await fetch(openrouterApiUrl, {
-    method: 'POST',
-    headers: {
-      authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
-      'content-type': 'application/json',
-      'http-referer': env.ATLAS_ALLOWED_ORIGIN,
-      'x-title': 'Visionary Machines Map',
-    },
-    body: JSON.stringify({
-      model: env.OPENROUTER_MODEL ?? 'openai/gpt-5.4-image-2',
-      modalities: ['text', 'image'],
-      messages: [
-        {
-          role: 'user',
-          content: [
-            { type: 'text', text: prompt },
-            { type: 'image_url', image_url: { url: sourceImage } },
-            { type: 'image_url', image_url: { url: guideImage } },
-          ],
-        },
-      ],
-    }),
-  })
+  const requestImage = () =>
+    fetch(openrouterImagesApiUrl, {
+      method: 'POST',
+      headers: {
+        authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
+        'content-type': 'application/json',
+        'http-referer': env.ATLAS_ALLOWED_ORIGIN,
+        'x-title': 'Visionary Machines Map',
+      },
+      body: JSON.stringify({
+        model: env.OPENROUTER_MODEL ?? 'openai/gpt-5.4-image-2',
+        prompt,
+        input_references: [
+          { type: 'image_url', image_url: { url: sourceImage } },
+          { type: 'image_url', image_url: { url: guideImage } },
+        ],
+        aspect_ratio: '1:1',
+        n: 1,
+        output_format: 'png',
+      }),
+    })
+
+  let response: Response
+  try {
+    response = await requestImage()
+  } catch {
+    try {
+      // A request can occasionally fail before it reaches the provider. Retry
+      // once: no image has been accepted or charged until OpenRouter responds.
+      response = await requestImage()
+    } catch {
+      throw new Error(
+        'The image-generation service could not be reached. Please try clearing this tile again shortly.',
+      )
+    }
+  }
   if (!response.ok) {
     throw new Error(`OpenRouter image generation failed (${response.status}).`)
   }
   const result = (await response.json()) as {
-    choices?: Array<{
-      message?: {
-        images?: Array<{ image_url?: { url?: string } }>
-        content?: Array<{ image_url?: { url?: string } }>
-      }
-    }>
+    data?: Array<{ b64_json?: unknown; media_type?: unknown }>
   }
-  const message = result.choices?.[0]?.message
-  const imageUrl =
-    message?.images?.find(image => image.image_url?.url)?.image_url?.url ??
-    message?.content?.find(image => image.image_url?.url)?.image_url?.url
-  const parsed = decodeDataUrl(imageUrl, 'OpenRouter image')
+  const image = result.data?.find(item => item.b64_json)
+  if (!image) throw new Error('OpenRouter returned no image for the requested prompt.')
+  const parsed = decodeGeneratedImage(image.b64_json, image.media_type)
   return parsed.bytes
 }
 
@@ -928,6 +953,10 @@ const mapConcurrently = async <Input, Output>(
 }
 
 const rebuildManifest = async (env: AtlasEnv) => {
+  // Entries published after this point may not appear in the R2 listing below.
+  // The Durable Object uses this timestamp to preserve those live writes while
+  // replacing stale rows from each rebuilt shard.
+  const rebuildStartedAt = Date.now()
   const metadataKeys: string[] = []
   let cursor: string | undefined
   do {
@@ -959,7 +988,11 @@ const rebuildManifest = async (env: AtlasEnv) => {
     [...entriesByShard].map(async ([shard, shardEntries]) => {
       const stub = env.ATLAS_MANIFEST.getByName(shard)
       for (let offset = 0; offset < shardEntries.length; offset += 100) {
-        await stub.upsert(shardEntries.slice(offset, offset + 100))
+        await stub.replaceFromRebuild(
+          shardEntries.slice(offset, offset + 100),
+          rebuildStartedAt,
+          offset === 0,
+        )
       }
     }),
   )
