@@ -44,8 +44,6 @@ const rootDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)),
 const cacheDirectory = path.join(rootDirectory, 'generated-tiles')
 const sharedMapsDirectory = path.join(rootDirectory, 'shared-maps')
 const productionDirectory = path.join(rootDirectory, 'dist')
-const generationWindowMs = 180_000
-const generationsPerClient = 3
 const concurrentGenerationsPerClient = 3
 const maximumCacheStatusBatchSize = 64
 const isProduction = process.env.NODE_ENV === 'production'
@@ -68,7 +66,7 @@ const contentTypes = {
 }
 
 const tileLocks = new Map<string, Promise<void>>()
-const clientGenerationState = new Map<string, { active: number; startedAt: number[] }>()
+const clientGenerationState = new Map<string, { active: number }>()
 
 const requestSearchParams = request =>
   new URL(request.url ?? '/', 'http://localhost').searchParams
@@ -109,33 +107,20 @@ const getClientKey = request => {
 }
 
 const reserveGeneration = clientKey => {
-  const now = Date.now()
-  const state = clientGenerationState.get(clientKey) ?? { active: 0, startedAt: [] }
-  state.startedAt = state.startedAt.filter(startedAt => now - startedAt < generationWindowMs)
+  const state = clientGenerationState.get(clientKey) ?? { active: 0 }
 
   if (state.active >= concurrentGenerationsPerClient) {
     clientGenerationState.set(clientKey, state)
     return {
       allowed: false,
-      retryAfterMs: generationWindowMs,
+      retryAfterMs: 1,
       reason:
-        'You already have an atlas tile clearing in progress.\n' +
-        'Allow 3 minutes for its dramatic exit',
-    }
-  }
-
-  if (state.startedAt.length >= generationsPerClient) {
-    const retryAfterMs = Math.max(1, generationWindowMs - (now - state.startedAt[0]))
-    clientGenerationState.set(clientKey, state)
-    return {
-      allowed: false,
-      retryAfterMs,
-      reason: 'Three tile clearings are complete. The fog is being cleared elsewhere in the city; please wait around three minutes.',
+        'Three tile clearings are already in progress.\n' +
+        'Wait for one to finish before clearing more fog.',
     }
   }
 
   state.active += 1
-  state.startedAt.push(now)
   clientGenerationState.set(clientKey, state)
   return {
     allowed: true,
@@ -143,7 +128,7 @@ const reserveGeneration = clientKey => {
       const current = clientGenerationState.get(clientKey)
       if (!current) return
       current.active = Math.max(0, current.active - 1)
-      if (!current.active && !current.startedAt.length) clientGenerationState.delete(clientKey)
+      if (!current.active) clientGenerationState.delete(clientKey)
     },
   }
 }
@@ -153,7 +138,8 @@ const sendRateLimit = (response, limit) => {
   response.writeHead(429, {
     'content-type': 'application/json; charset=utf-8',
     'retry-after': String(retryAfterSeconds),
-    'x-ratelimit-limit': String(generationsPerClient),
+    'x-atlas-limit-reason': 'concurrent-generations',
+    'x-ratelimit-limit': String(concurrentGenerationsPerClient),
     'x-ratelimit-remaining': '0',
   })
   response.end(JSON.stringify({
@@ -560,7 +546,7 @@ const atlasPrompt = (scene, hasSea) => {
       : 'This tile does not contain visible sea or coastal water. Do not create the sea-side event; preserve the map unchanged.'
     : ''
 
-  return `Create ${atlasScenes[scene]} across the permitted land in this complete single z18 map tile, leaving a 10% safety margin. The first image is the source map. The second image is a zoning guide: green areas are safe to transform, while red areas are locked and must remain unchanged. Use the guide as an instruction, not as artwork. Preserve the exact tile size, orientation, scale, coastline, water, roads, paths, boundaries, and labels. Treat every existing road and path as hard pixel-registered infrastructure: trace its original centerline exactly, keep every junction and curve in the same position, and do not cover it with buildings, scenery, texture, or event artwork. Do not invent, move, bend, widen, recolour, or erase any locked path or road, and do not draw road-like lines in the green areas. Do not add text, shadows, gradients, lighting, borders, frames, or tile-shaped background patches. Use a flat, planimetric, strict overhead view integrated into the existing cartography. ${atlasColourDirection} ${seaRule}`
+  return `Create ${atlasScenes[scene]} across the permitted land in this single z18 map tile, leaving a 10% safety margin. This image is a cropped window onto one continuous world map, never a complete, framed illustration: neighbouring map tiles continue beyond every edge. The first image is the source map. The second image is a zoning guide: green areas are safe to transform, while red areas are locked and must remain unchanged. Use the guide as an instruction, not as artwork. Preserve the exact tile size, orientation, scale, coastline, water, roads, paths, boundaries, and labels. At each image edge, preserve the source map and make any partial terrain, tree canopy, vegetation cluster, building, or event detail read as naturally continuing beyond the crop; never deliberately terminate an object, tree row, field, or vignette at the tile boundary. Treat every existing road and path as hard pixel-registered infrastructure: trace its original centerline exactly, keep every junction and curve in the same position, and do not cover it with buildings, scenery, texture, or event artwork. Do not invent, move, bend, widen, recolour, or erase any locked path or road, and do not draw road-like lines in the green areas. Do not add text, shadows, gradients, lighting, borders, frames, or tile-shaped background patches. Use a flat, planimetric, strict overhead view integrated into the existing cartography. ${atlasColourDirection} ${seaRule}`
 }
 
 const generateTile = async (tile, sourceImage, guideImage, safeMask, lineOverlay, contentBounds) => {

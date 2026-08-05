@@ -1,10 +1,10 @@
 export const atlasZoom = 18
 export const atlasTileSize = 512
-export const generationVersion = 4
+export const generationVersion = 6
 export const defaultAtlasVariant = 'default'
-// Keep the current write version stable while allowing every retained cache
-// generation, including the pre-existing v5 set, to be replayed or selected.
-export const readableCacheVersions = [1, 2, 3, 4, 5] as const
+// Retain every generated cache version so existing tiles remain replayable and
+// available for cache lookups after a generation change.
+export const readableCacheVersions = [1, 2, 3, 4, 5, 6] as const
 export const atlasSceneGridRadius = 4
 export const csrfCookieName = 'atlas_csrf'
 
