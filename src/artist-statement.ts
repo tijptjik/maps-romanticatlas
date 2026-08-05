@@ -2,6 +2,10 @@ const artistStatementMarkup = `
   <button class="artist-statement__trigger" type="button" aria-controls="artist-statement" aria-expanded="false">
     Cartographer's Note <span aria-hidden="true">↗</span>
   </button>
+  <button class="artist-statement__map-trigger" type="button" aria-controls="artist-statement" aria-expanded="false">
+    <span class="artist-statement__map-trigger-compass" aria-hidden="true"></span>
+    <span>Cartographer's Note</span>
+  </button>
   <section class="artist-statement" id="artist-statement" hidden>
     <div class="artist-statement__dialog" role="dialog" aria-modal="true" aria-labelledby="artist-statement-title">
       <button class="artist-statement__close" type="button" aria-label="Close the artist statement">×</button>
@@ -34,6 +38,10 @@ export const installArtistStatement = container => {
   container.append(wrapper)
 
   const trigger = wrapper.querySelector<HTMLButtonElement>('.artist-statement__trigger')
+  const mapTrigger = wrapper.querySelector<HTMLButtonElement>('.artist-statement__map-trigger')
+  const triggers = [trigger, mapTrigger].filter(
+    (button): button is HTMLButtonElement => button instanceof HTMLButtonElement,
+  )
   const actions = container.querySelector('.atlas-intro__actions') as HTMLElement | null
   const statement = wrapper.querySelector<HTMLElement>('.artist-statement')
   const dialog = wrapper.querySelector<HTMLElement>('.artist-statement__dialog')
@@ -45,22 +53,30 @@ export const installArtistStatement = container => {
   const close = () => {
     if (!statement || statement.hidden) return
     statement.hidden = true
-    trigger?.setAttribute('aria-expanded', 'false')
+    triggers.forEach(button => {
+      button.setAttribute('aria-expanded', 'false')
+    })
     previouslyFocused?.focus()
   }
 
-  const open = () => {
+  const open = (source?: HTMLElement) => {
     if (!statement) return
-    previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    previouslyFocused = source ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null)
     statement.hidden = false
-    trigger?.setAttribute('aria-expanded', 'true')
+    triggers.forEach(button => {
+      button.setAttribute('aria-expanded', 'true')
+    })
     closeButton?.focus()
   }
 
   if (actions && trigger) actions.prepend(trigger)
-  trigger?.addEventListener('pointerdown', event => event.stopPropagation())
-  trigger?.addEventListener('click', event => event.stopPropagation())
-  trigger?.addEventListener('click', open)
+  triggers.forEach(button => {
+    button.addEventListener('pointerdown', event => event.stopPropagation())
+    button.addEventListener('click', event => {
+      event.stopPropagation()
+      open(button)
+    })
+  })
   closeButton?.addEventListener('click', close)
   statement?.addEventListener('click', event => {
     if (event.target === statement) close()
