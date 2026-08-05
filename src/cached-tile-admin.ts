@@ -1,13 +1,25 @@
+import maplibregl from 'maplibre-gl'
 import { createAtlasTitleCard, positionAtlasTitleCard } from './atlas-title-cards.ts'
 import { captureTile, tileHasSea } from './atlas-tiles.ts'
 import { atlasSceneNames, pickAtlasScene, type AtlasScene } from './atlas-scenes.ts'
-import { atlasZoom, tileBounds, tileForPosition } from './tile-geometry.ts'
+import { atlasZoom, tileBounds, tileForPosition, tilePolygon } from './tile-geometry.ts'
 import { runtimeModeUrl } from './runtime-modes.ts'
 
 const adminControlId = 'atlas-admin-delete-control'
 const adminStatusId = 'atlas-admin-status'
 const adminTokenStorageKey = 'atlas-admin-token'
 const csrfCookieName = 'atlas_csrf'
+const selectionSourceId = 'atlas-admin-tile-selection'
+const selectionLayerId = 'atlas-admin-tile-selection-outline'
+const rasterSourceId = 'atlas-admin-cached-tiles'
+const rasterLayerId = 'atlas-admin-cached-tiles'
+const rasterProtocol = 'atlas-admin-cache'
+const transparentRasterTile = Uint8Array.from(
+  atob(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAADUlEQVQImWNgYGBgAAAABQABh6FO1AAAAABJRU5ErkJggg==',
+  ),
+  character => character.charCodeAt(0),
+).buffer
 
 const tileKey = tile =>
   `${tile.zoom}/${tile.x}/${tile.y}/${tile.scene}/v${tile.version}/${tile.variant ?? 'default'}`
@@ -33,8 +45,6 @@ const setControlIcon = (control, icon, label) => {
   control.title = label
 }
 
-const imageLayerId = tile => `atlas-admin-tile-${tileKey(tile).replaceAll('/', '-')}`
-const imageSourceId = tile => `${imageLayerId(tile)}-source`
 const firstLabelLayerId = map =>
   map.getStyle().layers.find(layer => layer.type === 'symbol')?.id
 
@@ -83,26 +93,80 @@ export const fetchAdmin = async (url, options: RequestInit = {}) => {
   return response
 }
 
-const installCachedImage = (map, tile) => {
-  const sourceId = imageSourceId(tile)
-  const layerId = imageLayerId(tile)
-  if (map.getSource(sourceId)) return
-  const bounds = tileBounds(tile)
-  map.addSource(sourceId, {
-    type: 'image',
-    url: tile.url,
-    coordinates: [
-      [bounds.west, bounds.north],
-      [bounds.east, bounds.north],
-      [bounds.east, bounds.south],
-      [bounds.west, bounds.south],
-    ],
+const rasterTileCoordinates = url => {
+  const match = new URL(url).pathname.match(/^\/(\d+)\/(\d+)\/(\d+)$/)
+  return match
+    ? { zoom: Number(match[1]), x: Number(match[2]), y: Number(match[3]) }
+    : null
+}
+
+const installCachedTileRasterSource = (map, activeTilesByPosition) => {
+  maplibregl.addProtocol(rasterProtocol, async ({ url }, abortController) => {
+    const rasterTile = rasterTileCoordinates(url)
+    if (!rasterTile || rasterTile.zoom > atlasZoom)
+      return { data: transparentRasterTile.slice(0) }
+
+    const tileSpan = 2 ** (atlasZoom - rasterTile.zoom)
+    const minX = rasterTile.x * tileSpan
+    const minY = rasterTile.y * tileSpan
+    const tiles = [...activeTilesByPosition.values()].filter(
+      tile =>
+        tile.x >= minX &&
+        tile.x < minX + tileSpan &&
+        tile.y >= minY &&
+        tile.y < minY + tileSpan,
+    )
+    if (!tiles.length) return { data: transparentRasterTile.slice(0) }
+
+    if (rasterTile.zoom === atlasZoom) {
+      const response = await fetch(tiles[0].url, { signal: abortController.signal })
+      if (!response.ok) return { data: transparentRasterTile.slice(0) }
+      return {
+        data: await response.arrayBuffer(),
+        cacheControl: response.headers.get('cache-control') ?? undefined,
+        expires: response.headers.get('expires') ?? undefined,
+      }
+    }
+
+    const plates = await Promise.all(
+      tiles.map(async tile => {
+        const response = await fetch(tile.url, { signal: abortController.signal })
+        if (!response.ok) return null
+        return { tile, image: await createImageBitmap(await response.blob()) }
+      }),
+    )
+    const canvas = document.createElement('canvas')
+    canvas.width = 512
+    canvas.height = 512
+    const context = canvas.getContext('2d')
+    if (!context) return { data: transparentRasterTile.slice(0) }
+    const plateSize = 512 / tileSpan
+    plates.forEach(plate => {
+      if (!plate) return
+      context.drawImage(
+        plate.image,
+        (plate.tile.x - minX) * plateSize,
+        (plate.tile.y - minY) * plateSize,
+        plateSize,
+        plateSize,
+      )
+      plate.image.close()
+    })
+    return { data: await createImageBitmap(canvas) }
+  })
+
+  map.addSource(rasterSourceId, {
+    type: 'raster',
+    tiles: [`${rasterProtocol}://tiles/{z}/{x}/{y}`],
+    minzoom: 12,
+    maxzoom: atlasZoom,
+    tileSize: 512,
   })
   map.addLayer(
     {
-      id: layerId,
+      id: rasterLayerId,
       type: 'raster',
-      source: sourceId,
+      source: rasterSourceId,
       paint: {
         'raster-opacity': 0.94,
         'raster-fade-duration': 0,
@@ -110,13 +174,14 @@ const installCachedImage = (map, tile) => {
     },
     firstLabelLayerId(map),
   )
-}
 
-const removeCachedImage = (map, tile) => {
-  const layerId = imageLayerId(tile)
-  const sourceId = imageSourceId(tile)
-  if (map.getLayer(layerId)) map.removeLayer(layerId)
-  if (map.getSource(sourceId)) map.removeSource(sourceId)
+  let revision = 0
+  return () => {
+    revision += 1
+    map.getSource(rasterSourceId)?.setTiles([
+      `${rasterProtocol}://tiles/{z}/{x}/{y}?revision=${revision}`,
+    ])
+  }
 }
 
 export const installCachedTileAdmin = async map => {
@@ -144,13 +209,16 @@ export const installCachedTileAdmin = async map => {
     const tilesByPosition = new Map()
     const activeTilesByPosition = new Map()
     tiles.forEach(tile => {
-      installCachedImage(map, tile)
       const positionKey = tilePositionKey(tile)
       const positionTiles = tilesByPosition.get(positionKey) ?? []
       positionTiles.push(tile)
       tilesByPosition.set(positionKey, positionTiles)
       activeTilesByPosition.set(positionKey, positionTiles.at(-1))
     })
+    const refreshCachedTileRaster = installCachedTileRasterSource(
+      map,
+      activeTilesByPosition,
+    )
 
     const titleCards = new Map()
     tiles.forEach(tile => {
@@ -163,6 +231,21 @@ export const installCachedTileAdmin = async map => {
     const container = map.getContainer()
     container.classList.add('atlas-admin-mode')
 
+    map.addSource(selectionSourceId, {
+      type: 'geojson',
+      data: { type: 'FeatureCollection', features: [] },
+    })
+    map.addLayer({
+      id: selectionLayerId,
+      type: 'line',
+      source: selectionSourceId,
+      paint: {
+        'line-color': '#e11d2e',
+        'line-width': 3,
+        'line-opacity': 0.95,
+      },
+    })
+
     const actionBar = document.createElement('div')
     actionBar.className = 'atlas-admin-actions'
     actionBar.setAttribute('aria-label', 'Tile actions')
@@ -174,7 +257,7 @@ export const installCachedTileAdmin = async map => {
     status.className = 'atlas-admin-status'
     const updateStatus = () => {
       const versionLabel = version ? ` · VERSION: v${version}` : ''
-      status.textContent = `ADMIN MODE · PRE-RENDERS: ${preRenderedCount}${versionLabel} · click an image to manage it`
+      status.textContent = `ADMIN MODE · PRE-RENDERS: ${preRenderedCount}${versionLabel} · select a tile to manage or render it`
     }
     updateStatus()
     container.append(status)
@@ -251,6 +334,7 @@ export const installCachedTileAdmin = async map => {
     })
 
     let selectedTile = null
+    let selectedPosition = null
     let deleting = false
     const renderingByPosition = new Map()
     let captureQueue = Promise.resolve()
@@ -258,7 +342,7 @@ export const installCachedTileAdmin = async map => {
     const updateRenderingOverlay = (tile, message) => {
       const rendering = renderingByPosition.get(tilePositionKey(tile))
       if (rendering) rendering.message = message
-      if (!selectedTile || tilePositionKey(selectedTile) !== tilePositionKey(tile)) return
+      if (!selectedPosition || tilePositionKey(selectedPosition) !== tilePositionKey(tile)) return
       renderingTitle.textContent = `Rendering ${sceneLabel(tile.scene)}`
       renderingMessage.textContent = message
     }
@@ -334,6 +418,22 @@ export const installCachedTileAdmin = async map => {
       actionBar.style.transform = 'none'
     }
 
+    const showRenderingFeedback = tile => {
+      const rendering = renderingByPosition.get(tilePositionKey(tile))
+      if (!rendering) return false
+      actionBar.hidden = true
+      deleteControl.hidden = true
+      cycleControl.hidden = true
+      rerenderControl.hidden = true
+      updateRenderingOverlay(rendering.tile, rendering.message)
+      // Do not depend on a later map movement to repaint the status. A new
+      // tile has no cached image layer to trigger one, so its rendering state
+      // must make the overlay visible immediately.
+      renderingOverlay.hidden = false
+      positionRenderingOverlay(rendering.tile)
+      return true
+    }
+
     const positionControl = () => {
       titleCards.forEach(({ card, tile }) => {
         const positionKey = tilePositionKey(tile)
@@ -351,20 +451,15 @@ export const installCachedTileAdmin = async map => {
         label.setAttribute('aria-label', `Image version ${activeTile.version}`)
         positionOverlay(label, activeTile, true)
       })
-      const rendering = selectedTile
-        ? renderingByPosition.get(tilePositionKey(selectedTile))
+      const rendering = selectedPosition
+        ? renderingByPosition.get(tilePositionKey(selectedPosition))
         : null
       if (rendering) {
-        actionBar.hidden = true
-        deleteControl.hidden = true
-        cycleControl.hidden = true
-        rerenderControl.hidden = true
-        updateRenderingOverlay(rendering.tile, rendering.message)
-        positionRenderingOverlay(rendering.tile)
+        showRenderingFeedback(rendering.tile)
         return
       }
       renderingOverlay.hidden = true
-      if (!selectedTile) {
+      if (!selectedPosition) {
         actionBar.hidden = true
         deleteControl.hidden = true
         cycleControl.hidden = true
@@ -372,20 +467,52 @@ export const installCachedTileAdmin = async map => {
         return
       }
       actionBar.hidden = false
+      rerenderControl.hidden = false
+      if (!selectedTile) {
+        deleteControl.hidden = true
+        cycleControl.hidden = true
+        setControlIcon(
+          rerenderControl,
+          'rerender',
+          `Render a new scene at ${selectedPosition.x}/${selectedPosition.y}`,
+        )
+        positionActionBar(selectedPosition)
+        return
+      }
       deleteControl.hidden = false
       setControlIcon(deleteControl, 'delete', `Delete ${sceneLabel(selectedTile.scene)}`)
       const candidates = tilesByPosition.get(tilePositionKey(selectedTile)) ?? []
       cycleControl.hidden = false
       cycleControl.disabled = candidates.length < 2
       cycleControl.title = candidates.length < 2 ? 'No alternate image' : 'Show next image'
-      rerenderControl.hidden = false
+      setControlIcon(rerenderControl, 'rerender', 'Render a different scene')
       positionActionBar(selectedTile)
+    }
+
+    const updateSelectionOutline = () => {
+      const source = map.getSource(selectionSourceId)
+      if (!source) return
+      source.setData({
+        type: 'FeatureCollection',
+        features:
+          selectedPosition && !selectedTile
+            ? [{
+                type: 'Feature',
+                properties: {},
+                geometry: {
+                  type: 'Polygon',
+                  coordinates: [tilePolygon(selectedPosition)],
+                },
+              }]
+            : [],
+      })
     }
 
     const selectTileAt = point => {
       const position = tileForPosition(point)
       const positionKey = `${atlasZoom}/${position.x}/${position.y}`
       const candidates = tilesByPosition.get(positionKey)
+      selectedPosition = { ...position, zoom: atlasZoom }
       selectedTile = activeTilesByPosition.get(positionKey) ?? candidates?.at(-1) ?? null
       deleteControl.hidden = !selectedTile
       cycleControl.hidden = !selectedTile
@@ -393,10 +520,19 @@ export const installCachedTileAdmin = async map => {
       if (selectedTile) {
         setControlIcon(deleteControl, 'delete', `Delete ${sceneLabel(selectedTile.scene)}`)
       }
+      updateSelectionOutline()
       positionControl()
     }
 
-    map.on('click', event => selectTileAt(event.lngLat))
+    map.on('click', event => {
+      // MapLibre observes the button click through its own handler even after
+      // the control stops DOM propagation. Without this guard, pressing the
+      // render button selects the tile beneath the button (often a neighbour)
+      // and positionControl immediately hides the active render overlay.
+      const target = event.originalEvent.target
+      if (target instanceof Element && target.closest('.atlas-admin-actions')) return
+      selectTileAt(event.lngLat)
+    })
     const mapEvents = ['move', 'resize', 'zoom', 'rotate', 'pitch']
     mapEvents.forEach(eventName => {
       map.on(eventName, positionControl)
@@ -420,7 +556,7 @@ export const installCachedTileAdmin = async map => {
         const titleCard = titleCards.get(tileKey(candidate))?.card
         if (titleCard) titleCard.hidden = candidate !== nextTile
       })
-      map.moveLayer(imageLayerId(nextTile))
+      refreshCachedTileRaster()
       setControlIcon(deleteControl, 'delete', `Delete ${sceneLabel(nextTile.scene)}`)
       positionControl()
     })
@@ -434,17 +570,23 @@ export const installCachedTileAdmin = async map => {
 
     const focusTileForCapture = tile => new Promise<void>(resolve => {
       const bounds = tileBounds(tile)
-      map.once('idle', resolve)
       map.fitBounds(
         [[bounds.west, bounds.south], [bounds.east, bounds.north]],
         { padding: 24, duration: 0, maxZoom: atlasZoom },
       )
+      // A newly selected admin tile has no raster image layer yet, so waiting
+      // for MapLibre's global idle state can defer both capture and visible
+      // feedback behind unrelated source work. The zero-duration camera update
+      // is synchronous; capture on the next frame instead.
+      requestAnimationFrame(() => resolve())
     })
 
-    const captureForRerender = tile => {
+    const captureForRerender = (tile, renderingTile) => {
       const capture = captureQueue.then(async () => {
-        updateRenderingOverlay(tile, 'Preparing the map reference…')
+        updateRenderingOverlay(renderingTile, 'Preparing the map reference…')
+        showRenderingFeedback(renderingTile)
         await focusTileForCapture(tile)
+        showRenderingFeedback(renderingTile)
         return captureTile(map, tile)
       })
       // Keep later captures moving if this one fails. The render that owns the
@@ -456,7 +598,7 @@ export const installCachedTileAdmin = async map => {
     const installRerenderedTile = tile => {
       const positionKey = tilePositionKey(tile)
       const replacesSelectedTile =
-        selectedTile && tilePositionKey(selectedTile) === positionKey
+        selectedPosition && tilePositionKey(selectedPosition) === positionKey
       const candidates = tilesByPosition.get(positionKey) ?? []
       const matchingIndex = candidates.findIndex(
         candidate => tileKey(candidate) === tileKey(tile),
@@ -464,7 +606,6 @@ export const installCachedTileAdmin = async map => {
       const replaced = matchingIndex >= 0 ? candidates[matchingIndex] : null
 
       if (replaced) {
-        removeCachedImage(map, replaced)
         titleCards.get(tileKey(replaced))?.card.remove()
         titleCards.delete(tileKey(replaced))
         candidates.splice(matchingIndex, 1, tile)
@@ -477,37 +618,39 @@ export const installCachedTileAdmin = async map => {
       }
 
       tilesByPosition.set(positionKey, candidates)
-      installCachedImage(map, tile)
       const card = createAtlasTitleCard(container, tile.scene)
       titleCards.set(tileKey(tile), { card, tile })
       activeTilesByPosition.set(positionKey, tile)
       // A render recenters the map for capture, but the operator may then pan
       // to and select another cached tile while the request is in flight. Do
       // not make the completed request steal that newer selection.
-      if (replacesSelectedTile) selectedTile = tile
-      map.moveLayer(imageLayerId(tile))
+      if (replacesSelectedTile) {
+        selectedTile = tile
+        selectedPosition = { zoom: tile.zoom, x: tile.x, y: tile.y }
+      }
+      refreshCachedTileRaster()
       updateCountBadge(positionKey, candidates.length)
       updateStatus()
+      updateSelectionOutline()
       positionControl()
     }
 
     rerenderControl.addEventListener('click', async event => {
       event.preventDefault()
       event.stopPropagation()
-      if (!selectedTile) return
+      if (!selectedPosition) return
 
-      const tile = selectedTile
+      const tile = selectedTile ?? selectedPosition
+      const selectedTileAtRenderStart = selectedTile
       const positionKey = tilePositionKey(tile)
+      const renderingNewTile = !selectedTileAtRenderStart
       if (renderingByPosition.has(positionKey)) return
-      if (
-        !window.confirm(
-          `Render a different scene for ${tile.x}/${tile.y} instead of ${sceneLabel(tile.scene)}?`,
-        )
-      )
-        return
 
-      renderingByPosition.set(positionKey, { tile, message: 'Finding an unused scene…' })
-      positionControl()
+      renderingByPosition.set(positionKey, {
+        tile: selectedTileAtRenderStart ?? { ...tile, scene: 'new-scene' },
+        message: 'Finding an unused scene…',
+      })
+      showRenderingFeedback(tile)
       try {
         // Cache status is the same 9×9 scene lookup used by ordinary tile
         // generation. It deliberately includes scenes already cached at this
@@ -539,7 +682,7 @@ export const installCachedTileAdmin = async map => {
           .map(({ tile: renderingTile }) => renderingTile.scene)
         const scene = pickAtlasScene(tileHasSea(map, tile), [
           ...scenes,
-          tile.scene,
+          ...(selectedTileAtRenderStart ? [selectedTileAtRenderStart.scene] : []),
           ...reservedScenes,
         ])
         const renderingScene = { ...tile, scene }
@@ -547,20 +690,25 @@ export const installCachedTileAdmin = async map => {
           tile: renderingScene,
           message: 'Waiting to prepare the map reference…',
         })
-        positionControl()
-        const capturedTile = await captureForRerender(tile)
+        showRenderingFeedback(renderingScene)
+        const capturedTile = await captureForRerender(tile, renderingScene)
         updateRenderingOverlay(renderingScene, 'Setting the new scene in ink and watercolour…')
-        const response = await fetchAdmin(
-          `/api/atlas-tiles/${tile.zoom}/${tile.x}/${tile.y}/${scene}?rerender=true`,
-          {
+        showRenderingFeedback(renderingScene)
+        const generationPath = `/api/atlas-tiles/${tile.zoom}/${tile.x}/${tile.y}/${scene}`
+        const response = renderingNewTile
+          ? await fetch(generationPath, {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({ ...capturedTile, hasSea: tileHasSea(map, tile) }),
+            })
+          : await fetchAdmin(`${generationPath}?rerender=true`, {
             method: 'POST',
             headers: {
               'content-type': 'application/json',
               'x-atlas-csrf-token': csrfToken() ?? '',
             },
             body: JSON.stringify({ ...capturedTile, hasSea: tileHasSea(map, tile) }),
-          },
-        )
+          })
         const body = await response.json().catch(() => null)
         if (!response.ok) {
           throw new Error(body?.error ?? `Rerender failed with HTTP ${response.status}`)
@@ -570,6 +718,7 @@ export const installCachedTileAdmin = async map => {
         }
 
         updateRenderingOverlay(renderingScene, 'Placing the finished atlas plate…')
+        showRenderingFeedback(renderingScene)
         installRerenderedTile({
           zoom: tile.zoom,
           x: tile.x,
@@ -584,6 +733,7 @@ export const installCachedTileAdmin = async map => {
         rerenderControl.title = error instanceof Error ? error.message : 'Rerender failed'
       } finally {
         renderingByPosition.delete(positionKey)
+        updateSelectionOutline()
         positionControl()
       }
     })
@@ -617,7 +767,6 @@ export const installCachedTileAdmin = async map => {
         if (!response.ok)
           throw new Error(body?.error ?? `Delete failed with HTTP ${response.status}`)
 
-        removeCachedImage(map, tile)
         titleCards.get(tileKey(tile))?.card.remove()
         titleCards.delete(tileKey(tile))
         const positionKey = tilePositionKey(tile)
@@ -636,6 +785,7 @@ export const installCachedTileAdmin = async map => {
           versionLabels.get(positionKey)?.remove()
           versionLabels.delete(positionKey)
         }
+        refreshCachedTileRaster()
         const countBadge = countBadges.get(positionKey)?.badge
         if (countBadge) {
           countBadge.textContent = String(remaining.length)
@@ -645,12 +795,14 @@ export const installCachedTileAdmin = async map => {
         if (index >= 0) tiles.splice(index, 1)
         preRenderedCount = Math.max(0, preRenderedCount - 1)
         selectedTile = remaining.at(-1) ?? null
+        selectedPosition = { zoom: tile.zoom, x: tile.x, y: tile.y }
         updateStatus()
         deleteControl.hidden = !selectedTile
         cycleControl.hidden = !selectedTile
         if (selectedTile) {
           setControlIcon(deleteControl, 'delete', `Delete ${sceneLabel(selectedTile.scene)}`)
         }
+        updateSelectionOutline()
         positionControl()
       } catch (error) {
         deleteControl.textContent =
