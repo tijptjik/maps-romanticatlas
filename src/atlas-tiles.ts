@@ -8,6 +8,7 @@ import Pbf from 'pbf'
 const minimumFogZoom = 15
 const loadingLayoutZoom = 17.5
 const landTargetThreshold = 0.75
+const streetTargetThreshold = 0.2
 const landSampleSize = 10
 const sourceLandZoom = 15
 const sourceLandTileSpan = 2 ** (atlasZoom - sourceLandZoom)
@@ -22,8 +23,7 @@ const revealedTileFocusDuration = 1500
 const titleCardFocusLeadTime = 500
 const fogPokeDuration = 900
 const fogPokeExpansion = 0.16
-const personalClearanceLimit = 3
-const cityClearanceDuration = 180_000
+const concurrentGenerationLimit = 3
 
 const tileId = ({ x, y }) => `${atlasZoom}/${x}/${y}`
 const sourceLandTileId = ({ x, y }) => `${sourceLandZoom}/${x}/${y}`
@@ -139,6 +139,8 @@ const vectorFeatureContainsPoint = (feature, point) => {
     )
 }
 
+const isRegionalBaseFeature = feature => feature.properties['saanseoi:base'] === true
+
 const vectorTileLandFraction = (sourceTile, tile) => {
   const earthLayer = sourceTile.layers.earth
   const waterLayer = sourceTile.layers.water
@@ -149,16 +151,21 @@ const vectorTileLandFraction = (sourceTile, tile) => {
   const originY = (tile.y % sourceLandTileSpan) * sourceTileSize
   const earthFeatures = Array.from({ length: earthLayer.length }, (_, index) =>
     earthLayer.feature(index),
-  )
+  ).filter(isRegionalBaseFeature)
   const waterFeatures = waterLayer
     ? Array.from({ length: waterLayer.length }, (_, index) => waterLayer.feature(index))
     : []
+  if (earthFeatures.length === 0) return null
+
   const landSamples = Array.from({ length: landSampleSize }, (_, row) =>
     Array.from({ length: landSampleSize }, (_, column) => {
       const point = {
         x: originX + ((column + 0.5) * sourceTileSize) / landSampleSize,
         y: originY + ((row + 0.5) * sourceTileSize) / landSampleSize,
       }
+      // The regional PMTiles contract provides complementary generated earth and
+      // water faces. Land must be explicitly covered by earth: treating missing
+      // water as land would turn areas outside the regional footprint into fog.
       const onEarth = earthFeatures.some(feature =>
         vectorFeatureContainsPoint(feature, point),
       )
@@ -170,6 +177,58 @@ const vectorTileLandFraction = (sourceTile, tile) => {
   ).flat()
 
   return landSamples.filter(Boolean).length / landSamples.length
+}
+
+const isVectorFinePath = feature =>
+  /path|trail|footway|pedestrian|steps|cycleway|track/.test(
+    Object.values(feature.properties).join(' ').toLowerCase(),
+  )
+
+const vectorTileStreetFraction = (sourceTile, tile) => {
+  const roadsLayer = sourceTile.layers.roads
+  if (!roadsLayer) return 0
+
+  const sourceTileSize = roadsLayer.extent / sourceLandTileSpan
+  const originX = (tile.x % sourceLandTileSpan) * sourceTileSize
+  const originY = (tile.y % sourceLandTileSpan) * sourceTileSize
+  const streetCanvas = document.createElement('canvas')
+  streetCanvas.width = atlasTileSize
+  streetCanvas.height = atlasTileSize
+  const streetContext = streetCanvas.getContext('2d')
+  const scale = atlasTileSize / sourceTileSize
+
+  Array.from({ length: roadsLayer.length }, (_, index) => roadsLayer.feature(index))
+    .filter(feature => feature.type === 2 && !isVectorFinePath(feature))
+    .forEach(feature => {
+      streetContext.beginPath()
+      feature.loadGeometry().forEach(line => {
+        if (!line.length) return
+        streetContext.moveTo((line[0].x - originX) * scale, (line[0].y - originY) * scale)
+        line.slice(1).forEach(point => {
+          streetContext.lineTo((point.x - originX) * scale, (point.y - originY) * scale)
+        })
+      })
+      streetContext.lineWidth = 18
+      streetContext.lineCap = 'round'
+      streetContext.lineJoin = 'round'
+      streetContext.stroke()
+    })
+
+  const pixels = streetContext.getImageData(0, 0, atlasTileSize, atlasTileSize)
+  let coveredPixels = 0
+  for (let index = 3; index < pixels.data.length; index += 4) {
+    if (pixels.data[index] > 32) coveredPixels += 1
+  }
+  return coveredPixels / (atlasTileSize * atlasTileSize)
+}
+
+const vectorTileIsTargetable = (sourceTile, tile) => {
+  const landFraction = vectorTileLandFraction(sourceTile, tile)
+  if (landFraction === null) return null
+  return (
+    landFraction >= landTargetThreshold &&
+    vectorTileStreetFraction(sourceTile, tile) <= streetTargetThreshold
+  )
 }
 
 // Choose the opening concept once at map initialization, then walk the full
@@ -303,100 +362,6 @@ export const tileHasSea = (map, tile) => {
   return map
     .queryRenderedFeatures([northWest, southEast], { layers: waterLayerIds })
     .some(feature => seaKinds.has(feature.properties?.kind))
-}
-
-const tileLandFraction = (map, tile) => {
-  const bounds = tileBounds(tile)
-  const landSamples = Array.from({ length: landSampleSize }, (_, row) =>
-    Array.from({ length: landSampleSize }, (_, column) => {
-      const lng =
-        bounds.west + ((bounds.east - bounds.west) * (column + 0.5)) / landSampleSize
-      const lat =
-        bounds.south + ((bounds.north - bounds.south) * (row + 0.5)) / landSampleSize
-      const point = map.project([lng, lat])
-      return map.queryRenderedFeatures(point, { layers: waterLayerIds }).length === 0
-    }),
-  ).flat()
-
-  return landSamples.filter(Boolean).length / landSamples.length
-}
-
-const pointInRing = (point, ring) => {
-  let inside = false
-  for (
-    let index = 0, previous = ring.length - 1;
-    index < ring.length;
-    previous = index++
-  ) {
-    const [x, y] = ring[index]
-    const [previousX, previousY] = ring[previous]
-    const crosses = y > point[1] !== previousY > point[1]
-    if (
-      crosses &&
-      point[0] < ((previousX - x) * (point[1] - y)) / (previousY - y) + x
-    ) {
-      inside = !inside
-    }
-  }
-  return inside
-}
-
-const geometryContainsPoint = (geometry, point) => {
-  if (!geometry) return false
-  if (geometry.type === 'Polygon') {
-    const rings = geometry.coordinates
-    return (
-      rings.length > 0 &&
-      pointInRing(point, rings[0]) &&
-      rings.slice(1).every(ring => !pointInRing(point, ring))
-    )
-  }
-  if (geometry.type === 'MultiPolygon') {
-    return geometry.coordinates.some(
-      polygon =>
-        polygon.length > 0 &&
-        pointInRing(point, polygon[0]) &&
-        polygon.slice(1).every(ring => !pointInRing(point, ring)),
-    )
-  }
-  if (geometry.type === 'GeometryCollection') {
-    return geometry.geometries.some(child => geometryContainsPoint(child, point))
-  }
-  return false
-}
-
-const sourceTileLandFraction = (map, tile) => {
-  const bounds = tileBounds(tile)
-  const earthFeatures = map.querySourceFeatures('hongkong-latest', {
-    sourceLayer: 'earth',
-  })
-  const waterFeatures = map.querySourceFeatures('hongkong-latest', {
-    sourceLayer: 'water',
-  })
-  if (!earthFeatures.length && !waterFeatures.length) return null
-  let coveredSampleCount = 0
-  const landSamples = Array.from({ length: landSampleSize }, (_, row) =>
-    Array.from({ length: landSampleSize }, (_, column) => {
-      const point = [
-        bounds.west + ((bounds.east - bounds.west) * (column + 0.5)) / landSampleSize,
-        bounds.south + ((bounds.north - bounds.south) * (row + 0.5)) / landSampleSize,
-      ]
-      const onEarth = earthFeatures.some(feature =>
-        geometryContainsPoint(feature.geometry, point),
-      )
-      const onWater = waterFeatures.some(feature =>
-        geometryContainsPoint(feature.geometry, point),
-      )
-      if (onEarth || onWater) coveredSampleCount += 1
-      return onEarth && !onWater
-    }),
-  ).flat()
-
-  // querySourceFeatures() can still contain the source tiles from the previous
-  // viewport while a drag exposes a new one. Treat sparse coverage as unknown
-  // instead of misclassifying the newly exposed land as water.
-  if (coveredSampleCount < landSamples.length * 0.75) return null
-  return landSamples.filter(Boolean).length / landSamples.length
 }
 
 const atlasTileSize = 512
@@ -1931,31 +1896,13 @@ export const installAtlasTileInteractions = (
   }: { noNoise?: boolean; onRevealCountChange?: (count: number) => void } = {},
 ) => {
   const tileState = new Map()
-  const landTargetState = new Map()
   const revealedTileIds = new Set()
-  const generatedTileIds = new Set()
   const titleCards = new Map()
   const clearanceNotice = createClearanceNotice(map)
   const fogErrorAnnouncer = createFogErrorAnnouncer(map)
-  let clearanceStartedAt: number | undefined
   const isAdminMode = () => map.getContainer().classList.contains('atlas-admin-mode')
-  const mapDataIsReady = () =>
-    map.isStyleLoaded() && map.isSourceLoaded('hongkong-latest') && map.areTilesLoaded()
   const activeGenerationCount = () =>
     [...tileState.values()].filter(state => state === 'generating').length
-
-  const isLandTargetable = tile => {
-    const id = tileId(tile)
-    if (landTargetState.has(id)) return landTargetState.get(id)
-
-    // queryRenderedFeatures() is render-state dependent. Never turn missing
-    // source data into land while the initial map or a new viewport is still
-    // settling. Cached classifications above must remain usable during that
-    // settling period or the whole fog mask can briefly clear during a pan.
-    if (!mapDataIsReady() || !isFullyVisible(map, tile)) return false
-    landTargetState.set(id, tileLandFraction(map, tile) >= landTargetThreshold)
-    return landTargetState.get(id)
-  }
 
   const fogLandState = new Map()
   const fogLandRequests = new Map()
@@ -1966,9 +1913,9 @@ export const installAtlasTileInteractions = (
 
     const request = loadSourceLandTile(tile)
       .then(sourceTile => {
-        const fraction = vectorTileLandFraction(sourceTile, tile)
-        if (fraction !== null) {
-          fogLandState.set(id, fraction >= landTargetThreshold)
+        const isTargetable = vectorTileIsTargetable(sourceTile, tile)
+        if (isTargetable !== null) {
+          fogLandState.set(id, isTargetable)
         }
       })
       .catch(() => {})
@@ -1981,25 +1928,14 @@ export const installAtlasTileInteractions = (
   const isFogTileLand = tile => {
     const id = tileId(tile)
     if (fogLandState.has(id)) return fogLandState.get(id)
-    if (isFullyVisible(map, tile) && mapDataIsReady()) {
-      const isLand = isLandTargetable(tile)
-      fogLandState.set(id, isLand)
-      return isLand
-    }
-
-    const fraction = sourceTileLandFraction(map, tile)
-    if (fraction !== null) {
-      const isLand = fraction >= landTargetThreshold
-      fogLandState.set(id, isLand)
-      return isLand
-    }
-
     requestFogLandClassification(tile)
     return false
   }
 
   const cachedTileIds = new Set()
-  const fog = createFogCanvas(map, tileState, cachedTileIds, isFogTileLand, noNoise)
+  const isFogTileRenderable = tile =>
+    cachedTileIds.has(tileId(tile)) || isFogTileLand(tile)
+  const fog = createFogCanvas(map, tileState, cachedTileIds, isFogTileRenderable, noNoise)
   invalidateFog = fog.invalidate
   const focusRevealedTile = (tile, onApproach?: () => void) => {
     const bounds = tileBounds(tile)
@@ -2032,15 +1968,10 @@ export const installAtlasTileInteractions = (
         essential: true,
       })
     })
-  const revealGeneratedTile = (
-    id,
-    scene: AtlasScene | undefined,
-    countsAgainstQuota = true,
-  ) => {
+  const revealGeneratedTile = (id, scene: AtlasScene | undefined) => {
     audio?.playFogLift(scene)
     tileState.set(id, 'revealing')
     revealedTileIds.add(id)
-    if (countsAgainstQuota) generatedTileIds.add(id)
     fog.beginReveal(id)
 
     const titleCard = titleCards.get(id)?.card
@@ -2068,13 +1999,6 @@ export const installAtlasTileInteractions = (
       // Count tiles that visibly clear from the fog. This deliberately includes
       // cache hits clicked by the visitor, but not background cache preloads.
       onRevealCountChange(revealedTileIds.size)
-      if (
-        countsAgainstQuota &&
-        generatedTileIds.size === personalClearanceLimit &&
-        clearanceStartedAt === undefined
-      ) {
-        clearanceStartedAt = Date.now()
-      }
       fog.finishReveal(id)
       fog.invalidate()
       focusRevealedTile(tile, () => titleCard?.classList.remove('is-awaiting-focus'))
@@ -2239,8 +2163,11 @@ export const installAtlasTileInteractions = (
     if (map.getZoom() < minimumFogZoom) return
     visibleFogTiles(map).forEach(tile => {
       const id = tileId(tile)
-      // Check every currently visible fog tile as the viewport moves.
-      if (tileState.has(id) || !isFogged(tile) || !isFogTileLand(tile)) return
+      if (tileState.has(id) || !isFogged(tile)) return
+      // Start the source pre-check before drawing fog. Cache lookups remain
+      // independent of that check: an existing generated tile is always a
+      // valid place to reveal, even when new generation is disallowed there.
+      isFogTileLand(tile)
       // A miss is cached too, so moving the map does not repeatedly ask the
       // server about the same visible tile during one visit.
       preloadCachedTile(tile).catch(() => {})
@@ -2256,18 +2183,18 @@ export const installAtlasTileInteractions = (
 
   map.on('mousemove', event => {
     if (isAdminMode()) {
-      map.getCanvas().style.cursor = ''
+      map.getCanvas().style.cursor = 'pointer'
       return
     }
     const tile = tileForPosition(event.lngLat)
-    const state = tileState.get(tileId(tile))
-    const isPartiallyVisible = !isFullyVisible(map, tile)
+    const id = tileId(tile)
+    const state = tileState.get(id)
     map.getCanvas().style.cursor =
       map.getZoom() >= minimumFogZoom &&
       (state === 'generated' ||
         (isFogged(tile) &&
           state !== 'revealing' &&
-          (isPartiallyVisible || isLandTargetable(tile))))
+          (cachedTileIds.has(id) || isFogTileLand(tile))))
         ? 'pointer'
         : ''
   })
@@ -2288,7 +2215,7 @@ export const installAtlasTileInteractions = (
       tileState.delete(id)
     }
     if (
-      !isLandTargetable(tile) ||
+      !(cachedTileIds.has(id) || isFogTileLand(tile)) ||
       !isFogged(tile) ||
       !isFullyVisible(map, tile) ||
       tileState.get(id) === 'checking' ||
@@ -2322,35 +2249,18 @@ export const installAtlasTileInteractions = (
           0,
           cacheStatus.preparedUrl,
         )
-        revealGeneratedTile(id, cacheStatus.scene, false)
+        revealGeneratedTile(id, cacheStatus.scene)
         console.info(
           `[atlas] ${id} loaded from cache in ${Math.round(performance.now() - startedAt)}ms`,
         )
         return
       }
 
-      if (generatedTileIds.size >= personalClearanceLimit) {
-        const remaining =
-          clearanceStartedAt === undefined
-            ? cityClearanceDuration
-            : Math.max(0, cityClearanceDuration - (Date.now() - clearanceStartedAt))
-        if (remaining > 0) {
-          tileState.delete(id)
-          fog.cancelReveal(id)
-          fog.invalidate()
-          clearanceNotice.show(
-            'Your three clearings are complete. The fog is being cleared elsewhere in the city; it takes around three minutes.',
-          )
-          return
-        }
-        clearanceStartedAt = undefined
-      }
-
       // Cache checks may run together, but only three cache misses may reach
       // the paid image request at once. This is deliberately checked directly
       // before marking the tile as generating so rapid clicks cannot start a
       // fourth request while the first three are still in flight.
-      if (activeGenerationCount() >= personalClearanceLimit) {
+      if (activeGenerationCount() >= concurrentGenerationLimit) {
         tileState.delete(id)
         fog.cancelReveal(id)
         fog.invalidate()
@@ -2395,10 +2305,11 @@ export const installAtlasTileInteractions = (
       if (!response.ok) {
         if (response.status === 429) {
           rateLimited = true
-          clearanceStartedAt = Date.now()
           clearanceNotice.show(
-            body?.error ??
-              'The fog is being cleared elsewhere in the city; it takes around three minutes.',
+            response.headers.get('x-atlas-limit-reason') === 'concurrent-generations'
+              ? body?.error ??
+                'Three tile clearings are already in progress.\nWait for one to finish before clearing more fog.'
+              : 'This clearing is temporarily unavailable.\nPlease wait a moment, then try another patch of fog.',
           )
         }
       }
@@ -2486,11 +2397,9 @@ export const installAtlasTileInteractions = (
             titleCards.delete(tileId(tile))
           }
         })
-        generatedTileIds.clear()
         revealedTileIds.clear()
         onRevealCountChange(0)
         tileState.clear()
-        clearanceStartedAt = undefined
         clearanceNotice.hide()
         fog.clearError()
         fogErrorAnnouncer.clear()
