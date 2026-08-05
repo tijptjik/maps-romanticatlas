@@ -163,33 +163,32 @@ returns to the framing view and creates a fresh image and QR code.
 
 On the local development server and the production Worker, the map is restricted to zoom
 levels 16.5–18.5. At that available zoom range, a drifting fog descends over a
-deterministic half of the fully visible z18 tiles that are at least 75% land. Each fog
-form spills into neighboring gaps and is rendered from a cached mask plus a WebGL noise
-shader, so the pattern reads as overlapping mist rather than an alternating grid. The
-shader uses its full detail below zoom 17, one veil from zoom 17 through just under 18,
-and a smooth fog mask at zoom 18 and above.
+deterministic half of the fully visible z18 tiles that are at least 75% land and no more
+than 20% streets. Each fog form spills into neighboring gaps and is rendered from a
+cached mask plus a WebGL noise shader, so the pattern reads as overlapping mist rather
+than an alternating grid. The shader uses its full detail below zoom 17, one veil from
+zoom 17 through just under 18, and a smooth fog mask at zoom 18 and above.
 
-Click a fully visible fogged land tile to create a strictly top-down cartographic event
-tile from the rendered map. The selected tile gets a “LOOKING UP THIS TILE” treatment
-while it runs. The fog carries one of 24 short provocations about imagination,
+Click a fully visible eligible fogged tile to create a strictly top-down cartographic
+event tile from the rendered map. The selected tile gets a “LOOKING UP THIS TILE”
+treatment while it runs. The fog carries one of 24 short provocations about imagination,
 discovery, possibility, and Romanticism, each paired with a quotation from a Romantic
 author. The text clears once the generated image is ready.
 
-On the local development server, each client may start three new tile clearings in a
-rolling three-minute window, with up to three paid generations active at a time.
+On the local development server, each client may have up to three paid tile generations
+active at a time.
 Requests for the same tile are coalesced while a generation is in flight. The production
 Worker does not currently apply an equivalent cross-request limit or coalescing.
 
 Generated images and metadata are stored separately. In production, the manifest is
 published only after both R2 objects have been stored, so normal manifest-based lookups
-do not expose an incomplete cache entry. After the three local personal clearings, the
-map gives a soft warning that the fog is being cleared elsewhere in the city and asks
-the visitor to wait around three minutes.
+do not expose an incomplete cache entry. When three local clearings are active, the map
+asks the visitor to wait for one to finish.
 
 Generated event images are cached in local `generated-tiles/` during development and in
 the configured R2 bucket in production. Current generations use immutable variant keys
-such as `atlas/18/x/y/type.v5.<variant>.image` and matching metadata. Normal cache
-lookup draws randomly from retained v1–v5 variants; new generation writes a new v5
+such as `atlas/18/x/y/type.v6.<variant>.image` and matching metadata. Normal cache
+lookup draws randomly from retained v1–v6 variants; new generation writes a new v6
 variant rather than overwriting an existing asset. Generation sends the model a
 full-tile source plus a vector-derived safe-zone guide: land is available for
 transformation, while water, roads, paths, boundaries, and tile edges are locked. The
@@ -227,7 +226,7 @@ The supported environment variables are:
   R2 origin that serves the `maps-romanticatlas-assets` bucket directly.
 - `?admin=true`: enables the cache manifest, image cycling, rerendering, and deletion UI
   in either local or production mode. The admin listing includes every retained image
-  version by default; add `?version=1` through `?version=5` to inspect one version.
+  version by default; add `?version=1` through `?version=6` to inspect one version.
   Unversioned legacy images are excluded. The rerender control selects a scene using the
   normal 9×9 cached-scene lookup, including images at the selected location. Click an
   image to reveal its controls. Different tile coordinates can render independently,
