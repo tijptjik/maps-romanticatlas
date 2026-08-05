@@ -3,7 +3,9 @@ import type { StyleSpecification } from 'maplibre-gl'
 
 const romanticPaint = layer => {
   if (layer.id === 'background') {
-    return { 'background-color': '#efe0bd' }
+    // Regional PMTiles contain land and water only inside the release footprint.
+    // Treat the uncovered canvas as sea so the viewer never invents land beyond it.
+    return { 'background-color': '#7d9fa0' }
   }
 
   if (layer.id === 'earth') {
@@ -56,7 +58,7 @@ const romanticPaint = layer => {
   return {}
 }
 
-const romanticLayers = layers('hongkong-latest', namedFlavor('light'), { lang: 'en' })
+const basemapLayers = layers('hongkong-latest', namedFlavor('light'), { lang: 'en' })
   .filter(
     layer =>
       !layer.id.startsWith('pois') &&
@@ -68,6 +70,25 @@ const romanticLayers = layers('hongkong-latest', namedFlavor('light'), { lang: '
     ...layer,
     paint: { ...layer.paint, ...romanticPaint(layer) },
   }))
+
+const coastlineLayer = {
+  id: 'coastline',
+  type: 'line' as const,
+  source: 'hongkong-latest',
+  'source-layer': 'coastline',
+  filter: ['==', 'kind', 'coastline'],
+  paint: {
+    'line-color': '#8d5d52',
+    'line-width': ['interpolate', ['linear'], ['zoom'], 12, 0.5, 18, 1.25],
+  },
+}
+
+const waterLayerIndex = basemapLayers.findIndex(layer => layer.id === 'water')
+const romanticLayers = [
+  ...basemapLayers.slice(0, waterLayerIndex + 1),
+  coastlineLayer,
+  ...basemapLayers.slice(waterLayerIndex + 1),
+]
 
 export const hongKongStyle = {
   version: 8,
