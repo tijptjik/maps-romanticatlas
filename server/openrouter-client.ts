@@ -28,23 +28,37 @@ export const createOpenRouterClient = ({
       .filter(Boolean)
       .map(image => ({ type: 'image_url', image_url: { url: image } }))
 
-    const response = await fetch(openrouterImagesApiUrl, {
-      method: 'POST',
-      headers: {
-        authorization: `Bearer ${apiKey}`,
-        'content-type': 'application/json',
-        'http-referer': 'https://romanticatlas.hype.hk',
-        'x-title': 'Visionary Machines Map',
-      },
-      body: JSON.stringify({
-        model,
-        prompt,
-        ...(inputReferences.length ? { input_references: inputReferences } : {}),
-        aspect_ratio: '1:1',
-        n: 1,
-        output_format: 'png',
-      }),
-    })
+    const requestImage = () =>
+      fetch(openrouterImagesApiUrl, {
+        method: 'POST',
+        headers: {
+          authorization: `Bearer ${apiKey}`,
+          'content-type': 'application/json',
+          'http-referer': 'https://romanticatlas.hype.hk',
+          'x-title': 'Visionary Machines Map',
+        },
+        body: JSON.stringify({
+          model,
+          prompt,
+          ...(inputReferences.length ? { input_references: inputReferences } : {}),
+          aspect_ratio: '1:1',
+          n: 1,
+          output_format: 'png',
+        }),
+      })
+
+    let response
+    try {
+      response = await requestImage()
+    } catch {
+      try {
+        response = await requestImage()
+      } catch {
+        throw new Error(
+          'The image-generation service could not be reached. Please try clearing this tile again shortly.',
+        )
+      }
+    }
 
     if (!response.ok) {
       throw new Error(`OpenRouter image generation failed (${response.status}): ${await response.text()}`)
