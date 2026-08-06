@@ -31,10 +31,11 @@ const artistStatementMarkup = `
   </section>
 `
 
-export const installArtistStatement = container => {
+export const installArtistStatement = (container, { showMapTrigger = true } = {}) => {
   const wrapper = document.createElement('div')
   wrapper.className = 'artist-statement-ui'
   wrapper.innerHTML = artistStatementMarkup
+  if (!showMapTrigger) wrapper.querySelector('.artist-statement__map-trigger')?.remove()
   container.append(wrapper)
 
   const trigger = wrapper.querySelector<HTMLButtonElement>('.artist-statement__trigger')
