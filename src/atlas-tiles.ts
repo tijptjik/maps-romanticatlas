@@ -2014,7 +2014,24 @@ export const installAtlasTileInteractions = (
       })
       return
     }
-    const required = fogIndexTilesForViewport(fogIndexLoadMarginZ15)
+    const center = tileForPosition(map.getCenter(), fogEligibilitySourceZoom)
+    const visible = fogIndexTilesForViewport(0).sort(
+      (left, right) =>
+        Math.abs(left.x - center.x) +
+          Math.abs(left.y - center.y) -
+        (Math.abs(right.x - center.x) + Math.abs(right.y - center.y)),
+    )
+    const visibleIds = new Set(visible.map(fogIndexId))
+    // Ask for the z15 parent below the visitor before the wider prefetch
+    // ring. This makes cached clouds at the opening position available from a
+    // single fog-index response instead of spending the initial request budget
+    // on off-screen parents.
+    const required = [
+      ...visible,
+      ...fogIndexTilesForViewport(fogIndexLoadMarginZ15).filter(
+        parent => !visibleIds.has(fogIndexId(parent)),
+      ),
+    ]
     const retained = new Set(
       fogIndexTilesForViewport(fogIndexRetainMarginZ15).map(fogIndexId),
     )
