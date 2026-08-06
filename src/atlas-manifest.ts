@@ -156,7 +156,12 @@ export class AtlasManifest extends DurableObject<Env> {
     this.upsert(entries, rebuildStartedAt)
   }
 
-  remove(entry: Pick<AtlasManifestEntry, 'zoom' | 'x' | 'y' | 'scene' | 'version' | 'variant'>) {
+  remove(
+    entry: Pick<
+      AtlasManifestEntry,
+      'zoom' | 'x' | 'y' | 'scene' | 'version' | 'variant'
+    >,
+  ) {
     this.ctx.storage.sql.exec(
       'DELETE FROM atlas_manifest_variants WHERE zoom = ? AND x = ? AND y = ? AND scene = ? AND version = ? AND variant = ?',
       entry.zoom,
@@ -208,6 +213,50 @@ export class AtlasManifest extends DurableObject<Env> {
   // work inside one Durable Object invocation avoids a round trip per tile.
   entriesForPositions(positions: AtlasManifestPosition[]): AtlasManifestEntry[] {
     return positions.flatMap(position => this.entriesForPosition(position))
+  }
+
+  entriesForTileArea(
+    zoom: number,
+    minimumX: number,
+    minimumY: number,
+    maximumX: number,
+    maximumY: number,
+  ): AtlasManifestEntry[] {
+    return this.ctx.storage.sql
+      .exec<{
+        zoom: number
+        x: number
+        y: number
+        scene: string
+        version: number
+        variant: string
+        content_type: string
+        content_bounds: string | null
+      }>(
+        `SELECT zoom, x, y, scene, version, variant, content_type, content_bounds
+         FROM atlas_manifest_variants
+         WHERE zoom = ? AND x BETWEEN ? AND ? AND y BETWEEN ? AND ?
+           AND version IN (${readableCacheVersions.map(() => '?').join(', ')})`,
+        zoom,
+        minimumX,
+        maximumX,
+        minimumY,
+        maximumY,
+        ...readableCacheVersions,
+      )
+      .toArray()
+      .map(entry => ({
+        zoom: entry.zoom,
+        x: entry.x,
+        y: entry.y,
+        scene: entry.scene,
+        version: entry.version,
+        variant: entry.variant,
+        contentType: entry.content_type,
+        contentBounds: entry.content_bounds
+          ? (JSON.parse(entry.content_bounds) as ContentBounds)
+          : null,
+      }))
   }
 
   scenesInGrid(position: AtlasManifestPosition): string[] {
