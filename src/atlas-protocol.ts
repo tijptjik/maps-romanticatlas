@@ -60,9 +60,7 @@ export const parseAtlasTilePath = <Scene extends string>(
   if (!match) return null
   const [, zoom, x, y, scene] = match
   const tile = { zoom: Number(zoom), x: Number(x), y: Number(y), scene }
-  return isValidAtlasPosition(tile) && isKnownScene(scene)
-    ? { ...tile, scene }
-    : null
+  return isValidAtlasPosition(tile) && isKnownScene(scene) ? { ...tile, scene } : null
 }
 
 export const parseAtlasPositionPath = (pathname: string): AtlasPosition | null => {
@@ -89,9 +87,10 @@ export const atlasTileCacheKey = (
   tile: AtlasTile,
   version = generationVersion,
   variant = defaultAtlasVariant,
-) => `atlas/${tile.zoom}/${tile.x}/${tile.y}/${tile.scene}.v${version}${
-  variant === defaultAtlasVariant ? '' : `.${variant}`
-}`
+) =>
+  `atlas/${tile.zoom}/${tile.x}/${tile.y}/${tile.scene}.v${version}${
+    variant === defaultAtlasVariant ? '' : `.${variant}`
+  }`
 
 export const atlasImageKey = (
   tile: AtlasTile,
@@ -133,7 +132,7 @@ export const normalizeContentBounds = (value: unknown): ContentBounds => {
 
 export const bearerToken = (authorization: unknown) =>
   typeof authorization === 'string'
-    ? authorization.match(/^Bearer\s+([^\s]+)$/i)?.[1] ?? null
+    ? (authorization.match(/^Bearer\s+([^\s]+)$/i)?.[1] ?? null)
     : null
 
 export const cookieValue = (cookieHeader: unknown, name: string) =>
@@ -143,8 +142,10 @@ export const cookieValue = (cookieHeader: unknown, name: string) =>
     .find(cookie => cookie.startsWith(`${name}=`))
     ?.slice(name.length + 1) ?? null
 
-export const modeEnabled = (searchParams: URLSearchParams, mode: 'admin' | 'diagnostics') =>
-  searchParams.get(mode) === 'true'
+export const modeEnabled = (
+  searchParams: URLSearchParams,
+  mode: 'admin' | 'diagnostics',
+) => searchParams.get(mode) === 'true'
 
 const localHostPattern = /^(?:localhost|127\.0\.0\.1)(?::\d+)?$/
 const isLocalHost = (host: string) => localHostPattern.test(host)
@@ -170,8 +171,8 @@ export const isAllowedApplicationRequest = ({
     return false
   }
 
-  const hostMatches = requestHost === allowedHost ||
-    (localDevelopment && isLocalHost(requestHost ?? ''))
+  const hostMatches =
+    requestHost === allowedHost || (localDevelopment && isLocalHost(requestHost ?? ''))
   const originMatches = requireOrigin
     ? origin === allowedOrigin || (localDevelopment && isLocalOrigin(origin))
     : !origin || origin === allowedOrigin || (localDevelopment && isLocalOrigin(origin))
@@ -241,7 +242,9 @@ export const cacheStatusPayload = <Scene extends string>({
   contentBounds: cached?.contentBounds ?? null,
 })
 
-export const cachedTilePayload = <Scene extends string>(cached: CachedAtlasTile<Scene>) => ({
+export const cachedTilePayload = <Scene extends string>(
+  cached: CachedAtlasTile<Scene>,
+) => ({
   url: atlasTileUrl(cached.tile, cached.version, cached.variant),
   scene: cached.tile.scene,
   version: cached.version,

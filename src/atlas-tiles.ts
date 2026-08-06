@@ -2,16 +2,14 @@ import { atlasSceneNames, pickAtlasScene, type AtlasScene } from './atlas-scenes
 import { createAtlasTitleCard, positionAtlasTitleCard } from './atlas-title-cards.ts'
 import { loadingConcepts } from './loading-concepts.ts'
 import { atlasZoom, tileBounds, tileForPosition } from './tile-geometry.ts'
-import { VectorTile } from '@mapbox/vector-tile'
-import Pbf from 'pbf'
+import {
+  fogEligibilityChildSpan,
+  fogEligibilitySourceZoom,
+  type FogEligibility,
+} from './fog-eligibility.ts'
 
 const minimumFogZoom = 15
 const loadingLayoutZoom = 17.5
-const landTargetThreshold = 0.75
-const streetTargetThreshold = 0.2
-const landSampleSize = 10
-const sourceLandZoom = 15
-const sourceLandTileSpan = 2 ** (atlasZoom - sourceLandZoom)
 const waterLayerIds = ['water', 'water_stream', 'water_river']
 const groundFogMotionSpeed = 1.1
 const groundFogRadiusMultiplier = 1.045
@@ -24,9 +22,76 @@ const titleCardFocusLeadTime = 500
 const fogPokeDuration = 900
 const fogPokeExpansion = 0.16
 const concurrentGenerationLimit = 3
+// A Worker may finish writing an image after the browser connection has been
+// interrupted by an edge or mobile-network timeout. Give that completed work a
+// short window to appear in the cache before treating the clearing as failed.
+const generatedTileRecoveryAttempts = 8
+const generatedTileRecoveryInterval = 2500
+// z15 fog indexes begin loading before they cross into view, then remain in
+// memory one additional parent tile beyond that request area.
+const fogIndexLoadMarginZ15 = 1
+const fogIndexRetainMarginZ15 = 2
+// Load the opening viewport's small index ring together. Production warms
+// these indexes after every release, so this remains a cache-read burst.
+const concurrentFogIndexRequestLimit = 12
+// Draw fog one z18 child outside the screen so its soft edge never clips.
+const fogRenderMarginZ18 = 1
+// Decode cached images only near the screen; these margins grow as a zoomed-out
+// view can cross more z18 children in one pan.
+const imagePreloadMarginZ18 = zoom => (zoom >= 18 ? 1 : zoom >= 17 ? 2 : 4)
+// Image variants are mutable, unlike eligibility. Refresh the compact z15
+// index so generation and deletion become visible without a full page reload.
+const fogImageIndexRefreshMs = 60_000
+
+const cloudExclusion = {
+  fogPattern: { icon: 'pattern', label: 'Not selected by the fog pattern' },
+  lowLand: { icon: 'land', label: 'Land coverage is below 75%' },
+  highStreets: { icon: 'streets', label: 'Street coverage is above 20%' },
+  noRegionalLand: { icon: 'map', label: 'No regional land data is available' },
+  unavailableMapData: { icon: 'unavailable', label: 'Map data is unavailable' },
+}
+
+const createCloudDiagnosticIcon = iconName => {
+  const namespace = 'http://www.w3.org/2000/svg'
+  const icon = document.createElementNS(namespace, 'svg')
+  icon.classList.add('atlas-cloud-diagnostic__icon')
+  icon.setAttribute('viewBox', '0 0 100 100')
+  icon.setAttribute('aria-hidden', 'true')
+  const shape = (name, attributes) => {
+    const element = document.createElementNS(namespace, name)
+    Object.entries(attributes).forEach(([attribute, value]) => {
+      element.setAttribute(attribute, value)
+    })
+    icon.append(element)
+  }
+
+  if (iconName === 'pattern') {
+    ;[
+      [12, 12],
+      [56, 12],
+      [12, 56],
+      [56, 56],
+    ].forEach(([x, y]) => {
+      shape('rect', { x, y, width: 32, height: 32, rx: 4 })
+    })
+  } else if (iconName === 'land') {
+    shape('path', { d: 'M8 80 38 29l18 26 12-17 24 42H8Z' })
+    shape('path', { d: 'm38 29 10 17 8-12 12 18-12 3-18-26Z', fill: 'none' })
+  } else if (iconName === 'streets') {
+    shape('path', {
+      d: 'M16 83 44 16h12l28 67H70L51 38 32 83H16Zm32 3V14',
+    })
+  } else if (iconName === 'map') {
+    shape('path', { d: 'm10 24 25-10 30 11 25-10v61L65 86 35 75 10 85V24Z' })
+    shape('path', { d: 'M35 14v61m30-50v61', fill: 'none' })
+  } else {
+    shape('circle', { cx: 50, cy: 50, r: 40, fill: 'none' })
+    shape('path', { d: 'M50 28v31m0 17v1', fill: 'none' })
+  }
+  return icon
+}
 
 const tileId = ({ x, y }) => `${atlasZoom}/${x}/${y}`
-const sourceLandTileId = ({ x, y }) => `${sourceLandZoom}/${x}/${y}`
 const tileFromId = id => {
   const [, x, y] = id.split('/').map(Number)
   return { x, y }
@@ -60,7 +125,7 @@ const intersectsViewport = (map, tile, spill = 0) => {
   )
 }
 
-const visibleFogTiles = map => {
+const visibleFogTiles = (map, spill = 0) => {
   if (map.getZoom() < minimumFogZoom) return []
   const bounds = map.getBounds()
   const northWest = tileForPosition({ lng: bounds.getWest(), lat: bounds.getNorth() })
@@ -69,7 +134,7 @@ const visibleFogTiles = map => {
   for (let y = northWest.y; y <= southEast.y; y += 1) {
     for (let x = northWest.x; x <= southEast.x; x += 1) {
       const tile = { x, y }
-      if (intersectsViewport(map, tile)) tiles.push(tile)
+      if (intersectsViewport(map, tile, spill)) tiles.push(tile)
     }
   }
   return tiles
@@ -83,153 +148,44 @@ const seeded = value => {
 }
 const clampUnit = value => Math.max(0, Math.min(1, value))
 
-const sourceLandTileRequests = new Map()
-const loadSourceLandTile = async tile => {
-  const sourceTile = {
-    x: Math.floor(tile.x / sourceLandTileSpan),
-    y: Math.floor(tile.y / sourceLandTileSpan),
-  }
-  const id = sourceLandTileId(sourceTile)
-  if (sourceLandTileRequests.has(id)) return sourceLandTileRequests.get(id)
-
-  const request = fetch(
-    `/map-assets/saanseoi/hongkong-latest/${sourceLandZoom}/${sourceTile.x}/${sourceTile.y}.mvt`,
-  )
-    .then(async response => {
-      if (!response.ok) throw new Error(`Could not load land tile ${id}.`)
-      return new VectorTile(new Pbf(await response.arrayBuffer()))
-    })
-    .catch(error => {
-      sourceLandTileRequests.delete(id)
-      throw error
-    })
-  sourceLandTileRequests.set(id, request)
-  return request
-}
-
-const vectorRingContainsPoint = (point, ring) => {
-  let inside = false
-  for (
-    let index = 0, previous = ring.length - 1;
-    index < ring.length;
-    previous = index++
-  ) {
-    const current = ring[index]
-    const prior = ring[previous]
-    const crosses = current.y > point.y !== prior.y > point.y
-    if (
-      crosses &&
-      point.x <
-        ((prior.x - current.x) * (point.y - current.y)) / (prior.y - current.y) +
-          current.x
-    ) {
-      inside = !inside
+const cloudEligibilityFromResult = (result: FogEligibility) => {
+  if (!result.regionalLandAvailable) {
+    return {
+      isTargetable: false,
+      landFraction: null,
+      reasons: [cloudExclusion.noRegionalLand],
+      streetFraction: null,
     }
   }
-  return inside
-}
-
-const vectorFeatureContainsPoint = (feature, point) => {
-  if (feature.type !== 3) return false
-  return feature
-    .loadGeometry()
-    .reduce(
-      (inside, ring) => (vectorRingContainsPoint(point, ring) ? !inside : inside),
-      false,
-    )
-}
-
-const isRegionalBaseFeature = feature => feature.properties['saanseoi:base'] === true
-
-const vectorTileLandFraction = (sourceTile, tile) => {
-  const earthLayer = sourceTile.layers.earth
-  const waterLayer = sourceTile.layers.water
-  if (!earthLayer) return null
-
-  const sourceTileSize = earthLayer.extent / sourceLandTileSpan
-  const originX = (tile.x % sourceLandTileSpan) * sourceTileSize
-  const originY = (tile.y % sourceLandTileSpan) * sourceTileSize
-  const earthFeatures = Array.from({ length: earthLayer.length }, (_, index) =>
-    earthLayer.feature(index),
-  ).filter(isRegionalBaseFeature)
-  const waterFeatures = waterLayer
-    ? Array.from({ length: waterLayer.length }, (_, index) => waterLayer.feature(index))
-    : []
-  if (earthFeatures.length === 0) return null
-
-  const landSamples = Array.from({ length: landSampleSize }, (_, row) =>
-    Array.from({ length: landSampleSize }, (_, column) => {
-      const point = {
-        x: originX + ((column + 0.5) * sourceTileSize) / landSampleSize,
-        y: originY + ((row + 0.5) * sourceTileSize) / landSampleSize,
-      }
-      // The regional PMTiles contract provides complementary generated earth and
-      // water faces. Land must be explicitly covered by earth: treating missing
-      // water as land would turn areas outside the regional footprint into fog.
-      const onEarth = earthFeatures.some(feature =>
-        vectorFeatureContainsPoint(feature, point),
-      )
-      const onWater = waterFeatures.some(feature =>
-        vectorFeatureContainsPoint(feature, point),
-      )
-      return onEarth && !onWater
-    }),
-  ).flat()
-
-  return landSamples.filter(Boolean).length / landSamples.length
-}
-
-const isVectorFinePath = feature =>
-  /path|trail|footway|pedestrian|steps|cycleway|track/.test(
-    Object.values(feature.properties).join(' ').toLowerCase(),
-  )
-
-const vectorTileStreetFraction = (sourceTile, tile) => {
-  const roadsLayer = sourceTile.layers.roads
-  if (!roadsLayer) return 0
-
-  const sourceTileSize = roadsLayer.extent / sourceLandTileSpan
-  const originX = (tile.x % sourceLandTileSpan) * sourceTileSize
-  const originY = (tile.y % sourceLandTileSpan) * sourceTileSize
-  const streetCanvas = document.createElement('canvas')
-  streetCanvas.width = atlasTileSize
-  streetCanvas.height = atlasTileSize
-  const streetContext = streetCanvas.getContext('2d')
-  const scale = atlasTileSize / sourceTileSize
-
-  Array.from({ length: roadsLayer.length }, (_, index) => roadsLayer.feature(index))
-    .filter(feature => feature.type === 2 && !isVectorFinePath(feature))
-    .forEach(feature => {
-      streetContext.beginPath()
-      feature.loadGeometry().forEach(line => {
-        if (!line.length) return
-        streetContext.moveTo((line[0].x - originX) * scale, (line[0].y - originY) * scale)
-        line.slice(1).forEach(point => {
-          streetContext.lineTo((point.x - originX) * scale, (point.y - originY) * scale)
-        })
-      })
-      streetContext.lineWidth = 18
-      streetContext.lineCap = 'round'
-      streetContext.lineJoin = 'round'
-      streetContext.stroke()
+  const reasons = []
+  if (result.landFraction !== null && result.landFraction < 0.75) {
+    reasons.push({
+      ...cloudExclusion.lowLand,
+      label: `Land coverage is ${Math.round(result.landFraction * 100)}% (minimum 75%)`,
     })
-
-  const pixels = streetContext.getImageData(0, 0, atlasTileSize, atlasTileSize)
-  let coveredPixels = 0
-  for (let index = 3; index < pixels.data.length; index += 4) {
-    if (pixels.data[index] > 32) coveredPixels += 1
   }
-  return coveredPixels / (atlasTileSize * atlasTileSize)
+  if (result.streetFraction !== null && result.streetFraction > 0.2) {
+    reasons.push({
+      ...cloudExclusion.highStreets,
+      label: `Street coverage is ${Math.round(result.streetFraction * 100)}% (maximum 20%)`,
+    })
+  }
+  return {
+    isTargetable: result.isTargetable,
+    landFraction: result.landFraction,
+    reasons,
+    streetFraction: result.streetFraction,
+  }
 }
 
-const vectorTileIsTargetable = (sourceTile, tile) => {
-  const landFraction = vectorTileLandFraction(sourceTile, tile)
-  if (landFraction === null) return null
-  return (
-    landFraction >= landTargetThreshold &&
-    vectorTileStreetFraction(sourceTile, tile) <= streetTargetThreshold
-  )
-}
+const unavailableCloudEligibility = detail => ({
+  cacheVersion: 'NOT RECEIVED',
+  error: detail,
+  isTargetable: false,
+  landFraction: null,
+  reasons: [{ ...cloudExclusion.unavailableMapData, label: detail }],
+  streetFraction: null,
+})
 
 // Choose the opening concept once at map initialization, then walk the full
 // collection in order so a loading sequence never repeats early.
@@ -611,6 +567,11 @@ const getFadedTileUrl = url => {
   return promise
 }
 
+const forgetPreloadedTileImage = url => {
+  decodedTileImages.delete(url)
+  fadedTileUrls.delete(url)
+}
+
 const addGeneratedTile = async (
   map,
   tile,
@@ -937,8 +898,6 @@ const createFogCanvas = (
   let maskAnchorZoom: number | undefined
   let mistAnchorScreen: { x: number; y: number } | undefined
   let mistAnchorZoom: number | undefined
-  let loadingAnchorScreen: { x: number; y: number } | undefined
-  let loadingAnchorZoom: number | undefined
   const fogFrameInterval = 1000 / 60
   const maskFrameInterval = 1000 / 60
   const zoomMaskFrameInterval = 1000 / 20
@@ -1083,8 +1042,7 @@ const createFogCanvas = (
   }
 
   const easeOutCubic = progress => 1 - (1 - progress) ** 3
-  const easeInOutSine = progress =>
-    -(Math.cos(Math.PI * clampUnit(progress)) - 1) / 2
+  const easeInOutSine = progress => -(Math.cos(Math.PI * clampUnit(progress)) - 1) / 2
 
   const drawFogMask = (context, tile, state, time) => {
     const bounds = tileBounds(tile)
@@ -1392,12 +1350,9 @@ const createFogCanvas = (
       const centerX = northWest.x + tileSize / 2
       const centerY = northWest.y + tileSize / 2
       const textWidth = size * 0.86
-      const titleSize =
-        Math.max(14, Math.min(30, textLayoutSize * 0.12)) * textScale
-      const questionSize =
-        Math.max(12, Math.min(23, textLayoutSize * 0.09)) * textScale
-      const quoteSize =
-        Math.max(11, Math.min(20, textLayoutSize * 0.075)) * textScale
+      const titleSize = Math.max(14, Math.min(30, textLayoutSize * 0.12)) * textScale
+      const questionSize = Math.max(12, Math.min(23, textLayoutSize * 0.09)) * textScale
+      const quoteSize = Math.max(11, Math.min(20, textLayoutSize * 0.075)) * textScale
       const titleProgress = Math.min(1, elapsed / timing.titleInDuration)
       const titleEase = easeInOutSine(titleProgress)
       const titleLines = wrapTextForWidth(
@@ -1525,11 +1480,12 @@ const createFogCanvas = (
             ? lineHeight * 0.15 * finalWordSettleProgress
             : 0
           const finalWordFloatY =
-            isFinalWord && !isLingering
-              ? floatY * (1 - easeOutCubic(progress))
-              : floatY
+            isFinalWord && !isLingering ? floatY * (1 - easeOutCubic(progress)) : floatY
           const wordY =
-            streamBaseline - distance * lineHeight + finalWordFloatY - finalWordExtraRise
+            streamBaseline -
+            distance * lineHeight +
+            finalWordFloatY -
+            finalWordExtraRise
           if (!isLingeringFinalWord && wordY - fittedSize * 0.58 < wordLimitY) continue
           drawCenteredLine(
             word,
@@ -1604,15 +1560,10 @@ const createFogCanvas = (
       loadingContext.restore()
     })
 
-    const snapshotLoadingCanvas = () => {
-      snapshotCanvasPosition(loadingCanvas, (anchorScreen, zoom) => {
-        loadingAnchorScreen = anchorScreen
-        loadingAnchorZoom = zoom
-      })
-    }
+    const resetLoadingCanvasTransform = () => resetCanvasTransform(loadingCanvas)
 
     if (!fogError) {
-      snapshotLoadingCanvas()
+      resetLoadingCanvasTransform()
       return
     }
     const tile = tileFromId(fogError.id)
@@ -1628,7 +1579,7 @@ const createFogCanvas = (
       northWest.x <= clientWidth &&
       northWest.y <= clientHeight
     if (!visible || size <= 0) {
-      snapshotLoadingCanvas()
+      resetLoadingCanvasTransform()
       return
     }
 
@@ -1663,7 +1614,7 @@ const createFogCanvas = (
       loadingContext.fillText(line, centerX, messageTop + index * lineHeight)
     })
     loadingContext.restore()
-    snapshotLoadingCanvas()
+    resetLoadingCanvasTransform()
   }
 
   const wrapTextForWidth = (context, text, maxWidth, font, maxLines = 2) => {
@@ -1687,7 +1638,7 @@ const createFogCanvas = (
   const paintMask = context => {
     setOverlayContextTransform(context, maskScale)
     context.clearRect(-fogBleed, -fogBleed, fogCanvasWidth, fogCanvasHeight)
-    visibleFogTiles(map).forEach(tile => {
+    visibleFogTiles(map, fogRenderMarginZ18).forEach(tile => {
       const id = tileId(tile)
       const state = tileState.get(id)
       if (state === 'generating' && !generatingStartedAt.has(id)) {
@@ -1891,9 +1842,14 @@ export const installAtlasTileInteractions = (
     preloadScene: (scene: AtlasScene) => void
   },
   {
+    cloudDiagnostics = false,
     noNoise = false,
     onRevealCountChange = (_count: number) => {},
-  }: { noNoise?: boolean; onRevealCountChange?: (count: number) => void } = {},
+  }: {
+    cloudDiagnostics?: boolean
+    noNoise?: boolean
+    onRevealCountChange?: (count: number) => void
+  } = {},
 ) => {
   const tileState = new Map()
   const revealedTileIds = new Set()
@@ -1905,38 +1861,347 @@ export const installAtlasTileInteractions = (
     [...tileState.values()].filter(state => state === 'generating').length
 
   const fogLandState = new Map()
-  const fogLandRequests = new Map()
+  const cachedTileIds = new Set()
+  const indexedCachedTiles = new Map()
+  const fogIndexTiles = new Map()
+  const fogIndexRequests = new Map()
+  const cachedTileRequests = new Map()
+  const preloadedTileRequests = new Map()
+  const queuedCacheStatusRequests = new Map()
+  let fogIndexUpdateTimer: number | undefined
+  let fogIndexActiveRequests = 0
+  let cacheStatusBatchTimer: number | undefined
+  let cacheStatusBatchActive = false
   let invalidateFog = () => {}
-  const requestFogLandClassification = tile => {
-    const id = tileId(tile)
-    if (fogLandState.has(id) || fogLandRequests.has(id)) return
-
-    const request = loadSourceLandTile(tile)
-      .then(sourceTile => {
-        const isTargetable = vectorTileIsTargetable(sourceTile, tile)
-        if (isTargetable !== null) {
-          fogLandState.set(id, isTargetable)
+  let updateCloudDiagnostics = () => {}
+  let updateCloudDiagnosticTooltip = () => {}
+  const fogIndexId = tile => `${fogEligibilitySourceZoom}/${tile.x}/${tile.y}`
+  const fogIndexTilesForViewport = margin => {
+    const bounds = map.getBounds()
+    const northWest = tileForPosition(
+      { lng: bounds.getWest(), lat: bounds.getNorth() },
+      fogEligibilitySourceZoom,
+    )
+    const southEast = tileForPosition(
+      { lng: bounds.getEast(), lat: bounds.getSouth() },
+      fogEligibilitySourceZoom,
+    )
+    const tileCount = 2 ** fogEligibilitySourceZoom
+    const tiles = []
+    for (
+      let y = Math.max(0, northWest.y - margin);
+      y <= Math.min(tileCount - 1, southEast.y + margin);
+      y += 1
+    ) {
+      for (
+        let x = Math.max(0, northWest.x - margin);
+        x <= Math.min(tileCount - 1, southEast.x + margin);
+        x += 1
+      ) {
+        tiles.push({ x, y })
+      }
+    }
+    return tiles
+  }
+  const removeFogIndexTileContents = parent => {
+    Array.from(
+      { length: fogEligibilityChildSpan * fogEligibilityChildSpan },
+      (_, offset) => ({
+        x: parent.x * fogEligibilityChildSpan + (offset % fogEligibilityChildSpan),
+        y:
+          parent.y * fogEligibilityChildSpan +
+          Math.floor(offset / fogEligibilityChildSpan),
+      }),
+    ).forEach(tile => {
+      const id = tileId(tile)
+      const indexed = indexedCachedTiles.get(id)
+      fogLandState.delete(id)
+      cachedTileIds.delete(id)
+      indexedCachedTiles.delete(id)
+      if (!tileState.has(id)) {
+        cachedTileRequests.delete(id)
+        preloadedTileRequests.delete(id)
+        if (indexed?.url) forgetPreloadedTileImage(indexed.url)
+      }
+    })
+  }
+  const removeFogIndexTile = parent => {
+    const id = fogIndexId(parent)
+    if (!fogIndexTiles.delete(id)) return
+    removeFogIndexTileContents(parent)
+  }
+  const loadFogIndexTile = async parent => {
+    const id = fogIndexId(parent)
+    const loaded = fogIndexTiles.get(id)
+    if (
+      fogIndexRequests.has(id) ||
+      (loaded && Date.now() - loaded.loadedAt < fogImageIndexRefreshMs)
+    )
+      return
+    const request = fetch(`/api/fog-index/15/${parent.x}/${parent.y}`)
+      .then(async response => {
+        if (!response.ok) throw new Error(`Fog index returned HTTP ${response.status}.`)
+        const body = (await response.json()) as {
+          version?: string
+          eligibility?: FogEligibility[]
+          cached?: Array<{
+            x: number
+            y: number
+            scene: AtlasScene
+            url: string
+            contentBounds?: unknown
+          }>
         }
+        if (loaded) removeFogIndexTileContents(parent)
+        const version = body.version ?? 'UNKNOWN'
+        ;(Array.isArray(body.eligibility) ? body.eligibility : []).forEach(result => {
+          fogLandState.set(tileId(result), {
+            ...cloudEligibilityFromResult(result),
+            cacheVersion: version,
+          })
+        })
+        const variantsByTile = new Map<
+          string,
+          Array<{ scene: AtlasScene; url: string; contentBounds?: unknown }>
+        >()
+        ;(Array.isArray(body.cached) ? body.cached : []).forEach(entry => {
+          const id = tileId(entry)
+          const variants = variantsByTile.get(id) ?? []
+          variants.push(entry)
+          variantsByTile.set(id, variants)
+        })
+        variantsByTile.forEach((variants, tileIdValue) => {
+          const selected = variants[Math.floor(Math.random() * variants.length)]
+          cachedTileIds.add(tileIdValue)
+          indexedCachedTiles.set(tileIdValue, selected)
+        })
+        fogIndexTiles.set(id, { ...parent, loadedAt: Date.now() })
       })
-      .catch(() => {})
+      .catch(error => {
+        const detail =
+          error instanceof Error ? error.message : 'Fog index request failed.'
+        Array.from(
+          { length: fogEligibilityChildSpan * fogEligibilityChildSpan },
+          (_, offset) => ({
+            x:
+              parent.x * fogEligibilityChildSpan +
+              (offset % fogEligibilityChildSpan),
+            y:
+              parent.y * fogEligibilityChildSpan +
+              Math.floor(offset / fogEligibilityChildSpan),
+          }),
+        ).forEach(tile => {
+          fogLandState.set(tileId(tile), unavailableCloudEligibility(detail))
+        })
+      })
       .finally(() => {
-        fogLandRequests.delete(id)
+        fogIndexRequests.delete(id)
+        fogIndexActiveRequests -= 1
         invalidateFog()
+        updateCloudDiagnostics()
+        updateCloudDiagnosticTooltip()
+        preloadVisibleCachedTiles()
+        scheduleFogIndexUpdate()
       })
-    fogLandRequests.set(id, request)
+    fogIndexRequests.set(id, request)
+    fogIndexActiveRequests += 1
+  }
+  const updateFogIndexes = () => {
+    fogIndexUpdateTimer = undefined
+    if (map.getZoom() < minimumFogZoom) {
+      ;[...fogIndexTiles.values()].forEach(parent => {
+        removeFogIndexTile(parent)
+      })
+      return
+    }
+    const required = fogIndexTilesForViewport(fogIndexLoadMarginZ15)
+    const retained = new Set(
+      fogIndexTilesForViewport(fogIndexRetainMarginZ15).map(fogIndexId),
+    )
+    fogIndexTiles.forEach(parent => {
+      if (!retained.has(fogIndexId(parent))) removeFogIndexTile(parent)
+    })
+    required.forEach(parent => {
+      if (fogIndexActiveRequests < concurrentFogIndexRequestLimit)
+        void loadFogIndexTile(parent)
+    })
+  }
+  const scheduleFogIndexUpdate = () => {
+    if (fogIndexUpdateTimer !== undefined) return
+    fogIndexUpdateTimer = window.setTimeout(updateFogIndexes, 24)
   }
   const isFogTileLand = tile => {
     const id = tileId(tile)
-    if (fogLandState.has(id)) return fogLandState.get(id)
-    requestFogLandClassification(tile)
+    if (fogLandState.has(id)) return fogLandState.get(id).isTargetable
+    scheduleFogIndexUpdate()
     return false
   }
 
-  const cachedTileIds = new Set()
   const isFogTileRenderable = tile =>
     cachedTileIds.has(tileId(tile)) || isFogTileLand(tile)
-  const fog = createFogCanvas(map, tileState, cachedTileIds, isFogTileRenderable, noNoise)
+  const fog = createFogCanvas(
+    map,
+    tileState,
+    cachedTileIds,
+    isFogTileRenderable,
+    noNoise,
+  )
   invalidateFog = fog.invalidate
+
+  if (cloudDiagnostics) {
+    const diagnosticRoot = document.createElement('div')
+    diagnosticRoot.className = 'atlas-cloud-diagnostics'
+    diagnosticRoot.setAttribute('aria-hidden', 'true')
+    map.getContainer().append(diagnosticRoot)
+    const diagnosticLabels = new Map()
+    const diagnosticTooltip = document.createElement('aside')
+    diagnosticTooltip.className = 'atlas-cloud-diagnostic-tooltip'
+    diagnosticTooltip.hidden = true
+    map.getContainer().append(diagnosticTooltip)
+    let hoveredTile: { x: number; y: number } | undefined
+
+    const percentage = value => `${Math.round(value * 100)}%`
+    const addTooltipRow = (label, value, state = undefined) => {
+      const row = document.createElement('div')
+      row.className = 'atlas-cloud-diagnostic-tooltip__row'
+      const name = document.createElement('span')
+      name.textContent = label
+      const detail = document.createElement('strong')
+      detail.textContent = value
+      if (state) detail.dataset.state = state
+      row.append(name, detail)
+      diagnosticTooltip.append(row)
+    }
+    updateCloudDiagnosticTooltip = () => {
+      if (!hoveredTile) return
+      const id = tileId(hoveredTile)
+      const eligibility = fogLandState.get(id)
+      diagnosticTooltip.replaceChildren()
+      diagnosticTooltip.hidden = false
+      addTooltipRow('Tile', `z${atlasZoom} / ${hoveredTile.x} / ${hoveredTile.y}`)
+      if (!eligibility) {
+        scheduleFogIndexUpdate()
+        addTooltipRow('Conditions', 'MEASURING')
+        return
+      }
+
+      const patternIncluded = isFogged(hoveredTile)
+      const cloudIncluded =
+        patternIncluded && (cachedTileIds.has(id) || eligibility.isTargetable)
+      addTooltipRow(
+        'Cache',
+        eligibility.cacheVersion ?? 'NOT RECEIVED',
+        eligibility.cacheVersion ? undefined : 'fail',
+      )
+      if (eligibility.error) addTooltipRow('Endpoint', eligibility.error, 'fail')
+      addTooltipRow(
+        'Fog pattern',
+        patternIncluded ? 'INCLUDED' : 'EXCLUDED',
+        patternIncluded ? 'pass' : 'fail',
+      )
+      if (Number.isFinite(eligibility.landFraction)) {
+        addTooltipRow(
+          'Land',
+          `${percentage(eligibility.landFraction)} · needs 75%`,
+          eligibility.landFraction >= 0.75 ? 'pass' : 'fail',
+        )
+      } else {
+        addTooltipRow('Land', eligibility.reasons[0]?.label ?? 'UNAVAILABLE', 'fail')
+      }
+      if (Number.isFinite(eligibility.streetFraction)) {
+        addTooltipRow(
+          'Streets',
+          `${percentage(eligibility.streetFraction)} · limit 20%`,
+          eligibility.streetFraction <= 0.2 ? 'pass' : 'fail',
+        )
+      }
+      addTooltipRow(
+        'Cloud',
+        cloudIncluded ? 'WILL RENDER' : 'EXCLUDED',
+        cloudIncluded ? 'pass' : 'fail',
+      )
+    }
+
+    updateCloudDiagnostics = () => {
+      const visibleIds = new Set()
+      if (map.getZoom() < minimumFogZoom) {
+        diagnosticLabels.forEach(label => {
+          label.remove()
+        })
+        diagnosticLabels.clear()
+        return
+      }
+
+      visibleFogTiles(map).forEach(tile => {
+        const id = tileId(tile)
+        visibleIds.add(id)
+        let reasons: { icon: string; label: string }[] | undefined
+        if (!isFogged(tile)) {
+          reasons = [cloudExclusion.fogPattern]
+        } else if (!cachedTileIds.has(id)) {
+          const eligibility = fogLandState.get(id)
+          if (eligibility) reasons = eligibility.reasons
+          else scheduleFogIndexUpdate()
+        }
+
+        // A label exists only when this tile is excluded. In particular, do
+        // not annotate tiles which are eligible through either the land test
+        // or a cached image: those are exactly the tiles that render a cloud.
+        if (!reasons?.length) {
+          diagnosticLabels.get(id)?.remove()
+          diagnosticLabels.delete(id)
+          return
+        }
+
+        let label = diagnosticLabels.get(id)
+        if (!label) {
+          label = document.createElement('output')
+          label.className = 'atlas-cloud-diagnostic'
+          diagnosticRoot.append(label)
+          diagnosticLabels.set(id, label)
+        }
+        const bounds = tileBounds(tile)
+        const northWest = map.project([bounds.west, bounds.north])
+        const southEast = map.project([bounds.east, bounds.south])
+        label.style.left = `${northWest.x}px`
+        label.style.top = `${northWest.y}px`
+        label.style.width = `${Math.max(0, southEast.x - northWest.x)}px`
+        label.style.height = `${Math.max(0, southEast.y - northWest.y)}px`
+        // Do not tint a tile red when the fog pattern would normally cover
+        // it. For example, a temporary eligibility-data failure should not
+        // visually replace the cloud with a red panel.
+        label.classList.toggle(
+          'atlas-cloud-diagnostic--fog-pattern-included',
+          isFogged(tile),
+        )
+        label.replaceChildren(
+          ...reasons.map(reason => createCloudDiagnosticIcon(reason.icon)),
+        )
+      })
+
+      diagnosticLabels.forEach((label, id) => {
+        if (visibleIds.has(id)) return
+        label.remove()
+        diagnosticLabels.delete(id)
+      })
+      updateCloudDiagnosticTooltip()
+    }
+    ;['move', 'moveend', 'resize', 'zoom', 'zoomend', 'data', 'idle'].forEach(
+      eventName => {
+        map.on(eventName, updateCloudDiagnostics)
+      },
+    )
+    map.on('mousemove', event => {
+      if (map.getZoom() < minimumFogZoom) return
+      hoveredTile = tileForPosition(event.lngLat)
+      updateCloudDiagnosticTooltip()
+    })
+    map.getCanvas().addEventListener('mouseleave', () => {
+      hoveredTile = undefined
+      diagnosticTooltip.hidden = true
+    })
+    updateCloudDiagnostics()
+  }
   const focusRevealedTile = (tile, onApproach?: () => void) => {
     const bounds = tileBounds(tile)
     map.easeTo({
@@ -1954,7 +2219,10 @@ export const installAtlasTileInteractions = (
       const canvas = map.getCanvas()
       // A z18 tile is 512 CSS pixels wide at zoom 18. Leave a small frame so
       // the canvas crop remains complete even on a narrow display.
-      const availableSize = Math.max(1, Math.min(canvas.clientWidth, canvas.clientHeight) - 32)
+      const availableSize = Math.max(
+        1,
+        Math.min(canvas.clientWidth, canvas.clientHeight) - 32,
+      )
       const captureSafeZoom = atlasZoom + Math.log2(availableSize / 512)
       // Preserve the visitor's zoom whenever it can contain the tile. This
       // is a local pan, not a dramatic reveal flight; only zoom out when a
@@ -2014,12 +2282,6 @@ export const installAtlasTileInteractions = (
   ;['move', 'resize', 'zoom', 'rotate', 'pitch'].forEach(eventName => {
     map.on(eventName, positionTitleCards)
   })
-
-  const cachedTileRequests = new Map()
-  const preloadedTileRequests = new Map()
-  const queuedCacheStatusRequests = new Map()
-  let cacheStatusBatchTimer: number | undefined
-  let cacheStatusBatchActive = false
 
   const cacheStatusFromResponse = body => {
     const scenes = Array.isArray(body?.scenes)
@@ -2107,6 +2369,17 @@ export const installAtlasTileInteractions = (
     const id = tileId(tile)
     if (preloadedTileRequests.has(id)) return preloadedTileRequests.get(id)
     if (cachedTileRequests.has(id)) return cachedTileRequests.get(id)
+    const indexed = indexedCachedTiles.get(id)
+    if (indexed) {
+      return Promise.resolve({
+        cached: true,
+        url: indexed.url,
+        scene: indexed.scene,
+        scenes: [],
+        contentBounds: indexed.contentBounds,
+        preparedUrl: undefined,
+      })
+    }
 
     let resolveRequest: (value: ReturnType<typeof cacheStatusFromResponse>) => void
     let rejectRequest: (reason?: unknown) => void
@@ -2128,19 +2401,44 @@ export const installAtlasTileInteractions = (
     return request
   }
 
+  const recoverGeneratedTile = async tile => {
+    const id = tileId(tile)
+    for (let attempt = 0; attempt < generatedTileRecoveryAttempts; attempt += 1) {
+      await new Promise(resolve =>
+        window.setTimeout(resolve, generatedTileRecoveryInterval),
+      )
+      // A cache miss is intentionally memoized during ordinary panning. It
+      // must be discarded here because this specific tile may have completed
+      // while its long-running render response was in transit.
+      cachedTileRequests.delete(id)
+      preloadedTileRequests.delete(id)
+      try {
+        const status = await checkCachedTile(tile)
+        if (status.cached) return status
+      } catch {
+        // Keep polling: a transient cache-status failure should not discard a
+        // render that has already reached R2 and the manifest.
+      }
+    }
+    return null
+  }
+
   const preloadCachedTile = tile => {
     const id = tileId(tile)
     if (preloadedTileRequests.has(id)) return preloadedTileRequests.get(id)
 
     const request = checkCachedTile(tile)
       .then(async status => {
+        if (preloadedTileRequests.get(id) !== request) return status
         if (!status.cached) {
           cachedTileIds.delete(id)
           fog.invalidate()
+          updateCloudDiagnostics()
           return status
         }
         cachedTileIds.add(id)
         fog.invalidate()
+        updateCloudDiagnostics()
         audio?.preloadScene(status.scene)
         return {
           ...status,
@@ -2150,9 +2448,11 @@ export const installAtlasTileInteractions = (
         }
       })
       .catch(error => {
+        if (preloadedTileRequests.get(id) !== request) throw error
         cachedTileIds.delete(id)
         fog.invalidate()
-        if (preloadedTileRequests.get(id) === request) preloadedTileRequests.delete(id)
+        updateCloudDiagnostics()
+        preloadedTileRequests.delete(id)
         throw error
       })
     preloadedTileRequests.set(id, request)
@@ -2161,24 +2461,21 @@ export const installAtlasTileInteractions = (
 
   const preloadVisibleCachedTiles = () => {
     if (map.getZoom() < minimumFogZoom) return
-    visibleFogTiles(map).forEach(tile => {
-      const id = tileId(tile)
+    indexedCachedTiles.forEach((_cached, id) => {
+      const tile = tileFromId(id)
+      if (!intersectsViewport(map, tile, imagePreloadMarginZ18(map.getZoom()))) return
       if (tileState.has(id) || !isFogged(tile)) return
-      // Start the source pre-check before drawing fog. Cache lookups remain
-      // independent of that check: an existing generated tile is always a
-      // valid place to reveal, even when new generation is disallowed there.
-      isFogTileLand(tile)
-      // A miss is cached too, so moving the map does not repeatedly ask the
-      // server about the same visible tile during one visit.
       preloadCachedTile(tile).catch(() => {})
     })
   }
 
   ;['move', 'moveend', 'resize', 'zoom', 'zoomend', 'data', 'idle'].forEach(
     eventName => {
+      map.on(eventName, scheduleFogIndexUpdate)
       map.on(eventName, preloadVisibleCachedTiles)
     },
   )
+  scheduleFogIndexUpdate()
   preloadVisibleCachedTiles()
 
   map.on('mousemove', event => {
@@ -2277,15 +2574,46 @@ export const installAtlasTileInteractions = (
       const hasSea = tileHasSea(map, tile)
       const scene = pickAtlasScene(hasSea, cacheStatus.scenes)
       audio?.preloadScene(scene)
-      const response = await fetch(
-        `/api/atlas-tiles/${atlasZoom}/${tile.x}/${tile.y}/${scene}`,
-        {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ ...capturedTile, hasSea }),
-        },
-      )
-      const responseText = await response.text()
+      let response: Response
+      let responseText: string
+      try {
+        response = await fetch(
+          `/api/atlas-tiles/${atlasZoom}/${tile.x}/${tile.y}/${scene}`,
+          {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ ...capturedTile, hasSea }),
+          },
+        )
+        responseText = await response.text()
+      } catch (error) {
+        const recovered = await recoverGeneratedTile(tile)
+        if (recovered?.cached) {
+          audio?.preloadScene(recovered.scene)
+          await addGeneratedTile(
+            map,
+            tile,
+            recovered.url,
+            recovered.scene,
+            titleCards,
+            recovered.contentBounds,
+            0,
+            recovered.preparedUrl,
+          )
+          revealGeneratedTile(id, recovered.scene)
+          console.info(
+            `[atlas] ${id} recovered from cache after an interrupted render response in ` +
+              `${Math.round(performance.now() - startedAt)}ms`,
+          )
+          return
+        }
+        if (error instanceof TypeError) {
+          throw new Error(
+            'The connection to the rendering service closed before this tile was ready. Please try this patch of fog again.',
+          )
+        }
+        throw error
+      }
       let body: {
         error?: string
         message?: string
@@ -2307,8 +2635,8 @@ export const installAtlasTileInteractions = (
           rateLimited = true
           clearanceNotice.show(
             response.headers.get('x-atlas-limit-reason') === 'concurrent-generations'
-              ? body?.error ??
-                'Three tile clearings are already in progress.\nWait for one to finish before clearing more fog.'
+              ? (body?.error ??
+                  'Three tile clearings are already in progress.\nWait for one to finish before clearing more fog.')
               : 'This clearing is temporarily unavailable.\nPlease wait a moment, then try another patch of fog.',
           )
         }
