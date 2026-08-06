@@ -7,6 +7,8 @@ const exportWidth = 1080 * exportPixelRatio
 const exportHeight = 1350 * exportPixelRatio
 const maximumCapturePixelRatio = 4
 const minimumReveals = 5
+const captureSaturation = 1.15
+const captureContrast = 1.08
 
 const nextFrame = () =>
   new Promise<void>(resolve => {
@@ -34,6 +36,18 @@ const canvasToPng = (canvas: HTMLCanvasElement) =>
       else reject(new Error('Could not render the map image.'))
     }, 'image/png')
   })
+
+const gradeCapture = (canvas: HTMLCanvasElement) => {
+  const gradedCanvas = document.createElement('canvas')
+  gradedCanvas.width = canvas.width
+  gradedCanvas.height = canvas.height
+  const context = gradedCanvas.getContext('2d')
+  if (!context) throw new Error('Could not prepare the map image.')
+
+  context.filter = `saturate(${captureSaturation}) contrast(${captureContrast})`
+  context.drawImage(canvas, 0, 0)
+  return gradedCanvas
+}
 
 const drawCanvasLayer = (
   context: CanvasRenderingContext2D,
@@ -270,7 +284,7 @@ const captureMap = async (map: MapLibreMap, frame: HTMLElement) => {
     }
 
     drawCredit(context, frameBounds)
-    return await canvasToPng(exportCanvas)
+    return await canvasToPng(gradeCapture(exportCanvas))
   } finally {
     if (changedPixelRatio) {
       map.setPixelRatio(normalPixelRatio)
