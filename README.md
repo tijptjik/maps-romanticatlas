@@ -135,7 +135,9 @@ Tiles generated during the session are written to remote R2 and are immediately 
 pre-existing remote tiles can still be fetched by their known image URL, but are not
 included in local manifest lookups until they are encountered or regenerated. Add
 `?admin=true` for cache administration, `?diagnostics=true` for tile outlines,
-`?noNoise=true` for smooth fog without the animated cloud noise, and `&version=3` to
+`?admin=true` also labels only cloud-excluded tiles with their failing condition;
+add `&cloudDiagnostics=false` to hide those labels. Use `?noNoise=true` for smooth fog
+without the animated cloud noise, and `&version=3` to
 replay an older cache version. To copy the existing local cache to R2, run
 `bun run sync:tiles`.
 
@@ -168,6 +170,26 @@ than 20% streets. Each fog form spills into neighboring gaps and is rendered fro
 cached mask plus a WebGL noise shader, so the pattern reads as overlapping mist rather
 than an alternating grid. The shader uses its full detail below zoom 17, one veil from
 zoom 17 through just under 18, and a smooth fog mask at zoom 18 and above.
+
+Fog eligibility is served as z15 fog-index tiles. Each index contains the complete set
+of 64 z18 child decisions, calculated from the z15 basemap source and stored as one
+versioned persistent index in its source-tile–sharded Durable Object. The cache key
+includes the explicit eligibility-definition version and the basemap release identifier,
+so ordinary views do not repeat geometry sampling; changing either deliberately creates
+a fresh cache. Precompute the Hong Kong coverage after either changes:
+
+```sh
+bun run precompute:fog-index
+```
+
+The default area is `113.75,22.1,114.5,22.6`. Set `ATLAS_FOG_INDEX_ORIGIN` to warm a
+different deployment, `ATLAS_FOG_INDEX_BOUNDS=west,south,east,north` to change the
+area, and `ATLAS_FOG_INDEX_CONCURRENCY` (1–16, default 4) to tune the warm-up rate.
+Transient request failures, including edge timeouts, are retried up to five times with
+exponential backoff; set `ATLAS_FOG_INDEX_REQUEST_ATTEMPTS` (1–10) to adjust that limit.
+The same z15 response also carries every live cached-image variant within that parent;
+the browser chooses one per z18 tile for the session and preloads it only near the
+viewport. No separate cloud-presence bitmap is needed.
 
 Click a fully visible eligible fogged tile to create a strictly top-down cartographic
 event tile from the rendered map. The selected tile gets a “LOOKING UP THIS TILE”
@@ -232,9 +254,14 @@ The supported environment variables are:
   image to reveal its controls. Different tile coordinates can render independently,
   while a coordinate accepts only one active render at a time.
 - `?diagnostics=true`: shows red boundaries around cached tiles.
+- `?admin=true`: marks visible z18 tiles that will not render a cloud with compact reason
+  icons for the deterministic fog pattern, land coverage, street coverage, or regional
+  map data. Tiles that would render a cloud are left unmarked. Add
+  `&cloudDiagnostics=false` to hide these labels.
 - `ATLAS_ADMIN_TOKEN`: required when using `?admin=true`; use a long random secret. The
   admin UI prompts for it once per browser session. The server also requires a
   same-origin Origin header and a signed CSRF cookie/header pair for cache changes.
 
-The browser also exposes `toggle_auth()` and `toggle_diagnostics()` global functions.
-Each toggles its respective URL parameter and reloads the page.
+The browser also exposes `toggle_auth()`, `toggle_diagnostics()`, and
+`toggle_cloud_diagnostics()` global functions. Each toggles its respective URL parameter
+and reloads the page.
