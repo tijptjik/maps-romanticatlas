@@ -20,7 +20,9 @@ export const createOpenRouterClient = ({
   model = process.env.OPENROUTER_MODEL ?? 'openai/gpt-5.4-image-2',
 } = {}) => {
   if (!apiKey) {
-    throw new Error('Missing OPENROUTER_API_KEY. Set it in the server environment before generating images.')
+    throw new Error(
+      'Missing OPENROUTER_API_KEY. Set it in the server environment before generating images.',
+    )
   }
 
   const requestImage = async (prompt, sourceImage, referenceImages = []) => {
@@ -47,7 +49,7 @@ export const createOpenRouterClient = ({
         }),
       })
 
-    let response
+    let response: Response
     try {
       response = await requestImage()
     } catch {
@@ -61,12 +63,15 @@ export const createOpenRouterClient = ({
     }
 
     if (!response.ok) {
-      throw new Error(`OpenRouter image generation failed (${response.status}): ${await response.text()}`)
+      throw new Error(
+        `OpenRouter image generation failed (${response.status}): ${await response.text()}`,
+      )
     }
 
     const result = await response.json()
     const image = result.data?.find(item => item?.b64_json)
-    if (!image) throw new Error('OpenRouter returned no image for the requested prompt.')
+    if (!image)
+      throw new Error('OpenRouter returned no image for the requested prompt.')
     return parseGeneratedImage(image.b64_json, image.media_type)
   }
 
