@@ -75,7 +75,7 @@ const coastlineLayer = {
   id: 'coastline',
   type: 'line' as const,
   source: 'hongkong-latest',
-  'source-layer': 'coastline',
+  'source-layer': 'water',
   filter: ['==', 'kind', 'coastline'],
   paint: {
     'line-color': '#8d5d52',
