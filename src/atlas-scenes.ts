@@ -20,6 +20,14 @@ export const atlasScenes = {
   'hall-of-mirrors': 'a grand Victorian hall of mirrors',
   'botanical-laboratory': 'an enormous Victorian botanical laboratory',
   'electrical-laboratory': 'an experimental Victorian electrical laboratory',
+  'tropical-aquarium': 'a celebration of tropical aquatic lifeforms across the rainbow of colours',
+  'sushi-restaurant': 'world\'s largest conveyer belt sushi restaurant',
+  'thrifting-paradise': 'eclectic neighbourhood with street fashion and voguey vibes',
+  'beer-garden': 'an lush bavarian beer garden',
+  'grand-library': 'a restrofuturistic library - testament to the englightenment that comes from knowledge',
+  'rice-sculpture-festival': 'a quirky competition creating the most marvelous sculptures out of rice',
+  'cyber-deck-alley': 'neuromanceresque back alley selling wetware for neural deck jockeys and netrunners',
+  'marshmallow-factory': 'a rainbow themed marshmallow structure with transparent domes so you can see how marshmallows are born',
   observatory: 'a Victorian astronomical observatory',
   'weather-station': 'an enormous Victorian meteorological station',
   'orrery-hall': 'a grand Victorian orrery and celestial-instrument hall',
@@ -63,6 +71,7 @@ export const atlasScenes = {
 export const atlasSeaScenes = new Set<keyof typeof atlasScenes>([
   'lighthouse',
   'pirate-harbour',
+  'canal-lock'
 ])
 
 export const atlasSceneNames = Object.keys(atlasScenes) as Array<keyof typeof atlasScenes>
