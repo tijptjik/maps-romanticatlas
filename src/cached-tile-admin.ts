@@ -608,9 +608,27 @@ export const installCachedTileAdmin = async map => {
       const capture = captureQueue.then(async () => {
         updateRenderingOverlay(renderingTile, 'Preparing the map reference…')
         showRenderingFeedback(renderingTile)
-        await focusTileForCapture(tile)
-        showRenderingFeedback(renderingTile)
-        return captureTile(map, tile)
+        // An additional scene must start from the underlying map geometry, not
+        // from the active cached plate at this position. Otherwise the image
+        // model receives its own previous output as the source reference and
+        // extends that scene instead of fitting the map beneath it.
+        const cachedRasterVisibility = map.getLayoutProperty(
+          rasterLayerId,
+          'visibility',
+        )
+        map.setLayoutProperty(rasterLayerId, 'visibility', 'none')
+        try {
+          await focusTileForCapture(tile)
+          showRenderingFeedback(renderingTile)
+          return await captureTile(map, tile)
+        } finally {
+          map.setLayoutProperty(
+            rasterLayerId,
+            'visibility',
+            cachedRasterVisibility ?? 'visible',
+          )
+          map.triggerRepaint()
+        }
       })
       // Keep later captures moving if this one fails. The render that owns the
       // failed capture still receives its rejection and reports the error.
