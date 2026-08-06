@@ -32,6 +32,10 @@
       {
         "name": "ATLAS_MANIFEST",
         "class_name": "AtlasManifest"
+      },
+      {
+        "name": "FOG_ELIGIBILITY_INDEX_CACHE",
+        "class_name": "FogEligibilityIndexCache"
       }
     ]
   },
@@ -39,6 +43,19 @@
     {
       "tag": "v1",
       "new_sqlite_classes": ["AtlasManifest"]
+    },
+    {
+      "tag": "v2",
+      "new_sqlite_classes": ["AtlasEligibilityCache"]
+    },
+    {
+      "tag": "v3",
+      "renamed_classes": [
+        {
+          "from": "AtlasEligibilityCache",
+          "to": "FogEligibilityIndexCache"
+        }
+      ]
     }
   ],
   "observability": {

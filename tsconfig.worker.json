@@ -8,6 +8,8 @@
     "src/worker.ts",
     "src/worker-api.ts",
     "src/atlas-manifest.ts",
+    "src/atlas-eligibility.ts",
+    "src/fog-eligibility-index-cache.ts",
     "src/atlas-scenes.ts",
     "worker-configuration.d.ts"
   ]

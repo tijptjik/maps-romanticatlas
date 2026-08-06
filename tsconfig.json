@@ -11,5 +11,10 @@
     "skipLibCheck": true
   },
   "include": ["src", "server", "scripts", "vite.config.ts"],
-  "exclude": ["src/worker.ts", "src/worker-api.ts", "src/atlas-manifest.ts"]
+  "exclude": [
+    "src/worker.ts",
+    "src/worker-api.ts",
+    "src/atlas-manifest.ts",
+    "src/fog-eligibility-index-cache.ts"
+  ]
 }
