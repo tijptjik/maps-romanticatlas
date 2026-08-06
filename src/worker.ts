@@ -1,6 +1,7 @@
 import { handleAtlasApi } from './worker-api.ts'
 
 export { AtlasManifest } from './atlas-manifest.ts'
+export { FogEligibilityIndexCache } from './fog-eligibility-index-cache.ts'
 
 const tileOrigin = 'https://tiles.saanseoi.hk'
 const tileProxyPrefix = '/map-assets/saanseoi'
@@ -52,16 +53,33 @@ const proxyVectorTile = (request: Request) => {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url)
-    const apiResponse = await handleAtlasApi(request, env)
-    if (apiResponse) return apiResponse
+    try {
+      const apiResponse = await handleAtlasApi(request, env)
+      if (apiResponse) return apiResponse
 
-    if (request.method === 'GET' && url.pathname === tileJsonPath) {
-      return proxyTileJson(request, env)
-    }
-    if (request.method === 'GET' && vectorTilePattern.test(url.pathname)) {
-      return proxyVectorTile(request)
-    }
+      if (request.method === 'GET' && url.pathname === tileJsonPath) {
+        return proxyTileJson(request, env)
+      }
+      if (request.method === 'GET' && vectorTilePattern.test(url.pathname)) {
+        return proxyVectorTile(request)
+      }
 
-    return env.ASSETS.fetch(request)
+      return env.ASSETS.fetch(request)
+    } catch (error) {
+      // Do not let an ordinary upstream, storage, or Durable Object exception
+      // tear down the browser connection. The tile client can reconcile a
+      // completed render from the cache when it receives a normal response.
+      console.error(`[atlas] request failed for ${url.pathname}`, error)
+      return new Response(
+        JSON.stringify({ error: 'The atlas service could not complete this request. Please try again.' }),
+        {
+          status: 500,
+          headers: {
+            'cache-control': 'no-store',
+            'content-type': 'application/json; charset=utf-8',
+          },
+        },
+      )
+    }
   },
 }
