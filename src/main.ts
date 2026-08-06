@@ -10,6 +10,7 @@ import { installAtlasSharing } from './atlas-sharing.ts'
 import { hongKongStyle } from './map-style.ts'
 import {
   adminModeEnabled,
+  cloudDiagnosticsModeEnabled,
   diagnosticsModeEnabled,
   noMusicEnabled,
   noNoiseEnabled,
@@ -79,7 +80,7 @@ const skipSplash = noSplashEnabled()
 const audio = installAtlasAudio(map.getContainer(), { initiallyMuted: noMusicEnabled() })
 if (!skipSplash) await waitForIntroFonts()
 const intro = createIntroSplash(map.getContainer(), audio.start, !skipSplash)
-installArtistStatement(map.getContainer())
+installArtistStatement(map.getContainer(), { showMapTrigger: !adminModeEnabled() })
 const sharing = installAtlasSharing(map, audio)
 const idleDelay = 180_000
 let idleTimer: number | undefined
@@ -157,6 +158,7 @@ map.on('load', async () => {
   }
 
   const atlas = installAtlasTileInteractions(map, audio, {
+    cloudDiagnostics: cloudDiagnosticsModeEnabled(),
     noNoise: noNoiseEnabled(),
     onRevealCountChange: sharing.setRevealCount,
   })
