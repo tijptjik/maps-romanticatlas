@@ -11,7 +11,7 @@
     "dev:remote": "bun run build && wrangler dev --port 8787 --var ATLAS_ALLOWED_ORIGIN:http://localhost:8787 --var ATLAS_LOCAL_DEV:true",
     "sync:tiles": "bun scripts/sync-generated-tiles.ts",
     "backfill:manifest": "bun scripts/backfill-atlas-manifest.ts",
-    "precompute:fog-index": "bun scripts/precompute-fog-index.ts",
+    "cache:warm:fog": "bun scripts/precompute-fog-index.ts",
     "generate:paper": "bun scripts/generate-paper-texture.ts",
     "generate:audio": "bun scripts/generate-atlas-audio.ts",
     "typecheck": "tsc --noEmit && tsc -p tsconfig.worker.json --noEmit",
