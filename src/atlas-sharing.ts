@@ -21,7 +21,9 @@ const blobToDataUrl = (blob: Blob) =>
         ? resolve(reader.result)
         : reject(new Error('Could not prepare the map image.'))
     })
-    reader.addEventListener('error', () => reject(new Error('Could not prepare the map image.')))
+    reader.addEventListener('error', () =>
+      reject(new Error('Could not prepare the map image.')),
+    )
     reader.readAsDataURL(blob)
   })
 
@@ -252,13 +254,17 @@ const captureMap = async (map: MapLibreMap, frame: HTMLElement) => {
 
     const container = map.getContainer()
     const containerBounds = container.getBoundingClientRect()
-    container
-      .querySelectorAll<HTMLElement>('.atlas-title-card')
-      .forEach(card => drawTitleCard(context, card, containerBounds, frameBounds))
+    container.querySelectorAll<HTMLElement>('.atlas-title-card').forEach(card => {
+      drawTitleCard(context, card, containerBounds, frameBounds)
+    })
 
     // The fog is kept in separate canvases so it can animate independently of
     // MapLibre. Draw them in their screen stacking order over the title cards.
-    for (const selector of ['.atlas-fog', '.atlas-fog-loading', '.atlas-fog-cached-mist']) {
+    for (const selector of [
+      '.atlas-fog',
+      '.atlas-fog-loading',
+      '.atlas-fog-cached-mist',
+    ]) {
       const canvas = container.querySelector<HTMLCanvasElement>(selector)
       if (canvas) drawCanvasLayer(context, canvas, frameBounds)
     }
@@ -342,7 +348,8 @@ export const installAtlasSharing = (
   const resultTitle = document.createElement('h2')
   resultTitle.textContent = 'Your map was pressed'
   const resultCopy = document.createElement('p')
-  resultCopy.innerHTML = 'Scan to get the image on your phone,<br>then share it anywhere.'
+  resultCopy.innerHTML =
+    'Scan to get the image on your phone,<br>then share it anywhere.'
   const qrImage = document.createElement('img')
   qrImage.className = 'atlas-share-qr'
   qrImage.alt = 'QR code for your map image'
@@ -390,7 +397,10 @@ export const installAtlasSharing = (
     frame.style.height = `${Math.max(0, frameHeight)}px`
     composePanel.style.setProperty('--atlas-share-frame-top', `${frameTop}px`)
     composePanel.style.setProperty('--atlas-share-frame-height', `${frameHeight}px`)
-    composePanel.style.setProperty('--atlas-share-frame-right', `${(width + frameWidth) / 2}px`)
+    composePanel.style.setProperty(
+      '--atlas-share-frame-right',
+      `${(width + frameWidth) / 2}px`,
+    )
   }
 
   const showCompose = () => {
@@ -413,7 +423,8 @@ export const installAtlasSharing = (
   }
 
   const setError = (error: unknown) => {
-    composeError.textContent = error instanceof Error ? error.message : 'Could not save your map.'
+    composeError.textContent =
+      error instanceof Error ? error.message : 'Could not save your map.'
     composeError.hidden = false
   }
 
