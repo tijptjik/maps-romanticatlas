@@ -1,15 +1,33 @@
 import { createServer } from 'node:http'
 import { createHmac, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto'
-import { mkdir, readFile, readdir, rename, rmdir, unlink, writeFile } from 'node:fs/promises'
+import {
+  mkdir,
+  readFile,
+  readdir,
+  rename,
+  rmdir,
+  unlink,
+  writeFile,
+} from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
 import { createServer as createViteServer } from 'vite'
+import { VectorTile } from '@mapbox/vector-tile'
+import Pbf from 'pbf'
 
 import { parseImageDataUrl } from './image-data-url.ts'
 import { createOpenRouterClient } from './openrouter-client.ts'
 import { atlasSceneNames, atlasScenes } from '../src/atlas-scenes.ts'
 import { atlasPrompt } from '../src/atlas-prompt.ts'
+import {
+  fogEligibilitySourceZoom,
+  fogEligibilityChildSpan,
+  fogEligibilityVersion,
+  classifyFogEligibility,
+  fogEligibilitySourceTile,
+  fogEligibilitySourceTileId,
+} from '../src/fog-eligibility.ts'
 import {
   adminAccessError,
   atlasErrorPayload,
@@ -49,7 +67,8 @@ const concurrentGenerationsPerClient = 3
 const maximumCacheStatusBatchSize = 64
 const isProduction = process.env.NODE_ENV === 'production'
 const adminToken = process.env.ATLAS_ADMIN_TOKEN?.trim() || null
-const allowedOrigin = process.env.ATLAS_ALLOWED_ORIGIN ?? 'https://romanticatlas.hype.hk'
+const allowedOrigin =
+  process.env.ATLAS_ALLOWED_ORIGIN ?? 'https://romanticatlas.hype.hk'
 const shareAssetOrigin = process.env.ATLAS_SHARE_ASSET_ORIGIN?.trim() || null
 const tileOrigin = 'https://tiles.saanseoi.hk'
 const tileProxyPrefix = '/map-assets/saanseoi'
@@ -57,6 +76,10 @@ const tileJsonPath = `${tileProxyPrefix}/hongkong-latest.json`
 const vectorTilePattern = new RegExp(
   `^${tileProxyPrefix}/hongkong-latest/(\\d+)/(\\d+)/(\\d+)\\.mvt$`,
 )
+const localEligibilityCache = new Map()
+let localEligibilityTemplateRequest:
+  | Promise<{ template: string; cacheVersion: string }>
+  | undefined
 const contentTypes = {
   '.css': 'text/css; charset=utf-8',
   '.html': 'text/html; charset=utf-8',
@@ -142,10 +165,12 @@ const sendRateLimit = (response, limit) => {
     'x-ratelimit-limit': String(concurrentGenerationsPerClient),
     'x-ratelimit-remaining': '0',
   })
-  response.end(JSON.stringify({
-    error: limit.reason,
-    retryAfterSeconds,
-  }))
+  response.end(
+    JSON.stringify({
+      error: limit.reason,
+      retryAfterSeconds,
+    }),
+  )
 }
 
 const atomicWriteFile = async (filePath, data) => {
@@ -176,25 +201,31 @@ const sendError = (response, statusCode, message) =>
 
 const isPathWithin = (directory, candidate) => {
   const relativePath = path.relative(directory, candidate)
-  return relativePath === '' || (
-    relativePath !== '..' &&
-    !relativePath.startsWith(`..${path.sep}`) &&
-    !path.isAbsolute(relativePath)
+  return (
+    relativePath === '' ||
+    (relativePath !== '..' &&
+      !relativePath.startsWith(`..${path.sep}`) &&
+      !path.isAbsolute(relativePath))
   )
 }
 
 const tokensMatch = (left, right) => {
   const leftBuffer = Buffer.from(left)
   const rightBuffer = Buffer.from(right)
-  return leftBuffer.length === rightBuffer.length && timingSafeEqual(leftBuffer, rightBuffer)
+  return (
+    leftBuffer.length === rightBuffer.length && timingSafeEqual(leftBuffer, rightBuffer)
+  )
 }
 
 const adminTokenIsValid = request =>
-  Boolean(adminToken) && tokensMatch(bearerToken(request.headers.authorization) ?? '', adminToken)
+  Boolean(adminToken) &&
+  tokensMatch(bearerToken(request.headers.authorization) ?? '', adminToken)
 
 const createCsrfToken = () => {
   const nonce = randomBytes(32).toString('hex')
-  const signature = createHmac('sha256', adminToken ?? '').update(nonce).digest('hex')
+  const signature = createHmac('sha256', adminToken ?? '')
+    .update(nonce)
+    .digest('hex')
   return `${nonce}.${signature}`
 }
 
@@ -223,8 +254,11 @@ const ensureCsrfCookie = (request, response) => {
 const hasValidCsrfRequest = request => {
   const headerToken = request.headers['x-atlas-csrf-token']
   const cookieToken = cookieValue(request.headers.cookie, csrfCookieName)
-  return typeof headerToken === 'string' && isValidCsrfToken(cookieToken) &&
+  return (
+    typeof headerToken === 'string' &&
+    isValidCsrfToken(cookieToken) &&
     tokensMatch(headerToken, cookieToken)
+  )
 }
 
 const rejectAdminAccess = (
@@ -236,7 +270,10 @@ const rejectAdminAccess = (
     adminMode: isAdminModeEnabled(request),
     authenticationConfigured: Boolean(adminToken),
     authenticated: adminTokenIsValid(request),
-    applicationRequestAllowed: applicationRequestIsAllowed(request, options.requireOrigin),
+    applicationRequestAllowed: applicationRequestIsAllowed(
+      request,
+      options.requireOrigin,
+    ),
     csrfValid: !options.requireCsrf || hasValidCsrfRequest(request),
     requireCsrf: options.requireCsrf,
   })
@@ -260,6 +297,171 @@ const readRequestBody = async request => {
   }
 
   return JSON.parse(Buffer.concat(chunks).toString('utf8'))
+}
+
+const localEligibilityTemplate = () => {
+  if (localEligibilityTemplateRequest) return localEligibilityTemplateRequest
+  localEligibilityTemplateRequest = fetch(`${tileOrigin}/hongkong-latest.json`, {
+    headers: { Origin: 'https://romanticatlas.hype.hk' },
+  })
+    .then(async response => {
+      if (!response.ok) throw new Error('Could not load the map source definition.')
+      const tileJson = await response.json()
+      const template = Array.isArray(tileJson.tiles) ? tileJson.tiles[0] : null
+      if (typeof template !== 'string' || !template.includes('{z}')) {
+        throw new Error('The map source did not provide a vector tile template.')
+      }
+      const release = new URL(template).searchParams.get('v') ?? 'unversioned'
+      return { template, cacheVersion: `${fogEligibilityVersion}:${release}` }
+    })
+    .catch(error => {
+      localEligibilityTemplateRequest = undefined
+      throw error
+    })
+  return localEligibilityTemplateRequest
+}
+
+const localEligibilityForPositions = async positions => {
+  const source = await localEligibilityTemplate()
+  const results = new Map()
+  const missingBySourceTile = new Map()
+  positions.forEach(position => {
+    const key = `${source.cacheVersion}/${position.zoom}/${position.x}/${position.y}`
+    const cached = localEligibilityCache.get(key)
+    if (cached) {
+      results.set(`${position.zoom}/${position.x}/${position.y}`, cached)
+      return
+    }
+    const sourceId = fogEligibilitySourceTileId(position)
+    const group = missingBySourceTile.get(sourceId) ?? []
+    group.push(position)
+    missingBySourceTile.set(sourceId, group)
+  })
+  await Promise.all(
+    [...missingBySourceTile.values()].map(async group => {
+      const sourceTile = fogEligibilitySourceTile(group[0])
+      const tileUrl = source.template
+        .replace('{z}', String(fogEligibilitySourceZoom))
+        .replace('{x}', String(sourceTile.x))
+        .replace('{y}', String(sourceTile.y))
+      const response = await fetch(tileUrl, {
+        headers: { Origin: 'https://romanticatlas.hype.hk' },
+      })
+      if (!response.ok) throw new Error('Could not load the source map tile.')
+      const vectorTile = new VectorTile(new Pbf(await response.arrayBuffer()))
+      group.forEach(position => {
+        const entry = classifyFogEligibility(vectorTile, position)
+        localEligibilityCache.set(
+          `${source.cacheVersion}/${position.zoom}/${position.x}/${position.y}`,
+          entry,
+        )
+        results.set(`${position.zoom}/${position.x}/${position.y}`, entry)
+      })
+    }),
+  )
+  return {
+    cacheVersion: source.cacheVersion,
+    eligibilities: positions.map(position =>
+      results.get(`${position.zoom}/${position.x}/${position.y}`),
+    ),
+  }
+}
+
+const serveEligibility = async (request, response) => {
+  if (request.method !== 'POST') return false
+  try {
+    const body = await readRequestBody(request)
+    if (!Array.isArray(body.tiles) || !body.tiles.length)
+      throw new Error('At least one atlas tile is required.')
+    if (body.tiles.length > maximumCacheStatusBatchSize)
+      throw new Error(
+        `At most ${maximumCacheStatusBatchSize} atlas tiles can be checked at once.`,
+      )
+    const positions = new Map()
+    body.tiles.forEach(value => {
+      const position = {
+        zoom: Number(value?.zoom),
+        x: Number(value?.x),
+        y: Number(value?.y),
+      }
+      if (!isValidAtlasPosition(position))
+        throw new Error('The eligibility request contains an invalid atlas tile.')
+      positions.set(`${position.zoom}/${position.x}/${position.y}`, position)
+    })
+    const eligibility = await localEligibilityForPositions([...positions.values()])
+    sendJson(response, 200, {
+      version: eligibility.cacheVersion,
+      eligibilities: eligibility.eligibilities,
+    })
+  } catch (error) {
+    sendError(
+      response,
+      400,
+      error instanceof Error
+        ? error.message
+        : 'Could not read the eligibility request.',
+    )
+  }
+  return true
+}
+
+const serveFogIndex = async (request, response, match) => {
+  if (request.method !== 'GET') return false
+  const x = Number(match[1])
+  const y = Number(match[2])
+  const tileCount = 2 ** fogEligibilitySourceZoom
+  if (
+    !Number.isInteger(x) ||
+    !Number.isInteger(y) ||
+    x < 0 ||
+    y < 0 ||
+    x >= tileCount ||
+    y >= tileCount
+  ) {
+    sendError(response, 400, 'The fog index tile is invalid.')
+    return true
+  }
+  try {
+    const positions = Array.from(
+      { length: fogEligibilityChildSpan * fogEligibilityChildSpan },
+      (_, offset) => ({
+        zoom: atlasZoom,
+        x: x * fogEligibilityChildSpan + (offset % fogEligibilityChildSpan),
+        y:
+          y * fogEligibilityChildSpan +
+          Math.floor(offset / fogEligibilityChildSpan),
+      }),
+    )
+    const eligibility = await localEligibilityForPositions(positions)
+    const minimumX = positions[0].x
+    const minimumY = positions[0].y
+    const maximumX = positions.at(-1).x
+    const maximumY = positions.at(-1).y
+    const cached = (await listCachedTiles(null)).filter(
+      tile =>
+        tile.x >= minimumX &&
+        tile.x <= maximumX &&
+        tile.y >= minimumY &&
+        tile.y <= maximumY,
+    )
+    sendJson(response, 200, {
+      zoom: fogEligibilitySourceZoom,
+      x,
+      y,
+      version: eligibility.cacheVersion,
+      eligibility: eligibility.eligibilities,
+      // Keep development equivalent to production: every cached variant is
+      // included so the browser can select and decode one before a click.
+      cached,
+    })
+  } catch (error) {
+    sendError(
+      response,
+      500,
+      error instanceof Error ? error.message : 'Could not load the fog index.',
+    )
+  }
+  return true
 }
 
 const localSharedMapPattern = /^\/shared-maps\/([0-9a-f-]{36})\.png$/
@@ -293,7 +495,11 @@ const createSharedMap = async (request, response) => {
   }
   const assetUrl = shareAssetUrl(request, 'placeholder.png')
   if (!assetUrl) {
-    sendError(response, 503, 'Map sharing is not configured with a public R2 asset origin.')
+    sendError(
+      response,
+      503,
+      'Map sharing is not configured with a public R2 asset origin.',
+    )
     return
   }
   try {
@@ -334,10 +540,19 @@ const serveSharedMap = async (response, filename) => {
 }
 
 const composeTileImage = async (sourceImage, generatedImage, safeMask, lineOverlay) => {
-  const source = parseImageDataUrl(sourceImage, 'The tile source image must be a valid image data URL.')
+  const source = parseImageDataUrl(
+    sourceImage,
+    'The tile source image must be a valid image data URL.',
+  )
   const generated = generatedImage.data
-  const mask = parseImageDataUrl(safeMask, 'The tile safe mask must be a valid image data URL.')
-  const overlay = parseImageDataUrl(lineOverlay, 'The tile line overlay must be a valid image data URL.')
+  const mask = parseImageDataUrl(
+    safeMask,
+    'The tile safe mask must be a valid image data URL.',
+  )
+  const overlay = parseImageDataUrl(
+    lineOverlay,
+    'The tile line overlay must be a valid image data URL.',
+  )
   const alpha = await sharp(mask.data)
     .resize(atlasTileSize, atlasTileSize, { fit: 'fill' })
     .flatten({ background: '#000000' })
@@ -378,16 +593,29 @@ const tilePaths = (tile, variant = defaultAtlasVariant) => {
 }
 
 const versionedTilePaths = (tile, version, variant = defaultAtlasVariant) => {
-  const directory = path.join(cacheDirectory, String(tile.zoom), String(tile.x), String(tile.y))
+  const directory = path.join(
+    cacheDirectory,
+    String(tile.zoom),
+    String(tile.x),
+    String(tile.y),
+  )
   return {
     directory,
     image: path.join(directory, path.basename(atlasImageKey(tile, version, variant))),
-    metadata: path.join(directory, path.basename(atlasMetadataKey(tile, version, variant))),
+    metadata: path.join(
+      directory,
+      path.basename(atlasMetadataKey(tile, version, variant)),
+    ),
   }
 }
 
 const legacyTilePaths = tile => {
-  const directory = path.join(cacheDirectory, String(tile.zoom), String(tile.x), String(tile.y))
+  const directory = path.join(
+    cacheDirectory,
+    String(tile.zoom),
+    String(tile.x),
+    String(tile.y),
+  )
   return {
     directory,
     image: path.join(directory, `${tile.scene}.image`),
@@ -395,7 +623,7 @@ const legacyTilePaths = tile => {
   }
 }
 
-const readCachedTile = async (paths) => {
+const readCachedTile = async paths => {
   try {
     const cached = JSON.parse(await readFile(paths.metadata, 'utf8'))
     const imageMetadata = await sharp(paths.image).metadata()
@@ -411,9 +639,15 @@ const getCachedTile = async tile => {
   return cached ? { ...cached, version: generationVersion } : null
 }
 const getLegacyCachedTile = tile => readCachedTile(legacyTilePaths(tile))
-const getVersionedCachedTile = async (tile, version, variant = defaultAtlasVariant) => {
+const getVersionedCachedTile = async (
+  tile,
+  version,
+  variant = defaultAtlasVariant,
+) => {
   if (!isSupportedCacheVersion(version)) return null
-  const cached = await readCachedTile(versionedTilePaths(tile, version, variant))
+  const cached = await readCachedTile(
+    versionedTilePaths(tile, version, variant),
+  )
   return cached ? { ...cached, version, variant } : null
 }
 const getVersionedCachedTiles = async (tile, version) => {
@@ -422,13 +656,21 @@ const getVersionedCachedTiles = async (tile, version) => {
   try {
     const files = await readdir(directory)
     const variants = files.flatMap(file => {
-      const match = file.match(new RegExp(`^${scenePattern}\\.v${version}(?:\\.([a-z0-9-]{1,64}))?\\.json$`))
+      const match = file.match(
+        new RegExp(
+          `^${scenePattern}\\.v${version}(?:\\.([a-z0-9-]{1,64}))?\\.json$`,
+        ),
+      )
       return match ? [match[1] ?? defaultAtlasVariant] : []
     })
-    return (await Promise.all(variants.map(async variant => {
-      const cached = await getVersionedCachedTile(tile, version, variant)
-      return cached ? { ...cached, tile } : null
-    }))).filter(Boolean)
+    return (
+      await Promise.all(
+        variants.map(async variant => {
+          const cached = await getVersionedCachedTile(tile, version, variant)
+          return cached ? { ...cached, tile } : null
+        }),
+      )
+    ).filter(Boolean)
   } catch {
     return []
   }
@@ -438,31 +680,45 @@ const requestedCacheVersion = request =>
   parseRequestedCacheVersion(requestSearchParams(request))
 
 const findCachedTile = async tile => {
-  const cachedTiles = (await Promise.all(
-    readableCacheVersions.flatMap(version => atlasSceneNames.map(async scene =>
-      getVersionedCachedTiles({ ...tile, scene }, version),
-    )),
-  )).flat()
+  const cachedTiles = (
+    await Promise.all(
+      readableCacheVersions.flatMap(version =>
+        atlasSceneNames.map(async scene =>
+          getVersionedCachedTiles({ ...tile, scene }, version),
+        ),
+      ),
+    )
+  ).flat()
   if (!cachedTiles.length) return null
   return cachedTiles[Math.floor(Math.random() * cachedTiles.length)]
 }
 
-const listCachedTiles = async (requestedVersion = generationVersion) => {
+const listCachedTiles = async (requestedVersion: number | null = generationVersion) => {
   const cachedTiles = new Set<string>()
   const versionedTiles = []
   try {
     const zooms = await readdir(cacheDirectory, { withFileTypes: true })
     for (const zoom of zooms) {
       if (!zoom.isDirectory() || Number(zoom.name) !== atlasZoom) continue
-      const xDirectories = await readdir(path.join(cacheDirectory, zoom.name), { withFileTypes: true })
+      const xDirectories = await readdir(path.join(cacheDirectory, zoom.name), {
+        withFileTypes: true,
+      })
       for (const xDirectory of xDirectories) {
         if (!xDirectory.isDirectory() || !/^\d+$/.test(xDirectory.name)) continue
         const x = Number(xDirectory.name)
-        const yDirectories = await readdir(path.join(cacheDirectory, zoom.name, xDirectory.name), { withFileTypes: true })
+        const yDirectories = await readdir(
+          path.join(cacheDirectory, zoom.name, xDirectory.name),
+          { withFileTypes: true },
+        )
         for (const yDirectory of yDirectories) {
           if (!yDirectory.isDirectory() || !/^\d+$/.test(yDirectory.name)) continue
           const y = Number(yDirectory.name)
-          const directory = path.join(cacheDirectory, zoom.name, xDirectory.name, yDirectory.name)
+          const directory = path.join(
+            cacheDirectory,
+            zoom.name,
+            xDirectory.name,
+            yDirectory.name,
+          )
           const metadataFiles = await readdir(directory)
           for (const metadataFile of metadataFiles) {
             const currentMatch = metadataFile.match(
@@ -482,18 +738,21 @@ const listCachedTiles = async (requestedVersion = generationVersion) => {
     const tileCount = 2 ** atlasZoom
     for (const tile of versionedTiles) {
       if (
-        tile.version !== requestedVersion ||
+        (requestedVersion !== null && tile.version !== requestedVersion) ||
         !atlasScenes[tile.scene] ||
         tile.x >= tileCount ||
         tile.y >= tileCount
-      ) continue
+      )
+        continue
       const cached = await getVersionedCachedTile(tile, tile.version, tile.variant)
       if (cached) {
-        cachedTiles.add(JSON.stringify({
-          ...tile,
-          url: atlasTileUrl(tile, tile.version, tile.variant),
-          contentBounds: cached.contentBounds ?? null,
-        }))
+        cachedTiles.add(
+          JSON.stringify({
+            ...tile,
+            url: atlasTileUrl(tile, tile.version, tile.variant),
+            contentBounds: cached.contentBounds ?? null,
+          }),
+        )
       }
     }
   } catch {
@@ -507,10 +766,18 @@ const atlasTilesAtZoom = atlasTileCount()
 
 const sceneGridPositions = position => {
   const positions = []
-  for (let yOffset = -atlasSceneGridRadius; yOffset <= atlasSceneGridRadius; yOffset += 1) {
+  for (
+    let yOffset = -atlasSceneGridRadius;
+    yOffset <= atlasSceneGridRadius;
+    yOffset += 1
+  ) {
     const y = position.y + yOffset
     if (y < 0 || y >= atlasTilesAtZoom) continue
-    for (let xOffset = -atlasSceneGridRadius; xOffset <= atlasSceneGridRadius; xOffset += 1) {
+    for (
+      let xOffset = -atlasSceneGridRadius;
+      xOffset <= atlasSceneGridRadius;
+      xOffset += 1
+    ) {
       positions.push({
         x: (position.x + xOffset + atlasTilesAtZoom) % atlasTilesAtZoom,
         y,
@@ -521,25 +788,36 @@ const sceneGridPositions = position => {
 }
 
 const cachedScenesInGrid = async position => {
-  const sceneLists = await Promise.all(sceneGridPositions(position).map(async ({ x, y }) => {
-    try {
-      const files = await readdir(path.join(cacheDirectory, String(atlasZoom), String(x), String(y)))
-      return files.flatMap(fileName => {
-        const match = fileName.match(/^(.+)\.v(\d+)\.json$/)
-        const version = Number(match?.[2])
-        const scene = match?.[1]
-        return scene && atlasScenes[scene] && isReadableCacheVersion(version)
-          ? [scene]
-          : []
-      })
-    } catch {
-      return []
-    }
-  }))
+  const sceneLists = await Promise.all(
+    sceneGridPositions(position).map(async ({ x, y }) => {
+      try {
+        const files = await readdir(
+          path.join(cacheDirectory, String(atlasZoom), String(x), String(y)),
+        )
+        return files.flatMap(fileName => {
+          const match = fileName.match(/^(.+)\.v(\d+)\.json$/)
+          const version = Number(match?.[2])
+          const scene = match?.[1]
+          return scene && atlasScenes[scene] && isReadableCacheVersion(version)
+            ? [scene]
+            : []
+        })
+      } catch {
+        return []
+      }
+    }),
+  )
   return [...new Set(sceneLists.flat())]
 }
 
-const generateTile = async (tile, sourceImage, guideImage, safeMask, lineOverlay, contentBounds) => {
+const generateTile = async (
+  tile,
+  sourceImage,
+  guideImage,
+  safeMask,
+  lineOverlay,
+  contentBounds,
+) => {
   const startedAt = performance.now()
   const generatedImage = await createOpenRouterClient().editImage({
     prompt: atlasPrompt(tile.scene, tile.hasSea),
@@ -584,7 +862,7 @@ const serveCachedTile = async (request, response, tile) => {
   const variant = requestedAtlasVariant(requestSearchParams(request))
   const cached = Number.isInteger(requestedVersion)
     ? await getVersionedCachedTile(tile, requestedVersion, variant)
-    : await getCachedTile(tile) ?? await getLegacyCachedTile(tile)
+    : (await getCachedTile(tile)) ?? (await getLegacyCachedTile(tile))
   if (!cached) {
     sendError(response, 404, 'This atlas tile has not been generated yet.')
     return true
@@ -608,12 +886,9 @@ const serveCacheStatus = async (request, response, tile) => {
     findCachedTile(tile),
     cachedScenesInGrid(tile),
   ])
-  sendJson(
-    response,
-    200,
-    cacheStatusPayload({ cached, scenes }),
-    { 'cache-control': 'public, max-age=10, stale-while-revalidate=30' },
-  )
+  sendJson(response, 200, cacheStatusPayload({ cached, scenes }), {
+    'cache-control': 'public, max-age=10, stale-while-revalidate=30',
+  })
   return true
 }
 
@@ -624,7 +899,9 @@ const serveCacheStatusBatch = async (request, response) => {
     if (!Array.isArray(body.tiles) || !body.tiles.length)
       throw new Error('At least one atlas tile is required.')
     if (body.tiles.length > maximumCacheStatusBatchSize)
-      throw new Error(`At most ${maximumCacheStatusBatchSize} atlas tiles can be checked at once.`)
+      throw new Error(
+        `At most ${maximumCacheStatusBatchSize} atlas tiles can be checked at once.`,
+      )
 
     const positions = new Map()
     body.tiles.forEach(value => {
@@ -651,7 +928,9 @@ const serveCacheStatusBatch = async (request, response) => {
     sendError(
       response,
       400,
-      error instanceof Error ? error.message : 'Could not read the cache-status request.',
+      error instanceof Error
+        ? error.message
+        : 'Could not read the cache-status request.',
     )
   }
   return true
@@ -668,7 +947,8 @@ const applicationRequestIsAllowed = (request, requireOrigin = false) =>
 
 const deleteCachedTile = async (request, response, tile) => {
   if (request.method !== 'DELETE') return false
-  if (rejectAdminAccess(request, response, { requireOrigin: true, requireCsrf: true })) return true
+  if (rejectAdminAccess(request, response, { requireOrigin: true, requireCsrf: true }))
+    return true
 
   const releaseTileLock = await acquireTileLock(tile)
   try {
@@ -676,7 +956,7 @@ const deleteCachedTile = async (request, response, tile) => {
     const variant = requestedAtlasVariant(requestSearchParams(request))
     const cached = Number.isInteger(requestedVersion)
       ? await getVersionedCachedTile(tile, requestedVersion, variant)
-      : await getCachedTile(tile) ?? await getLegacyCachedTile(tile)
+      : (await getCachedTile(tile)) ?? (await getLegacyCachedTile(tile))
     if (!cached) {
       sendError(response, 404, 'This atlas tile is not cached.')
       return true
@@ -706,9 +986,13 @@ const serveAtlasTileRequest = async (request, response, tile) => {
     return true
   }
 
-  const rerender = new URL(request.url, 'http://localhost').searchParams.get('rerender') === 'true'
+  const rerender =
+    new URL(request.url, 'http://localhost').searchParams.get('rerender') === 'true'
   if (rerender) {
-    if (rejectAdminAccess(request, response, { requireOrigin: true, requireCsrf: true })) return true
+    if (
+      rejectAdminAccess(request, response, { requireOrigin: true, requireCsrf: true })
+    )
+      return true
   }
   return generateAtlasTile(request, response, tile, rerender)
 }
@@ -726,17 +1010,34 @@ const generateAtlasTile = async (request, response, tile, force = false) => {
   }
 
   if (!applicationRequestIsAllowed(request)) {
-    sendError(response, 403, 'Image generation is restricted to the configured application domain.')
+    sendError(
+      response,
+      403,
+      'Image generation is restricted to the configured application domain.',
+    )
     return true
   }
 
-  const { sourceImage, guideImage, safeMask, lineOverlay, contentBounds, hasSea } = await readRequestBody(request)
+  const { sourceImage, guideImage, safeMask, lineOverlay, contentBounds, hasSea } =
+    await readRequestBody(request)
   if (typeof sourceImage !== 'string' || !sourceImage.startsWith('data:image/')) {
-    sendError(response, 400, 'A PNG or JPEG data URL is required as the tile source image.')
+    sendError(
+      response,
+      400,
+      'A PNG or JPEG data URL is required as the tile source image.',
+    )
     return true
   }
-  if ([guideImage, safeMask, lineOverlay].some(value => typeof value !== 'string' || !value.startsWith('data:image/'))) {
-    sendError(response, 400, 'A guide image, safe-zone mask, and path overlay are required.')
+  if (
+    [guideImage, safeMask, lineOverlay].some(
+      value => typeof value !== 'string' || !value.startsWith('data:image/'),
+    )
+  ) {
+    sendError(
+      response,
+      400,
+      'A guide image, safe-zone mask, and path overlay are required.',
+    )
     return true
   }
 
@@ -765,13 +1066,17 @@ const generateAtlasTile = async (request, response, tile, force = false) => {
         lineOverlay,
         contentBounds,
       )
-      sendJson(response, 200, cachedTilePayload({
-        tile: generated.tile,
-        version: generated.generationVersion,
-        variant: generated.variant,
-        contentType: generated.contentType,
-        contentBounds: generated.contentBounds,
-      }))
+      sendJson(
+        response,
+        200,
+        cachedTilePayload({
+          tile: generated.tile,
+          version: generated.generationVersion,
+          variant: generated.variant,
+          contentType: generated.contentType,
+          contentBounds: generated.contentBounds,
+        }),
+      )
       return true
     } finally {
       reservation.release()
@@ -790,7 +1095,8 @@ const serveProductionAsset = async (request, response) => {
     try {
       const file = await readFile(filePath)
       response.writeHead(200, {
-        'content-type': contentTypes[path.extname(filePath)] ?? 'application/octet-stream',
+        'content-type':
+          contentTypes[path.extname(filePath)] ?? 'application/octet-stream',
       })
       response.end(file)
       return
@@ -874,29 +1180,48 @@ const server = createServer(async (request, response) => {
       const adminMode = isAdminModeEnabled(request)
       const diagnosticsMode = diagnosticsModeEnabled(request)
       if (!adminMode && !diagnosticsMode) {
-        sendJson(response, 200, cachedTilesPayload({
+        sendJson(
+          response,
+          200,
+          cachedTilesPayload({
           adminMode: false,
           diagnosticsMode: false,
           version: null,
           tiles: [],
-        }))
+          }),
+        )
         return
       }
       if (adminMode && rejectAdminAccess(request, response)) return
       if (adminMode) ensureCsrfCookie(request, response)
       const version = requestedCacheVersion(request) ?? generationVersion
       const tiles = await listCachedTiles(version)
-      sendJson(response, 200, cachedTilesPayload({
-        adminMode,
-        diagnosticsMode,
-        version,
-        tiles,
-      }))
+      sendJson(
+        response,
+        200,
+        cachedTilesPayload({
+          adminMode,
+          diagnosticsMode,
+          version,
+          tiles,
+        }),
+      )
       return
     }
 
     if (pathname === '/api/atlas-tiles/cache-status') {
       await serveCacheStatusBatch(request, response)
+      return
+    }
+
+    if (pathname === '/api/atlas-eligibility') {
+      await serveEligibility(request, response)
+      return
+    }
+
+    const fogIndexMatch = pathname.match(/^\/api\/fog-index\/15\/(\d+)\/(\d+)$/)
+    if (fogIndexMatch) {
+      await serveFogIndex(request, response, fogIndexMatch)
       return
     }
 
@@ -927,7 +1252,12 @@ const server = createServer(async (request, response) => {
     }
 
     if (request.method === 'GET' && vectorTilePattern.test(pathname)) {
-      await proxyMapAsset(request, response, pathname, new URL(request.url, 'http://localhost').search)
+      await proxyMapAsset(
+        request,
+        response,
+        pathname,
+        new URL(request.url, 'http://localhost').search,
+      )
       return
     }
 
@@ -944,7 +1274,11 @@ const server = createServer(async (request, response) => {
     })
   } catch (error) {
     console.error(error)
-    sendError(response, 500, error instanceof Error ? error.message : 'Unexpected server error.')
+    sendError(
+      response,
+      500,
+      error instanceof Error ? error.message : 'Unexpected server error.',
+    )
   }
 })
 
