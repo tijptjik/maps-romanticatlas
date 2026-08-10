@@ -7,11 +7,13 @@ import { createIntroSplash } from './intro-splash.ts'
 import { installArtistStatement } from './artist-statement.ts'
 import { installAtlasAudio } from './atlas-audio.ts'
 import { installAtlasSharing } from './atlas-sharing.ts'
+import { createMapFlight } from './map-flight.ts'
 import { hongKongStyle } from './map-style.ts'
 import {
   adminModeEnabled,
   cloudDiagnosticsModeEnabled,
   diagnosticsModeEnabled,
+  kioskModeEnabled,
   noMusicEnabled,
   noNoiseEnabled,
   noSplashEnabled,
@@ -24,6 +26,9 @@ const initialView = {
   bearing: 0,
   pitch: 0,
 }
+
+const kioskFlightCenter = [114.1455, 22.2759] as [number, number]
+const kioskMode = kioskModeEnabled()
 
 const map = new maplibregl.Map({
   container: 'map',
@@ -76,18 +81,24 @@ const waitForIntroFonts = async () => {
   await document.fonts.ready
 }
 
-const skipSplash = noSplashEnabled()
-const audio = installAtlasAudio(map.getContainer(), { initiallyMuted: noMusicEnabled() })
+const skipSplash = noSplashEnabled() || kioskMode
+const audio = installAtlasAudio(map.getContainer(), {
+  initiallyMuted: noMusicEnabled() || kioskMode,
+})
 if (!skipSplash) await waitForIntroFonts()
 const intro = createIntroSplash(map.getContainer(), audio.start, !skipSplash)
 installArtistStatement(map.getContainer(), { showMapTrigger: !adminModeEnabled() })
 const sharing = installAtlasSharing(map, audio)
 const idleDelay = 180_000
+const kioskIdleDelay = 30_000
 let idleTimer: number | undefined
+let kioskTimer: number | undefined
 let resetAtlas: (() => Promise<void>) | undefined
 let isResetting = false
+let kioskFlight: ReturnType<typeof createMapFlight> | undefined
 
 const scheduleIdleReset = () => {
+  if (kioskMode) return
   if (idleTimer) window.clearTimeout(idleTimer)
   idleTimer = window.setTimeout(async () => {
     if (isResetting || !resetAtlas) return
@@ -105,8 +116,19 @@ const scheduleIdleReset = () => {
   }, idleDelay)
 }
 
+const scheduleKioskFlight = () => {
+  if (!kioskMode) return
+  if (kioskTimer) window.clearTimeout(kioskTimer)
+  kioskTimer = window.setTimeout(() => kioskFlight?.start(), kioskIdleDelay)
+}
+
 const noteActivity = (dismissIntro = false) => {
   if (isResetting) return
+  if (kioskMode) {
+    kioskFlight?.pause()
+    scheduleKioskFlight()
+    return
+  }
   if (dismissIntro) intro.dismiss()
   scheduleIdleReset()
 }
@@ -122,6 +144,11 @@ window.addEventListener(
     if (event.ctrlKey && !event.altKey && event.key.toLowerCase() === 'm') {
       event.preventDefault()
       event.stopPropagation()
+      if (kioskMode) {
+        kioskFlight?.pause()
+        scheduleKioskFlight()
+        return
+      }
       intro.show()
       audio.stop()
       sharing.reset()
@@ -167,5 +194,10 @@ map.on('load', async () => {
     await atlas.resetReveals()
   }
 
-  scheduleIdleReset()
+  if (kioskMode) {
+    kioskFlight = createMapFlight(map, kioskFlightCenter)
+    kioskFlight.start()
+  } else {
+    scheduleIdleReset()
+  }
 })

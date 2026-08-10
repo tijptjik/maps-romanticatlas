@@ -8,11 +8,15 @@ export const diagnosticsModeEnabled = () => modeEnabled('diagnostics')
 // Cloud eligibility is an admin-only diagnostic and is enabled by default for
 // cache administration. Pass cloudDiagnostics=false to hide it temporarily.
 export const cloudDiagnosticsModeEnabled = () =>
-  adminModeEnabled() && new URLSearchParams(window.location.search).get('cloudDiagnostics') !== 'false'
+  adminModeEnabled() &&
+  new URLSearchParams(window.location.search).get('cloudDiagnostics') !== 'false'
 
 export const noSplashEnabled = () => modeEnabled('noSplash')
 
-export const noMusicEnabled = () => new URLSearchParams(window.location.search).has('noMusic')
+export const kioskModeEnabled = () => modeEnabled('kioskMode')
+
+export const noMusicEnabled = () =>
+  new URLSearchParams(window.location.search).has('noMusic')
 
 export const noNoiseEnabled = () => modeEnabled('noNoise')
 
@@ -46,6 +50,9 @@ window.toggle_auth = () => toggleModeAndReload('admin')
 window.toggle_diagnostics = () => toggleModeAndReload('diagnostics')
 window.toggle_cloud_diagnostics = () => {
   const url = new URL(window.location.href)
-  url.searchParams.set('cloudDiagnostics', cloudDiagnosticsModeEnabled() ? 'false' : 'true')
+  url.searchParams.set(
+    'cloudDiagnostics',
+    cloudDiagnosticsModeEnabled() ? 'false' : 'true',
+  )
   window.location.assign(url.toString())
 }

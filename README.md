@@ -137,8 +137,11 @@ included in local manifest lookups until they are encountered or regenerated. Ad
 `?admin=true` for cache administration, `?diagnostics=true` for tile outlines,
 `?admin=true` also labels only cloud-excluded tiles with their failing condition; add
 `&cloudDiagnostics=false` to hide those labels. Use `?noNoise=true` for smooth fog
-without the animated cloud noise, and `&version=3` to replay an older cache version. To
-copy the existing local cache to R2, run `bun run sync:tiles`.
+without the animated cloud noise, `?kioskMode=true` for a clockwise camera circuit 2 km
+from Victoria Peak, completing each loop in 120 seconds, and `&version=3` to replay an
+older cache version. Kiosk mode hides the introduction, pauses for visitor interaction,
+and resumes its flight path after 30 seconds without activity. To copy the existing
+local cache to R2, run `bun run sync:tiles`.
 
 For an on-phone QR test, use `bun run dev:remote` with the public R2 origin above. The
 local Worker uploads the image to the remote bucket, so the scanned QR opens the direct
