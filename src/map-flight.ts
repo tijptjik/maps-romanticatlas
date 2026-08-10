@@ -33,7 +33,7 @@ const destinationPoint = (
 }
 
 // Keep the map north-up while its centre travels clockwise around a geodesic
-// circle. Each orbit takes 120 s, and can be paused for map interaction.
+// circle. Each orbit takes 240 s, and can be paused for map interaction.
 export const createMapFlight = (map: MapLibreMap, center: LngLat) => {
   let animationFrame: number | undefined
   let isJoiningFlightPath = false
@@ -48,7 +48,7 @@ export const createMapFlight = (map: MapLibreMap, center: LngLat) => {
       if (!isFlying) return
 
       const elapsedSeconds = (now - startedAt) / 1_000
-      const bearingRadians = (elapsedSeconds * 3 * Math.PI) / 180
+      const bearingRadians = (elapsedSeconds * 1.5 * Math.PI) / 180
       map.jumpTo({
         center: destinationPoint(center, bearingRadians, flightRadiusMetres),
       })
