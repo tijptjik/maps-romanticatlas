@@ -9,3 +9,4 @@ dist/
 generated-tiles/
 shared-maps/
 .wrangler/
+.playwright-cli
