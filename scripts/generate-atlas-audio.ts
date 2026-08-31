@@ -111,6 +111,12 @@ const sourceRecordings: Record<string, RecordedSource> = {
     title: 'Factory with Robotic arm movements and metal sounds',
     creator: 'editboy23',
   },
+  fallingRice: {
+    sourceUrl: 'https://cdn.freesound.org/previews/838/838989_15636277-lq.mp3',
+    sourcePage: 'https://freesound.org/people/bassimat/sounds/838989/',
+    title: 'Pouring Rice on the Floor - Biennale Exhibition Venice 2025',
+    creator: 'bassimat',
+  },
   fairground: {
     sourceUrl: 'https://cdn.freesound.org/previews/635/635159_12863902-lq.mp3',
     sourcePage: 'https://freesound.org/people/HECKFRICKER/sounds/635159/',
@@ -128,6 +134,12 @@ const sourceRecordings: Record<string, RecordedSource> = {
     sourcePage: 'https://freesound.org/people/kyles/sounds/451392/',
     title: 'fishermen busy pier near fish market shouting voices',
     creator: 'kyles',
+  },
+  fishJump: {
+    sourceUrl: 'https://cdn.freesound.org/previews/507/507092_8682843-lq.mp3',
+    sourcePage: 'https://freesound.org/people/paulprit/sounds/507092/',
+    title: 'Fish Jumping Splash 1.wav',
+    creator: 'paulprit',
   },
   foghorn: {
     sourceUrl: 'https://cdn.freesound.org/previews/477/477643_1481531-lq.mp3',
@@ -257,6 +269,12 @@ const sourceRecordings: Record<string, RecordedSource> = {
     title: 'Space Ambience.wav',
     creator: 'Sonicfreak',
   },
+  sushiWelcome: {
+    sourceUrl: 'https://cdn.freesound.org/previews/364/364897_179538-lq.mp3',
+    sourcePage: 'https://freesound.org/people/RutgerMuller/sounds/364897/',
+    title: 'Japan_Tokyo_Shinjuku_Street_Promoter_Yelling_City.wav',
+    creator: 'RutgerMuller',
+  },
   steam: {
     sourceUrl: 'https://cdn.freesound.org/previews/593/593088_6456158-lq.mp3',
     sourcePage: 'https://freesound.org/people/FunWithSound/sounds/593088/',
@@ -299,6 +317,19 @@ const sourceRecordings: Record<string, RecordedSource> = {
     title: 'Blade Runner ambient 03 - vehicles outside the streets',
     creator: 'Simonus18',
   },
+  frenchParty: {
+    sourceUrl: 'https://cdn.freesound.org/previews/718/718568_11519060-lq.mp3',
+    sourcePage: 'https://freesound.org/people/bruno.auzet/sounds/718568/',
+    title: 'crowded small french bar',
+    creator: 'bruno.auzet',
+  },
+  arabicBazaar: {
+    sourceUrl: 'https://cdn.freesound.org/previews/511/511005_571436-lq.mp3',
+    sourcePage: 'https://freesound.org/people/3bagbrew/sounds/511005/',
+    title: 'Khan El Khalili bazaar .wav',
+    creator: '3bagbrew',
+    start: 0.8,
+  },
   astronomicalClock: {
     sourceUrl: 'https://cdn.freesound.org/previews/550/550851_3662372-lq.mp3',
     sourcePage: 'https://freesound.org/people/SoundEnsemble/sounds/550851/',
@@ -311,6 +342,18 @@ const sourceRecordings: Record<string, RecordedSource> = {
     title: 'Singapore Botanic Gardens - Ambiance',
     creator: 'nyoz',
   },
+  beerGarden: {
+    sourceUrl: 'https://cdn.freesound.org/previews/767/767554_2337062-lq.mp3',
+    sourcePage: 'https://freesound.org/people/henner1964/sounds/767554/',
+    title: '240908-city-murmur-biergarten-river-weser',
+    creator: 'henner1964',
+  },
+  bladeRunnerHarmony: {
+    sourceUrl: 'https://cdn.freesound.org/previews/260/260985_4434608-lq.mp3',
+    sourcePage: 'https://freesound.org/people/Andy_de_Rue/sounds/260985/',
+    title: 'Blade_Runners_Harmony.MP3',
+    creator: 'Andy_de_Rue',
+  },
   carousel: {
     sourceUrl: 'https://cdn.freesound.org/previews/474/474195_5474387-lq.mp3',
     sourcePage: 'https://freesound.org/people/OneTwo_BER/sounds/474195/',
@@ -322,6 +365,12 @@ const sourceRecordings: Record<string, RecordedSource> = {
     sourcePage: 'https://freesound.org/people/balloonhead/sounds/448105/',
     title: 'circus-normal.wav',
     creator: 'balloonhead',
+  },
+  dreamyAmbience: {
+    sourceUrl: 'https://cdn.freesound.org/previews/663/663789_3674972-lq.mp3',
+    sourcePage: 'https://freesound.org/people/AquantiuM/sounds/663789/',
+    title: 'mysterious_dreamy_ambience_18392.wav',
+    creator: 'AquantiuM',
   },
   clock: {
     sourceUrl: 'https://cdn.freesound.org/previews/171/171043_2449563-lq.mp3',
@@ -438,7 +487,7 @@ const sourceRecordings: Record<string, RecordedSource> = {
 const recordedScenes: Record<AtlasScene, keyof typeof sourceRecordings> = {
   circus: 'circus',
   'balloon-festival': 'balloon',
-  'art-nouveau-palace': 'museum',
+  'art-nouveau-palace': 'frenchParty',
   ironworks: 'clanking',
   'steam-railway': 'steam',
   'suspension-bridge': 'construction',
@@ -457,6 +506,14 @@ const recordedScenes: Record<AtlasScene, keyof typeof sourceRecordings> = {
   'hall-of-mirrors': 'hall',
   'botanical-laboratory': 'greenhouse',
   'electrical-laboratory': 'electricity',
+  'tropical-aquarium': 'fishJump',
+  'sushi-restaurant': 'sushiWelcome',
+  'thrifting-paradise': 'market',
+  'beer-garden': 'beerGarden',
+  'grand-library': 'museum',
+  'rice-sculpture-festival': 'fallingRice',
+  'cyber-deck-alley': 'bladeRunnerHarmony',
+  'marshmallow-factory': 'dreamyAmbience',
   observatory: 'observatory',
   'weather-station': 'weather',
   'orrery-hall': 'astronomicalClock',
@@ -484,7 +541,7 @@ const recordedScenes: Record<AtlasScene, keyof typeof sourceRecordings> = {
   'lunar-outpost': 'oneSmallStep',
   'volcano-observatory': 'volcano',
   'grand-exhibition': 'exhibition',
-  'market-quarter': 'market',
+  'market-quarter': 'arabicBazaar',
   'steampunk-city': 'steampunk',
   'civic-centre': 'debate',
   'worlds-fair': 'worldFair',
@@ -555,6 +612,14 @@ const profiles: Record<AtlasScene, Profile> = {
   'hall-of-mirrors': 'glass',
   'botanical-laboratory': 'garden',
   'electrical-laboratory': 'electric',
+  'tropical-aquarium': 'water',
+  'sushi-restaurant': 'market',
+  'thrifting-paradise': 'market',
+  'beer-garden': 'garden',
+  'grand-library': 'candle',
+  'rice-sculpture-festival': 'fairground',
+  'cyber-deck-alley': 'neon',
+  'marshmallow-factory': 'engine',
   observatory: 'celestial',
   'weather-station': 'wind',
   'orrery-hall': 'celestial',
@@ -1118,17 +1183,23 @@ const clipRecordedScene = (
 }
 
 const thirdPartyNotices = () => {
+  const backgroundTrack = '`public/atlas-audio/awestruck.ogg`'
   const rows = atlasSceneNames.map(scene => {
     const source = sourceRecordings[recordedScenes[scene]]
     return `| \`public/atlas-audio/${scene}.ogg\` | [${source.title}](${source.sourcePage}) | ${source.creator} | ${source.license ?? 'CC0 1.0'} |`
   })
   return `# Third-party audio notices
 
-Every scene cue is a 2.35-second excerpt from public-domain material. Freesound
+The background theme is a full, seamlessly looping CC0 track from OpenGameArt. Every
+scene cue is a 2.35-second excerpt from public-domain material. Freesound
 recordings are published under the
 [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/) dedication;
 the NASA recording is United States government public-domain material. The local Ogg
 files are clipped and transcoded versions of the linked source recordings.
+
+| Local track | Source | Creator | Licence |
+| --- | --- | --- | --- |
+| ${backgroundTrack} | [Awestruck](https://opengameart.org/content/awestruck) | isaiah658 | CC0 |
 
 | Local cue | Source recording | Creator | Licence |
 | --- | --- | --- | --- |
