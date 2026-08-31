@@ -5,6 +5,7 @@ import { atlasZoom, tileBounds, tileForPosition } from './tile-geometry.ts'
 import {
   fogEligibilityChildSpan,
   fogEligibilitySourceZoom,
+  isFogPatternSelected,
   type FogEligibility,
 } from './fog-eligibility.ts'
 
@@ -140,7 +141,7 @@ const visibleFogTiles = (map, spill = 0) => {
   return tiles
 }
 
-const isFogged = tile => (((tile.x * 73856093) ^ (tile.y * 19349663)) & 1) === 0
+const isFogged = isFogPatternSelected
 const waitForRender = map => new Promise(resolve => map.once('render', resolve))
 const seeded = value => {
   const noise = Math.sin(value * 12.9898) * 43758.5453
@@ -1232,8 +1233,8 @@ const createFogCanvas = (
       colourSpill + tileHeight * 0.92 + swayY,
     )
     const secondHue = (baseHue + 78 + seeded(seed + 73.6) * 18) % 360
-    gradient.addColorStop(0, `hsla(${baseHue}, 88%, 67%, 0.28)`)
-    gradient.addColorStop(1, `hsla(${secondHue}, 88%, 67%, 0.32)`)
+    gradient.addColorStop(0, `hsla(${baseHue}, 100%, 67%, 0.28)`)
+    gradient.addColorStop(1, `hsla(${secondHue}, 100%, 67%, 0.32)`)
     cachedColourTileContext.globalAlpha = 1
     cachedColourTileContext.fillStyle = gradient
     cachedColourTileContext.fillRect(0, 0, renderWidth, renderHeight)
