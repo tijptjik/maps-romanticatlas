@@ -3,6 +3,12 @@ import { createAtlasTitleCard, positionAtlasTitleCard } from './atlas-title-card
 import { captureTile, tileHasSea } from './atlas-tiles.ts'
 import { atlasSceneNames, pickAtlasScene, type AtlasScene } from './atlas-scenes.ts'
 import { atlasZoom, tileBounds, tileForPosition, tilePolygon } from './tile-geometry.ts'
+import {
+  fogEligibilityChildSpan,
+  fogEligibilitySourceZoom,
+  isFogPatternSelected,
+  type FogEligibility,
+} from './fog-eligibility.ts'
 import { runtimeModeUrl } from './runtime-modes.ts'
 import { installAdminTileGrid } from './admin-tile-grid.ts'
 
@@ -25,6 +31,7 @@ const transparentRasterTile = Uint8Array.from(
 const tileKey = tile =>
   `${tile.zoom}/${tile.x}/${tile.y}/${tile.scene}/v${tile.version}/${tile.variant ?? 'default'}`
 const tilePositionKey = tile => `${tile.zoom}/${tile.x}/${tile.y}`
+const fogEligibilityPositionKey = tile => `${atlasZoom}/${tile.x}/${tile.y}`
 const sceneLabel = scene =>
   scene
     .split('-')
@@ -210,6 +217,8 @@ export const installCachedTileAdmin = async map => {
         : null
     const tilesByPosition = new Map()
     const activeTilesByPosition = new Map()
+    const fogEligibilityByPosition = new Map<string, boolean>()
+    const fogEligibilityRequests = new Map<string, Promise<void>>()
     tiles.forEach(tile => {
       const positionKey = tilePositionKey(tile)
       const positionTiles = tilesByPosition.get(positionKey) ?? []
@@ -473,11 +482,14 @@ export const installCachedTileAdmin = async map => {
         rerenderControl.hidden = true
         return
       }
-      actionBar.hidden = false
-      rerenderControl.hidden = false
+      const isEligible =
+        fogEligibilityByPosition.get(fogEligibilityPositionKey(selectedPosition)) === true
+      actionBar.hidden = !selectedTile && !isEligible
+      rerenderControl.hidden = !isEligible
       if (!selectedTile) {
         deleteControl.hidden = true
         cycleControl.hidden = true
+        if (!isEligible) return
         setControlIcon(
           rerenderControl,
           'rerender',
@@ -499,6 +511,44 @@ export const installCachedTileAdmin = async map => {
         candidates.length < 2 ? 'No alternate image' : 'Show next image'
       setControlIcon(rerenderControl, 'rerender', 'Render a different scene')
       positionActionBar(selectedTile)
+    }
+
+    const loadFogEligibility = tile => {
+      const positionKey = fogEligibilityPositionKey(tile)
+      if (
+        fogEligibilityByPosition.has(positionKey) ||
+        fogEligibilityRequests.has(positionKey)
+      )
+        return
+
+      const parentX = Math.floor(tile.x / fogEligibilityChildSpan)
+      const parentY = Math.floor(tile.y / fogEligibilityChildSpan)
+      const request = fetch(
+        runtimeModeUrl(`/api/fog-index/${fogEligibilitySourceZoom}/${parentX}/${parentY}`),
+        { cache: 'no-store' },
+      )
+        .then(async response => {
+          if (!response.ok) throw new Error(`Fog index returned HTTP ${response.status}.`)
+          const body = (await response.json()) as { eligibility?: FogEligibility[] }
+          if (!Array.isArray(body.eligibility))
+            throw new Error('Fog index did not include eligibility data.')
+          body.eligibility.forEach(entry => {
+            if (entry.zoom !== atlasZoom) return
+            fogEligibilityByPosition.set(
+              fogEligibilityPositionKey(entry),
+              isFogPatternSelected(entry) && entry.isTargetable,
+            )
+          })
+        })
+        .catch(() => {
+          // An unmeasured cell must never be offered as a render target.
+          fogEligibilityByPosition.set(positionKey, false)
+        })
+        .finally(() => {
+          fogEligibilityRequests.delete(positionKey)
+          positionControl()
+        })
+      fogEligibilityRequests.set(positionKey, request)
     }
 
     const updateSelectionOutline = () => {
@@ -539,6 +589,7 @@ export const installCachedTileAdmin = async map => {
           `Delete ${sceneLabel(selectedTile.scene)}`,
         )
       }
+      void loadFogEligibility(position)
       updateSelectionOutline()
       positionControl()
     }

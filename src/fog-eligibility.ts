@@ -20,6 +20,12 @@ export type FogEligibility = FogEligibilityPosition & {
   streetFraction: number | null
 }
 
+// This deterministic half-grid selection is part of tile eligibility, not a
+// rendering-only detail. Keep it shared by the visitor, admin, and Worker
+// paths so none of them can create an atlas entry outside the fog program.
+export const isFogPatternSelected = ({ x, y }: Pick<FogEligibilityPosition, 'x' | 'y'>) =>
+  (((x * 73856093) ^ (y * 19349663)) & 1) === 0
+
 export const fogEligibilitySourceTile = ({ x, y }: FogEligibilityPosition) => ({
   x: Math.floor(x / fogEligibilityChildSpan),
   y: Math.floor(y / fogEligibilityChildSpan),
