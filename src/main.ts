@@ -1,5 +1,6 @@
 import * as maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
+import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { installAtlasTileInteractions } from './atlas-tiles.ts'
 import { installCachedTileAdmin } from './cached-tile-admin.ts'
 import { installCachedTileDiagnostic } from './cached-tile-diagnostic.ts'
@@ -19,6 +20,9 @@ import {
   noSplashEnabled,
 } from './runtime-modes.ts'
 import './style.css'
+
+// Vite emits MapLibre's module worker as a self-contained same-origin asset.
+maplibregl.setWorkerUrl(workerUrl)
 
 const initialView = {
   center: [114.1346, 22.28364] as [number, number],
