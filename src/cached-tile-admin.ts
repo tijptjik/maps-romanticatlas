@@ -1,4 +1,4 @@
-import maplibregl from 'maplibre-gl'
+import * as maplibregl from 'maplibre-gl'
 import { createAtlasTitleCard, positionAtlasTitleCard } from './atlas-title-cards.ts'
 import { captureTile, tileHasSea } from './atlas-tiles.ts'
 import { atlasSceneNames, pickAtlasScene, type AtlasScene } from './atlas-scenes.ts'

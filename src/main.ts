@@ -1,4 +1,4 @@
-import maplibregl from 'maplibre-gl'
+import * as maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { installAtlasTileInteractions } from './atlas-tiles.ts'
 import { installCachedTileAdmin } from './cached-tile-admin.ts'

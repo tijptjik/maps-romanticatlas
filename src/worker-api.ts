@@ -1,6 +1,6 @@
 import { PhotonImage, SamplingFilter, resize } from '@cf-wasm/photon/workerd'
 import { VectorTile } from '@mapbox/vector-tile'
-import Pbf from 'pbf'
+import { PbfReader } from 'pbf'
 import {
   fogEligibilityVersion,
   fogEligibilityChildSpan,
@@ -333,7 +333,7 @@ const fogIndexEligibility = async (env: AtlasEnv, x: number, y: number) => {
     headers: { Origin: 'https://romanticatlas.hype.hk' },
   })
   if (!response.ok) throw new Error(`Could not load source map tile ${sourceId}.`)
-  const vectorTile = new VectorTile(new Pbf(await response.arrayBuffer()))
+  const vectorTile = new VectorTile(new PbfReader(await response.arrayBuffer()))
   const eligibilities = positions.map(position =>
     classifyFogEligibility(vectorTile, position),
   )

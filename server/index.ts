@@ -14,7 +14,7 @@ import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
 import { createServer as createViteServer } from 'vite'
 import { VectorTile } from '@mapbox/vector-tile'
-import Pbf from 'pbf'
+import { PbfReader } from 'pbf'
 
 import { parseImageDataUrl } from './image-data-url.ts'
 import { createOpenRouterClient } from './openrouter-client.ts'
@@ -348,7 +348,7 @@ const localEligibilityForPositions = async positions => {
         headers: { Origin: 'https://romanticatlas.hype.hk' },
       })
       if (!response.ok) throw new Error('Could not load the source map tile.')
-      const vectorTile = new VectorTile(new Pbf(await response.arrayBuffer()))
+      const vectorTile = new VectorTile(new PbfReader(await response.arrayBuffer()))
       group.forEach(position => {
         const entry = classifyFogEligibility(vectorTile, position)
         localEligibilityCache.set(
@@ -1158,7 +1158,13 @@ const proxyMapAsset = async (request, response, pathname, search = '') => {
 
 const vite = isProduction
   ? null
-  : await createViteServer({ root: rootDirectory, server: { middlewareMode: true } })
+  : await createViteServer({
+      root: rootDirectory,
+      server: { middlewareMode: true },
+      // MapLibre loads its worker as a separate ESM module. Vite's optimizer
+      // otherwise records a non-existent optimized worker entry in Vite 8.
+      optimizeDeps: { exclude: ['maplibre-gl'] },
+    })
 
 const server = createServer(async (request, response) => {
   try {
