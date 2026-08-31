@@ -7,6 +7,7 @@ import {
   fogEligibilitySourceZoom,
   classifyFogEligibility,
   fogEligibilitySourceTile,
+  isFogPatternSelected,
   type FogEligibility,
 } from './fog-eligibility.ts'
 import {
@@ -845,6 +846,25 @@ const generateTile = async (
     return errorResponse(
       403,
       'Image generation is restricted to the configured application domain.',
+    )
+  }
+
+  // The client only offers fogged, targetable cells, but this is the final
+  // authority before a paid render writes a persistent atlas entry. Admin
+  // requests use this path too, so they cannot bypass grid eligibility.
+  let isTargetable = false
+  try {
+    const { eligibilities } = await fogEligibilityForPositions(env, [tile])
+    isTargetable = eligibilities[0]?.isTargetable === true
+  } catch {
+    // Eligibility is fail-closed: an unavailable map index must not create a
+    // persistent entry that later turns out to be outside the fog program.
+    return errorResponse(503, 'Could not verify this atlas tile is eligible for generation.')
+  }
+  if (!isFogPatternSelected(tile) || !isTargetable) {
+    return errorResponse(
+      403,
+      'This atlas tile is not eligible for generation.',
     )
   }
 
