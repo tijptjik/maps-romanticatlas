@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.5.7/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.6.5/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -33,7 +33,7 @@
         "noUnknownPseudoElement": "off"
       },
       "nursery": {
-        "useSortedClasses": "error"
+        "useTailwindSortedClasses": "error"
       }
     }
   },
@@ -85,6 +85,15 @@
     "parser": {
       "cssModules": true,
       "tailwindDirectives": true
+    }
+  },
+  "markdown": {
+    "formatter": {
+      "enabled": true,
+      "proseWrap": "always"
+    },
+    "parser": {
+      "frontmatter": true
     }
   }
 }
