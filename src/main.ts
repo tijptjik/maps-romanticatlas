@@ -10,6 +10,7 @@ import { installAtlasAudio } from './atlas-audio.ts'
 import { installAtlasSharing } from './atlas-sharing.ts'
 import { createMapFlight } from './map-flight.ts'
 import { hongKongStyle } from './map-style.ts'
+import { installBasemapPreload } from './basemap-preload.ts'
 import {
   adminModeEnabled,
   cloudDiagnosticsModeEnabled,
@@ -55,6 +56,8 @@ const map = new maplibregl.Map({
   pixelRatio: Math.min(window.devicePixelRatio, 2),
   canvasContextAttributes: { preserveDrawingBuffer: true },
 })
+
+installBasemapPreload(map)
 
 const installDeployCommit = (mapContainer: HTMLElement) => {
   if (!adminModeEnabled()) return
