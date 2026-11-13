@@ -10,8 +10,10 @@ import {
   writeFile,
 } from 'node:fs/promises'
 import path from 'node:path'
+import { setImmediate as yieldToRequests } from 'node:timers/promises'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
+import { createMapAssetCache } from './map-asset-cache.ts'
 import { createServer as createViteServer } from 'vite'
 import { VectorTile } from '@mapbox/vector-tile'
 import { PbfReader } from 'pbf'
@@ -71,6 +73,7 @@ const allowedOrigin =
   process.env.ATLAS_ALLOWED_ORIGIN ?? 'https://romanticatlas.hype.hk'
 const shareAssetOrigin = process.env.ATLAS_SHARE_ASSET_ORIGIN?.trim() || null
 const tileOrigin = 'https://tiles.saanseoi.hk'
+const fetchMapAsset = createMapAssetCache()
 const tileProxyPrefix = '/map-assets/saanseoi'
 const tileJsonPath = `${tileProxyPrefix}/hongkong-latest.json`
 const vectorTilePattern = new RegExp(
@@ -301,9 +304,7 @@ const readRequestBody = async request => {
 
 const localEligibilityTemplate = () => {
   if (localEligibilityTemplateRequest) return localEligibilityTemplateRequest
-  localEligibilityTemplateRequest = fetch(`${tileOrigin}/hongkong-latest.json`, {
-    headers: { Origin: 'https://romanticatlas.hype.hk' },
-  })
+  localEligibilityTemplateRequest = fetchMapAsset(`${tileOrigin}/hongkong-latest.json`)
     .then(async response => {
       if (!response.ok) throw new Error('Could not load the map source definition.')
       const tileJson = await response.json()
@@ -344,19 +345,19 @@ const localEligibilityForPositions = async positions => {
         .replace('{z}', String(fogEligibilitySourceZoom))
         .replace('{x}', String(sourceTile.x))
         .replace('{y}', String(sourceTile.y))
-      const response = await fetch(tileUrl, {
-        headers: { Origin: 'https://romanticatlas.hype.hk' },
-      })
+      const response = await fetchMapAsset(tileUrl)
       if (!response.ok) throw new Error('Could not load the source map tile.')
       const vectorTile = new VectorTile(new PbfReader(await response.arrayBuffer()))
-      group.forEach(position => {
+      for (const position of group) {
+        // Let basemap responses and other visitors run between child tiles.
+        await yieldToRequests()
         const entry = classifyFogEligibility(vectorTile, position)
         localEligibilityCache.set(
           `${source.cacheVersion}/${position.zoom}/${position.x}/${position.y}`,
           entry,
         )
         results.set(`${position.zoom}/${position.x}/${position.y}`, entry)
-      })
+      }
     }),
   )
   return {
@@ -437,13 +438,7 @@ const serveFogIndex = async (request, response, match) => {
     const minimumY = positions[0].y
     const maximumX = positions.at(-1).x
     const maximumY = positions.at(-1).y
-    const cached = (await listCachedTiles(null)).filter(
-      tile =>
-        tile.x >= minimumX &&
-        tile.x <= maximumX &&
-        tile.y >= minimumY &&
-        tile.y <= maximumY,
-    )
+    const cached = await listCachedTiles(null, { minimumX, maximumX, minimumY, maximumY })
     sendJson(response, 200, {
       zoom: fogEligibilitySourceZoom,
       x,
@@ -693,7 +688,10 @@ const findCachedTile = async tile => {
   return cachedTiles[Math.floor(Math.random() * cachedTiles.length)]
 }
 
-const listCachedTiles = async (requestedVersion: number | null = generationVersion) => {
+const listCachedTiles = async (
+  requestedVersion: number | null = generationVersion,
+  bounds?: { minimumX: number; maximumX: number; minimumY: number; maximumY: number },
+) => {
   const cachedTiles = new Set<string>()
   const versionedTiles = []
   try {
@@ -706,6 +704,7 @@ const listCachedTiles = async (requestedVersion: number | null = generationVersi
       for (const xDirectory of xDirectories) {
         if (!xDirectory.isDirectory() || !/^\d+$/.test(xDirectory.name)) continue
         const x = Number(xDirectory.name)
+        if (bounds && (x < bounds.minimumX || x > bounds.maximumX)) continue
         const yDirectories = await readdir(
           path.join(cacheDirectory, zoom.name, xDirectory.name),
           { withFileTypes: true },
@@ -713,6 +712,7 @@ const listCachedTiles = async (requestedVersion: number | null = generationVersi
         for (const yDirectory of yDirectories) {
           if (!yDirectory.isDirectory() || !/^\d+$/.test(yDirectory.name)) continue
           const y = Number(yDirectory.name)
+          if (bounds && (y < bounds.minimumY || y > bounds.maximumY)) continue
           const directory = path.join(
             cacheDirectory,
             zoom.name,
@@ -1119,13 +1119,7 @@ const proxyMapAsset = async (request, response, pathname, search = '') => {
     `${pathname.slice(tileProxyPrefix.length)}${search}`,
     tileOrigin,
   )
-  const upstreamResponse = await fetch(upstreamUrl, {
-    headers: {
-      // The basemap service authorizes the production application origin. The
-      // browser still talks to this server same-origin during local dev.
-      Origin: 'https://romanticatlas.hype.hk',
-    },
-  })
+  const upstreamResponse = await fetchMapAsset(upstreamUrl)
 
   if (pathname === tileJsonPath && upstreamResponse.ok) {
     const tileJson = await upstreamResponse.json()
