@@ -4,6 +4,9 @@
   "main": "src/worker.ts",
   "compatibility_date": "2026-07-18",
   "workers_dev": true,
+  "placement": {
+    "region": "aws:ap-southeast-1"
+  },
   "routes": [
     {
       "pattern": "romanticatlas.hype.hk",
