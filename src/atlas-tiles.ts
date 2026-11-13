@@ -1,3 +1,4 @@
+import { FogQuality } from './fog-quality.ts'
 import { atlasSceneNames, pickAtlasScene, type AtlasScene } from './atlas-scenes.ts'
 import { createAtlasTitleCard, positionAtlasTitleCard } from './atlas-title-cards.ts'
 import { loadingConcepts } from './loading-concepts.ts'
@@ -868,12 +869,45 @@ const createFogCanvas = (
   const canvasSizeUniform = program && gl?.getUniformLocation(program, 'u_canvas_size')
   const canvasOriginUniform =
     program && gl?.getUniformLocation(program, 'u_canvas_origin')
+  const quality = new FogQuality()
+  let appliedQuality = -1
+  const silhouettes = new Map<string, HTMLCanvasElement>()
+  let silhouetteBytes = 0
+  const silhouette = (seed, radius, blur, padding) => {
+    const unit = 128
+    const key = `${seed}:${radius}:${blur.toFixed(3)}:${padding.toFixed(6)}`
+    const existing = silhouettes.get(key)
+    if (existing) {
+      silhouettes.delete(key)
+      silhouettes.set(key, existing)
+      return existing
+    }
+    const sprite = document.createElement('canvas')
+    sprite.width = sprite.height = Math.ceil(unit * (1 + padding * 2))
+    const context = sprite.getContext('2d')
+    if (!context) throw new Error('Could not create the cloud silhouette canvas.')
+    context.filter = `blur(${blur * unit}px)`
+    context.fillStyle = '#fff'
+    createFogMaskPath(context, padding * unit, padding * unit, unit, seed, radius)
+    context.fill()
+    const bytes = sprite.width * sprite.height * 4
+    while (silhouettes.size && silhouetteBytes + bytes > 16 * 1024 * 1024) {
+      const entry = silhouettes.entries().next().value
+      if (!entry) break
+      const [oldest, previous] = entry
+      silhouetteBytes -= previous.width * previous.height * 4
+      silhouettes.delete(oldest)
+    }
+    silhouettes.set(key, sprite)
+    silhouetteBytes += bytes
+    return sprite
+  }
   const fogAnchor = map.getCenter()
   const fogAnchorZoom = map.getZoom()
   const isMapMoving = () => isDragging || map.isMoving()
   const noiseDetail = () => {
     if (noNoise || map.getZoom() > 18) return 0
-    return 2
+    return quality.level === 2 ? 1 : 2
   }
   let clientWidth = 0
   let clientHeight = 0
@@ -885,6 +919,10 @@ const createFogCanvas = (
   let maskUploaded = false
   let cachedMistDirty = true
   let colourCloudsVisible = false
+  let loadingCanvasHasContent = false
+  let textureWidth = 0
+  let textureHeight = 0
+  let loadingPixelRatio = 0
   let lastCachedMistTime = -Infinity
   let animationFrame: number | undefined
   let maskFrame: number | undefined
@@ -900,10 +938,10 @@ const createFogCanvas = (
   let mistAnchorScreen: { x: number; y: number } | undefined
   let mistAnchorZoom: number | undefined
   const fogFrameInterval = 1000 / 60
-  const maskFrameInterval = 1000 / 60
+  // The shader compensates for camera motion between mask uploads.
+  const maskFrameInterval = 1000 / 30
   const zoomMaskFrameInterval = 1000 / 20
   const cachedMistFrameInterval = 1000 / 15
-  const zoomFrameInterval = 1000 / 60
   let maskRetryTimer: number | undefined
   const loadingSequences = new Map()
   let fogError: { id: string; text: string; startedAt: number } | undefined
@@ -949,8 +987,8 @@ const createFogCanvas = (
   }
 
   const positionCanvasDuringMapMotion = (target, anchorScreen, anchorZoom) => {
-    if ((!isZooming && !isDragging) || !anchorScreen || anchorZoom === undefined) return
-    const scale = isZooming ? 2 ** (map.getZoom() - anchorZoom) : 1
+    if (!anchorScreen || anchorZoom === undefined) return
+    const scale = 2 ** (map.getZoom() - anchorZoom)
     const currentAnchorScreen = map.project(fogAnchor)
     const translateX =
       currentAnchorScreen.x - anchorScreen.x * scale - (scale - 1) * fogBleed
@@ -971,10 +1009,21 @@ const createFogCanvas = (
     const nextWidth = mapCanvas.clientWidth
     const nextHeight = mapCanvas.clientHeight
     if (!nextWidth || !nextHeight) return
+    const nextPixelRatio = Math.max(1, mapCanvas.width / nextWidth)
+    if (
+      nextWidth === clientWidth &&
+      nextHeight === clientHeight &&
+      nextPixelRatio === loadingPixelRatio &&
+      appliedQuality === quality.level
+    )
+      return
+    loadingPixelRatio = nextPixelRatio
+    appliedQuality = quality.level
+    canvas.dataset.quality = String(quality.level)
+    cachedMistDirty = true
     // This is a deliberately soft overlay, so rendering above 960px on either
     // axis only spends GPU time on imperceptible detail. Keeping the target
     // bounded leaves MapLibre enough frame time to animate zooms smoothly.
-    const renderScale = Math.min(0.75, 960 / Math.max(nextWidth, nextHeight))
     const changed = nextWidth !== clientWidth || nextHeight !== clientHeight
     clientWidth = nextWidth
     clientHeight = nextHeight
@@ -988,6 +1037,8 @@ const createFogCanvas = (
     )
     fogCanvasWidth = clientWidth + fogBleed * 2
     fogCanvasHeight = clientHeight + fogBleed * 2
+    const renderScale =
+      Math.min(0.75, 960 / Math.max(fogCanvasWidth, fogCanvasHeight)) * quality.scale
     const renderWidth = Math.ceil(fogCanvasWidth * renderScale)
     const renderHeight = Math.ceil(fogCanvasHeight * renderScale)
     // Loading copy has sharp edges, unlike the intentionally soft fog. Keep
@@ -1029,7 +1080,13 @@ const createFogCanvas = (
   const uploadMaskTexture = (texture, source) => {
     if (!gl || !texture) return false
     gl.bindTexture(gl.TEXTURE_2D, texture)
+    if (textureWidth === source.width && textureHeight === source.height) {
+      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, gl.RGBA, gl.UNSIGNED_BYTE, source)
+      return true
+    }
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source)
+    textureWidth = source.width
+    textureHeight = source.height
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
@@ -1079,6 +1136,24 @@ const createFogCanvas = (
       context.globalAlpha = 1 - revealProgress
     } else {
       context.globalAlpha = state === 'generating' ? 1 : 0.96
+    }
+    if (radiusScale === 1) {
+      const padding = 0.75
+      const sprite = silhouette(
+        seed,
+        1.1 * groundFogRadiusMultiplier,
+        Math.max(4 / size, 0.055) / maskScale,
+        padding,
+      )
+      context.drawImage(
+        sprite,
+        x - size * padding,
+        y - size * padding,
+        size * (1 + padding * 2),
+        size * (1 + padding * 2),
+      )
+      context.restore()
+      return
     }
     context.filter = `blur(${Math.max(4, size * 0.055)}px)`
     context.fillStyle = '#ffffff'
@@ -1212,8 +1287,11 @@ const createFogCanvas = (
     // field the same breathing room before compositing it onto the map canvas,
     // otherwise its soft edge is cut off by this intermediate tile buffer.
     const colourSpill = Math.max(tileWidth, tileHeight) * 0.48
-    const renderWidth = Math.max(1, Math.ceil(tileWidth + colourSpill * 2))
-    const renderHeight = Math.max(1, Math.ceil(tileHeight + colourSpill * 2))
+    const logicalWidth = tileWidth + colourSpill * 2
+    const logicalHeight = tileHeight + colourSpill * 2
+    const colourScale = canvas.width / Math.max(1, fogCanvasWidth)
+    const renderWidth = Math.max(1, Math.ceil(logicalWidth * colourScale))
+    const renderHeight = Math.max(1, Math.ceil(logicalHeight * colourScale))
     if (
       cachedColourTileCanvas.width !== renderWidth ||
       cachedColourTileCanvas.height !== renderHeight
@@ -1225,7 +1303,8 @@ const createFogCanvas = (
     cachedColourTileContext.setTransform(1, 0, 0, 1, 0, 0)
     cachedColourTileContext.clearRect(0, 0, renderWidth, renderHeight)
     cachedColourTileContext.save()
-    cachedColourTileContext.filter = `blur(${Math.max(2, size * 0.018)}px)`
+    cachedColourTileContext.scale(colourScale, colourScale)
+    cachedColourTileContext.filter = `blur(${Math.max(2, size * 0.018) * colourScale}px)`
     const gradient = cachedColourTileContext.createLinearGradient(
       colourSpill - tileWidth * 0.32 + swayX,
       colourSpill - tileHeight * 0.08 + swayY,
@@ -1237,33 +1316,29 @@ const createFogCanvas = (
     gradient.addColorStop(1, `hsla(${secondHue}, 100%, 67%, 0.32)`)
     cachedColourTileContext.globalAlpha = 1
     cachedColourTileContext.fillStyle = gradient
-    cachedColourTileContext.fillRect(0, 0, renderWidth, renderHeight)
+    cachedColourTileContext.fillRect(0, 0, logicalWidth, logicalHeight)
     cachedColourTileContext.restore()
 
     cachedColourTileContext.save()
+    cachedColourTileContext.scale(colourScale, colourScale)
     cachedColourTileContext.globalCompositeOperation = 'destination-in'
     cachedColourTileContext.globalAlpha = 1
     // Keep a little of the neutral ground fog around the colour field, then
     // feather that transition so it dissolves into the surrounding mist.
-    cachedColourTileContext.filter = `blur(${Math.max(5, size * 0.085)}px)`
-    cachedColourTileContext.fillStyle = '#ffffff'
-    createFogMaskPath(
-      cachedColourTileContext,
-      colourSpill,
-      colourSpill,
-      size,
+    const sprite = silhouette(
       seed,
       0.9 * groundFogRadiusMultiplier,
-      0.9,
+      Math.max(5 / size, 0.085),
+      colourSpill / size,
     )
-    cachedColourTileContext.fill()
+    cachedColourTileContext.drawImage(sprite, 0, 0, logicalWidth, logicalHeight)
     cachedColourTileContext.restore()
     mistContext.drawImage(
       cachedColourTileCanvas,
       northWest.x - colourSpill,
       northWest.y - colourSpill,
-      renderWidth,
-      renderHeight,
+      logicalWidth,
+      logicalHeight,
     )
     return true
   }
@@ -1271,14 +1346,11 @@ const createFogCanvas = (
   const renderCachedColourFields = (frameTime, visualTime) => {
     if (!mistContext || map.getContainer().classList.contains('atlas-admin-mode'))
       return
-    // Keep the colour field in the same current map coordinates as the fog.
-    // During a drag both redraw at the animation-frame cadence; at rest the
-    // colour field can use its lower-cost update cadence.
-    const frameInterval =
-      isMapMoving() || isZooming ? zoomFrameInterval : cachedMistFrameInterval
+    // Camera events transform the last snapshot every frame; the expensive
+    // colour/blur composition stays at 15fps even while the camera moves.
     if (
-      (!cachedMistDirty || isZooming) &&
-      frameTime - lastCachedMistTime < frameInterval
+      frameTime - lastCachedMistTime < cachedMistFrameInterval &&
+      (!cachedMistDirty || isMapMoving())
     )
       return
 
@@ -1307,6 +1379,13 @@ const createFogCanvas = (
 
   const drawLoadingText = time => {
     if (!loadingContext) return
+    const hasContent =
+      Boolean(fogError) ||
+      [...tileState.values()].some(
+        state => state === 'checking' || state === 'generating',
+      )
+    if (!hasContent && !loadingCanvasHasContent) return
+    loadingCanvasHasContent = hasContent
     const ratio = loadingCanvas.width / Math.max(1, fogCanvasWidth)
     clearOverlayContext(loadingContext)
     setOverlayContextTransform(loadingContext, ratio)
@@ -1694,9 +1773,10 @@ const createFogCanvas = (
   }
 
   const render = time => {
-    resize()
     const frameDelta = previousFrameTime === undefined ? 0 : time - previousFrameTime
     previousFrameTime = time
+    quality.sample(frameDelta, !document.hidden)
+    resize()
     const elapsed = Math.min(100, frameDelta)
     if (!isMapMoving()) fogTime += (elapsed / 1000) * groundFogMotionSpeed
     animationTime += elapsed
@@ -1829,6 +1909,7 @@ const createFogCanvas = (
       generatingStartedAt.clear()
       revealStartedAt.clear()
       pokedAt.clear()
+      silhouettes.clear()
       canvas.remove()
       mistCanvas.remove()
       loadingCanvas.remove()
@@ -1984,9 +2065,7 @@ export const installAtlasTileInteractions = (
         Array.from(
           { length: fogEligibilityChildSpan * fogEligibilityChildSpan },
           (_, offset) => ({
-            x:
-              parent.x * fogEligibilityChildSpan +
-              (offset % fogEligibilityChildSpan),
+            x: parent.x * fogEligibilityChildSpan + (offset % fogEligibilityChildSpan),
             y:
               parent.y * fogEligibilityChildSpan +
               Math.floor(offset / fogEligibilityChildSpan),
@@ -2019,7 +2098,7 @@ export const installAtlasTileInteractions = (
     const visible = fogIndexTilesForViewport(0).sort(
       (left, right) =>
         Math.abs(left.x - center.x) +
-          Math.abs(left.y - center.y) -
+        Math.abs(left.y - center.y) -
         (Math.abs(right.x - center.x) + Math.abs(right.y - center.y)),
     )
     const visibleIds = new Set(visible.map(fogIndexId))
