@@ -19,6 +19,7 @@
     "format:markdown": "bun run scripts/checks/markdown.ts --write",
     "format:markdown:check": "bun run scripts/checks/markdown.ts --check",
     "lint": "biome lint . && bun run format:markdown:check",
+    "test:performance": "node scripts/checks/fog-performance.mjs",
     "test:markdown": "bun test scripts/checks/markdown.test.ts"
   },
   "dependencies": {

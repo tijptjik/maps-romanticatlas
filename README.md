@@ -68,6 +68,25 @@ Open the local URL printed by the server (use `http://localhost:5173`).
 | `bun run sync:tiles`            | Upload local generated tile images and metadata to the configured R2 bucket.                                 |
 | `bun run backfill:manifest`     | Index existing production atlas assets after deploying the manifest migration.                               |
 
+## Performance verification
+
+For a local production preview, build first and start the server with its exact
+browser origin so image generation remains available:
+
+```sh
+env PORT=5176 ATLAS_ALLOWED_ORIGIN=http://localhost:5176 dev-server bun run preview
+```
+
+Open `http://localhost:5176` (not `127.0.0.1`, which is a different origin).
+
+Run `dev-remote --port 5176 chrome bun run test:performance` against the running
+local preview (substitute its actual port). This records time until the basemap and
+clouds are visible, time until fog requests settle,
+basemap/fog request timings, frame-time percentiles and blur work during sustained
+panning, plus desktop, zoom and mobile screenshots in the runner artifacts.
+The test uses visible Google Chrome on Li. Compare runs on the same machine and
+viewport; server memory pressure, network and cache warmth affect loading times.
+
 ## Production build and deployment
 
 ```sh
