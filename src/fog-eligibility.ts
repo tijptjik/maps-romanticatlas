@@ -23,7 +23,10 @@ export type FogEligibility = FogEligibilityPosition & {
 // This deterministic half-grid selection is part of tile eligibility, not a
 // rendering-only detail. Keep it shared by the visitor, admin, and Worker
 // paths so none of them can create an atlas entry outside the fog program.
-export const isFogPatternSelected = ({ x, y }: Pick<FogEligibilityPosition, 'x' | 'y'>) =>
+export const isFogPatternSelected = ({
+  x,
+  y,
+}: Pick<FogEligibilityPosition, 'x' | 'y'>) =>
   (((x * 73856093) ^ (y * 19349663)) & 1) === 0
 
 export const fogEligibilitySourceTile = ({ x, y }: FogEligibilityPosition) => ({
@@ -58,14 +61,11 @@ const vectorRingContainsPoint = (point, ring) => {
   return inside
 }
 
-const vectorFeatureContainsPoint = (feature, point) => {
-  if (feature.type !== 3) return false
-  return feature
-    .loadGeometry()
-    .reduce(
-      (inside, ring) => (vectorRingContainsPoint(point, ring) ? !inside : inside),
-      false,
-    )
+const vectorFeatureContainsPoint = (rings, point) => {
+  return rings.reduce(
+    (inside, ring) => (vectorRingContainsPoint(point, ring) ? !inside : inside),
+    false,
+  )
 }
 
 const isRegionalBaseFeature = feature => feature.properties['saanseoi:base'] === true
@@ -92,9 +92,13 @@ const vectorTileLandFraction = (sourceTile, tile) => {
   const { sourceTileSize, originX, originY } = sourceTileWindow(tile, earthLayer)
   const earthFeatures = Array.from({ length: earthLayer.length }, (_, index) =>
     earthLayer.feature(index),
-  ).filter(isRegionalBaseFeature)
+  )
+    .filter(isRegionalBaseFeature)
+    .map(feature => (feature.type === 3 ? feature.loadGeometry() : []))
   const waterFeatures = waterLayer
-    ? Array.from({ length: waterLayer.length }, (_, index) => waterLayer.feature(index))
+    ? Array.from({ length: waterLayer.length }, (_, index) =>
+        waterLayer.feature(index),
+      ).map(feature => (feature.type === 3 ? feature.loadGeometry() : []))
     : []
   if (!earthFeatures.length) return null
 
@@ -105,8 +109,12 @@ const vectorTileLandFraction = (sourceTile, tile) => {
         x: originX + ((column + 0.5) * sourceTileSize) / landSampleSize,
         y: originY + ((row + 0.5) * sourceTileSize) / landSampleSize,
       }
-      const onEarth = earthFeatures.some(feature => vectorFeatureContainsPoint(feature, point))
-      const onWater = waterFeatures.some(feature => vectorFeatureContainsPoint(feature, point))
+      const onEarth = earthFeatures.some(feature =>
+        vectorFeatureContainsPoint(feature, point),
+      )
+      const onWater = waterFeatures.some(feature =>
+        vectorFeatureContainsPoint(feature, point),
+      )
       if (onEarth && !onWater) landSamples += 1
     }
   }
@@ -124,7 +132,10 @@ const squaredDistanceToSegment = (point, start, end) => {
   }
   const fraction = Math.max(
     0,
-    Math.min(1, ((point.x - start.x) * deltaX + (point.y - start.y) * deltaY) / lengthSquared),
+    Math.min(
+      1,
+      ((point.x - start.x) * deltaX + (point.y - start.y) * deltaY) / lengthSquared,
+    ),
   )
   const x = point.x - (start.x + fraction * deltaX)
   const y = point.y - (start.y + fraction * deltaY)
@@ -156,24 +167,38 @@ const vectorTileStreetFraction = (sourceTile, tile) => {
         }),
       ),
     )
-  if (!paddedSegments.length) return 0
+  // Only segments whose padded bounds intersect this child can cover a sample.
+  const tileSegments = paddedSegments.filter(
+    segment =>
+      segment.right >= originX &&
+      segment.left <= originX + sourceTileSize &&
+      segment.bottom >= originY &&
+      segment.top <= originY + sourceTileSize,
+  )
+  if (!tileSegments.length) return 0
 
   let coveredSamples = 0
   const halfStrokeSquared = halfStroke * halfStroke
   for (let row = 0; row < streetSampleSize; row += 1) {
+    const sampleY = originY + ((row + 0.5) * sourceTileSize) / streetSampleSize
+    const rowSegments = tileSegments.filter(
+      segment => sampleY >= segment.top && sampleY <= segment.bottom,
+    )
+    if (!rowSegments.length) continue
     for (let column = 0; column < streetSampleSize; column += 1) {
       const point = {
         x: originX + ((column + 0.5) * sourceTileSize) / streetSampleSize,
         y: originY + ((row + 0.5) * sourceTileSize) / streetSampleSize,
       }
       if (
-        paddedSegments.some(
+        rowSegments.some(
           segment =>
             point.x >= segment.left &&
             point.x <= segment.right &&
             point.y >= segment.top &&
             point.y <= segment.bottom &&
-            squaredDistanceToSegment(point, segment.start, segment.end) <= halfStrokeSquared,
+            squaredDistanceToSegment(point, segment.start, segment.end) <=
+              halfStrokeSquared,
         )
       ) {
         coveredSamples += 1
