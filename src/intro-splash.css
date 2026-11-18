@@ -1,0 +1,603 @@
+.atlas-intro {
+  --ink: #183e3a;
+  position: absolute;
+  z-index: 10;
+  inset: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  color: var(--ink);
+  background: #000;
+  font: 500 17px/1.25 "Cormorant Garamond", Georgia, serif;
+  outline: none;
+}
+.atlas-intro[hidden] { display: none; }
+.atlas-intro.is-exiting { animation: pavilion-approach 1550ms both; pointer-events: none; }
+
+.pavilion-room {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  height: 100%;
+  min-height: 410px;
+  container-type: size;
+  background: url("/pavilion/glasshouse.webp") center / 100% 100% no-repeat;
+}
+.pavilion-garden, .pavilion-piers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.pavilion-garden { overflow: hidden; }
+.pavilion-sky {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent 24%, black 33% 67%, transparent 76%);
+}
+.pavilion-sky canvas {
+  position: absolute;
+  top: 31%;
+  left: 0;
+  width: 100%;
+  height: min(16cqw, 19cqh);
+  filter: grayscale(1) contrast(.12) brightness(1.86);
+}
+
+.pavilion-sky canvas.pavilion-sky__far {
+  top: 40%; height: min(7cqw, 9cqh); opacity: .63;
+}
+@media (max-aspect-ratio: 9/10) {
+  .pavilion-sky canvas.pavilion-sky__far { top: 50%; height: 11cqw; }
+}
+.pavilion-water {
+  position: absolute;
+  left: 0;
+  top: 63.5556%;
+  width: 100%;
+  height: 5.5556%;
+}
+@media (max-aspect-ratio: 9/10) {
+  .pavilion-sky { mask-image: linear-gradient(to right, transparent 15%, black 24% 76%, transparent 85%); }
+  .pavilion-sky canvas { top: 41%; height: 24cqw; }
+  .pavilion-water { top: 64.3548%; height: 6.2903%; }
+}
+.pavilion-piers { background: url("/pavilion/glasshouse-piers.webp") center / 100% 100%; }
+.pavilion-plant, .pavilion-aerostat { position: absolute; height: auto; }
+.pavilion-plant--vine { top: -3%; left: 2%; width: 34%; }
+.pavilion-plant--raceme { top: -4%; right: 1%; width: 32%; }
+.pavilion-plant--palm { bottom: 26%; left: -3.5%; width: 26%; }
+.pavilion-plant--orchid { bottom: 26%; right: -3%; width: 24%; }
+.pavilion-plant { transform-origin: 50% 0; }
+.pavilion-plant--palm, .pavilion-plant--orchid { transform-origin: 50% 100%; }
+.is-visible .pavilion-plant { animation: pavilion-sway 5.8s ease-in-out infinite alternate; }
+.is-visible .pavilion-plant--raceme { animation-duration: 6.7s; animation-delay: -3s; }
+.is-visible .pavilion-plant--palm { animation-duration: 7.2s; animation-delay: -2s; }
+.is-visible .pavilion-plant--orchid { animation-duration: 6.2s; animation-delay: -4s; }
+@keyframes pavilion-sway {
+  from { transform: skewX(-.65deg) rotate(-.42deg); }
+  to { transform: skewX(.85deg) rotate(.55deg); }
+}
+.pavilion-aerostat--west { width: clamp(18px, 2.6cqw, 42px); left: 27%; top: 37%; }
+.pavilion-aerostat--east { width: clamp(15px, 2.2cqw, 32px); right: 26%; top: 42%; }
+.pavilion-aerostat img { display: block; width: 100%; }
+.pavilion-aerostat canvas { position: absolute; inset: -50%; width: 200%; height: 200%; }
+.pavilion-aerostat.has-sky-paint img { visibility: hidden; }
+@media (max-aspect-ratio: 9/10) {
+  .pavilion-piers { background-image: url("/pavilion/glasshouse-portrait-piers.webp"); }
+  .pavilion-plant--vine { top: 1%; width: 49%; left: -1%; }
+  .pavilion-plant--raceme { top: 0; width: 45%; right: -2%; }
+  .pavilion-plant--palm { width: 39%; left: -9%; bottom: 25%; }
+  .pavilion-plant--orchid { width: 37%; right: -8%; bottom: 25%; }
+  .pavilion-aerostat--west { top: 47%; left: 22%; }
+  .pavilion-aerostat--east { top: 46%; right: 21%; }
+}
+.pavilion-title {
+  position: absolute;
+  top: 20%;
+  inset-inline: 3%;
+  text-align: center;
+  pointer-events: none;
+  text-shadow: 0 1px 5px #fff5d9;
+  padding-top: 1cqh;
+}
+.pavilion-title p {
+  margin: 0;
+  font: 650 clamp(10px, 1.4cqh, 15px)/1.4 system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: .2em;
+}
+.pavilion-title p::before, .pavilion-title p::after {
+  display: inline-block;
+  content: "✦";
+  margin-inline: .75em;
+  color: #895d32;
+}
+.pavilion-title h1 {
+  margin: .07em 0 0;
+  font-size: clamp(36px, min(6cqw, 7.3cqh), 130px);
+  font-weight: 500;
+  line-height: .99;
+  letter-spacing: -.045em;
+}
+.pavilion-title h1 small {
+  display: block;
+  font-size: .52em;
+  font-style: italic;
+  line-height: 1.05;
+  letter-spacing: -.025em;
+}
+.pavilion-book, .pavilion-orrery { position: absolute; }
+.pavilion-book {
+  z-index: 2;
+  bottom: 13%;
+  left: 50%;
+  width: min(53cqw, 75cqh);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  transform: translateX(-50%);
+}
+.pavilion-book::before, .pavilion-orrery::before {
+  position: absolute;
+  content: "";
+  inset: auto 4% -1.5%;
+  height: 6%;
+  border-radius: 50%;
+  background: #49300ea6;
+  filter: blur(5px);
+}
+.pavilion-spread {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: auto;
+
+}
+.pavilion-page-light {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  pointer-events: none;
+  clip-path: polygon(11% 0,87% 0,94% 76%,6% 76%);
+  filter: brightness(1.2) saturate(1.1);
+  opacity: 0;
+  mask-image: radial-gradient(ellipse 34% 29% at 50% 29%, black 8%, #000b 52%, transparent);
+  transition: opacity 480ms ease;
+}
+.pavilion-page-mist {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  clip-path: polygon(13.3% 7%,25% 6.4%,38.7% 4%,46% 4.8%,50.2% 8%,54.8% 4.5%,63.4% 4.3%,74.1% 6.4%,86.1% 6.5%,91.2% 70.5%,78.8% 69.9%,64.8% 67.6%,55.1% 67.7%,50.3% 71.2%,46.3% 67.9%,38.1% 67.8%,22.2% 70.7%,7.9% 70.9%);
+}
+.pavilion-page-mist { background: url("/pavilion/lavender-mist.webp") left center / 300% 100%; }
+.pavilion-page-mist.has-flow { background: none; }
+.pavilion-page-mist canvas { display: block; width: 100%; height: 100%; }
+.pavilion-book:is(:hover,:focus-visible) .pavilion-page-light { opacity: 1; }
+
+.pavilion-orrery {
+  bottom: 18.2%;
+  right: 7.5%;
+  width: min(15cqw, 22cqh);
+  aspect-ratio: 456 / 546;
+}
+.pavilion-orrery::before { inset: auto 24% 4%; }
+.pavilion-orrery img, .pavilion-orb canvas { display: block; width: 100%; height: 100%; }
+.pavilion-lamps i {
+  position: absolute;
+  width: clamp(3px, .4cqw, 7px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #fff6c7;
+  box-shadow: 0 0 4px 2px #f9d395, 0 0 14px 3px #ffefa7;
+}
+.is-visible .pavilion-lamps i { animation: pavilion-glimmer 4s ease-in-out infinite; }
+@keyframes pavilion-glimmer { 50% { opacity: .2; } }
+
+.pavilion-credit {
+  position: absolute;
+  z-index: 4;
+  right: 3%;
+  bottom: 12%;
+  width: clamp(105px, 9.5cqw, 146px);
+  display: block;
+  --petal-tint: 0;
+  color: var(--petal-ink, var(--petal-rest-ink, #602f40));
+  text-decoration: none;
+}
+.pavilion-credit__petal {
+  display: grid;
+  place-items: center;
+  isolation: isolate;
+  transform: translateY(-6px);
+}
+.pavilion-credit__petal > * { grid-area: 1 / 1; }
+.pavilion-credit img { display: block; width: 100%; filter: drop-shadow(1px 3px 2px #47311973); }
+.pavilion-credit__petal::before,
+.is-night .pavilion-credit__petal::after {
+  content: "";
+  grid-area: 1 / 1;
+  z-index: 1;
+  place-self: stretch;
+  pointer-events: none;
+  mask: url("/pavilion/bauhinia-petal.webp") center / 100% 100% no-repeat;
+}
+.pavilion-credit__petal::before {
+  opacity: var(--petal-tint);
+  background: linear-gradient(150deg, #ffc7e6 6%, #e167ad 34%, #ba438c 57%, #f58fc9 82%, #ffd1e6);
+  mix-blend-mode: multiply;
+}
+.pavilion-credit__petal > span {
+  z-index: 2;
+  margin: 0 0 0 8%;
+  font: italic 600 clamp(13px, 1.3cqw, 19px)/1 "Cormorant Garamond", Georgia, serif;
+}
+.pavilion-credit b { font-variant: small-caps; font-weight: 700; letter-spacing: .025em; }
+.pavilion-credit:is(:focus-visible, :active) {
+  --petal-tint: .52;
+  --petal-ink: #fff1ed;
+}
+@media (hover: hover) {
+  .pavilion-credit:hover {
+    --petal-tint: .52;
+    --petal-ink: #fff1ed;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .pavilion-credit { transition: color 220ms ease-in-out; }
+  .pavilion-credit__petal::before, .is-night .pavilion-credit__petal::after {
+    transition: opacity 220ms ease-in-out;
+  }
+  .is-night .pavilion-credit img { transition: filter 220ms ease-in-out; }
+}
+@media (max-aspect-ratio: 9/10) {
+  .pavilion-room { background-image: url("/pavilion/glasshouse-portrait.webp"); }
+  .pavilion-title { top: 30%; }
+  .pavilion-title h1 { margin: .18em auto 0; font-size: 10cqw; }
+  .pavilion-book { width: min(91cqw, 75cqh); bottom: 16%; }
+  .pavilion-orrery { right: 7%; bottom: 18.5%; width: 17cqw; z-index: 3; }
+  .pavilion-credit { bottom: 13%; right: 3%; width: 90px; }
+}
+@media (max-height: 560px) and (min-aspect-ratio: 9/10) {
+  .pavilion-room { min-height: 320px; }
+  .pavilion-credit { bottom: 6%; width: 100px; }
+}
+
+.pavilion-book:focus-visible, .pavilion-notes:focus-visible {
+  outline: 2px solid #fff1b6;
+  outline-offset: 3px;
+
+}
+.pavilion-orb {
+  position: absolute;
+  bottom: 71%;
+  left: 50%;
+  width: clamp(62px, min(18cqw, 19cqh), 224px);
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  border-radius: 50%;
+
+}
+.pavilion-orb canvas {
+  pointer-events: none;
+  transform-origin: 49% 67%;
+  transition: translate 480ms ease, scale 480ms ease;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .is-visible .pavilion-book:is(:hover, :focus-visible) .pavilion-orb canvas {
+    translate: 0 -7%;
+    scale: 1.14;
+  }
+}
+/* Illuminate the engraved pigment itself, with a narrow reflection at the fold. */
+.pavilion-reflected-light {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  pointer-events: none;
+  opacity: var(--orb-radiance, .88);
+  mix-blend-mode: screen;
+  filter: brightness(1.18) sepia(.18);
+  mask-image: radial-gradient(ellipse 15% 12% at 50% 29%, #0009, #0005 36%, #0001 72%, transparent);
+}
+.pavilion-page-mist::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: var(--orb-radiance, .88);
+  background:
+    radial-gradient(ellipse 1.6% 7% at 50% 29%, #fff3c57a, transparent),
+    radial-gradient(ellipse 9% 4% at 50% 29%, #ffe9bc66, #ffe8bc20 54%, transparent);
+}
+.is-visible .pavilion-orb canvas { animation: pavilion-hover 5s ease-in-out infinite alternate; }
+@keyframes pavilion-hover { to { transform: translateY(-4%); } }
+.pavilion-sparks i {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 4%;
+  aspect-ratio: 1;
+  background: hsl(var(--hue) 85% 85%);
+  box-shadow: 0 0 8px #fff;
+  border-radius: 50%;
+  opacity: 0;
+}
+.is-visible .pavilion-book:is(:hover,:focus-visible) .pavilion-sparks i {
+  animation: pavilion-scatter 1.8s var(--delay) ease-out infinite;
+}
+@keyframes pavilion-scatter {
+  0% { transform: rotate(var(--angle)) translateY(-8em) scale(.4); opacity: 0; }
+  26% { opacity: .95; }
+  100% { transform: rotate(var(--angle)) translateY(-19em) scale(.2); opacity: 0; }
+}
+.pavilion-sparks { font-size: clamp(3px, .61cqh, 9px); }
+.pavilion-book::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  inset: -25% -15%;
+  opacity: 0;
+  background: radial-gradient(ellipse, #fffce9 0%, #ffe6bda8 26%, transparent 68%);
+}
+.is-exiting .pavilion-orb { animation: pavilion-launch 680ms ease-in both; }
+.is-exiting .pavilion-book::after { animation: pavilion-bloom 1.1s ease-out both; }
+@keyframes pavilion-launch {
+  20% { transform: translate(-50%, 8%) scale(1.1); }
+  to { transform: translate(-50%, -75cqh) scale(.48, 1.6); opacity: 0; }
+}
+@keyframes pavilion-bloom {
+  0% { opacity: 0; transform: scale(.45); }
+  50% { opacity: .92; }
+  to { opacity: .14; transform: scale(1.45); }
+}
+@keyframes pavilion-approach {
+  0%, 18% { opacity: 1; transform: scale(1); }
+  46% { opacity: 1; transform: perspective(1200px) translate(1.2%, -.7%) rotateX(4deg) rotateZ(-1.4deg) scale(1.22); }
+  72% { opacity: .96; }
+  100% { opacity: 0; transform: perspective(1200px) translateY(1.2%) rotateX(11deg) scale(3.5); }
+}
+
+.pavilion-notes {
+  position: absolute;
+  z-index: 3;
+  left: 5%;
+  bottom: 15%;
+  width: min(21cqw, 33cqh);
+  min-height: 44px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #fff0bd;
+  cursor: pointer;
+  perspective: 550px;
+}
+.pavilion-notes__cover { position: relative; display: block; container-type: inline-size; isolation: isolate; transform-origin: center bottom; transition: transform 450ms ease; }
+.pavilion-notes__cover img { display: block; width: 100%; height: auto; }
+.pavilion-notes__cover span {
+  position: absolute;
+  top: 78%;
+  left: 50%;
+  width: max-content;
+  transform: translate(-50%, -50%) scaleY(.88);
+  font: 600 max(11px, 5.35cqw)/1 "Cormorant Garamond", Georgia, serif;
+  font-variant-caps: small-caps;
+  letter-spacing: .045em;
+  color: #eed196;
+  text-shadow: 0 -.04em .025em #382410;
+}
+/* Sweep light over the engraved points in the cover’s own coordinate system. */
+.pavilion-notes { --compass-motion: none; }
+.pavilion-orrery { --sun-glow: 0; }
+.pavilion-notes:focus-visible { --compass-motion: pavilion-compass-glint; }
+.pavilion-orrery:focus-visible { --sun-glow: .75; }
+@media (hover: hover) {
+  .pavilion-notes:hover { --compass-motion: pavilion-compass-glint; }
+  .pavilion-orrery:hover { --sun-glow: .75; }
+}
+@property --compass-light-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: -45deg;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .pavilion-notes .pavilion-notes__cover::before {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    left: 37.8%;
+    top: 9%;
+    width: 24.4%;
+    height: 41.2%;
+    pointer-events: none;
+    clip-path: polygon(50% 0, 56% 37%, 85% 15%, 63% 44%, 100% 50%, 63% 56%,
+      85% 85%, 56% 63%, 50% 100%, 44% 63%, 15% 85%, 37% 56%, 0 50%,
+      37% 44%, 15% 15%, 44% 37%);
+    background: conic-gradient(from var(--compass-light-angle),
+      transparent, #fff0ac 27deg, transparent 66deg);
+    mix-blend-mode: soft-light;
+    opacity: 0;
+    animation: var(--compass-motion) 850ms ease-in-out;
+  }
+  @keyframes pavilion-compass-glint {
+    0% { --compass-light-angle: -45deg; opacity: 0; }
+    18%, 80% { opacity: 1; }
+    100% { --compass-light-angle: 315deg; opacity: 0; }
+  }
+}
+.pavilion-sun-glow {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(ellipse 17% 14% at 52.4% 32.8%,
+    #fff1b8b3 0%, #ffdc8899 32%, #ffbb5738 63%, transparent);
+  opacity: var(--sun-glow);
+  transition: opacity 220ms ease-out;
+}
+.pavilion-notes[aria-expanded="true"] { visibility: hidden; }
+
+
+
+.pavilion-air, .pavilion-sun { position: absolute; inset: 0; pointer-events: none; }
+.pavilion-air i {
+  position: absolute;
+  top: calc(9% + var(--i) * 6%);
+  left: 1%;
+  width: clamp(5px, .65cqw, 11px);
+  height: 4px;
+  border-radius: 90% 0 80% 0;
+  background: #dba5a0;
+  opacity: 0;
+}
+.is-visible .pavilion-air i { animation: pavilion-breeze 17s calc(var(--i) * -3.2s) ease-in-out infinite; }
+@keyframes pavilion-breeze {
+  0%, 84%, 100% { opacity: 0; }
+  12%, 60% { opacity: .8; }
+  32% { transform: translate(34cqw, var(--drift)) rotate(125deg); }
+  84%, 100% { transform: translate(98cqw, 14cqh) rotate(390deg); }
+}
+.pavilion-sun i {
+  position: absolute;
+  top: 14%;
+  left: 15%;
+  width: clamp(12px, 1.55cqw, 24px);
+  aspect-ratio: 1;
+  background: #fffce6;
+  clip-path: polygon(50% 0,56% 42%,100% 50%,57% 56%,50% 100%,44% 57%,0 50%,42% 43%);
+  opacity: 0;
+}
+.pavilion-sun i:nth-child(2) { left: 77%; top: 13%; animation-delay: -4s; }
+.pavilion-sun i:nth-child(3) { left: 11%; top: 79%; animation-delay: -2s; }
+.is-visible .pavilion-sun i { animation-name: pavilion-glint; animation-iteration-count: infinite; animation-duration: 7s; }
+@keyframes pavilion-glint { 0%, 64%, 84%, 100% { opacity: 0; transform: scale(.3); } 74% { opacity: .95; transform: scale(1); } }
+
+@media (max-aspect-ratio: 9/10) {
+  .pavilion-orb { width: min(27cqw, 15cqh); }
+  .pavilion-orb { bottom: 65%; }
+  .pavilion-notes { left: 3%; bottom: 13.7%; width: clamp(150px, 43cqw, 235px); }
+  .pavilion-book { bottom: 22%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .atlas-intro *, .atlas-intro.is-exiting, .artist-statement.from-pavilion:not([hidden]) {
+    animation: none !important;
+    transition: none !important;
+  }
+
+}
+
+.pavilion-curtain { position: absolute; inset: 0; z-index: 5; background: black; pointer-events: none; }
+
+.pavilion-orrery {
+  appearance: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+.pavilion-orrery:focus-visible {
+  outline: 2px solid currentColor;
+  color: var(--ink);
+  outline-offset: 3px;
+}
+
+.pavilion-room::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: url("/pavilion/glasshouse-night.webp") center / 100% 100%;
+  opacity: 0;
+  transition: opacity .45s ease;
+}
+@media (max-aspect-ratio: 9/10) {
+  .pavilion-room::before { background-image: url("/pavilion/glasshouse-portrait-night.webp"); }
+}
+.is-night { --ink: #a2d7fe; }
+.is-night .pavilion-room::before { opacity: 1; }
+.is-night :is(.pavilion-aerostat, .pavilion-piers, .pavilion-sun, .pavilion-lamps) { visibility: hidden; }
+.is-night .pavilion-water:not([data-light="night"]),
+.atlas-intro:not(.is-night) .pavilion-water[data-light="night"] { visibility: hidden; }
+.is-night .pavilion-sky { opacity: .09; }
+.is-night .pavilion-air { opacity: .18; }
+.is-night .pavilion-title {
+  color: var(--ink);
+  text-shadow: 0 1px 3px #020916;
+}
+.is-night .pavilion-title p::before, .is-night .pavilion-title p::after { color: inherit; }
+.is-night .pavilion-plant {
+  filter: brightness(.28) saturate(.53) sepia(.25) hue-rotate(172deg);
+}
+/* The spine catches a little gilt, while the petal carries ink on its pale centre. */
+.is-night .pavilion-notes__cover img { filter: brightness(.65) saturate(.84); }
+.is-night .pavilion-notes__cover span {
+  color: #e4c58e;
+  text-shadow: 0 1px 1px #281d16;
+}
+.is-night .pavilion-credit {
+  --petal-rest-ink: #301826;
+  text-shadow: none;
+}
+/* The credit lies below and to the right of the tabletop sun. */
+.is-night .pavilion-credit img {
+  filter: saturate(calc(.74 + .34 * var(--petal-tint))) brightness(calc(.78 + .13 * var(--petal-tint))) drop-shadow(2px 3px 2px #120d18bf);
+}
+.is-night .pavilion-credit__petal::after {
+  opacity: calc(1 - var(--petal-tint));
+  background: radial-gradient(ellipse at var(--petal-light-x, 12%) 0%, #ffcc83c2, #ffbe6838 50%, transparent 85%);
+  mix-blend-mode: screen;
+}
+@media (max-aspect-ratio: 9/10) {
+  .is-night .pavilion-credit { --petal-light-x: 55%; }
+}
+.is-night .pavilion-orrery img { filter: brightness(.5) saturate(.72); }
+/* The centre and sunward rims follow the painted spheres in the 456 × 546 plate. */
+.is-night .pavilion-orrery::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: url("/pavilion/orrery.webp") center / 100% 100%;
+  filter: sepia(.35) saturate(1.26) brightness(1.42);
+  mask-image:
+    radial-gradient(ellipse 14% 12% at 52.4% 32.8%, black 35%, transparent),
+    radial-gradient(ellipse 6% 7% at 34% 33%, black, transparent),
+    radial-gradient(ellipse 5% 5% at 79.8% 25%, black, transparent),
+    radial-gradient(ellipse 3% 3% at 65.8% 27%, black, transparent),
+    radial-gradient(ellipse 3.5% 3.5% at 71.8% 39.4%, black, transparent),
+    radial-gradient(ellipse 2.5% 2.5% at 39.3% 30%, black, transparent),
+    radial-gradient(ellipse 2% 2% at 25.4% 25%, black, transparent);
+}
+.is-night .pavilion-orrery::before {
+  inset: 26.2% auto auto 44.5%;
+  width: 15.8%;
+  height: auto;
+  aspect-ratio: 1;
+  z-index: 1;
+  background: radial-gradient(circle, #fff6ca 2%, #ffdc89ed 22%, #ffb24d94 44%, transparent 72%);
+  filter: drop-shadow(0 0 .55cqh #ffad54b3);
+  pointer-events: none;
+}
+.is-night .pavilion-spread { filter: brightness(.55) saturate(.87); }
+.is-night .pavilion-page-light {
+  opacity: 1;
+  filter: brightness(1.03);
+  mask-image: radial-gradient(ellipse 53% 81% at 50% 22%, black 8%, #000c 40%, transparent 94%);
+}
+.is-night .pavilion-page-mist { opacity: .56; }
+.is-night .pavilion-orb canvas { filter: drop-shadow(0 0 1.3cqh #bbd9ff75); }
+@media (prefers-reduced-motion: reduce) {
+  .pavilion-room::before { transition: none; }
+}
+
+@media (max-aspect-ratio: 9/10) {
+  /* Leave the illuminated shoreline visible above the open pages. */
+  .is-night .pavilion-book { width: min(69cqw, 55cqh); bottom: 19.5%; }
+}
+
+/* Keep the entrance usable on installations without the pavilion illustration pack. */
+.atlas-intro.without-illustrations .pavilion-room { background: #f1e6cc; }
+.without-illustrations :is(.pavilion-garden, .pavilion-orrery, .pavilion-book > *, .pavilion-notes img) { visibility: hidden; }
+.without-illustrations .pavilion-book::before { content: "Enter the Fog"; color: #183e3a; font: 600 1.5rem Georgia, serif; }
+.without-illustrations .pavilion-notes__cover span { color: #183e3a; }

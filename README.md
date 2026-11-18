@@ -166,8 +166,11 @@ For an on-phone QR test, use `bun run dev:remote` with the public R2 origin abov
 local Worker uploads the image to the remote bucket, so the scanned QR opens the direct
 R2 image on the phone; the phone does not need access to `localhost`.
 
-The map opens with a Victorian-circus-style introduction. Click or press a key to enter
-the atlas, or open the Cartographer's Note for the artist statement. Press Ctrl+M at any
+The map opens in a glass exhibition pavilion overlooking Victoria Harbour. Balloons drift past
+the windows and coloured mist drifts across the open atlas beside an illustrated brass orrery. Select
+the atlas or its hovering orb to enter the fog. The illustrated spread follows the
+shoreline in a north-up Victoria Harbour reference from [Esri World Imagery](https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer).
+The green booklet on the right flips open to the Cartographer’s Note. Press Ctrl+M at any
 time to return to the introduction. After 3 minutes without activity, locally revealed
 tiles fade back into the fog, the view returns to its starting position, and the
 introduction animates in again. A quiet, looping ambient theme begins after the first
@@ -175,6 +178,12 @@ visitor gesture. The bottom-left sound control cycles through all sounds on, mus
 (while reveal effects remain on), and all sounds off. Successfully revealed tiles add a
 short filtered wind swell and a scene-specific sound cue. The synthesized chime remains
 as a fallback while a cue loads or when playback is unsupported.
+
+The pavilion uses trimmed CC0 field recordings for its touch controls.
+
+- The petal plays one hand brushing leaves. [newtad1, *brushing leaves_with hand*](https://freesound.org/people/newtad1/sounds/836390/)
+- The orrery plays a single ratchet click. [CallFlan, *Single_Ratchet-05*](https://freesound.org/people/CallFlan/sounds/495238/)
+- The Cartographer’s Note plays a textbook opening and a separate book closing. [Lucie Markova, *11_otevreni_ucebnice*](https://freesound.org/people/13GPanska_Markova_Lucie/sounds/379897/) · [qubodup, *Close Book 1*](https://freesound.org/people/qubodup/sounds/862315/)
 
 After five revealed tiles, visitors can choose **Share your map**. The centred 4:5
 portrait frame shows exactly what will be exported, with all controls omitted. They can
@@ -184,10 +193,15 @@ returns to the framing view and creates a fresh image and QR code.
 
 ## On-demand romantic atlas tiles
 
-On the local development server and the production Worker, the map is restricted to zoom
-levels 16.5–18.5. At that available zoom range, a drifting fog descends over a
-deterministic half of the fully visible z18 tiles that are at least 75% land and no more
-than 20% streets. Each fog form spills into neighboring gaps and is rendered from a
+The regular map stops zooming out at level 16 and diagnostics at level 15. Admin mode uses MapLibre’s world extent and default zoom-out limit.
+The maximum zoom follows the artwork’s native resolution. Within that range, a drifting fog descends over a
+set of all visible z18 tiles that are at least 75% land and retain
+a connected usable plot covering at least 25% of the tile after road cleanup. Coastal tiles need at least 10% land and a connected road-free plot covering at least 50% of the tile. Their illustrations target 50% coverage, including shore-connected
+piers and floating structures, selected from sixteen water-dependent scenes. Open-water
+tiles remain excluded. Local
+two-way dead-end branches can be reclaimed up to their first junction; through roads,
+tile-edge continuations and protected connections remain. Roads concentrated along
+one side are allowed; fragmented road meshes with no usable plot are excluded. Each fog form spills into neighboring gaps and is rendered from a
 cached mask plus a WebGL noise shader, so the pattern reads as overlapping mist rather
 than an alternating grid. The shader uses its full detail below zoom 17, one veil from
 zoom 17 through just under 18, and a smooth fog mask at zoom 18 and above.
@@ -212,13 +226,12 @@ z15 response also carries every live cached-image variant within that parent; th
 browser chooses one per z18 tile for the session and preloads it only near the viewport.
 No separate cloud-presence bitmap is needed.
 
-Click a fully visible eligible fogged tile to create a strictly top-down cartographic
-event tile from the rendered map. The selected tile gets a “LOOKING UP THIS TILE”
+Click a fully visible eligible fogged tile to draw an event on the north-up map with architecture aligned to its footprint. The selected tile gets a “LOOKING UP THIS TILE”
 treatment while it runs. The fog carries one of 24 short provocations about imagination,
 discovery, possibility, and Romanticism, each paired with a quotation from a Romantic
 author. The text clears once the generated image is ready.
 
-On the local development server, each client may have up to three paid tile generations
+On the local development server, each client may have up to three tile generations
 active at a time. Requests for the same tile are coalesced while a generation is in
 flight. The production Worker does not currently apply an equivalent cross-request limit
 or coalescing.
@@ -231,12 +244,11 @@ asks the visitor to wait for one to finish.
 Generated event images are cached in local `generated-tiles/` during development and in
 the configured R2 bucket in production. Current generations use immutable variant keys
 such as `atlas/18/x/y/type.v6.<variant>.image` and matching metadata. Normal cache
-lookup draws randomly from retained v1–v6 variants; new generation writes a new v6
-variant rather than overwriting an existing asset. Generation sends the model a
-full-tile source plus a vector-derived safe-zone guide: land is available for
-transformation, while water, roads, paths, boundaries, and tile edges are locked. The
-same safe mask is enforced during compositing, and the original path linework is
-restored above the generated artwork.
+lookup draws randomly from retained v1–v8 variants; new generation writes a new v6
+variant rather than overwriting an existing asset. The OpenRouter renderer sends the model a
+full-tile source and a vector-derived guide. Green marks land parcels, amber marks
+where upper storeys can project over a street behind a building, and blue marks
+nearshore water for vessels. Waterfront artwork can cover roads and shorelines beneath bridges, decks and buildings, with a blend into the basemap at the tile edge. Other scenes restore locked linework around their permitted areas. Ground-level eligibility uses the original map.
 
 Production also maintains a sharded Durable Object manifest for these entries. It is the
 source for cache-status and nearby-scene lookups, avoiding per-request R2 probing. The
@@ -249,8 +261,8 @@ assets. Set `ATLAS_MANIFEST_ORIGIN` if your local `.env` points at a development
 
 The local server-only OpenRouter wrapper is at `server/openrouter-client.ts`; the
 production equivalent runs in `src/worker-api.ts`. Copy `.env.example` to `.env` and set
-`OPENROUTER_API_KEY` in the local server environment when generating images or the paper
-texture. For production, use `wrangler secret put OPENROUTER_API_KEY`. Never expose the
+`OPENROUTER_API_KEY` in the local server environment for admin rerenders and the paper
+texture. Regular development cloud clicks use the authenticated Codex CLI. For production, use `wrangler secret put OPENROUTER_API_KEY`. Never expose the
 key through a `VITE_*` variable or import the server wrapper from browser code.
 
 The default model is `openai/gpt-5.4-image-2`. Generation requests use OpenRouter's
@@ -260,7 +272,7 @@ The response is requested as a square PNG for reliable tile composition. Set
 
 The supported environment variables are:
 
-- `OPENROUTER_API_KEY`: server-side key required for new image generations.
+- `OPENROUTER_API_KEY`: server-side key for OpenRouter image generation.
 - `OPENROUTER_MODEL`: optional compatible model override; defaults to
   `openai/gpt-5.4-image-2`.
 - `ATLAS_ALLOWED_ORIGIN`: optional application origin for server API checks; defaults to
@@ -274,7 +286,19 @@ The supported environment variables are:
   normal 9×9 cached-scene lookup, including images at the selected location. Click an
   image to reveal its controls. Different tile coordinates can render independently,
   while a coordinate accepts only one active render at a time.
-- `?diagnostics=true`: shows red boundaries around cached tiles.
+- The regular map uses a fixed seed to select clouds with a 75% chance per eligible tile, including tiles with accepted artwork. White clouds render new scenes with the original poetry while waiting. Coloured clouds reveal accepted V2 artwork or scenes the visitor generated during this map visit. Reveals use the catalog’s viewer image and title. Review decisions override the release defaults for the exact image URL.
+- Press `D` on the map (or use `?diagnostics=true`) to show artwork immediately.
+  Dashed lines outline each covered z18 tile. At its lower edge, the number counts
+  distinct images and the ring marks the displayed image. Select a pip to show its
+  image, or click the tile to cycle. Green means accepted for production, blue
+  means awaiting a decision. Rejected images stay in storage and disappear from
+  the review map, its counts, and tile cycling. Use ✓ or × to review the displayed
+  image with the Atlas admin token. The decision applies across its entire footprint.
+  After saving, the selection advances to the next blue pip in the tile, wrapping
+  to the beginning if needed. A tile with only rejected images loses its review controls. Press `R` to return to the regular map, which draws from accepted images.
+  The Bun server saves decisions in `releases/v2-reviews.json`. The Worker uses
+  the optional release defaults plus decisions saved in its R2 bucket.
+- Press `A` on the map to open the admin interface.
 - `?admin=true`: marks visible z18 tiles that will not render a cloud with compact
   reason icons for the deterministic fog pattern, land coverage, street coverage, or
   regional map data. Tiles that would render a cloud are left unmarked. Add

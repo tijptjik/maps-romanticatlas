@@ -1,6 +1,10 @@
 import type { AtlasScene } from './atlas-scenes.ts'
 
+import { createPavilionSounds, type PavilionCue } from './pavilion-audio'
+
 type AtlasAudioHooks = {
+  playPavilionCue: PavilionCue
+  unlock: () => void
   playCameraFlash: () => void
   playFogLift: (scene?: AtlasScene) => void
   preloadScene: (scene: AtlasScene) => void
@@ -196,6 +200,14 @@ export const installAtlasAudio = (
     return true
   }
 
+  const soundPavilionItem = createPavilionSounds()
+  const playPavilionCue: PavilionCue = (item, movement) => {
+    if (audioMode === 'all-off' || !ensureContext() || !context || !masterGain) return
+    // A hover before Chrome grants audio access must not queue notes for the first click.
+    if (context.state !== 'running' && !navigator.userActivation?.hasBeenActive) return
+    soundPavilionItem(context, masterGain, item, movement)
+  }
+
   const loadThemeAudio = (): Promise<AudioBuffer | undefined> => {
     if (themeAudio) return Promise.resolve(themeAudio)
     if (themeAudioRequest) return themeAudioRequest
@@ -289,6 +301,8 @@ export const installAtlasAudio = (
           : 'all-on'
     updateControl()
     syncAudioMode()
+    // The toggle itself can acknowledge muting after the effects bus goes silent.
+    if (context) soundPavilionItem(context, context.destination, 'orb', audioMode === 'all-on' ? 'rise' : 'fall')
   }
 
   const scheduleFallbackChime = (at: number) => {
@@ -404,7 +418,7 @@ export const installAtlasAudio = (
 
   updateControl()
 
-  return { playCameraFlash, playFogLift, preloadScene, start, stop }
+  return { playPavilionCue, playCameraFlash, playFogLift, preloadScene, start, stop, unlock: ensureContext }
 }
 
 declare global {

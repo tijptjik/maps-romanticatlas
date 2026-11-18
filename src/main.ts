@@ -1,26 +1,26 @@
-import { installNativeTileZoom, nativeTileZoom } from './native-tile-zoom.ts'
-import { atlasTileSize } from './atlas-protocol.ts'
 import { installArtworkSampling } from './artwork-sampling.ts'
 import * as maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
-import { installAtlasTileInteractions } from './atlas-tiles.ts'
-import { installCachedTileAdmin } from './cached-tile-admin.ts'
-import { installDiscoveryMap } from './v2-discovery-map.ts'
+import { installDiscoveryMap } from './v2-discovery-map'
+import { installCachedTileAdmin } from './cached-tile-admin'
+import { installAtlasTileInteractions, minimumFogZoom } from './atlas-tiles'
 import { createIntroSplash } from './intro-splash.ts'
 import { installArtistStatement } from './artist-statement.ts'
 import { installAtlasAudio } from './atlas-audio.ts'
 import { installAtlasSharing } from './atlas-sharing.ts'
 import { createMapFlight } from './map-flight.ts'
 import { hongKongStyle } from './map-style.ts'
+import { atlasTileSize } from './atlas-protocol.ts'
+import { installNativeTileZoom, nativeTileZoom } from './native-tile-zoom.ts'
 import { installBasemapPreload } from './basemap-preload.ts'
 import {
   adminModeEnabled,
-  cloudDiagnosticsModeEnabled,
   diagnosticsModeEnabled,
+  cloudDiagnosticsModeEnabled,
+  noNoiseEnabled,
   kioskModeEnabled,
   noMusicEnabled,
-  noNoiseEnabled,
   noSplashEnabled,
 } from './runtime-modes.ts'
 import './style.css'
@@ -29,7 +29,7 @@ import './style.css'
 maplibregl.setWorkerUrl(workerUrl)
 
 const initialView = {
-  center: [114.1346, 22.28364] as [number, number],
+  center: [114.13765, 22.28364] as [number, number],
   zoom: 17,
   bearing: 0,
   pitch: 0,
@@ -37,11 +37,22 @@ const initialView = {
 
 const kioskFlightCenter = [114.1455, 22.2759] as [number, number]
 const kioskMode = kioskModeEnabled()
+const restoringMap = history.state?.atlasView === 'map' ||
+  (!history.state?.atlasView && Boolean(history.state?.atlasModeCamera))
+if (kioskMode || noSplashEnabled() || restoringMap) {
+  document.documentElement.classList.remove('atlas-boot')
+}
+
+const adminMap = adminModeEnabled()
+const minimumZoom = diagnosticsModeEnabled() ? minimumFogZoom : 16
+const nativeMaxZoom = nativeTileZoom(atlasTileSize, window.devicePixelRatio)
+const initialMaxZoom = adminMap ? nativeMaxZoom : Math.max(minimumZoom, nativeMaxZoom)
 
 const map = new maplibregl.Map({
   container: 'map',
   style: hongKongStyle,
   ...initialView,
+  ...(history.state?.atlasModeCamera ?? {}),
   maxPitch: 0,
   dragRotate: false,
   keyboard: false,
@@ -50,18 +61,37 @@ const map = new maplibregl.Map({
   pitchWithRotate: false,
   // Atlas interactions use the z18 tile grid. The fog remains visible above it,
   // while generation still requires a complete z18 tile in the viewport.
-  ...(adminModeEnabled() ? {} : { minZoom: diagnosticsModeEnabled() ? 15 : 16, maxBounds: [113.8, 22.1, 114.5, 22.6] as [number, number, number, number] }),
-  maxZoom: Math.max(16.5, nativeTileZoom(atlasTileSize, window.devicePixelRatio)),
+  ...(adminMap ? {} : { minZoom: minimumZoom, maxBounds: [113.8, 22.1, 114.5, 22.6] as [number, number, number, number] }),
+  maxZoom: initialMaxZoom,
   attributionControl: false,
-  // Keep the share capture sharp on high-density displays without exceeding a
-  // 2× backing canvas.
-  pixelRatio: Math.min(window.devicePixelRatio, 2),
   canvasContextAttributes: { preserveDrawingBuffer: true },
 })
 
 installArtworkSampling(map)
 installNativeTileZoom(map, map.getMinZoom())
 installBasemapPreload(map)
+
+function installModeShortcuts(mapVisible: () => boolean) {
+  const modes = { r: null, d: 'diagnostics', a: 'admin' } as const
+  window.addEventListener('keydown', event => {
+    if (kioskMode || !mapVisible() || event.repeat || event.isComposing ||
+        event.altKey || event.ctrlKey || event.metaKey || event.shiftKey ||
+        (event.target instanceof Element && event.target.closest('input, textarea, select, [contenteditable], [role="dialog"]'))) return
+    const key = event.key.toLowerCase()
+    if (key !== 'r' && key !== 'd' && key !== 'a') return
+    event.preventDefault()
+    const url = new URL(location.href)
+    const selected = modes[key]
+    const flags = ['admin', 'diagnostics']
+    if (flags.every(flag => (url.searchParams.get(flag) === 'true') === (flag === selected))) return
+    for (const flag of flags) url.searchParams.delete(flag)
+    if (selected) url.searchParams.set(selected, 'true')
+    history.replaceState({ ...history.state, atlasModeCamera: {
+      center: map.getCenter().toArray(), zoom: map.getZoom(),
+    } }, '', url)
+    location.reload()
+  })
+}
 
 const installDeployCommit = (mapContainer: HTMLElement) => {
   if (!adminModeEnabled()) return
@@ -77,29 +107,42 @@ const installDeployCommit = (mapContainer: HTMLElement) => {
 
 installDeployCommit(map.getContainer())
 
-const introFontFaces = [
-  '400 1em "Ewert"',
-  '400 1em "IM Fell English SC"',
-  '700 1em "Cormorant Garamond"',
-]
-
-const waitForIntroFonts = async () => {
-  if (!('fonts' in document)) return
-
-  // Explicitly request the fonts because the splash is not in the document yet,
-  // so relying on document.fonts.ready alone would not necessarily load them.
-  await Promise.allSettled(introFontFaces.map(font => document.fonts.load(font)))
-  await document.fonts.ready
-}
-
 const skipSplash = noSplashEnabled() || kioskMode
 const audio = installAtlasAudio(map.getContainer(), {
   initiallyMuted: noMusicEnabled() || kioskMode,
 })
-if (!skipSplash) await waitForIntroFonts()
-const intro = createIntroSplash(map.getContainer(), audio.start, !skipSplash)
-installArtistStatement(map.getContainer(), { showMapTrigger: !adminModeEnabled() })
+const enterMap = () => {
+  if (history.state?.atlasView !== 'map') {
+    history.replaceState({ ...history.state, atlasView: 'pavilion' }, '')
+    history.pushState({ ...history.state, atlasView: 'map' }, '')
+  }
+  audio.unlock()
+}
+const intro = createIntroSplash(map.getContainer(), enterMap, !skipSplash && !restoringMap, audio.start, audio.playPavilionCue)
+const statement = installArtistStatement(map.getContainer(), {
+  showMapTrigger: !adminModeEnabled(),
+  onBookmarkPull: () => audio.playPavilionCue('book', 'pull'),
+  onPavilionClose: () => audio.playPavilionCue('book', 'fall'),
+})
 const sharing = installAtlasSharing(map, audio)
+const showPavilion = () => {
+  intro.show()
+  audio.stop()
+  sharing.reset()
+}
+const returnToPavilion = () => {
+  if (history.state?.atlasView === 'map') history.back()
+  else showPavilion()
+}
+window.addEventListener('popstate', event => {
+  if (event.state?.atlasView === 'pavilion') {
+    void statement.close()
+    showPavilion()
+  } else if (event.state?.atlasView === 'map') {
+    void statement.close()
+    intro.dismiss()
+  }
+})
 const idleDelay = 180_000
 const kioskIdleDelay = 30_000
 let idleTimer: number | undefined
@@ -114,8 +157,7 @@ const scheduleIdleReset = () => {
   idleTimer = window.setTimeout(async () => {
     if (isResetting || !resetAtlas) return
     isResetting = true
-    intro.show()
-    sharing.reset()
+    returnToPavilion()
     map.stop()
     map.easeTo({ ...initialView, duration: 900, essential: true })
     try {
@@ -133,22 +175,23 @@ const scheduleKioskFlight = () => {
   kioskTimer = window.setTimeout(() => kioskFlight?.start(), kioskIdleDelay)
 }
 
-const noteActivity = (dismissIntro = false) => {
+const noteActivity = () => {
   if (isResetting) return
   if (kioskMode) {
     kioskFlight?.pause()
     scheduleKioskFlight()
     return
   }
-  if (dismissIntro) intro.dismiss()
   scheduleIdleReset()
 }
 
-window.addEventListener('pointerdown', () => noteActivity(true), { passive: true })
-window.addEventListener('click', () => audio.start(), { once: true, passive: true })
+// A visitor reading the fog poetry is still waiting for an active clearing.
+map.getContainer().addEventListener('atlas-generation-progress', scheduleIdleReset)
+window.addEventListener('pointerdown', () => noteActivity(), { passive: true })
+if (skipSplash || restoringMap) map.once('click', () => audio.start())
 window.addEventListener('pointermove', () => noteActivity(), { passive: true })
 window.addEventListener('wheel', () => noteActivity(), { passive: true })
-window.addEventListener('touchstart', () => noteActivity(true), { passive: true })
+window.addEventListener('touchstart', () => noteActivity(), { passive: true })
 window.addEventListener(
   'keydown',
   event => {
@@ -160,14 +203,13 @@ window.addEventListener(
         scheduleKioskFlight()
         return
       }
-      intro.show()
-      audio.stop()
-      sharing.reset()
+      returnToPavilion()
       noteActivity()
     }
   },
   { capture: true },
 )
+installModeShortcuts(() => Boolean(intro.element.hidden))
 window.addEventListener('keydown', () => noteActivity())
 
 const collapseAttribution = () => {
