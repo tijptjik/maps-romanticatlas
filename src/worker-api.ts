@@ -1,3 +1,5 @@
+import { parseArtworkReview, reviewEndpoint } from './artwork-review.ts'
+import type { ArtworkReview } from './artwork-review.ts'
 import { PhotonImage, SamplingFilter, resize } from '@cf-wasm/photon/workerd'
 import { VectorTile } from '@mapbox/vector-tile'
 import { PbfReader } from 'pbf'
@@ -15,7 +17,8 @@ import {
   manifestShardNamesForGrid,
   type AtlasManifestEntry,
 } from './atlas-manifest.ts'
-import { atlasScenes } from './atlas-scenes.ts'
+import { composeWaterfrontPixels } from './waterfront-composition.ts'
+import { atlasScenes, atlasSeaScenes } from './atlas-scenes.ts'
 import { atlasPrompt } from './atlas-prompt.ts'
 import {
   adminAccessError,
@@ -33,7 +36,9 @@ import {
   cookieValue,
   csrfCookieName,
   defaultAtlasVariant,
+  discoveryVariantForRequest,
   generationVersion,
+  liveProviderBudgetMs,
   isAllowedApplicationRequest,
   isReadableCacheVersion,
   isSupportedCacheVersion,
@@ -240,11 +245,12 @@ const cachedTilesFromBucket = async (
   ).filter((entry): entry is CachedTile => entry !== null)
 }
 
-const findCachedTile = async (env: AtlasEnv, position: Omit<Tile, 'scene'>) => {
-  const cached = await manifestEntriesForPosition(env, position)
+const findCachedTile = async (env: AtlasEnv, position: Omit<Tile, 'scene'>, discovery?: string) => {
+  const allowed = (entry: CachedTile) => !discovery || entry.variant.startsWith(discovery + '-')
+  const cached = (await manifestEntriesForPosition(env, position)).filter(allowed)
   if (cached.length) return randomItem(cached)
   if (!localDevelopmentEnabled(env)) return null
-  const recovered = await cachedTilesFromBucket(env.ATLAS_BUCKET, position)
+  const recovered = (await cachedTilesFromBucket(env.ATLAS_BUCKET, position)).filter(allowed)
   return recovered.length ? randomItem(recovered) : null
 }
 
@@ -580,9 +586,24 @@ const composeTileImage = (
   generatedBytes: Uint8Array,
   safeMaskBytes: Uint8Array,
   lineOverlayBytes: Uint8Array,
+  waterfront: boolean,
 ) => {
   const source = resizeToTile(sourceBytes, 'The source image')
   const generated = resizeToTile(generatedBytes, 'The generated image')
+  if (waterfront) {
+    try {
+      const pixels = composeWaterfrontPixels(source.get_raw_pixels(), generated.get_raw_pixels(), atlasTileSize)
+      const result = new PhotonImage(pixels, atlasTileSize, atlasTileSize)
+      try {
+        return result.get_bytes()
+      } finally {
+        result.free()
+      }
+    } finally {
+      source.free()
+      generated.free()
+    }
+  }
   const mask = resizeToTile(safeMaskBytes, 'The safe-zone mask')
   const overlay = resizeToTile(lineOverlayBytes, 'The line overlay')
 
@@ -649,8 +670,10 @@ const openrouterImage = async (
   if (!env.OPENROUTER_API_KEY) {
     throw new Error('OpenRouter is not configured for this deployment.')
   }
+  const signal = AbortSignal.timeout(liveProviderBudgetMs)
   const requestImage = () =>
     fetch(openrouterImagesApiUrl, {
+      signal,
       method: 'POST',
       headers: {
         authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
@@ -661,6 +684,7 @@ const openrouterImage = async (
       body: JSON.stringify({
         model: env.OPENROUTER_MODEL ?? 'openai/gpt-5.4-image-2',
         prompt,
+        quality: 'low',
         input_references: [
           { type: 'image_url', image_url: { url: sourceImage } },
           { type: 'image_url', image_url: { url: guideImage } },
@@ -675,6 +699,7 @@ const openrouterImage = async (
   try {
     response = await requestImage()
   } catch {
+    signal.throwIfAborted()
     try {
       // A request can occasionally fail before it reaches the provider. Retry
       // once: no image has been accepted or charged until OpenRouter responds.
@@ -834,14 +859,31 @@ const serveCachedTile = async (request: Request, env: AtlasEnv, tile: Tile) => {
   })
 }
 
+// esbuild includes local release decisions when the artwork pack is available.
+const releaseReviews: ArtworkReview[] = (() => {
+  try {
+    return require('../releases/v2-reviews.json') as ArtworkReview[]
+  } catch {
+    return []
+  }
+})()
+
 const generateTile = async (
   request: Request,
   env: AtlasEnv,
   tile: Tile,
   force = false,
 ) => {
-  const existing = force ? null : await findCachedTile(env, tile)
-  if (existing) return json(cachedTilePayload(existing))
+  const discovery = discoveryVariantForRequest(new URL(request.url).searchParams)
+  const existing = force ? null : await findCachedTile(env, tile, discovery)
+  if (existing) {
+    const payload = cachedTilePayload(existing)
+    const review = await env.ATLAS_BUCKET.head('v2-artwork-reviews/' + encodeURIComponent(payload.url))
+    const decision = review?.customMetadata?.review
+      ? JSON.parse(decodeURIComponent(review.customMetadata.review)).status
+      : releaseReviews.find(item => item.url === payload.url)?.status
+    if (decision !== 'rejected') return json(payload)
+  }
   if (!applicationRequestIsAllowed(request, env)) {
     return errorResponse(
       403,
@@ -883,21 +925,24 @@ const generateTile = async (
       String(body.sourceImage),
       String(body.guideImage),
     )
+    const waterfront = hasSea && atlasSeaScenes.has(tile.scene)
     const composed = composeTileImage(
       source.bytes,
       generated,
       mask.bytes,
       overlay.bytes,
+      waterfront,
     )
     const entry = {
       contentType: 'image/png',
       generationVersion,
       generatedAt: new Date().toISOString(),
       contentBounds,
-      mask: 'vector-safe-zones',
+      mask: waterfront ? 'waterfront-edge' : 'vector-safe-zones',
       outputSize: { width: atlasTileSize, height: atlasTileSize },
     }
-    const variant = crypto.randomUUID()
+    const variantId = crypto.randomUUID()
+    const variant = discovery ? discovery + '-' + variantId.slice(-12) : variantId
     const versionedImageKey = atlasImageKey(tile, generationVersion, variant)
     const versionedMetadataKey = atlasMetadataKey(tile, generationVersion, variant)
     await env.ATLAS_BUCKET.put(versionedImageKey, composed, {
@@ -989,6 +1034,7 @@ const serveCacheStatus = async (env: AtlasEnv, position: Omit<Tile, 'scene'>) =>
 const serveCacheStatusBatch = async (
   env: AtlasEnv,
   positions: Omit<Tile, 'scene'>[],
+  discovery?: string,
 ) => {
   const positionsByShard = new Map<string, Omit<Tile, 'scene'>[]>()
   const scenePositionsByShard = new Map<string, Omit<Tile, 'scene'>[]>()
@@ -1049,7 +1095,7 @@ const serveCacheStatusBatch = async (
 
   return json({
     statuses: positions.map(position => {
-      const cached = cachedByPosition.get(positionId(position))
+      const cached = cachedByPosition.get(positionId(position))?.filter(entry => !discovery || entry.variant.startsWith(discovery + '-'))
       return cacheStatusPayload({
         cached: cached?.length ? randomItem(cached) : null,
         scenes: [...(scenesByPosition.get(positionId(position)) ?? [])],
@@ -1222,6 +1268,31 @@ export const handleAtlasApi = async (
   env: AtlasEnv,
 ): Promise<Response | null> => {
   const url = new URL(request.url)
+  if (url.pathname === reviewEndpoint) {
+    const prefix = 'v2-artwork-reviews/'
+    if (request.method === 'GET') {
+      const reviews = [...releaseReviews]
+      let cursor: string | undefined
+      do {
+        const page = await env.ATLAS_BUCKET.list({ prefix, cursor, include: ['customMetadata'] })
+        for (const object of page.objects) {
+          const record = object.customMetadata?.review
+          if (record) reviews.push(JSON.parse(decodeURIComponent(record)))
+        }
+        cursor = page.truncated ? page.cursor : undefined
+      } while (cursor)
+      return json(reviews)
+    }
+    if (request.method !== 'PUT') return errorResponse(405, 'Unsupported review method.')
+    const error = await adminMutationIsAllowed(request, env)
+    if (error) return errorResponse(error.status, error.error)
+    const review = parseArtworkReview(await readJsonBody(request).catch(() => null))
+    if (!review) return errorResponse(400, 'Invalid artwork review.')
+    await env.ATLAS_BUCKET.put(prefix + encodeURIComponent(review.url), '', {
+      customMetadata: { review: encodeURIComponent(JSON.stringify(review)) },
+    })
+    return json(review)
+  }
   if (request.method === 'POST' && url.pathname === '/api/share-maps') {
     return createShareMap(request, env)
   }
@@ -1292,6 +1363,7 @@ export const handleAtlasApi = async (
       return serveCacheStatusBatch(
         env,
         positionsFromCacheStatusRequest(await readJsonBody(request)),
+        discoveryVariantForRequest(url.searchParams),
       )
     } catch (error) {
       return errorResponse(
@@ -1346,6 +1418,10 @@ export const handleAtlasApi = async (
       return errorResponse(400, 'The fog index tile is invalid.')
     }
     try {
+      if (url.searchParams.get('eligibilityOnly') === 'true') {
+        const { cacheVersion, eligibilities } = await fogIndexEligibility(env, x, y)
+        return json({ x, y, zoom: fogIndexZoom, version: cacheVersion, eligibility: eligibilities })
+      }
       return json(await fogIndexForTile(env, x, y))
     } catch (error) {
       return errorResponse(

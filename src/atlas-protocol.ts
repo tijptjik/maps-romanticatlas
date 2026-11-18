@@ -1,10 +1,23 @@
 export const atlasZoom = 18
 export const atlasTileSize = 512
+// Reserve time for capture, composition, image decode, and the fog animation.
+export const liveProviderBudgetMs = 50_000
+export const clickRevealBudgetMs = 60_000
 export const generationVersion = 6
+// Public discovery renders share the tile store, with a distinct variant prefix
+// so an unreviewed legacy painting cannot satisfy a new white-cloud click.
+export const discoveryVariantForRequest = (params: URLSearchParams) => {
+  const visit = params.get('discovery')
+  if (visit === null) return undefined
+  if (!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/.test(visit))
+    throw new Error('Invalid discovery visit.')
+  return 'discovery-' + visit
+}
+
 export const defaultAtlasVariant = 'default'
 // Retain every generated cache version so existing tiles remain replayable and
 // available for cache lookups after a generation change.
-export const readableCacheVersions = [1, 2, 3, 4, 5, 6] as const
+export const readableCacheVersions = [1, 2, 3, 4, 5, 6, 7, 8] as const
 export const atlasSceneGridRadius = 4
 export const csrfCookieName = 'atlas_csrf'
 
