@@ -148,6 +148,7 @@ const installCachedTileRasterSource = (map, activeTilesByPosition) => {
     canvas.height = 512
     const context = canvas.getContext('2d')
     if (!context) return { data: transparentRasterTile.slice(0) }
+    context.imageSmoothingQuality = 'high'
     const plateSize = 512 / tileSpan
     plates.forEach(plate => {
       if (!plate) return

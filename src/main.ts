@@ -1,3 +1,4 @@
+import { installArtworkSampling } from './artwork-sampling.ts'
 import * as maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
@@ -57,6 +58,7 @@ const map = new maplibregl.Map({
   canvasContextAttributes: { preserveDrawingBuffer: true },
 })
 
+installArtworkSampling(map)
 installBasemapPreload(map)
 
 const installDeployCommit = (mapContainer: HTMLElement) => {
