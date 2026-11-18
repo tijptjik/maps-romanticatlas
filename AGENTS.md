@@ -1,5 +1,10 @@
 # Repository Guidelines
 
+## Response summaries
+
+- Preface every final summary response with "# SUMMARY `r{sequence}`" with `{sequence}`
+  is an auto-incrementing number.
+
 ## Project Structure & Module Organization
 
 The app entry point is `src/main.js`; it creates the MapLibre map and its Hong Kong
