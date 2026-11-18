@@ -1,4 +1,17 @@
 export const atlasScenes = {
+  'mermaid-station': 'a mermaid transformation station: visitors leave their shoes in numbered-looking cubbies, step through shell-shaped changing booths, and emerge as mermaids into a sea channel. Show the sequence from a person on foot to a half-submerged figure with a gleaming forked tail and a mermaid swimming out. A return staircase has a waiting row of shoes. Use pearlescent tile and sea-green glass',
+  'walking-yacht-club': 'a yacht club whose sailing yachts grow folding brass heron legs. Show one yacht sailing, another stepping from the sea onto the quay on four articulated legs, and one standing tall outside the clubhouse while its crew polish its feet. Keep the sails, hulls and mechanical joints legible; the clubhouse has a boot room for yacht-sized feet',
+  'staircase-foundation': 'the Staircase Foundation, an open-topped tidal institution built around a deep square stairwell in the sea. Broad stone flights switch back repeatedly beneath cantilevered landings and vanish far below sight. A sluice opens in one side; a foaming tongue of incoming seawater pours down successive flights and disappears below. Show progressively submerged treads and visitors watching the flush from a dry balustrade',
+  'car-boat-works': 'a shore workshop that converts customers’ own cars into boats. Follow one distinctive red motorcar design through three bays: road wheels on arrival, a suspended curved hull being fitted underneath the chassis in a cutaway workshop, and the finished red car afloat leaving a slipway with the same bonnet, steering wheel and headlamps still visible',
+  'flying-fish-burgers': 'a flying-fish burger restaurant where the kitchen gives each customer two bun halves and they catch their own filling. A long open counter hugs a narrow seawater race. Make the central action unmistakable: silver flying fish with outspread fins leap in arcs above the water; diners lean over the rail holding a bun half in each hand, and one fish is visibly between two halves. Show baskets of buns, striped awnings and a waterside dining terrace',
+  'bottled-post': 'a tidal post office where letters arrive inside floating glass bottles. A forked boom guides bottles into waist-high sorting channels beside an open sorting gallery. Clerks uncork them and hang wet letters on lines, while a postmistress dispatches sealed green bottles down a separate outgoing chute on the ebb tide. Broad copper roof and red postal fittings',
+  'wave-organ': 'a wave-powered public pipe organ built into a breakwater. Draw a cutaway row of sea chambers with waves squeezing air up a graduated rank of tall copper organ pipes. A seated organist works the stops in an open-sided music room, while listeners line curved stone steps on the sheltered side. The sea-facing mouths, bellows and pipe ranks should make the mechanism readable',
+  'moon-jelly-lanterns': 'a lending library for living moon-jelly lanterns. A marine librarian lifts a round glass seawater lantern, enclosing one pale peach jellyfish, from a rack beside the quay into the hands of a night ferryman. Filled lanterns are checked out onto small boats; returned jellies drift back into sheltered nursery pools. Show a broad glazed reading room, ranks of distinct round vessels, and a return flume. Daylight atlas colours with pearly lilac jellyfish',
+  'pleasure-pier': 'a Victorian pleasure pier with an iron pavilion, carousel and promenade on timber piles connected to shore',
+  'tidal-bathhouse': 'a Victorian tidal bathhouse with striped changing cabins and sea bathing pools on a shore-connected pier',
+  'floating-opera': 'a Victorian floating opera with a moored theatre barge, painted scenery and a gangway to a quayside foyer',
+  'shipwright-dock': 'a Victorian floating dry dock with a steam launch under repair, timber workshops and shore-connected pontoons',
+  'kelp-conservatory': 'a Victorian marine botanical conservatory with glasshouses on a piled pier, kelp growing frames and naturalists tending specimen tanks',
   circus: 'a Victorian circus',
   'balloon-festival': 'a balloon festival',
   'art-nouveau-palace': 'an elaborate Art Nouveau palace',
@@ -13,8 +26,8 @@ export const atlasScenes = {
   shipyard: 'a Victorian steamship shipyard',
   'telegraph-office': 'an enormous Victorian telegraph office',
   'photography-studio': 'an early Victorian photography studio',
-  'mechanical-theatre': 'a Victorian mechanical theatre filled with automata',
-  automata: 'an exhibition of uncanny Victorian automata',
+  'mechanical-theatre': 'a Victorian mechanical theatre with a cutaway stage, brass automata, scenery painters and a fly-gallery workshop',
+  automata: 'an exhibition of Victorian automata with moving brass birds, winding benches and clockmakers tending exposed gears',
   'anatomical-museum': 'a Victorian anatomical museum',
   'mesmerist-salon': 'an enormous candlelit Victorian mesmerist salon',
   'hall-of-mirrors': 'a grand Victorian hall of mirrors',
@@ -30,8 +43,8 @@ export const atlasScenes = {
   'marshmallow-factory': 'a rainbow themed marshmallow structure with transparent domes so you can see how marshmallows are born',
   observatory: 'a Victorian astronomical observatory',
   'weather-station': 'an enormous Victorian meteorological station',
-  'orrery-hall': 'a grand Victorian orrery and celestial-instrument hall',
-  'analytical-engine': 'a workshop containing a Victorian analytical engine',
+  'orrery-hall': 'a Victorian orrery court with brass orbital rings, an instrument workshop and outdoor calibration benches',
+  'analytical-engine': 'a Victorian analytical-engine workshop with gear trains, punch-card looms and rows of card-sorting tables',
   'utopian-garden': 'an idealised Victorian utopian garden city',
   'theme-park': 'a sprawling theme park packed with looping roller coasters',
   zoo: 'a sprawling zoo with radiating animal enclosures and winding paths',
@@ -71,7 +84,20 @@ export const atlasScenes = {
 export const atlasSeaScenes = new Set<keyof typeof atlasScenes>([
   'lighthouse',
   'pirate-harbour',
-  'canal-lock'
+  'canal-lock',
+  'pleasure-pier',
+  'tidal-bathhouse',
+  'floating-opera',
+  'shipwright-dock',
+  'kelp-conservatory',
+  'mermaid-station',
+  'walking-yacht-club',
+  'staircase-foundation',
+  'car-boat-works',
+  'flying-fish-burgers',
+  'bottled-post',
+  'wave-organ',
+  'moon-jelly-lanterns',
 ])
 
 export const atlasSceneNames = Object.keys(atlasScenes) as Array<keyof typeof atlasScenes>
@@ -83,7 +109,7 @@ export const pickAtlasScene = (
   excluded: Iterable<AtlasScene> = [],
 ): AtlasScene => {
   const candidates = hasSea
-    ? atlasSceneNames
+    ? atlasSceneNames.filter(scene => atlasSeaScenes.has(scene))
     : atlasSceneNames.filter(scene => !atlasSeaScenes.has(scene))
   const excludedSet = new Set(excluded)
   const unpicked = candidates.filter(scene => !excludedSet.has(scene))

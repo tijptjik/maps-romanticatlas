@@ -483,7 +483,7 @@ const sourceRecordings: Record<string, RecordedSource> = {
   },
 }
 
-const recordedScenes: Record<AtlasScene, keyof typeof sourceRecordings> = {
+const recordedScenes: Partial<Record<AtlasScene, keyof typeof sourceRecordings>> = {
   circus: 'circus',
   'balloon-festival': 'balloon',
   'art-nouveau-palace': 'frenchParty',
@@ -619,9 +619,11 @@ const clipRecordedScene = (
   if (result.status !== 0) throw new Error(`Could not clip ${outputPath}.`)
 }
 
+const recordedSceneNames = atlasSceneNames.filter(scene => recordedScenes[scene])
+
 const thirdPartyNotices = () => {
   const backgroundTrack = '`public/atlas-audio/harbour-light-legato.flac`'
-  const rows = atlasSceneNames.map(scene => {
+  const rows = recordedSceneNames.map(scene => {
     const source = sourceRecordings[recordedScenes[scene]]
     return `| \`public/atlas-audio/${scene}.ogg\` | [${source.title}](${source.sourcePage}) | ${source.creator} | ${source.license ?? 'CC0 1.0'} |`
   })
@@ -651,14 +653,14 @@ await mkdir(temporaryDirectory, { recursive: true })
 
 const requestedScenes = process.argv.slice(2)
 const unknownScenes = requestedScenes.filter(
-  scene => !atlasSceneNames.includes(scene as AtlasScene),
+  scene => !recordedSceneNames.includes(scene as AtlasScene),
 )
 if (unknownScenes.length) {
   throw new Error(`Unknown scene cue(s): ${unknownScenes.join(', ')}`)
 }
 const selectedScenes = requestedScenes.length
-  ? atlasSceneNames.filter(scene => requestedScenes.includes(scene))
-  : atlasSceneNames
+  ? recordedSceneNames.filter(scene => requestedScenes.includes(scene))
+  : recordedSceneNames
 const uniqueRecordings = [...new Map(
   selectedScenes.map(scene => {
     const source = sourceRecordings[recordedScenes[scene]]
