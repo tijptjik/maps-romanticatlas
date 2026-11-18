@@ -288,7 +288,7 @@ The supported environment variables are:
   while a coordinate accepts only one active render at a time.
 - The regular map uses a fixed seed to select clouds with a 75% chance per eligible tile, including tiles with accepted artwork. White clouds render new scenes with the original poetry while waiting. Coloured clouds reveal accepted V2 artwork or scenes the visitor generated during this map visit. Reveals use the catalog’s viewer image and title. Review decisions override the release defaults for the exact image URL.
 - Press `D` on the map (or use `?diagnostics=true`) to show artwork immediately.
-  Dashed lines outline each covered z18 tile. At its lower edge, the number counts
+  Dashed lines outline each covered z18 tile. A small cross and the displayed artwork’s title sit at the top. At the lower edge, the number counts
   distinct images and the ring marks the displayed image. Select a pip to show its
   image, or click the tile to cycle. Green means accepted for production, blue
   means awaiting a decision. Rejected images stay in storage and disappear from
@@ -297,7 +297,7 @@ The supported environment variables are:
   After saving, the selection advances to the next blue pip in the tile, wrapping
   to the beginning if needed. A tile with only rejected images loses its review controls. Press `R` to return to the regular map, which draws from accepted images.
   The Bun server saves decisions in `releases/v2-reviews.json`. The Worker uses
-  the optional release defaults plus decisions saved in its R2 bucket.
+  that optional release file plus decisions saved in its R2 bucket.
 - Press `A` on the map to open the admin interface.
 - `?admin=true`: marks visible z18 tiles that will not render a cloud with compact
   reason icons for the deterministic fog pattern, land coverage, street coverage, or

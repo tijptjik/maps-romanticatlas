@@ -6,7 +6,7 @@ import { drawingFootprint, tileBounds, tileForPosition, tilePolygon } from './ti
 
 type Footprint = ReturnType<typeof drawingFootprint>
 type Unit = { art: Painting; footprint: Footprint; layer: string }
-type Label = { element: HTMLElement; bounds: Footprint['bounds'] }
+type Label = { element: HTMLElement; title: HTMLElement; bounds: Footprint['bounds'] }
 
 type Catalog = { release: string; sheets: { accepted?: boolean; art: Painting[] }[] }
 
@@ -74,13 +74,18 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean, n
 
   function positionLabels() {
     const view = map.getBounds()
-    for (const { element, bounds } of labels.values()) {
+    for (const { element, title, bounds } of labels.values()) {
       const { west, east, north, south } = bounds
       element.hidden = !view.intersects([[west, south], [east, north]])
+      title.hidden = element.hidden
       if (element.hidden) continue
       const point = map.project([(east + west) / 2, south])
       element.style.left = point.x + 'px'
       element.style.top = point.y + 'px'
+      const corner = map.project([east, north])
+      title.style.left = element.style.left
+      title.style.top = corner.y + 'px'
+      title.style.maxWidth = Math.max(0, 2 * (corner.x - point.x) - 8) + 'px'
     }
   }
 
@@ -141,6 +146,7 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean, n
           } else {
             byCell.delete(id)
             labels.get(id)?.element.remove()
+            labels.get(id)?.title.remove()
             labels.delete(id)
           }
         }
@@ -196,12 +202,16 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean, n
         element.className = 'atlas-image-count'
         element.setAttribute('role', 'group')
         element.innerHTML = '<span class="atlas-image-pips"></span><output></output><button type="button" data-action="accepted">✓</button><button type="button" data-action="rejected">×</button>'
-        map.getContainer().append(element)
+        const title = document.createElement('span')
+        title.className = 'atlas-discovery-title'
+        title.dataset.tile = id
+        map.getContainer().append(title, element)
         const cell = current.footprint.cells.find(cell => tileId(cell) === id)!
-        label = {element, bounds: tileBounds(cell)}
+        label = {element, title, bounds: tileBounds(cell)}
         labels.set(id, label)
       }
-      const {element} = label
+      const {element, title} = label
+      title.textContent = current.art.title
       element.setAttribute('aria-label', choices.length + ' images on tile ' + id)
       element.querySelector('output')!.value = String(choices.length)
       const pips = element.querySelector('.atlas-image-pips')!
