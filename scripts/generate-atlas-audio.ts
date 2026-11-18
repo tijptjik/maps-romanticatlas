@@ -620,14 +620,15 @@ const clipRecordedScene = (
 }
 
 const thirdPartyNotices = () => {
-  const backgroundTrack = '`public/atlas-audio/awestruck.ogg`'
+  const backgroundTrack = '`public/atlas-audio/harbour-light-legato.flac`'
   const rows = atlasSceneNames.map(scene => {
     const source = sourceRecordings[recordedScenes[scene]]
     return `| \`public/atlas-audio/${scene}.ogg\` | [${source.title}](${source.sourcePage}) | ${source.creator} | ${source.license ?? 'CC0 1.0'} |`
   })
   return `# Third-party audio notices
 
-The background theme is a full, seamlessly looping CC0 track from OpenGameArt. Every
+The background theme, *Harbour Light (Legato)*, is an original piano composition.
+Its recorded piano samples were pitch-shifted, filtered and mixed for the atlas. Every
 scene cue is a 2.35-second excerpt from public-domain material. Freesound
 recordings are published under the
 [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/) dedication;
@@ -636,7 +637,7 @@ files are clipped and transcoded versions of the linked source recordings.
 
 | Local track | Source | Creator | Licence |
 | --- | --- | --- | --- |
-| ${backgroundTrack} | [Awestruck](https://opengameart.org/content/awestruck) | isaiah658 | CC0 |
+| ${backgroundTrack} | [Salamander Grand Piano](https://tonejs.github.io/audio/salamander/) | Alexander Holm | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) |
 
 | Local cue | Source recording | Creator | Licence |
 | --- | --- | --- | --- |
