@@ -18,6 +18,8 @@ const parseGeneratedImage = (value, mediaType) => {
 export const createOpenRouterClient = ({
   apiKey = process.env.OPENROUTER_API_KEY,
   model = process.env.OPENROUTER_MODEL ?? 'openai/gpt-5.4-image-2',
+  timeoutMs = undefined as number | undefined,
+  quality = undefined as 'auto' | 'low' | 'medium' | 'high' | undefined,
 } = {}) => {
   if (!apiKey) {
     throw new Error(
@@ -26,6 +28,7 @@ export const createOpenRouterClient = ({
   }
 
   const requestImage = async (prompt, sourceImage, referenceImages = []) => {
+    const signal = timeoutMs ? AbortSignal.timeout(timeoutMs) : undefined
     const inputReferences = [sourceImage, ...referenceImages]
       .filter(Boolean)
       .map(image => ({ type: 'image_url', image_url: { url: image } }))
@@ -33,6 +36,7 @@ export const createOpenRouterClient = ({
     const requestImage = () =>
       fetch(openrouterImagesApiUrl, {
         method: 'POST',
+        signal,
         headers: {
           authorization: `Bearer ${apiKey}`,
           'content-type': 'application/json',
@@ -41,6 +45,7 @@ export const createOpenRouterClient = ({
         },
         body: JSON.stringify({
           model,
+          ...(quality ? { quality } : {}),
           prompt,
           ...(inputReferences.length ? { input_references: inputReferences } : {}),
           aspect_ratio: '1:1',
@@ -53,6 +58,7 @@ export const createOpenRouterClient = ({
     try {
       response = await requestImage()
     } catch {
+      signal?.throwIfAborted()
       try {
         response = await requestImage()
       } catch {
