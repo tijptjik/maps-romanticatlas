@@ -64,7 +64,7 @@ const storedAdminToken = () => {
   }
 }
 
-const csrfToken = () =>
+export const csrfToken = () =>
   document.cookie
     .split(';')
     .map(cookie => cookie.trim())
@@ -204,7 +204,6 @@ export const installCachedTileAdmin = async map => {
       throw new Error(`Cache manifest request failed with ${response.status}`)
     const body = await response.json()
     if (body.adminMode !== true) return
-    map.setMinZoom(12)
 
     const tiles = Array.isArray(body.tiles)
       ? body.tiles.filter(tile => tile?.url && tile.scene)

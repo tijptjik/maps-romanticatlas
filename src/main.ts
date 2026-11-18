@@ -6,7 +6,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { installAtlasTileInteractions } from './atlas-tiles.ts'
 import { installCachedTileAdmin } from './cached-tile-admin.ts'
-import { installCachedTileDiagnostic } from './cached-tile-diagnostic.ts'
+import { installDiscoveryMap } from './v2-discovery-map.ts'
 import { createIntroSplash } from './intro-splash.ts'
 import { installArtistStatement } from './artist-statement.ts'
 import { installAtlasAudio } from './atlas-audio.ts'
@@ -50,9 +50,8 @@ const map = new maplibregl.Map({
   pitchWithRotate: false,
   // Atlas interactions use the z18 tile grid. The fog remains visible above it,
   // while generation still requires a complete z18 tile in the viewport.
-  minZoom: 16.5,
+  ...(adminModeEnabled() ? {} : { minZoom: diagnosticsModeEnabled() ? 15 : 16, maxBounds: [113.8, 22.1, 114.5, 22.6] as [number, number, number, number] }),
   maxZoom: Math.max(16.5, nativeTileZoom(atlasTileSize, window.devicePixelRatio)),
-  maxBounds: [113.8, 22.1, 114.5, 22.6],
   attributionControl: false,
   // Keep the share capture sharp on high-density displays without exceeding a
   // 2× backing canvas.
@@ -190,20 +189,18 @@ collapseAttribution()
 map.once('idle', collapseAttribution)
 map.on('mousemove', () => noteActivity())
 map.on('load', async () => {
-  await installCachedTileAdmin(map)
-
-  if (diagnosticsModeEnabled()) {
-    await installCachedTileDiagnostic(map)
-  }
-
-  const atlas = installAtlasTileInteractions(map, audio, {
-    cloudDiagnostics: cloudDiagnosticsModeEnabled(),
-    noNoise: noNoiseEnabled(),
-    onRevealCountChange: sharing.setRevealCount,
-  })
-  sharing.setRevealCount(atlas.getRevealCount())
-  resetAtlas = async () => {
-    await atlas.resetReveals()
+  if (adminModeEnabled()) {
+    await installCachedTileAdmin(map)
+    const atlas = installAtlasTileInteractions(map, audio, {
+      cloudDiagnostics: cloudDiagnosticsModeEnabled(),
+      noNoise: noNoiseEnabled(),
+      onRevealCountChange: sharing.setRevealCount,
+    })
+    resetAtlas = async () => { await atlas.resetReveals() }
+  } else {
+    const reset = await installDiscoveryMap(map, diagnosticsModeEnabled(), noNoiseEnabled(),
+      sharing.setRevealCount, audio)
+    resetAtlas = async () => { await reset() }
   }
 
   if (kioskMode) {

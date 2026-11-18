@@ -7,14 +7,14 @@ const titleCase = value =>
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ')
 
-export const createAtlasTitleCard = (container, scene) => {
+export const createAtlasTitleCard = (container, scene, displayTitle?: string) => {
   const card = document.createElement('aside')
   card.className = 'atlas-title-card is-awaiting-focus'
-  card.setAttribute('aria-label', `${titleCase(scene)}: ${atlasScenes[scene]}`)
+  card.setAttribute('aria-label', displayTitle ?? `${titleCase(scene)}: ${atlasScenes[scene]}`)
 
   const title = document.createElement('strong')
   title.className = 'atlas-title-card__title'
-  title.textContent = titleCase(scene)
+  title.textContent = displayTitle ?? titleCase(scene)
 
   card.append(title)
   container.append(card)

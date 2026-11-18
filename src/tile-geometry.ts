@@ -41,3 +41,17 @@ export const tilePolygon = tile => {
     [bounds.west, bounds.north],
   ]
 }
+
+// Experiment images are anchored at their southwest tile and extend north and east.
+export const drawingFootprint = (tile: {
+  x: number; y: number; scene?: string; tileSpan?: { columns: number; rows: number }
+}) => {
+  const { columns, rows } = tile.tileSpan ?? { columns: 1, rows: tile.scene === 'skyscraper' ? 2 : 1 }
+  const cells = []
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < columns; col++) cells.push({ x: tile.x + col, y: tile.y - row })
+  }
+  const { west, south } = tileBounds(tile)
+  const { east, north } = tileBounds(cells.at(-1))
+  return { cells, bounds: { west, south, east, north } }
+}
