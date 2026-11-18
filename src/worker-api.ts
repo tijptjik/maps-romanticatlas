@@ -859,6 +859,8 @@ const serveCachedTile = async (request: Request, env: AtlasEnv, tile: Tile) => {
   })
 }
 
+declare function require(path: string): unknown
+
 // esbuild includes local release decisions when the artwork pack is available.
 const releaseReviews: ArtworkReview[] = (() => {
   try {
