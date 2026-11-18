@@ -1,14 +1,18 @@
+import { planAtlasRoads } from './atlas-road-plan.ts'
 import { atlasTileSize, atlasZoom } from './atlas-protocol.ts'
 
 // The version names the sampling rules. The Worker appends the upstream map
 // release identifier, so either deliberate definition changes or a basemap
 // release creates a fresh persistent-cache namespace.
-export const fogEligibilityVersion = '2026-08-06.1'
+export const fogEligibilityVersion = '2026-11-18.4'
 export const fogEligibilitySourceZoom = 15
 const landSampleSize = 10
 const streetSampleSize = 128
 const landTargetThreshold = 0.75
-const streetTargetThreshold = 0.2
+export const minimumUsableFraction = 0.25
+export const coastalSceneCoverage = 0.5
+export const requiredUsableFraction = (coastal = false) => coastal ? coastalSceneCoverage : minimumUsableFraction
+export const coastalLandThreshold = 0.1
 export const fogEligibilityChildSpan = 2 ** (atlasZoom - fogEligibilitySourceZoom)
 
 export type FogEligibilityPosition = { zoom: number; x: number; y: number }
@@ -18,16 +22,11 @@ export type FogEligibility = FogEligibilityPosition & {
   regionalLandAvailable: boolean
   landFraction: number | null
   streetFraction: number | null
+  coastal?: boolean
+  usableFraction?: number | null
 }
 
-// This deterministic half-grid selection is part of tile eligibility, not a
-// rendering-only detail. Keep it shared by the visitor, admin, and Worker
-// paths so none of them can create an atlas entry outside the fog program.
-export const isFogPatternSelected = ({
-  x,
-  y,
-}: Pick<FogEligibilityPosition, 'x' | 'y'>) =>
-  (((x * 73856093) ^ (y * 19349663)) & 1) === 0
+export { isFogPatternSelected } from './fog-pattern.js'
 
 export const fogEligibilitySourceTile = ({ x, y }: FogEligibilityPosition) => ({
   x: Math.floor(x / fogEligibilityChildSpan),
@@ -87,7 +86,7 @@ const sourceTileWindow = (tile, layer) => {
 const vectorTileLandFraction = (sourceTile, tile) => {
   const earthLayer = sourceTile.layers.earth
   const waterLayer = sourceTile.layers.water
-  if (!earthLayer) return null
+  if (!earthLayer) return { landFraction: null, coastal: false }
 
   const { sourceTileSize, originX, originY } = sourceTileWindow(tile, earthLayer)
   const earthFeatures = Array.from({ length: earthLayer.length }, (_, index) =>
@@ -100,8 +99,12 @@ const vectorTileLandFraction = (sourceTile, tile) => {
         waterLayer.feature(index),
       ).map(feature => (feature.type === 3 ? feature.loadGeometry() : []))
     : []
-  if (!earthFeatures.length) return null
+  if (!earthFeatures.length) return { landFraction: null, coastal: false }
 
+  const seaFeatures = waterLayer ? Array.from({ length: waterLayer.length }, (_, i) => waterLayer.feature(i))
+    .filter(f => f.type === 3 && ['sea', 'ocean', 'bay', 'strait', 'fjord'].includes(f.properties.kind))
+    .map(f => f.loadGeometry()) : []
+  let seaSamples = 0
   let landSamples = 0
   for (let row = 0; row < landSampleSize; row += 1) {
     for (let column = 0; column < landSampleSize; column += 1) {
@@ -115,10 +118,11 @@ const vectorTileLandFraction = (sourceTile, tile) => {
       const onWater = waterFeatures.some(feature =>
         vectorFeatureContainsPoint(feature, point),
       )
+      if (seaFeatures.some(feature => vectorFeatureContainsPoint(feature, point))) seaSamples++
       if (onEarth && !onWater) landSamples += 1
     }
   }
-  return landSamples / (landSampleSize * landSampleSize)
+  return { landFraction: landSamples / (landSampleSize * landSampleSize), coastal: seaSamples > 0 }
 }
 
 const squaredDistanceToSegment = (point, start, end) => {
@@ -142,31 +146,32 @@ const squaredDistanceToSegment = (point, start, end) => {
   return x * x + y * y
 }
 
-const vectorTileStreetFraction = (sourceTile, tile) => {
+const vectorTileStreetSpace = (sourceTile, tile) => {
   const roadsLayer = sourceTile.layers.roads
-  if (!roadsLayer) return 0
+  if (!roadsLayer) return { streetFraction: 0, usableFraction: 1 }
 
   const { sourceTileSize, originX, originY } = sourceTileWindow(tile, roadsLayer)
   const halfStroke = (18 / 2) * (sourceTileSize / atlasTileSize)
-  const paddedSegments = Array.from({ length: roadsLayer.length }, (_, index) =>
-    roadsLayer.feature(index),
-  )
-    .filter(feature => feature.type === 2 && !isVectorFinePath(feature))
-    .flatMap(feature =>
-      feature.loadGeometry().flatMap(line =>
-        line.slice(1).map((end, index) => {
-          const start = line[index]
-          return {
-            start,
-            end,
-            left: Math.min(start.x, end.x) - halfStroke,
-            right: Math.max(start.x, end.x) + halfStroke,
-            top: Math.min(start.y, end.y) - halfStroke,
-            bottom: Math.max(start.y, end.y) + halfStroke,
-          }
-        }),
-      ),
-    )
+  const features = Array.from({ length: roadsLayer.length }, (_, index) => roadsLayer.feature(index))
+    .filter(feature => feature.type === 2)
+    .map(feature => ({
+      properties: feature.properties,
+      geometry: { type: 'MultiLineString', coordinates: feature.loadGeometry().map(line =>
+        line.map(point => [point.x / roadsLayer.extent, 1 - point.y / roadsLayer.extent])) },
+    }))
+  const plan = planAtlasRoads(features, {
+    west: originX / roadsLayer.extent, east: (originX + sourceTileSize) / roadsLayer.extent,
+    north: 1 - originY / roadsLayer.extent, south: 1 - (originY + sourceTileSize) / roadsLayer.extent,
+  })
+  const paddedSegments = plan.retained.filter(feature => !isVectorFinePath(feature))
+    .flatMap(feature => feature.geometry.coordinates.slice(1).map((point, index) => {
+      const prior = feature.geometry.coordinates[index]
+      const start = { x: prior[0] * roadsLayer.extent, y: (1 - prior[1]) * roadsLayer.extent }
+      const end = { x: point[0] * roadsLayer.extent, y: (1 - point[1]) * roadsLayer.extent }
+      return { start, end,
+        left: Math.min(start.x, end.x) - halfStroke, right: Math.max(start.x, end.x) + halfStroke,
+        top: Math.min(start.y, end.y) - halfStroke, bottom: Math.max(start.y, end.y) + halfStroke }
+    }))
   // Only segments whose padded bounds intersect this child can cover a sample.
   const tileSegments = paddedSegments.filter(
     segment =>
@@ -175,8 +180,9 @@ const vectorTileStreetFraction = (sourceTile, tile) => {
       segment.bottom >= originY &&
       segment.top <= originY + sourceTileSize,
   )
-  if (!tileSegments.length) return 0
+  if (!tileSegments.length) return { streetFraction: 0, usableFraction: 1 }
 
+  const blocked = new Uint8Array(streetSampleSize * streetSampleSize)
   let coveredSamples = 0
   const halfStrokeSquared = halfStroke * halfStroke
   for (let row = 0; row < streetSampleSize; row += 1) {
@@ -202,17 +208,54 @@ const vectorTileStreetFraction = (sourceTile, tile) => {
         )
       ) {
         coveredSamples += 1
+        blocked[row * streetSampleSize + column] = 1
       }
     }
   }
-  return coveredSamples / (streetSampleSize * streetSampleSize)
+  return {
+    streetFraction: coveredSamples / blocked.length,
+    usableFraction: usableRoadSpace(blocked, streetSampleSize),
+  }
+}
+
+// Remove two sample widths around roads so narrow cracks cannot join
+// otherwise unusable fragments. Measure the largest remaining connected plot.
+export const usableRoadSpace = (blocked: Uint8Array, size: number) => {
+  const free = new Uint8Array(size * size).fill(1)
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+    if (!blocked[y * size + x]) continue
+    for (let row = Math.max(0, y - 2); row <= Math.min(size - 1, y + 2); row++)
+      for (let col = Math.max(0, x - 2); col <= Math.min(size - 1, x + 2); col++)
+        free[row * size + col] = 0
+  }
+  const queue = new Int32Array(free.length)
+  let largest = 0
+  for (let start = 0; start < free.length; start++) {
+    if (!free[start]) continue
+    let head = 0, tail = 1
+    queue[0] = start
+    free[start] = 0
+    while (head < tail) {
+      const cell = queue[head++], x = cell % size
+      const neighbours = [cell - size, cell + size]
+      if (x > 0) neighbours.push(cell - 1)
+      if (x < size - 1) neighbours.push(cell + 1)
+      for (const next of neighbours) {
+        if (next < 0 || next >= free.length || !free[next]) continue
+        free[next] = 0
+        queue[tail++] = next
+      }
+    }
+    largest = Math.max(largest, tail)
+  }
+  return largest / free.length
 }
 
 export const classifyFogEligibility = (
   sourceTile,
   tile: FogEligibilityPosition,
 ): FogEligibility => {
-  const landFraction = vectorTileLandFraction(sourceTile, tile)
+  const { landFraction, coastal } = vectorTileLandFraction(sourceTile, tile)
   if (landFraction === null) {
     return {
       ...tile,
@@ -222,13 +265,15 @@ export const classifyFogEligibility = (
       streetFraction: null,
     }
   }
-  const streetFraction = vectorTileStreetFraction(sourceTile, tile)
+  const { streetFraction, usableFraction } = vectorTileStreetSpace(sourceTile, tile)
   return {
     ...tile,
     isTargetable:
-      landFraction >= landTargetThreshold && streetFraction <= streetTargetThreshold,
+      (landFraction >= (coastal ? coastalLandThreshold : landTargetThreshold)) && usableFraction >= requiredUsableFraction(coastal),
     regionalLandAvailable: true,
     landFraction,
     streetFraction,
+    coastal,
+    usableFraction,
   }
 }
