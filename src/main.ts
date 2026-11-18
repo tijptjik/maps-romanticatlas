@@ -1,3 +1,5 @@
+import { installNativeTileZoom, nativeTileZoom } from './native-tile-zoom.ts'
+import { atlasTileSize } from './atlas-protocol.ts'
 import { installArtworkSampling } from './artwork-sampling.ts'
 import * as maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
@@ -49,7 +51,7 @@ const map = new maplibregl.Map({
   // Atlas interactions use the z18 tile grid. The fog remains visible above it,
   // while generation still requires a complete z18 tile in the viewport.
   minZoom: 16.5,
-  maxZoom: 18.5,
+  maxZoom: Math.max(16.5, nativeTileZoom(atlasTileSize, window.devicePixelRatio)),
   maxBounds: [113.8, 22.1, 114.5, 22.6],
   attributionControl: false,
   // Keep the share capture sharp on high-density displays without exceeding a
@@ -59,6 +61,7 @@ const map = new maplibregl.Map({
 })
 
 installArtworkSampling(map)
+installNativeTileZoom(map, map.getMinZoom())
 installBasemapPreload(map)
 
 const installDeployCommit = (mapContainer: HTMLElement) => {

@@ -63,6 +63,8 @@ const basemapLayers = layers('hongkong-latest', namedFlavor('light'), { lang: 'e
     layer =>
       !layer.id.startsWith('pois') &&
       layer.id !== 'roads_rail' &&
+      layer.id !== 'roads_oneway' &&
+      layer.id !== 'roads_shields' &&
       layer.id !== 'address_label' &&
       !layer.id.startsWith('roads_labels_'),
   )

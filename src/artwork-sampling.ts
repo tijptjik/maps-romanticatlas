@@ -8,6 +8,15 @@ export const originalArtwork = (image: ArtworkImage) => originals.get(image) ?? 
 // MapLibre image sources use a single texture level. Supply a prefiltered
 // level when several artwork pixels fit inside one physical screen pixel.
 export const installArtworkSampling = (map: AtlasMap) => {
+  // MapLibre 6 switches rasters to a pixel-snapped projection at rest.
+  // Atlas images share surveyed corners with unsnapped vector buildings.
+  map.once('load', () => {
+    const transform = map._camera.transform
+    const projectTile = transform.getProjectionData.bind(transform)
+    transform.getProjectionData = params =>
+      projectTile(params.aligned ? { ...params, aligned: false } : params)
+  })
+
   const pyramids = new WeakMap<ArtworkImage, ImageData[]>()
   let frame = 0
 
