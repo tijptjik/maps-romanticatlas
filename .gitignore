@@ -10,3 +10,7 @@ generated-tiles/
 shared-maps/
 .wrangler/
 .playwright-cli
+
+# Local generator working files
+.tmp/
+__pycache__/
