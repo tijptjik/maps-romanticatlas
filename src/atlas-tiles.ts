@@ -6,7 +6,7 @@ import { clickRevealBudgetMs } from './atlas-protocol.ts'
 import { planAtlasRoads } from './atlas-road-plan.ts'
 import { FogQuality } from './fog-quality.ts'
 import { atlasSceneNames, pickAtlasScene, type AtlasScene } from './atlas-scenes.ts'
-import { createAtlasTitleCard, positionAtlasTitleCard } from './atlas-title-cards.ts'
+import { sampleArtworkAlpha, createAtlasTitleCard, positionAtlasTitleCard } from './atlas-title-cards.ts'
 import { loadingConcepts } from './loading-concepts.ts'
 import { atlasZoom, drawingFootprint, tileBounds, tileForPosition } from './tile-geometry.ts'
 import {
@@ -735,12 +735,15 @@ export const addGeneratedTile = async (
   initialOpacity = 0,
   preparedUrl = undefined,
   signal?: AbortSignal,
-  placement?: { bounds: ReturnType<typeof tileBounds>; title: string },
+  placement?: { bounds: ReturnType<typeof tileBounds>; title: string; image: HTMLImageElement },
 ) => {
   const id = `atlas-tile-${tile.x}-${tile.y}`
   if (map.getLayer(id)) return
   const bounds = placement?.bounds ?? tileBounds(tile)
   const fadedUrl = preparedUrl ?? (await withinClickBudget(getFadedTileUrl(url), signal))
+  const alpha = scene && titleCards
+    ? sampleArtworkAlpha(placement?.image ?? await withinClickBudget(decodeTileImage(url), signal))
+    : undefined
   signal?.throwIfAborted()
   map.addSource(id, {
     type: 'image',
@@ -769,8 +772,8 @@ export const addGeneratedTile = async (
   )
   if (scene && titleCards) {
     const card = createAtlasTitleCard(map.getContainer(), scene, placement?.title)
-    titleCards.set(tileId(tile), { card, tile, contentBounds })
-    positionAtlasTitleCard(map, card, tile, contentBounds)
+    titleCards.set(tileId(tile), { card, tile, contentBounds, bounds, alpha })
+    positionAtlasTitleCard(map, card, tile, contentBounds, bounds, alpha)
   }
 }
 
@@ -2630,8 +2633,8 @@ export const installAtlasTileInteractions = (
     })
   }
   const positionTitleCards = () => {
-    titleCards.forEach(({ card, tile, contentBounds }) => {
-      positionAtlasTitleCard(map, card, tile, contentBounds)
+    titleCards.forEach(({ card, tile, contentBounds, bounds, alpha }) => {
+      positionAtlasTitleCard(map, card, tile, contentBounds, bounds, alpha)
     })
   }
 
@@ -2879,7 +2882,7 @@ export const installAtlasTileInteractions = (
         await image.decode()
         if (tileState.get(id) !== 'checking') return
         await addGeneratedTile(map, art, art.url, art.title, titleCards, undefined,
-          0, art.url, undefined, { bounds: footprint.bounds, title: art.title })
+          0, art.url, undefined, { bounds: footprint.bounds, title: art.title, image })
         const frame = { bounds: footprint.bounds, width: image.naturalWidth, height: image.naturalHeight }
         for (const cell of cells) artworkFrames.set(cell, frame)
         const anchor = tileId(art)
