@@ -1,3 +1,4 @@
+import { releaseCatalog, releaseMediaKeys } from '../src/release-media.ts'
 import { createServer } from 'node:http'
 import { createHmac, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto'
 import {
@@ -651,6 +652,7 @@ const findCachedTile = async (tile, excludedUrls?: Set<string>, discovery?: stri
 const listCachedTiles = async (
   requestedVersion: number | null = generationVersion,
   bounds?: { minimumX: number; maximumX: number; minimumY: number; maximumY: number },
+  discoveryOnly = false,
 ) => {
   const cachedTiles = new Set<string>()
   const versionedTiles = []
@@ -688,6 +690,7 @@ const listCachedTiles = async (
             const scene = currentMatch[1]
             const version = Number(currentMatch[2])
             const variant = currentMatch[3] ?? defaultAtlasVariant
+            if (discoveryOnly && !variant.startsWith('discovery-')) continue
             if (isSupportedCacheVersion(version))
               versionedTiles.push({ scene, zoom: atlasZoom, x, y, version, variant })
           }
@@ -1159,6 +1162,27 @@ const server = createServer(async (request, response) => {
   try {
     const pathname = new URL(request.url, 'http://localhost').pathname
 
+    if (request.method === 'GET' || request.method === 'HEAD') {
+      if (pathname === '/atlas-v2/catalog.json' && (isProduction || !await Bun.file(path.join(rootDirectory, 'public', pathname)).exists())) {
+        return sendJson(response, 200, releaseCatalog)
+      }
+      const key = releaseMediaKeys.get(pathname)
+      if (key && (isProduction || !await Bun.file(path.join(rootDirectory, 'public', pathname)).exists())) {
+        const origin = process.env.ATLAS_SHARE_ASSET_ORIGIN || 'https://romanticassets.hype.hk'
+        const media = await fetch(new URL(key, origin), {
+          method: request.method,
+          headers: request.headers.range ? { range: request.headers.range } : {},
+        })
+        const headers = { 'cache-control': 'no-cache' }
+        for (const name of ['content-type', 'content-range', 'accept-ranges']) {
+          const value = media.headers.get(name)
+          if (value) headers[name] = value
+        }
+        response.writeHead(media.status, headers)
+        return response.end(Buffer.from(await media.arrayBuffer()))
+      }
+    }
+
     if (!isProduction && request.method === 'GET' && pathname.startsWith(liveJobPath)) {
       const job = liveJobs.get(pathname.slice(liveJobPath.length))
       if (!job) return sendError(response, 404, 'This generation job has expired.')
@@ -1210,8 +1234,9 @@ const server = createServer(async (request, response) => {
       }
       if (adminMode && rejectAdminAccess(request, response)) return
       if (adminMode) ensureCsrfCookie(request, response)
-      const version = requestedCacheVersion(request) ?? generationVersion
-      const tiles = await listCachedTiles(version)
+      const discoveryOnly = diagnosticsMode && requestSearchParams(request).get('collection') === 'discovery'
+      const version = requestedCacheVersion(request) ?? (discoveryOnly ? null : generationVersion)
+      const tiles = await listCachedTiles(version, undefined, discoveryOnly)
       sendJson(
         response,
         200,

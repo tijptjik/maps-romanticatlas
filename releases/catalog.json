@@ -1,0 +1,3441 @@
+{
+  "release": "v2",
+  "sheets": [
+    {
+      "id": "hku-skyscrapers-current",
+      "title": "HKU Main Building",
+      "accepted": true,
+      "art": [
+        {
+          "title": "The Borrowed Horizon",
+          "x": 214184,
+          "y": 114420,
+          "rows": 2,
+          "url": "/hku-skyscrapers-in-place/mirror-garden/the-borrowed-horizon.webp?v=75266549d24a76eb"
+        },
+        {
+          "title": "The Harbour Rehearsal Tank",
+          "x": 214184,
+          "y": 114420,
+          "rows": 2,
+          "url": "/hku-skyscrapers-in-place/campus-editions/the-harbour-rehearsal-tank.webp?v=4a1360faff9d0b35"
+        },
+        {
+          "title": "An Address for Lost Streets",
+          "x": 214184,
+          "y": 114420,
+          "rows": 2,
+          "url": "/hku-skyscrapers-in-place/campus-editions/an-address-for-lost-streets.webp?v=26301e02c3e5314c"
+        },
+        {
+          "title": "The Quiet Eye",
+          "x": 214184,
+          "y": 114420,
+          "rows": 2,
+          "url": "/hku-skyscrapers-in-place/shard-shelter/the-quiet-eye.webp?v=4c255cb32c3d58d2"
+        },
+        {
+          "title": "The Theatre That Grows Back",
+          "x": 214184,
+          "y": 114420,
+          "rows": 2,
+          "url": "/hku-skyscrapers-in-place/campus-editions/the-theatre-that-grows-back.webp?v=3ccca1def554dc54"
+        }
+      ]
+    },
+    {
+      "id": "harbour-curiosities-v2-01",
+      "title": "Harbour Curiosities",
+      "accepted": true,
+      "art": [
+        {
+          "title": "Mermaid Transformation Station",
+          "x": 214205,
+          "y": 114420,
+          "rows": 1,
+          "url": "/harbour-curiosities/214205-114420.webp?v=82de5196697b9152"
+        },
+        {
+          "title": "The Walking Yacht Club",
+          "x": 214209,
+          "y": 114419,
+          "rows": 1,
+          "url": "/harbour-curiosities/214209-114419.webp?v=9bfa9a33a83001ed"
+        },
+        {
+          "title": "The Staircase Foundation",
+          "x": 214210,
+          "y": 114419,
+          "rows": 1,
+          "url": "/harbour-curiosities/214210-114419.webp?v=35872eb7dceab0fb"
+        },
+        {
+          "title": "The Car-to-Boat Works",
+          "x": 214211,
+          "y": 114419,
+          "rows": 1,
+          "url": "/harbour-curiosities/214211-114419.webp?v=aa68798ced4a84f1"
+        },
+        {
+          "title": "Flying Fish Burger Pier",
+          "x": 214211,
+          "y": 114420,
+          "rows": 1,
+          "url": "/harbour-curiosities/214211-114420.webp?v=2bf3a5e8a5969ba4"
+        }
+      ]
+    },
+    {
+      "id": "harbour-curiosities-v2-02",
+      "title": "Harbour Curiosities",
+      "accepted": true,
+      "art": [
+        {
+          "title": "The Bottle Post Sorting Office",
+          "x": 214212,
+          "y": 114420,
+          "rows": 1,
+          "url": "/harbour-curiosities/214212-114420.webp?v=3ca61892b9e9b0df"
+        },
+        {
+          "title": "The Breakwater Organ",
+          "x": 214213,
+          "y": 114420,
+          "rows": 1,
+          "url": "/harbour-curiosities/214213-114420.webp?v=554f9f1394b2cc4f"
+        },
+        {
+          "title": "The Moon Jelly Lantern Library",
+          "x": 214214,
+          "y": 114420,
+          "rows": 1,
+          "url": "/harbour-curiosities/214214-114420.webp?v=eeb01a62e7f5f476"
+        }
+      ]
+    },
+    {
+      "id": "south-island-shore-v2-01",
+      "title": "Hong Kong Island’s Southern Shore",
+      "accepted": true,
+      "art": [
+        {
+          "title": "Lighthouse and Signal Station · Cape D’Aguilar",
+          "x": 214272,
+          "y": 114478,
+          "rows": 1,
+          "url": "/south-island-shore/214272-114478.webp?v=14341ef2b5e4f5dd"
+        },
+        {
+          "title": "Pirate Harbour · Shek O",
+          "x": 214268,
+          "y": 114463,
+          "rows": 1,
+          "url": "/south-island-shore/214268-114463.webp?v=aec572f2863158f1"
+        },
+        {
+          "title": "Victorian Canal Lock · Aberdeen",
+          "x": 214195,
+          "y": 114448,
+          "rows": 1,
+          "url": "/south-island-shore/214195-114448.webp?v=4210446bf286c633"
+        },
+        {
+          "title": "Victorian pleasure pier · Repulse Bay",
+          "x": 214227,
+          "y": 114457,
+          "rows": 1,
+          "url": "/south-island-shore/214227-114457.webp?v=314e5617885bd27a"
+        },
+        {
+          "title": "Tidal bathhouse · South Bay",
+          "x": 214228,
+          "y": 114469,
+          "rows": 1,
+          "url": "/south-island-shore/214228-114469.webp?v=26b56dee80247463"
+        }
+      ]
+    },
+    {
+      "id": "south-island-shore-v2-02",
+      "title": "Hong Kong Island’s Southern Shore",
+      "accepted": true,
+      "art": [
+        {
+          "title": "Floating opera · Stanley",
+          "x": 214236,
+          "y": 114472,
+          "rows": 1,
+          "url": "/south-island-shore/214236-114472.webp?v=5d0342fecb0118aa"
+        },
+        {
+          "title": "Shipwrights’ floating dry dock · Wong Chuk Hang",
+          "x": 214204,
+          "y": 114453,
+          "rows": 1,
+          "url": "/south-island-shore/214204-114453.webp?v=7f033d1f0260a899"
+        },
+        {
+          "title": "Marine botanical conservatory · Chung Hom Kok",
+          "x": 214227,
+          "y": 114477,
+          "rows": 1,
+          "url": "/south-island-shore/214227-114477.webp?v=bb09a642080f2b34"
+        },
+        {
+          "title": "Mermaid Transformation Station · Deep Water Bay",
+          "x": 214216,
+          "y": 114450,
+          "rows": 1,
+          "url": "/south-island-shore/214216-114450.webp?v=c5a5147dbef74c12"
+        },
+        {
+          "title": "The Walking Yacht Club · Middle Island Channel",
+          "x": 214221,
+          "y": 114456,
+          "rows": 1,
+          "url": "/south-island-shore/214221-114456.webp?v=58fc7a18ec1bfbde"
+        }
+      ]
+    },
+    {
+      "id": "south-island-shore-v2-03",
+      "title": "Hong Kong Island’s Southern Shore",
+      "accepted": true,
+      "art": [
+        {
+          "title": "The Staircase Foundation · Bluff Head",
+          "x": 214238,
+          "y": 114489,
+          "rows": 1,
+          "url": "/south-island-shore/214238-114489.webp?v=73c6222d7116ea21"
+        },
+        {
+          "title": "The Car-to-Boat Works · Wah Fu",
+          "x": 214183,
+          "y": 114447,
+          "rows": 1,
+          "url": "/south-island-shore/214183-114447.webp?v=cd06d1b23e0129f1"
+        },
+        {
+          "title": "Flying Fish Burger Pier · St. Stephen’s Beach",
+          "x": 214238,
+          "y": 114478,
+          "rows": 1,
+          "url": "/south-island-shore/214238-114478.webp?v=abd68e3241198616"
+        },
+        {
+          "title": "The Bottle Post Sorting Office · Tai Tam Bay",
+          "x": 214247,
+          "y": 114460,
+          "rows": 1,
+          "url": "/south-island-shore/214247-114460.webp?v=1541f19109f0ec30"
+        },
+        {
+          "title": "The Breakwater Organ · Brick Hill",
+          "x": 214208,
+          "y": 114462,
+          "rows": 1,
+          "url": "/south-island-shore/214208-114462.webp?v=5a023e88b212ee97"
+        }
+      ]
+    },
+    {
+      "id": "south-island-shore-v2-04",
+      "title": "Hong Kong Island’s Southern Shore",
+      "accepted": true,
+      "art": [
+        {
+          "title": "The Moon Jelly Lantern Library · Middle Bay",
+          "x": 214228,
+          "y": 114462,
+          "rows": 1,
+          "url": "/south-island-shore/214228-114462.webp?v=c24d21b9206cc892"
+        }
+      ]
+    },
+    {
+      "id": "hku-ring-214185-114420",
+      "title": "East of HKU Main Building",
+      "accepted": true,
+      "art": [
+        {
+          "title": "The Office of Unwanted Gifts",
+          "x": 214185,
+          "y": 114420,
+          "rows": 1,
+          "url": "/atlas-v2/hku-ring-214185-114420/office-of-unwanted-gifts.webp?v=1aec592aab4c6238"
+        },
+        {
+          "title": "The Bridge Takes a Breath",
+          "x": 214185,
+          "y": 114420,
+          "rows": 1,
+          "url": "/atlas-v2/hku-ring-214185-114420/2.webp?v=d44489a4729d7f0b"
+        },
+        {
+          "title": "The Shoe Tide",
+          "x": 214185,
+          "y": 114420,
+          "rows": 1,
+          "url": "/atlas-v2/hku-ring-214185-114420/3.webp?v=9df7b8fe6834ec4f"
+        },
+        {
+          "title": "The Steam Laundry Express",
+          "x": 214185,
+          "y": 114420,
+          "rows": 1,
+          "url": "/atlas-v2/hku-ring-214185-114420/4.webp?v=a3e1ea55b450783c"
+        }
+      ],
+      "isolated": true
+    },
+    {
+      "id": "hku-ring-214184-114421",
+      "title": "South of HKU Main Building",
+      "accepted": true,
+      "art": [
+        {
+          "title": "Time in a Revolving Door",
+          "x": 214184,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/hku-ring-214184-114421/1.webp?v=2ba0f4f8f8f1494e"
+        },
+        {
+          "title": "The Haptic Arcade",
+          "x": 214184,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/hku-ring-214184-114421/2.webp?v=2c7fc6b127329451"
+        },
+        {
+          "title": "The Edible Moon Calendar",
+          "x": 214184,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/hku-ring-214184-114421/3.webp?v=fd4410385e409f5d"
+        },
+        {
+          "title": "A City One Plank Deep",
+          "x": 214184,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/hku-ring-214184-114421/4.webp?v=2399c8a96a3a4c71"
+        }
+      ],
+      "isolated": true
+    },
+    {
+      "id": "hku-ring-214184-114418",
+      "title": "North of HKU Main Building",
+      "accepted": true,
+      "art": [
+        {
+          "title": "The Borrowing Orchard",
+          "x": 214184,
+          "y": 114418,
+          "rows": 1,
+          "url": "/atlas-v2/hku-ring-214184-114418/1.webp?v=05f5e3da0959746f"
+        },
+        {
+          "title": "An Orchestra Under Glass",
+          "x": 214184,
+          "y": 114418,
+          "rows": 1,
+          "url": "/atlas-v2/hku-ring-214184-114418/2.webp?v=ef46f481956b5796"
+        },
+        {
+          "title": "Wings Awaiting Bodies",
+          "x": 214184,
+          "y": 114418,
+          "rows": 1,
+          "url": "/atlas-v2/hku-ring-214184-114418/3.webp?v=db0ee094c767fa7f"
+        },
+        {
+          "title": "A Market by the Slice",
+          "x": 214184,
+          "y": 114418,
+          "rows": 1,
+          "url": "/atlas-v2/hku-ring-214184-114418/4.webp?v=70ca41590f4acb80"
+        }
+      ],
+      "isolated": true
+    },
+    {
+      "id": "ancient-temple",
+      "title": "Ancient Temple",
+      "accepted": true,
+      "art": [
+        {
+          "title": "Ancient Temple",
+          "x": 214179,
+          "y": 114419,
+          "rows": 1,
+          "url": "/atlas-v2/ancient-temple.png?v=08c1b579d864a084"
+        }
+      ]
+    },
+    {
+      "id": "hku-ring-214183-114419",
+      "title": "Po Ga Building · West of HKU Main Building",
+      "accepted": true,
+      "art": [
+        {
+          "title": "A Constellation You Can Borrow",
+          "x": 214183,
+          "y": 114419,
+          "rows": 1,
+          "url": "/atlas-v2/hku-ring-214183-114419/1.webp?v=1c28e6b651dff9b7"
+        },
+        {
+          "title": "The Afternoon Orchard",
+          "x": 214183,
+          "y": 114419,
+          "rows": 1,
+          "url": "/atlas-v2/hku-ring-214183-114419/2.webp?v=4b595a2dd7e8081a"
+        },
+        {
+          "title": "The Root Readers",
+          "x": 214183,
+          "y": 114419,
+          "rows": 1,
+          "url": "/atlas-v2/hku-ring-214183-114419/3.webp?v=b83ca561dc4dbc82"
+        },
+        {
+          "title": "The Dye Stair",
+          "x": 214183,
+          "y": 114419,
+          "rows": 1,
+          "url": "/atlas-v2/hku-ring-214183-114419/4.webp?v=24656997768945f5"
+        }
+      ],
+      "isolated": true
+    },
+    {
+      "id": "harbour-airworks",
+      "title": "Skyscrapers · The Harbour Airworks",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Mica Fountain",
+          "x": 214192,
+          "y": 114377,
+          "rows": 2,
+          "url": "/harbour-airworks/214192-114377.webp?v=6eca4d66e87f35e5",
+          "animation": {
+            "glitterOrigin": [
+              0.537065,
+              -0.376339
+            ],
+            "pixelsPerTile": 1254
+          }
+        },
+        {
+          "title": "The Eclipse Theatre",
+          "x": 214231,
+          "y": 114455,
+          "rows": 2,
+          "url": "/harbour-airworks/214231-114455.webp?v=aaa6b58ee743a563",
+          "animation": {
+            "auditoriumOriginPixels": [
+              460,
+              1290
+            ],
+            "pixelsPerTile": 1254
+          }
+        },
+        {
+          "title": "The Samara Port",
+          "x": 214190,
+          "y": 114379,
+          "rows": 2,
+          "url": "/atlas-v2/harbour-airworks-214190-114379-1cb334f8e0006c41.webp",
+          "animation": {
+            "motion": {
+              "sprite": "samara-glider",
+              "box": [
+                989,
+                1400,
+                1085,
+                1444
+              ]
+            },
+            "folder": "harbour-airworks",
+            "plate": "/harbour-airworks/214190-114379.webp?v=b3d339858919aa26",
+            "pixelsPerTile": 1254
+          }
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "western-district-towers",
+      "title": "Skyscrapers · Western District Towers",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Tidal Telegraph",
+          "x": 214185,
+          "y": 114417,
+          "rows": 2,
+          "url": "/western-district-towers/214185-114417.webp?v=b6528bd1cbeb0ce1"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "kowloon-grand-skyworks",
+      "title": "Skyscrapers · The Grand Skyworks of Kowloon",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Dragon Moon Gate",
+          "x": 214200,
+          "y": 114376,
+          "rows": 2,
+          "url": "/kowloon-grand-skyworks/214200-114376.webp?v=88f40cddfffa1bb8"
+        },
+        {
+          "title": "The Saffron Balloon Inn",
+          "x": 214207,
+          "y": 114409,
+          "rows": 2,
+          "url": "/kowloon-grand-skyworks/214207-114409.webp?v=4406ba9eed25f7b8"
+        },
+        {
+          "title": "The Flying Whale Post",
+          "x": 214208,
+          "y": 114381,
+          "rows": 2,
+          "url": "/kowloon-grand-skyworks/214208-114381.webp?v=e7d8276355597313"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "coasters",
+      "title": "Two-tile coaster studies",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Photo Finish",
+          "x": 214215,
+          "y": 114427,
+          "columns": 2,
+          "rows": 1,
+          "url": "/atlas-v2/coasters/photo-finish-connected.png"
+        },
+        {
+          "title": "The Counterweight Ballet",
+          "x": 214200,
+          "y": 114407,
+          "columns": 2,
+          "rows": 1,
+          "url": "/atlas-v2/coasters/counterweight-ballet-cleared.png"
+        },
+        {
+          "title": "After the Shutters Rise",
+          "x": 214205,
+          "y": 114394,
+          "columns": 1,
+          "rows": 2,
+          "url": "/atlas-v2/coasters/shutters-rise-loop.png"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "peak-maquette",
+      "title": "Hong Kong in the Clouds · The Peak",
+      "isolated": true,
+      "art": [
+        {
+          "title": "Hong Kong in the Clouds",
+          "x": 214185,
+          "y": 114426,
+          "columns": 3,
+          "rows": 1,
+          "url": "/atlas-v2/peak-maquette/hong-kong-in-the-clouds-scaled.png"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "hku-cell-pilot",
+      "title": "Haking Wong Podium · Four alternatives",
+      "isolated": true,
+      "art": [
+        {
+          "title": "A Zoo of Departures",
+          "x": 214183,
+          "y": 114420,
+          "rows": 1,
+          "url": "/atlas-v2/hku-cell-pilot/2.webp?v=c697e94b5b89"
+        },
+        {
+          "title": "The Marble Holiday",
+          "x": 214183,
+          "y": 114420,
+          "rows": 1,
+          "url": "/atlas-v2/hku-cell-pilot/3.webp?v=7d7e9c8f8202"
+        },
+        {
+          "title": "The Amber Stair",
+          "x": 214183,
+          "y": 114420,
+          "rows": 1,
+          "url": "/atlas-v2/hku-cell-pilot/4.webp?v=8e6f58a87350"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "hku-ring-214185-114419",
+      "title": "Stewart Building · East of HKU Main Building",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Unrolled Landscape",
+          "x": 214185,
+          "y": 114419,
+          "rows": 1,
+          "url": "/atlas-v2/hku-ring-214185-114419/1.webp?v=5c924b3d00ba"
+        },
+        {
+          "title": "The Self-Mending Elephant",
+          "x": 214185,
+          "y": 114419,
+          "rows": 1,
+          "url": "/atlas-v2/hku-ring-214185-114419/2.webp?v=f9141b17c7ce"
+        },
+        {
+          "title": "The Street That Unpeels",
+          "x": 214185,
+          "y": 114419,
+          "rows": 1,
+          "url": "/atlas-v2/hku-ring-214185-114419/3.webp?v=62ccf72fc6ea"
+        },
+        {
+          "title": "The Petition Orchard",
+          "x": 214185,
+          "y": 114419,
+          "rows": 1,
+          "url": "/atlas-v2/hku-ring-214185-114419/4.webp?v=9e811e6bbfa5"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "hku-ring-214185-114421",
+      "title": "Six studies southeast of HKU Main Building",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Sleepwalking Wardrobe",
+          "x": 214185,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/hku-ring-214185-114421/the-sleepwalking-wardrobe-campus-274291590d96.webp"
+        },
+        {
+          "title": "The Sleeve Exchange",
+          "x": 214185,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/hku-ring-214185-114421/the-sleeve-exchange-campus-d1b65fe53e4b.webp"
+        },
+        {
+          "title": "A Street Cast Overnight",
+          "x": 214185,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/hku-ring-214185-114421/a-street-cast-overnight-campus-78397df7a1b0.webp"
+        },
+        {
+          "title": "The Astronomer's Mobile",
+          "x": 214185,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/hku-ring-214185-114421/the-astronomers-mobile-campus-436ac602bc1b.webp"
+        },
+        {
+          "title": "The Root Readers",
+          "x": 214185,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/hku-ring-214185-114421/the-root-readers-campus-869a51d1b63d.webp"
+        },
+        {
+          "title": "The City in Carbon Paper",
+          "x": 214185,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/hku-ring-214185-114421/the-city-in-carbon-paper-campus-e795c277112b.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "hku-ring-editorial-114418",
+      "title": "The Silver Bath and three Sai Ying Pun revisions",
+      "isolated": true,
+      "art": [
+        {
+          "x": 214186,
+          "y": 114418,
+          "rows": 1,
+          "title": "The Walk Through a Breath",
+          "url": "/atlas-v2/hku-ring-editorial-114418/0056-a4b9b19a957576bb.webp"
+        },
+        {
+          "x": 214186,
+          "y": 114418,
+          "rows": 1,
+          "title": "The Steam Laundry Express",
+          "url": "/atlas-v2/hku-ring-editorial-114418/0055-8fc89eaa5c606fab.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-retained-18-214183-114434",
+      "title": "Wind Farm · 18/214183/114434",
+      "isolated": true,
+      "art": [
+        {
+          "title": "Wind Farm",
+          "x": 214183,
+          "y": 114434,
+          "rows": 1,
+          "url": "/generated-tiles/18/214183/114434/wind-farm?version=6&variant=discovery-2d6298a1-e9e0-414b-a643-4da5cdfe8554-164a5662b2de"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214183-114418",
+      "title": "永華大廈 Wing Wah Mansion · HKU ring 1 · 18/214183/114418",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Great Mortar Ballet",
+          "x": 214183,
+          "y": 114418,
+          "rows": 1,
+          "url": "/atlas-v2/production/0001-01acdb1d78a13bfd.webp"
+        },
+        {
+          "title": "A Skeleton for Rain",
+          "x": 214183,
+          "y": 114418,
+          "rows": 1,
+          "url": "/atlas-v2/production/0003-b24451f850507900.webp"
+        },
+        {
+          "title": "The Folded Peacock",
+          "x": 214183,
+          "y": 114418,
+          "rows": 1,
+          "url": "/atlas-v2/production/0004-775f4f3855a7e1c7.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214183-114421",
+      "title": "HKU ring 1 · 18/214183/114421",
+      "isolated": true,
+      "art": [
+        {
+          "title": "Orbit of the Ginger",
+          "x": 214183,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0005-182ad518f261a7d2.webp"
+        },
+        {
+          "title": "The Lightning Quilt",
+          "x": 214183,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0006-6807d11a5f24ecf9.webp"
+        },
+        {
+          "title": "The Crossing Belongs to Them",
+          "x": 214183,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0007-410f95aacc478091.webp"
+        },
+        {
+          "title": "The Threadbare Wheel",
+          "x": 214183,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0008-bd84c4c824385f93.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214185-114418",
+      "title": "第一座 Block 1 · HKU ring 1 · 18/214185/114418",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Sunflower Swap",
+          "x": 214185,
+          "y": 114418,
+          "rows": 1,
+          "url": "/atlas-v2/production/0009-3aac08c47f4c1284.webp"
+        },
+        {
+          "title": "The Unfinished Question",
+          "x": 214185,
+          "y": 114418,
+          "rows": 1,
+          "url": "/atlas-v2/production/0010-1ee6c61bdb797939.webp"
+        },
+        {
+          "title": "The Fragments' Supper",
+          "x": 214185,
+          "y": 114418,
+          "rows": 1,
+          "url": "/atlas-v2/production/0011-984e923c9af21b4f.webp"
+        },
+        {
+          "title": "The Memory Tailors",
+          "x": 214185,
+          "y": 114418,
+          "rows": 1,
+          "url": "/atlas-v2/production/0012-158af731cec83631.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214182-114417",
+      "title": "太平洋廣場 Pacific Plaza · HKU ring 2 · 18/214182/114417",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Listening Comb",
+          "x": 214182,
+          "y": 114417,
+          "rows": 1,
+          "url": "/atlas-v2/production/0017-973f7b31e811f834.webp"
+        },
+        {
+          "title": "The Borrowed Reflection",
+          "x": 214182,
+          "y": 114417,
+          "rows": 1,
+          "url": "/atlas-v2/production/0018-b5d8852eac79375b.webp"
+        },
+        {
+          "title": "Mountains by the Metre",
+          "x": 214182,
+          "y": 114417,
+          "rows": 1,
+          "url": "/atlas-v2/production/0019-e065f66a7b5bd342.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214182-114418",
+      "title": "新安大樓 Sun On Building · HKU ring 2 · 18/214182/114418",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Spiral Guests",
+          "x": 214182,
+          "y": 114418,
+          "rows": 1,
+          "url": "/atlas-v2/production/0020-ad2837392989af0a.webp"
+        },
+        {
+          "title": "The City in Carbon Paper",
+          "x": 214182,
+          "y": 114418,
+          "rows": 1,
+          "url": "/atlas-v2/production/0021-0677ee9a55b8a384.webp"
+        },
+        {
+          "title": "The Dancefloor Has Pockets",
+          "x": 214182,
+          "y": 114418,
+          "rows": 1,
+          "url": "/atlas-v2/production/0022-01ba3d70f10b1644.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214182-114419",
+      "title": "A座 Block A · HKU ring 2 · 18/214182/114419",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Arithmetic Laundry",
+          "x": 214182,
+          "y": 114419,
+          "rows": 1,
+          "url": "/atlas-v2/production/0023-6f43d4be9b5a0c5b.webp"
+        },
+        {
+          "title": "A Shelf for Every Tide",
+          "x": 214182,
+          "y": 114419,
+          "rows": 1,
+          "url": "/atlas-v2/production/0024-0600c3018602f35f.webp"
+        },
+        {
+          "title": "The Crater in the Courtyard",
+          "x": 214182,
+          "y": 114419,
+          "rows": 1,
+          "url": "/atlas-v2/production/0025-6b97e252e2e11c39.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214182-114420",
+      "title": "Central Podium · HKU ring 2 · 18/214182/114420",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Station That Braids Trains",
+          "x": 214182,
+          "y": 114420,
+          "rows": 1,
+          "url": "/atlas-v2/production/0027-ce22e8776e082db9.webp"
+        },
+        {
+          "title": "The Rain Inheritance",
+          "x": 214182,
+          "y": 114420,
+          "rows": 1,
+          "url": "/atlas-v2/production/0028-f0433e1037fae6c5.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214182-114421",
+      "title": "HKU ring 2 · 18/214182/114421",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Cloud Printing Bed",
+          "x": 214182,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0029-93126310cee915cd.webp"
+        },
+        {
+          "title": "The Pollen Weighhouse",
+          "x": 214182,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0030-18caf98a9a128734.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214182-114422",
+      "title": "HKU ring 2 · 18/214182/114422",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Camera Orchard",
+          "x": 214182,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0032-ded2cdafaaa99099.webp"
+        },
+        {
+          "title": "The Polished Laundry",
+          "x": 214182,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0034-6879ba180a7d8afa.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214183-114417",
+      "title": "得富大樓 Des Voeux Road West Building · HKU ring 2 · 18/214183/114417",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Marble Holiday",
+          "x": 214183,
+          "y": 114417,
+          "rows": 1,
+          "url": "/atlas-v2/production/0035-d0334a04cf190b69.webp"
+        },
+        {
+          "title": "The Shade Cooperative",
+          "x": 214183,
+          "y": 114417,
+          "rows": 1,
+          "url": "/atlas-v2/production/0036-01ae9237b9d2fa98.webp"
+        },
+        {
+          "title": "A Mill for Shadows",
+          "x": 214183,
+          "y": 114417,
+          "rows": 1,
+          "url": "/atlas-v2/production/0037-2e3463a726bccd7c.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214183-114422",
+      "title": "HKU ring 2 · 18/214183/114422",
+      "isolated": true,
+      "art": [
+        {
+          "title": "Archaeological Excavation",
+          "x": 214183,
+          "y": 114422,
+          "rows": 1,
+          "url": "/generated-tiles/18/214183/114422/archaeological-excavation?version=6&variant=discovery-0fb5cf43-b8da-4536-a33e-6ac2d1f2adce-b1853274ce3f"
+        },
+        {
+          "title": "The Public Staircase",
+          "x": 214183,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0038-4a062526415e9f6a.webp"
+        },
+        {
+          "title": "The Procession of Feet",
+          "x": 214183,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0039-91f23b6e1fcb45f2.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214184-114417",
+      "title": "A座 Block A · HKU ring 2 · 18/214184/114417",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Foldaway Audience",
+          "x": 214184,
+          "y": 114417,
+          "rows": 1,
+          "url": "/atlas-v2/production/0040-a9f8736dd639eb28.webp"
+        },
+        {
+          "title": "The Nocturnal Curtain",
+          "x": 214184,
+          "y": 114417,
+          "rows": 1,
+          "url": "/atlas-v2/production/0041-60441a393ec05d4d.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214184-114422",
+      "title": "龍虎山環境教育中心 Lung Fu Shan Environmental Education Centre · HKU ring 2 · 18/214184/114422",
+      "isolated": true,
+      "art": [
+        {
+          "title": "Photography Studio",
+          "x": 214184,
+          "y": 114422,
+          "rows": 1,
+          "url": "/generated-tiles/18/214184/114422/photography-studio?version=6&variant=discovery-3f9be3dc-1e5d-4420-8f3c-ca46c40db71c-a941ba95b622"
+        },
+        {
+          "title": "The Horizontal Horizon",
+          "x": 214184,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0043-9096c4ca719ef9cd.webp"
+        },
+        {
+          "title": "Rehearsal for a Falling Moon",
+          "x": 214184,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0044-01a2ffb6feb0e9a6.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214185-114422",
+      "title": "旭龢道食水配水庫 Kotewall Road Fresh Water Service Reservoir · HKU ring 2 · 18/214185/114422",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Self-Mending Elephant",
+          "x": 214185,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0048-95a19619447fb32a.webp"
+        },
+        {
+          "title": "Numbers on the Half Shell",
+          "x": 214185,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0049-fa6309c0f83b1639.webp"
+        },
+        {
+          "title": "The Common Table Harvest",
+          "x": 214185,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0050-057deca957e1d03e.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214186-114417",
+      "title": "西區裁判法院大樓 Western Magistracy Building · HKU ring 2 · 18/214186/114417",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Street That Unpeels",
+          "x": 214186,
+          "y": 114417,
+          "rows": 1,
+          "url": "/atlas-v2/production/0051-a5532ac82f3081d8.webp"
+        },
+        {
+          "title": "A Battery of Pickles",
+          "x": 214186,
+          "y": 114417,
+          "rows": 1,
+          "url": "/atlas-v2/production/0052-c2770687f7e94400.webp"
+        },
+        {
+          "title": "The Rain Cache",
+          "x": 214186,
+          "y": 114417,
+          "rows": 1,
+          "url": "/atlas-v2/production/0053-b66d77686ac15264.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214186-114419",
+      "title": "第二座 Tower 2 · HKU ring 2 · 18/214186/114419",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Kelp Harp",
+          "x": 214186,
+          "y": 114419,
+          "rows": 1,
+          "url": "/atlas-v2/production/0058-d5808e6d2ed76b36.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214186-114420",
+      "title": "西區軍營 Western Barracks · HKU ring 2 · 18/214186/114420",
+      "isolated": true,
+      "art": [
+        {
+          "title": "Wings Awaiting Bodies",
+          "x": 214186,
+          "y": 114420,
+          "rows": 1,
+          "url": "/atlas-v2/production/0062-250c15251a532e08.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214186-114421",
+      "title": "梅堂 May Hall · HKU ring 2 · 18/214186/114421",
+      "isolated": true,
+      "art": [
+        {
+          "title": "A Street Learns to Float",
+          "x": 214186,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0063-8fcf430c44cc4e88.webp"
+        },
+        {
+          "title": "The Confectioner's Eclipse",
+          "x": 214186,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0065-b45a814c66a02aaf.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214186-114422",
+      "title": "Block 1 · HKU ring 2 · 18/214186/114422",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Afternoon Orchard",
+          "x": 214186,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0066-9d3094560237ec93.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214181-114416",
+      "title": "HKU ring 3 · 18/214181/114416",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Bridge Takes a Breath",
+          "x": 214181,
+          "y": 114416,
+          "rows": 1,
+          "url": "/atlas-v2/production/0069-0387d271a77e2142.webp"
+        },
+        {
+          "title": "The Bobbin Borough",
+          "x": 214181,
+          "y": 114416,
+          "rows": 1,
+          "url": "/atlas-v2/production/0070-8f4d716a00856561.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214181-114417",
+      "title": "Harbour One · HKU ring 3 · 18/214181/114417",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Silver Reedbed",
+          "x": 214181,
+          "y": 114417,
+          "rows": 1,
+          "url": "/atlas-v2/production/0071-b550155e8d4941c7.webp"
+        },
+        {
+          "title": "A Shadow of the Missing Wall",
+          "x": 214181,
+          "y": 114417,
+          "rows": 1,
+          "url": "/atlas-v2/production/0072-1e55b7b81a157639.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214181-114419",
+      "title": "第五座 Tower 5 · HKU ring 3 · 18/214181/114419",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Moving Moon Gate",
+          "x": 214181,
+          "y": 114419,
+          "rows": 1,
+          "url": "/atlas-v2/production/0075-c6ec417976407636.webp"
+        },
+        {
+          "title": "The White City Melt",
+          "x": 214181,
+          "y": 114419,
+          "rows": 1,
+          "url": "/atlas-v2/production/0076-e81b45823da9fbff.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214181-114420",
+      "title": "Central Podium · HKU ring 3 · 18/214181/114420",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Park on a Hinge",
+          "x": 214181,
+          "y": 114420,
+          "rows": 1,
+          "url": "/atlas-v2/production/0078-03432ca3fce308ea.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214181-114421",
+      "title": "HKU ring 3 · 18/214181/114421",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Hedge That Reads Your Shadow",
+          "x": 214181,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0079-b0b8ae0ce662ed53.webp"
+        },
+        {
+          "title": "The Velvet Pendulum",
+          "x": 214181,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0080-04d3505e5950fdbc.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214181-114422",
+      "title": "HKU ring 3 · 18/214181/114422",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Herbarium Unpressed",
+          "x": 214181,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0081-83e513e160230cdd.webp"
+        },
+        {
+          "title": "The Static Menagerie",
+          "x": 214181,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0082-a4c3d87676246526.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214181-114423",
+      "title": "HKU ring 3 · 18/214181/114423",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Cabinet of Hands",
+          "x": 214181,
+          "y": 114423,
+          "rows": 1,
+          "url": "/atlas-v2/production/0083-bd449ee3528a5e87.webp"
+        },
+        {
+          "title": "The Court of Common Weight",
+          "x": 214181,
+          "y": 114423,
+          "rows": 1,
+          "url": "/atlas-v2/production/0084-d1a7e98bba377586.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214182-114416",
+      "title": "西區副食品批發市場 Western Wholesale Food Market · HKU ring 3 · 18/214182/114416",
+      "isolated": true,
+      "art": [
+        {
+          "title": "A Solar System in the Wash",
+          "x": 214182,
+          "y": 114416,
+          "rows": 1,
+          "url": "/atlas-v2/production/0085-725471150f49c926.webp"
+        },
+        {
+          "title": "One Grain High",
+          "x": 214182,
+          "y": 114416,
+          "rows": 1,
+          "url": "/atlas-v2/production/0086-ebcef59162159c93.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214182-114423",
+      "title": "HKU ring 3 · 18/214182/114423",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Cabinet of Soft Thunder",
+          "x": 214182,
+          "y": 114423,
+          "rows": 1,
+          "url": "/atlas-v2/production/0087-4af79893a6e28e15.webp"
+        },
+        {
+          "title": "A Market by the Slice",
+          "x": 214182,
+          "y": 114423,
+          "rows": 1,
+          "url": "/atlas-v2/production/0088-01f16d01327b42a5.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214183-114416",
+      "title": "西區副食品批發市場 Western Wholesale Food Market · HKU ring 3 · 18/214183/114416",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Unrolled Landscape",
+          "x": 214183,
+          "y": 114416,
+          "rows": 1,
+          "url": "/atlas-v2/production/0090-83a7530b444f93be.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214183-114423",
+      "title": "HKU ring 3 · 18/214183/114423",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Clockwork Picnic Line",
+          "x": 214183,
+          "y": 114423,
+          "rows": 1,
+          "url": "/atlas-v2/production/0091-ada9e34243aeab04.webp"
+        },
+        {
+          "title": "The Chromatic Staircase",
+          "x": 214183,
+          "y": 114423,
+          "rows": 1,
+          "url": "/atlas-v2/production/0092-6cc2569a7a0a13dd.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214184-114416",
+      "title": "香港電車有限公司 Hong Kong Tramways Limited · HKU ring 3 · 18/214184/114416",
+      "isolated": true,
+      "art": [
+        {
+          "title": "Lilies for the Night Shift",
+          "x": 214184,
+          "y": 114416,
+          "rows": 1,
+          "url": "/atlas-v2/production/0094-059194cdfe1e5846.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214184-114423",
+      "title": "克頓道海水配水庫 Hatton Road Salt Water Service Reservoir · HKU ring 3 · 18/214184/114423",
+      "isolated": true,
+      "art": [
+        {
+          "title": "A Roof for Every Seed",
+          "x": 214184,
+          "y": 114423,
+          "rows": 1,
+          "url": "/atlas-v2/production/0095-a31d58be44e9ed2f.webp"
+        },
+        {
+          "title": "The Great Knot Garden",
+          "x": 214184,
+          "y": 114423,
+          "rows": 1,
+          "url": "/atlas-v2/production/0096-be853b24c01af3bf.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214185-114423",
+      "title": "Block D · HKU ring 3 · 18/214185/114423",
+      "isolated": true,
+      "art": [
+        {
+          "title": "A Constellation You Can Borrow",
+          "x": 214185,
+          "y": 114423,
+          "rows": 1,
+          "url": "/atlas-v2/production/0099-d76a944a650b42d3.webp"
+        },
+        {
+          "title": "The Maze Goes to Market",
+          "x": 214185,
+          "y": 114423,
+          "rows": 1,
+          "url": "/atlas-v2/production/0100-5f1f36489db41d5e.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214186-114416",
+      "title": "B座 Block B · HKU ring 3 · 18/214186/114416",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Walk-In Negative",
+          "x": 214186,
+          "y": 114416,
+          "rows": 1,
+          "url": "/atlas-v2/production/0102-aa6fe06e763f0b5d.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214186-114423",
+      "title": "Block B · HKU ring 3 · 18/214186/114423",
+      "isolated": true,
+      "art": [
+        {
+          "title": "A Coaster for Fallen Leaves",
+          "x": 214186,
+          "y": 114423,
+          "rows": 1,
+          "url": "/atlas-v2/production/0103-22e2b42f9fdc24d0.webp"
+        },
+        {
+          "title": "The Dream Vending Wall",
+          "x": 214186,
+          "y": 114423,
+          "rows": 1,
+          "url": "/atlas-v2/production/0104-6cd5e4a096685aaa.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214180-114415",
+      "title": "HKU ring 4 · 18/214180/114415",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Tablecloth Exchange",
+          "x": 214180,
+          "y": 114415,
+          "rows": 1,
+          "url": "/atlas-v2/production/0121-58112f2ec120bbe4.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214180-114416",
+      "title": "HKU ring 4 · 18/214180/114416",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Portrait Picnic",
+          "x": 214180,
+          "y": 114416,
+          "rows": 1,
+          "url": "/atlas-v2/production/0122-c1d20e091def90c5.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214180-114417",
+      "title": "堅尼地城游泳池 Kennedy Town Swimming Pool · HKU ring 4 · 18/214180/114417",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Unpaid Hour",
+          "x": 214180,
+          "y": 114417,
+          "rows": 1,
+          "url": "/atlas-v2/production/0123-3cc49d3ae067911a.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214180-114418",
+      "title": "堅尼地城游泳池 Kennedy Town Swimming Pool · HKU ring 4 · 18/214180/114418",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Porcelain Switchboard",
+          "x": 214180,
+          "y": 114418,
+          "rows": 1,
+          "url": "/atlas-v2/production/0124-0788da8b176dc4ab.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214180-114419",
+      "title": "第一座 Tower 1 · HKU ring 4 · 18/214180/114419",
+      "isolated": true,
+      "art": [
+        {
+          "title": "A Maze of Low Tides",
+          "x": 214180,
+          "y": 114419,
+          "rows": 1,
+          "url": "/atlas-v2/production/0125-3c13c80c9e79c487.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214180-114420",
+      "title": "利瑪竇堂 Ricci Hall · HKU ring 4 · 18/214180/114420",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Shattered Banquet",
+          "x": 214180,
+          "y": 114420,
+          "rows": 1,
+          "url": "/atlas-v2/production/0126-2e152d1fcd945575.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214180-114421",
+      "title": "第2座 Block 2 · HKU ring 4 · 18/214180/114421",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Iron Orchard",
+          "x": 214180,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0127-71dad22ceeeda449.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214180-114422",
+      "title": "馬登樓 Marden Wing · HKU ring 4 · 18/214180/114422",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Low Cloud Ferry",
+          "x": 214180,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0128-d7fe64bc41de62c5.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214180-114423",
+      "title": "王植庭堂 Wong Chik Ting Hall · HKU ring 4 · 18/214180/114423",
+      "isolated": true,
+      "art": [
+        {
+          "title": "A City One Plank Deep",
+          "x": 214180,
+          "y": 114423,
+          "rows": 1,
+          "url": "/atlas-v2/production/0129-3f1df7172efcca76.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214182-114415",
+      "title": "西區副食品批發市場 Western Wholesale Food Market · HKU ring 4 · 18/214182/114415",
+      "isolated": true,
+      "art": [
+        {
+          "title": "Pillows by Post",
+          "x": 214182,
+          "y": 114415,
+          "rows": 1,
+          "url": "/atlas-v2/production/0130-8ccae1057a54389d.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214183-114415",
+      "title": "西區副食品批發市場 Western Wholesale Food Market · HKU ring 4 · 18/214183/114415",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Carpet River",
+          "x": 214183,
+          "y": 114415,
+          "rows": 1,
+          "url": "/atlas-v2/production/0131-f2592215d2fe9d43.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214184-114415",
+      "title": "西區副食品批發市場 Western Wholesale Food Market · HKU ring 4 · 18/214184/114415",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Room That Blinks",
+          "x": 214184,
+          "y": 114415,
+          "rows": 1,
+          "url": "/atlas-v2/production/0132-4d36f83986e12ebd.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214169-114419",
+      "title": "North Hong Kong Island · 18/214169/114419",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Book That Takes a Village",
+          "x": 214169,
+          "y": 114419,
+          "rows": 1,
+          "url": "/atlas-v2/production/0145-2b4e9f39db84a1ba.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214170-114422",
+      "title": "行政大樓 Administration Building · North Hong Kong Island · 18/214170/114422",
+      "isolated": true,
+      "art": [
+        {
+          "title": "Pulse Market",
+          "x": 214170,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0146-4c8d7ac213db1e72.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214171-114422",
+      "title": "unnamed building · North Hong Kong Island · 18/214171/114422",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Dig in Reverse",
+          "x": 214171,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0147-8dedc38b663d2451.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214171-114421",
+      "title": "North Hong Kong Island · 18/214171/114421",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Hemline Parliament",
+          "x": 214171,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0148-809be17a107e5fee.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214172-114421",
+      "title": "招商局第一貨倉 China Merchants Godown A · North Hong Kong Island · 18/214172/114421",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Daylight Star Catcher",
+          "x": 214172,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0149-2fb1a04c55628cda.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214172-114422",
+      "title": "中国石化 · North Hong Kong Island · 18/214172/114422",
+      "isolated": true,
+      "art": [
+        {
+          "title": "A Bridge of Borrowed Doors",
+          "x": 214172,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0150-c71a14781fca4a1d.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214173-114422",
+      "title": "道慈佛社 · North Hong Kong Island · 18/214173/114422",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Haptic Arcade",
+          "x": 214173,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0151-3180219a4ee88eb0.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214173-114421",
+      "title": "招商局第二貨倉 China Merchants Godown B · North Hong Kong Island · 18/214173/114421",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Dynamo Roundabout",
+          "x": 214173,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0152-77192cf5ce9bb798.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214174-114420",
+      "title": "unnamed building · North Hong Kong Island · 18/214174/114420",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Edible Moon Calendar",
+          "x": 214174,
+          "y": 114420,
+          "rows": 1,
+          "url": "/atlas-v2/production/0153-c2f633c4174cb0da.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214174-114421",
+      "title": "第一座 Block 1 · North Hong Kong Island · 18/214174/114421",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Orange Peel Cosmos",
+          "x": 214174,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0154-5850db3ba6b94cbf.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214175-114422",
+      "title": "西苑臺 West Terrace · North Hong Kong Island · 18/214175/114422",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Difference Stair",
+          "x": 214175,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0156-1cd46eb10046854d.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214175-114421",
+      "title": "第二座 Block 2 · North Hong Kong Island · 18/214175/114421",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Courtesy Machine",
+          "x": 214175,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0157-ae182a42c8631fb8.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214175-114420",
+      "title": "unnamed building · North Hong Kong Island · 18/214175/114420",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Slow Mosaic",
+          "x": 214175,
+          "y": 114420,
+          "rows": 1,
+          "url": "/atlas-v2/production/0158-5e926674fe212a55.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214176-114420",
+      "title": "高逸華軒 Manhattan Heights · North Hong Kong Island · 18/214176/114420",
+      "isolated": true,
+      "art": [
+        {
+          "title": "A Stage in the Teeth",
+          "x": 214176,
+          "y": 114420,
+          "rows": 1,
+          "url": "/atlas-v2/production/0159-16c8259ee3ef3ee3.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214176-114421",
+      "title": "加多近山 Cadogan · North Hong Kong Island · 18/214176/114421",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Printer's Tidal Pool",
+          "x": 214176,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0160-850b962367d0fb04.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214177-114422",
+      "title": "堅尼地城 Kennedy Town · North Hong Kong Island · 18/214177/114422",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Logic Beehive",
+          "x": 214177,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0162-fee55e542641b435.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214177-114421",
+      "title": "士美非路市政大廈 Smithfield Municipal Services Building · North Hong Kong Island · 18/214177/114421",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Awning Library",
+          "x": 214177,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0163-32efdc3eefeac9b8.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214177-114420",
+      "title": "五福大廈 New Fortune House · North Hong Kong Island · 18/214177/114420",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Ribbon Glacier",
+          "x": 214177,
+          "y": 114420,
+          "rows": 1,
+          "url": "/atlas-v2/production/0164-f3800da335751221.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214177-114419",
+      "title": "unnamed building · North Hong Kong Island · 18/214177/114419",
+      "isolated": true,
+      "art": [
+        {
+          "title": "Before the Lanterns Wake",
+          "x": 214177,
+          "y": 114419,
+          "rows": 1,
+          "url": "/atlas-v2/production/0165-8bffaf630aaeeed0.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214178-114421",
+      "title": "堅尼地城 Kennedy Town · North Hong Kong Island · 18/214178/114421",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Stranger's Thread",
+          "x": 214178,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0169-adf9f589fac9a4c6.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214179-114422",
+      "title": "馬禮遜堂 Morrison Hall · North Hong Kong Island · 18/214179/114422",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Brass Migration",
+          "x": 214179,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0171-55ad65232c3b1ef1.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214179-114421",
+      "title": "第1座 Tower 1 · North Hong Kong Island · 18/214179/114421",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Sea in a Drawer",
+          "x": 214179,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0172-22ac945d957fb45b.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214179-114420",
+      "title": "堅城中心商場 Kennedy Town Centre Shopping Centre · North Hong Kong Island · 18/214179/114420",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Garden of Spare Keys",
+          "x": 214179,
+          "y": 114420,
+          "rows": 1,
+          "url": "/atlas-v2/production/0173-103b1643b3f93351.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214179-114417",
+      "title": "North Hong Kong Island · 18/214179/114417",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Ribbon Pulse",
+          "x": 214179,
+          "y": 114417,
+          "rows": 1,
+          "url": "/atlas-v2/production/0175-88539898d0fecaa1.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214186-114414",
+      "title": "North Hong Kong Island · 18/214186/114414",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Rice Clock",
+          "x": 214186,
+          "y": 114414,
+          "rows": 1,
+          "url": "/atlas-v2/production/0176-56a32c93b19c8442.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214187-114414",
+      "title": "North Hong Kong Island · 18/214187/114414",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Reef Goes Visiting",
+          "x": 214187,
+          "y": 114414,
+          "rows": 1,
+          "url": "/atlas-v2/production/0177-05340b45e09f9322.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214200-114420",
+      "title": "郵政總局 General Post Office · North Hong Kong Island · 18/214200/114420",
+      "isolated": true,
+      "art": [
+        {
+          "title": "A Battery of Pickles",
+          "x": 214200,
+          "y": 114420,
+          "rows": 1,
+          "url": "/atlas-v2/production/0237-07eab2df61661645.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214203-114421",
+      "title": "中國人民解放軍駐香港部隊大廈 Chinese People's Liberation Army Forces Hong Kong Building · North Hong Kong Island · 18/214203/114421",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Dream Vending Wall",
+          "x": 214203,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0257-48f880fb9d9356ed.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214205-114422",
+      "title": "立法會綜合大樓 Legislative Council Complex · North Hong Kong Island · 18/214205/114422",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Crater in the Courtyard",
+          "x": 214205,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0268-2416e7f8eddbf72b.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214206-114421",
+      "title": "龍和道太古廣場泵房變電站 Lung Wo Rd Pacific Place P/Stn Substation · North Hong Kong Island · 18/214206/114421",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Root Readers",
+          "x": 214206,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0271-a753548372bf3045.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214213-114425",
+      "title": "職業訓練局大樓 VTC Tower · North Hong Kong Island · 18/214213/114425",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Wheel of Borrowed Rooms",
+          "x": 214213,
+          "y": 114425,
+          "rows": 1,
+          "url": "/atlas-v2/production/0315-c21e3b2e8da76e41.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214213-114423",
+      "title": "杜智臺 Tonnochy Towers · North Hong Kong Island · 18/214213/114423",
+      "isolated": true,
+      "art": [
+        {
+          "title": "A Skeleton for Rain",
+          "x": 214213,
+          "y": 114423,
+          "rows": 1,
+          "url": "/atlas-v2/production/0316-1727a48ca57462d5.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214206-114406",
+      "title": "中港城 China Hong Kong City · Tsim Sha Tsui and Kowloon Peninsula · 18/214206/114406",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Folded Stratum",
+          "x": 214206,
+          "y": 114406,
+          "rows": 1,
+          "url": "/atlas-v2/production/0424-66a5572485506375.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214206-114411",
+      "title": "海運大廈 Ocean Terminal · Tsim Sha Tsui and Kowloon Peninsula · 18/214206/114411",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Walk-In Negative",
+          "x": 214206,
+          "y": 114411,
+          "rows": 1,
+          "url": "/atlas-v2/production/0425-54695cfda4b3095b.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214207-114412",
+      "title": "尖沙咀天星碼頭 Tsim Sha Tsui Star Ferry Pier · Tsim Sha Tsui and Kowloon Peninsula · 18/214207/114412",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Lost Button Arcade",
+          "x": 214207,
+          "y": 114412,
+          "rows": 1,
+          "url": "/atlas-v2/production/0426-0db78f915b3b98b3.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214211-114407",
+      "title": "尖沙咀浸信會 Tsim Sha Tsui Baptist Church · Tsim Sha Tsui and Kowloon Peninsula · 18/214211/114407",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Rain Falls Sideways",
+          "x": 214211,
+          "y": 114407,
+          "rows": 1,
+          "url": "/atlas-v2/production/0437-7f5374f4ebad1f76.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214213-114409",
+      "title": "unnamed building · Tsim Sha Tsui and Kowloon Peninsula · 18/214213/114409",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Book That Takes a Village",
+          "x": 214213,
+          "y": 114409,
+          "rows": 1,
+          "url": "/atlas-v2/production/0440-c59ad0280ce893dc.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214214-114407",
+      "title": "華懋廣場 Chinachem Golden Plaza · Tsim Sha Tsui and Kowloon Peninsula · 18/214214/114407",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Park on a Hinge",
+          "x": 214214,
+          "y": 114407,
+          "rows": 1,
+          "url": "/atlas-v2/production/0442-cf5e3a25e044529f.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214183-114420",
+      "title": "HKU ring 1 · 18/214183/114420",
+      "isolated": true,
+      "art": [
+        {
+          "title": "A Zoo of Departures",
+          "x": 214183,
+          "y": 114420,
+          "rows": 1,
+          "url": "/atlas-v2/hku-cell-pilot/2.webp?v=c697e94b5b89"
+        },
+        {
+          "title": "The Marble Holiday",
+          "x": 214183,
+          "y": 114420,
+          "rows": 1,
+          "url": "/atlas-v2/hku-cell-pilot/3.webp?v=7d7e9c8f8202"
+        },
+        {
+          "title": "The Amber Stair",
+          "x": 214183,
+          "y": 114420,
+          "rows": 1,
+          "url": "/atlas-v2/hku-cell-pilot/4.webp?v=8e6f58a87350"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-analytical-engine-01",
+      "title": "Analytical Engine · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Arithmetic Laundry",
+          "x": 214182,
+          "y": 114419,
+          "rows": 1,
+          "url": "/atlas-v2/production/0023-6f43d4be9b5a0c5b.webp"
+        },
+        {
+          "title": "Numbers on the Half Shell",
+          "x": 214185,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0049-fa6309c0f83b1639.webp"
+        },
+        {
+          "title": "The Difference Stair",
+          "x": 214175,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0156-1cd46eb10046854d.webp"
+        },
+        {
+          "title": "The Logic Beehive",
+          "x": 214177,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0162-fee55e542641b435.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-anatomical-museum-01",
+      "title": "Anatomical Museum · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "A Skeleton for Rain",
+          "x": 214183,
+          "y": 114418,
+          "rows": 1,
+          "url": "/atlas-v2/production/0003-b24451f850507900.webp"
+        },
+        {
+          "title": "The Cabinet of Hands",
+          "x": 214181,
+          "y": 114423,
+          "rows": 1,
+          "url": "/atlas-v2/production/0083-bd449ee3528a5e87.webp"
+        },
+        {
+          "title": "Pulse Market",
+          "x": 214170,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0146-4c8d7ac213db1e72.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-archaeological-excavation-01",
+      "title": "Archaeological Excavation · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Fragments' Supper",
+          "x": 214185,
+          "y": 114418,
+          "rows": 1,
+          "url": "/atlas-v2/production/0011-984e923c9af21b4f.webp"
+        },
+        {
+          "title": "A Shadow of the Missing Wall",
+          "x": 214181,
+          "y": 114417,
+          "rows": 1,
+          "url": "/atlas-v2/production/0072-1e55b7b81a157639.webp"
+        },
+        {
+          "title": "The Dig in Reverse",
+          "x": 214171,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0147-8dedc38b663d2451.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-art-nouveau-palace-01",
+      "title": "Art Nouveau Palace · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Folded Peacock",
+          "x": 214183,
+          "y": 114418,
+          "rows": 1,
+          "url": "/atlas-v2/production/0004-775f4f3855a7e1c7.webp"
+        },
+        {
+          "title": "Lilies for the Night Shift",
+          "x": 214184,
+          "y": 114416,
+          "rows": 1,
+          "url": "/atlas-v2/production/0094-059194cdfe1e5846.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-automata-01",
+      "title": "Automata · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Self-Mending Elephant",
+          "x": 214185,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0048-95a19619447fb32a.webp"
+        },
+        {
+          "title": "The Courtesy Machine",
+          "x": 214175,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0157-ae182a42c8631fb8.webp"
+        },
+        {
+          "title": "The Brass Migration",
+          "x": 214179,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0171-55ad65232c3b1ef1.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-balloon-festival-01",
+      "title": "Balloon Festival · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Rain Inheritance",
+          "x": 214182,
+          "y": 114420,
+          "rows": 1,
+          "url": "/atlas-v2/production/0028-f0433e1037fae6c5.webp"
+        },
+        {
+          "title": "A Street Learns to Float",
+          "x": 214186,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0063-8fcf430c44cc4e88.webp"
+        },
+        {
+          "title": "The Great Knot Garden",
+          "x": 214184,
+          "y": 114423,
+          "rows": 1,
+          "url": "/atlas-v2/production/0096-be853b24c01af3bf.webp"
+        },
+        {
+          "title": "The Low Cloud Ferry",
+          "x": 214180,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0128-d7fe64bc41de62c5.webp"
+        },
+        {
+          "title": "Before the Lanterns Wake",
+          "x": 214177,
+          "y": 114419,
+          "rows": 1,
+          "url": "/atlas-v2/production/0165-8bffaf630aaeeed0.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-botanical-laboratory-01",
+      "title": "Botanical Laboratory · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Pollen Weighhouse",
+          "x": 214182,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0030-18caf98a9a128734.webp"
+        },
+        {
+          "title": "The Herbarium Unpressed",
+          "x": 214181,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0081-83e513e160230cdd.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-circus-01",
+      "title": "Circus · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Procession of Feet",
+          "x": 214183,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0039-91f23b6e1fcb45f2.webp"
+        },
+        {
+          "title": "Rehearsal for a Falling Moon",
+          "x": 214184,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0044-01a2ffb6feb0e9a6.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-civic-centre-01",
+      "title": "Civic Centre · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Public Staircase",
+          "x": 214183,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0038-4a062526415e9f6a.webp"
+        },
+        {
+          "title": "The Court of Common Weight",
+          "x": 214181,
+          "y": 114423,
+          "rows": 1,
+          "url": "/atlas-v2/production/0084-d1a7e98bba377586.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cyber-deck-alley-01",
+      "title": "Cyber Deck Alley · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Memory Tailors",
+          "x": 214185,
+          "y": 114418,
+          "rows": 1,
+          "url": "/atlas-v2/production/0012-158af731cec83631.webp"
+        },
+        {
+          "title": "The Rain Cache",
+          "x": 214186,
+          "y": 114417,
+          "rows": 1,
+          "url": "/atlas-v2/production/0053-b66d77686ac15264.webp"
+        },
+        {
+          "title": "The Dream Vending Wall",
+          "x": 214186,
+          "y": 114423,
+          "rows": 1,
+          "url": "/atlas-v2/production/0104-6cd5e4a096685aaa.webp"
+        },
+        {
+          "title": "The Haptic Arcade",
+          "x": 214173,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0151-3180219a4ee88eb0.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-electrical-laboratory-01",
+      "title": "Electrical Laboratory · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Lightning Quilt",
+          "x": 214183,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0006-6807d11a5f24ecf9.webp"
+        },
+        {
+          "title": "A Battery of Pickles",
+          "x": 214186,
+          "y": 114417,
+          "rows": 1,
+          "url": "/atlas-v2/production/0052-c2770687f7e94400.webp"
+        },
+        {
+          "title": "The Static Menagerie",
+          "x": 214181,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0082-a4c3d87676246526.webp"
+        },
+        {
+          "title": "The Dynamo Roundabout",
+          "x": 214173,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0152-77192cf5ce9bb798.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-ferris-wheel-01",
+      "title": "Ferris Wheel · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Threadbare Wheel",
+          "x": 214183,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0008-bd84c4c824385f93.webp"
+        },
+        {
+          "title": "The Horizontal Horizon",
+          "x": 214184,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0043-9096c4ca719ef9cd.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-film-backlot-01",
+      "title": "Film Backlot · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "Mountains by the Metre",
+          "x": 214182,
+          "y": 114417,
+          "rows": 1,
+          "url": "/atlas-v2/production/0019-e065f66a7b5bd342.webp"
+        },
+        {
+          "title": "A City One Plank Deep",
+          "x": 214180,
+          "y": 114423,
+          "rows": 1,
+          "url": "/atlas-v2/production/0129-3f1df7172efcca76.webp"
+        },
+        {
+          "title": "The Sea in a Drawer",
+          "x": 214179,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0172-22ac945d957fb45b.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-grand-library-01",
+      "title": "Grand Library · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "A Shelf for Every Tide",
+          "x": 214182,
+          "y": 114419,
+          "rows": 1,
+          "url": "/atlas-v2/production/0024-0600c3018602f35f.webp"
+        },
+        {
+          "title": "The Book That Takes a Village",
+          "x": 214169,
+          "y": 114419,
+          "rows": 1,
+          "url": "/atlas-v2/production/0145-2b4e9f39db84a1ba.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-hall-of-mirrors-01",
+      "title": "Hall Of Mirrors · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Polished Laundry",
+          "x": 214182,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0034-6879ba180a7d8afa.webp"
+        },
+        {
+          "title": "The Silver Reedbed",
+          "x": 214181,
+          "y": 114417,
+          "rows": 1,
+          "url": "/atlas-v2/production/0071-b550155e8d4941c7.webp"
+        },
+        {
+          "title": "The Shattered Banquet",
+          "x": 214180,
+          "y": 114420,
+          "rows": 1,
+          "url": "/atlas-v2/production/0126-2e152d1fcd945575.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-ironworks-01",
+      "title": "Ironworks · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Iron Orchard",
+          "x": 214180,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0127-71dad22ceeeda449.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-japanese-garden-01",
+      "title": "Japanese Garden · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Borrowed Reflection",
+          "x": 214182,
+          "y": 114417,
+          "rows": 1,
+          "url": "/atlas-v2/production/0018-b5d8852eac79375b.webp"
+        },
+        {
+          "title": "The Moving Moon Gate",
+          "x": 214181,
+          "y": 114419,
+          "rows": 1,
+          "url": "/atlas-v2/production/0075-c6ec417976407636.webp"
+        },
+        {
+          "title": "The Unrolled Landscape",
+          "x": 214183,
+          "y": 114416,
+          "rows": 1,
+          "url": "/atlas-v2/production/0090-83a7530b444f93be.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-market-quarter-01",
+      "title": "Market Quarter · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Street That Unpeels",
+          "x": 214186,
+          "y": 114417,
+          "rows": 1,
+          "url": "/atlas-v2/production/0051-a5532ac82f3081d8.webp"
+        },
+        {
+          "title": "A Market by the Slice",
+          "x": 214182,
+          "y": 114423,
+          "rows": 1,
+          "url": "/atlas-v2/production/0088-01f16d01327b42a5.webp"
+        },
+        {
+          "title": "The Tablecloth Exchange",
+          "x": 214180,
+          "y": 114415,
+          "rows": 1,
+          "url": "/atlas-v2/production/0121-58112f2ec120bbe4.webp"
+        },
+        {
+          "title": "The Awning Library",
+          "x": 214177,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0163-32efdc3eefeac9b8.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-marshmallow-factory-01",
+      "title": "Marshmallow Factory · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Confectioner's Eclipse",
+          "x": 214186,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0065-b45a814c66a02aaf.webp"
+        },
+        {
+          "title": "Pillows by Post",
+          "x": 214182,
+          "y": 114415,
+          "rows": 1,
+          "url": "/atlas-v2/production/0130-8ccae1057a54389d.webp"
+        },
+        {
+          "title": "The Ribbon Glacier",
+          "x": 214177,
+          "y": 114420,
+          "rows": 1,
+          "url": "/atlas-v2/production/0164-f3800da335751221.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-maze-garden-01",
+      "title": "Maze Garden · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Unfinished Question",
+          "x": 214185,
+          "y": 114418,
+          "rows": 1,
+          "url": "/atlas-v2/production/0010-1ee6c61bdb797939.webp"
+        },
+        {
+          "title": "The Hedge That Reads Your Shadow",
+          "x": 214181,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0079-b0b8ae0ce662ed53.webp"
+        },
+        {
+          "title": "The Maze Goes to Market",
+          "x": 214185,
+          "y": 114423,
+          "rows": 1,
+          "url": "/atlas-v2/production/0100-5f1f36489db41d5e.webp"
+        },
+        {
+          "title": "A Maze of Low Tides",
+          "x": 214180,
+          "y": 114419,
+          "rows": 1,
+          "url": "/atlas-v2/production/0125-3c13c80c9e79c487.webp"
+        },
+        {
+          "title": "The Stranger's Thread",
+          "x": 214178,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0169-adf9f589fac9a4c6.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-mechanical-theatre-01",
+      "title": "Mechanical Theatre · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Foldaway Audience",
+          "x": 214184,
+          "y": 114417,
+          "rows": 1,
+          "url": "/atlas-v2/production/0040-a9f8736dd639eb28.webp"
+        },
+        {
+          "title": "Wings Awaiting Bodies",
+          "x": 214186,
+          "y": 114420,
+          "rows": 1,
+          "url": "/atlas-v2/production/0062-250c15251a532e08.webp"
+        },
+        {
+          "title": "A Stage in the Teeth",
+          "x": 214176,
+          "y": 114420,
+          "rows": 1,
+          "url": "/atlas-v2/production/0159-16c8259ee3ef3ee3.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-mesmerist-salon-01",
+      "title": "Mesmerist Salon · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Spiral Guests",
+          "x": 214182,
+          "y": 114418,
+          "rows": 1,
+          "url": "/atlas-v2/production/0020-ad2837392989af0a.webp"
+        },
+        {
+          "title": "The Velvet Pendulum",
+          "x": 214181,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0080-04d3505e5950fdbc.webp"
+        },
+        {
+          "title": "The Cabinet of Soft Thunder",
+          "x": 214182,
+          "y": 114423,
+          "rows": 1,
+          "url": "/atlas-v2/production/0087-4af79893a6e28e15.webp"
+        },
+        {
+          "title": "The Room That Blinks",
+          "x": 214184,
+          "y": 114415,
+          "rows": 1,
+          "url": "/atlas-v2/production/0132-4d36f83986e12ebd.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-observatory-01",
+      "title": "Observatory · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Crater in the Courtyard",
+          "x": 214182,
+          "y": 114419,
+          "rows": 1,
+          "url": "/atlas-v2/production/0025-6b97e252e2e11c39.webp"
+        },
+        {
+          "title": "A Constellation You Can Borrow",
+          "x": 214185,
+          "y": 114423,
+          "rows": 1,
+          "url": "/atlas-v2/production/0099-d76a944a650b42d3.webp"
+        },
+        {
+          "title": "The Daylight Star Catcher",
+          "x": 214172,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0149-2fb1a04c55628cda.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-observatory-02",
+      "title": "Observatory · Sheet 2",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Crater in the Courtyard",
+          "x": 214205,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0268-2416e7f8eddbf72b.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-orrery-hall-01",
+      "title": "Orrery Hall · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "A Solar System in the Wash",
+          "x": 214182,
+          "y": 114416,
+          "rows": 1,
+          "url": "/atlas-v2/production/0085-725471150f49c926.webp"
+        },
+        {
+          "title": "The Orange Peel Cosmos",
+          "x": 214174,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0154-5850db3ba6b94cbf.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-photography-studio-01",
+      "title": "Photography Studio · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Camera Orchard",
+          "x": 214182,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0032-ded2cdafaaa99099.webp"
+        },
+        {
+          "title": "The Walk-In Negative",
+          "x": 214186,
+          "y": 114416,
+          "rows": 1,
+          "url": "/atlas-v2/production/0102-aa6fe06e763f0b5d.webp"
+        },
+        {
+          "title": "The Portrait Picnic",
+          "x": 214180,
+          "y": 114416,
+          "rows": 1,
+          "url": "/atlas-v2/production/0122-c1d20e091def90c5.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-photography-studio-02",
+      "title": "Photography Studio · Sheet 2",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Walk-In Negative",
+          "x": 214206,
+          "y": 114411,
+          "rows": 1,
+          "url": "/atlas-v2/production/0425-54695cfda4b3095b.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-printworks-01",
+      "title": "Printworks · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The City in Carbon Paper",
+          "x": 214182,
+          "y": 114418,
+          "rows": 1,
+          "url": "/atlas-v2/production/0021-0677ee9a55b8a384.webp"
+        },
+        {
+          "title": "The Printer's Tidal Pool",
+          "x": 214176,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0160-850b962367d0fb04.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-raver-arena-01",
+      "title": "Raver Arena · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Dancefloor Has Pockets",
+          "x": 214182,
+          "y": 114418,
+          "rows": 1,
+          "url": "/atlas-v2/production/0022-01ba3d70f10b1644.webp"
+        },
+        {
+          "title": "The Ribbon Pulse",
+          "x": 214179,
+          "y": 114417,
+          "rows": 1,
+          "url": "/atlas-v2/production/0175-88539898d0fecaa1.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-rice-sculpture-festival-01",
+      "title": "Rice Sculpture Festival · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Great Mortar Ballet",
+          "x": 214183,
+          "y": 114418,
+          "rows": 1,
+          "url": "/atlas-v2/production/0001-01acdb1d78a13bfd.webp"
+        },
+        {
+          "title": "The White City Melt",
+          "x": 214181,
+          "y": 114419,
+          "rows": 1,
+          "url": "/atlas-v2/production/0076-e81b45823da9fbff.webp"
+        },
+        {
+          "title": "One Grain High",
+          "x": 214182,
+          "y": 114416,
+          "rows": 1,
+          "url": "/atlas-v2/production/0086-ebcef59162159c93.webp"
+        },
+        {
+          "title": "The Edible Moon Calendar",
+          "x": 214174,
+          "y": 114420,
+          "rows": 1,
+          "url": "/atlas-v2/production/0153-c2f633c4174cb0da.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-solar-farm-01",
+      "title": "Solar Farm · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Sunflower Swap",
+          "x": 214185,
+          "y": 114418,
+          "rows": 1,
+          "url": "/atlas-v2/production/0009-3aac08c47f4c1284.webp"
+        },
+        {
+          "title": "The Afternoon Orchard",
+          "x": 214186,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0066-9d3094560237ec93.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-steam-railway-01",
+      "title": "Steam Railway · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Station That Braids Trains",
+          "x": 214182,
+          "y": 114420,
+          "rows": 1,
+          "url": "/atlas-v2/production/0027-ce22e8776e082db9.webp"
+        },
+        {
+          "title": "The Clockwork Picnic Line",
+          "x": 214183,
+          "y": 114423,
+          "rows": 1,
+          "url": "/atlas-v2/production/0091-ada9e34243aeab04.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-sushi-restaurant-01",
+      "title": "Sushi Restaurant · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "Orbit of the Ginger",
+          "x": 214183,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0005-182ad518f261a7d2.webp"
+        },
+        {
+          "title": "The Slow Mosaic",
+          "x": 214175,
+          "y": 114420,
+          "rows": 1,
+          "url": "/atlas-v2/production/0158-5e926674fe212a55.webp"
+        },
+        {
+          "title": "The Rice Clock",
+          "x": 214186,
+          "y": 114414,
+          "rows": 1,
+          "url": "/atlas-v2/production/0176-56a32c93b19c8442.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-suspension-bridge-01",
+      "title": "Suspension Bridge · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Bridge Takes a Breath",
+          "x": 214181,
+          "y": 114416,
+          "rows": 1,
+          "url": "/atlas-v2/production/0069-0387d271a77e2142.webp"
+        },
+        {
+          "title": "A Bridge of Borrowed Doors",
+          "x": 214172,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0150-c71a14781fca4a1d.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-telegraph-office-01",
+      "title": "Telegraph Office · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Listening Comb",
+          "x": 214182,
+          "y": 114417,
+          "rows": 1,
+          "url": "/atlas-v2/production/0017-973f7b31e811f834.webp"
+        },
+        {
+          "title": "The Porcelain Switchboard",
+          "x": 214180,
+          "y": 114418,
+          "rows": 1,
+          "url": "/atlas-v2/production/0124-0788da8b176dc4ab.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-textile-mill-01",
+      "title": "Textile Mill · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "A Mill for Shadows",
+          "x": 214183,
+          "y": 114417,
+          "rows": 1,
+          "url": "/atlas-v2/production/0037-2e3463a726bccd7c.webp"
+        },
+        {
+          "title": "The Bobbin Borough",
+          "x": 214181,
+          "y": 114416,
+          "rows": 1,
+          "url": "/atlas-v2/production/0070-8f4d716a00856561.webp"
+        },
+        {
+          "title": "The Carpet River",
+          "x": 214183,
+          "y": 114415,
+          "rows": 1,
+          "url": "/atlas-v2/production/0131-f2592215d2fe9d43.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-theme-park-01",
+      "title": "Theme Park · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Marble Holiday",
+          "x": 214183,
+          "y": 114417,
+          "rows": 1,
+          "url": "/atlas-v2/production/0035-d0334a04cf190b69.webp"
+        },
+        {
+          "title": "The Park on a Hinge",
+          "x": 214181,
+          "y": 114420,
+          "rows": 1,
+          "url": "/atlas-v2/production/0078-03432ca3fce308ea.webp"
+        },
+        {
+          "title": "A Coaster for Fallen Leaves",
+          "x": 214186,
+          "y": 114423,
+          "rows": 1,
+          "url": "/atlas-v2/production/0103-22e2b42f9fdc24d0.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-thrifting-paradise-01",
+      "title": "Thrifting Paradise · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Hemline Parliament",
+          "x": 214171,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0148-809be17a107e5fee.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-tropical-aquarium-01",
+      "title": "Tropical Aquarium · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Kelp Harp",
+          "x": 214186,
+          "y": 114419,
+          "rows": 1,
+          "url": "/atlas-v2/production/0058-d5808e6d2ed76b36.webp"
+        },
+        {
+          "title": "The Chromatic Staircase",
+          "x": 214183,
+          "y": 114423,
+          "rows": 1,
+          "url": "/atlas-v2/production/0092-6cc2569a7a0a13dd.webp"
+        },
+        {
+          "title": "The Reef Goes Visiting",
+          "x": 214187,
+          "y": 114414,
+          "rows": 1,
+          "url": "/atlas-v2/production/0177-05340b45e09f9322.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-utopian-garden-01",
+      "title": "Utopian Garden · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Shade Cooperative",
+          "x": 214183,
+          "y": 114417,
+          "rows": 1,
+          "url": "/atlas-v2/production/0036-01ae9237b9d2fa98.webp"
+        },
+        {
+          "title": "The Common Table Harvest",
+          "x": 214185,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0050-057deca957e1d03e.webp"
+        },
+        {
+          "title": "A Roof for Every Seed",
+          "x": 214184,
+          "y": 114423,
+          "rows": 1,
+          "url": "/atlas-v2/production/0095-a31d58be44e9ed2f.webp"
+        },
+        {
+          "title": "The Unpaid Hour",
+          "x": 214180,
+          "y": 114417,
+          "rows": 1,
+          "url": "/atlas-v2/production/0123-3cc49d3ae067911a.webp"
+        },
+        {
+          "title": "The Garden of Spare Keys",
+          "x": 214179,
+          "y": 114420,
+          "rows": 1,
+          "url": "/atlas-v2/production/0173-103b1643b3f93351.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-weather-station-01",
+      "title": "Weather Station · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Cloud Printing Bed",
+          "x": 214182,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0029-93126310cee915cd.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-zoo-01",
+      "title": "Zoo · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Crossing Belongs to Them",
+          "x": 214183,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0007-410f95aacc478091.webp"
+        },
+        {
+          "title": "The Nocturnal Curtain",
+          "x": 214184,
+          "y": 114417,
+          "rows": 1,
+          "url": "/atlas-v2/production/0041-60441a393ec05d4d.webp"
+        }
+      ],
+      "accepted": true
+    }
+  ]
+}

@@ -3,6 +3,8 @@ import { handleAtlasApi } from './worker-api.ts'
 export { AtlasManifest } from './atlas-manifest.ts'
 export { FogEligibilityIndexCache } from './fog-eligibility-index-cache.ts'
 
+import { releaseCatalog, releaseMediaKeys } from './release-media.ts'
+
 const tileOrigin = 'https://tiles.saanseoi.hk'
 const tileProxyPrefix = '/map-assets/saanseoi'
 const tileJsonPath = `${tileProxyPrefix}/hongkong-latest.json`
@@ -54,6 +56,25 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url)
     try {
+      if (request.method === 'GET' || request.method === 'HEAD') {
+        if (url.pathname === '/atlas-v2/catalog.json') {
+          return new Response(request.method === 'HEAD' ? null : JSON.stringify(releaseCatalog), {
+            headers: { 'content-type': 'application/json', 'cache-control': 'no-cache' },
+          })
+        }
+        const key = releaseMediaKeys.get(url.pathname)
+        if (key) {
+          const headers = new Headers()
+          for (const name of ['range', 'if-range', 'if-none-match', 'if-modified-since']) {
+            const value = request.headers.get(name)
+            if (value) headers.set(name, value)
+          }
+          const media = await fetch(new URL(key, env.ATLAS_SHARE_ASSET_ORIGIN), { method: request.method, headers })
+          const response = new Response(media.body, media)
+          response.headers.set('cache-control', 'no-cache')
+          return response
+        }
+      }
       const apiResponse = await handleAtlasApi(request, env)
       if (apiResponse) return apiResponse
 
