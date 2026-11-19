@@ -693,7 +693,7 @@ const createGenerationArtifacts = (map, sourceCanvas, northWest, southEast, stud
   }
 }
 
-const decodedTileImages = new Map()
+const decodedTileImages = new Map<string, Promise<HTMLImageElement>>()
 
 const decodeTileImage = url => {
   if (decodedTileImages.has(url)) return decodedTileImages.get(url)
@@ -2941,8 +2941,10 @@ export const installAtlasTileInteractions = (
       const result = await response.json()
       if (!response.ok) throw Error(result.error ?? 'This clearing is unavailable. Please try again.')
       // Decode while the single reading finishes; never substitute an old local cache.
+      const image = await withinClickBudget(decodeTileImage(result.url), budget)
       await Promise.all([
-        addGeneratedTile(map, tile, result.url, result.scene, titleCards, result.contentBounds, 0, budget),
+        addGeneratedTile(map, tile, result.url, result.scene, titleCards, result.contentBounds, 0, budget,
+          result.title ? { bounds: tileBounds(tile), title: result.title, image } : undefined),
         withinClickBudget(reading, budget),
       ])
       revealGeneratedTile(id, result.scene)

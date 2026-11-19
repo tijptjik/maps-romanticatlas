@@ -9,5 +9,5 @@ export function fakeRenderSeed(position: { x: number; y: number }): RevealImage 
   if (!art) return null
   const tile = parseAtlasTilePath(new URL(art.url, 'https://atlas.internal').pathname,
     (scene): scene is typeof atlasSceneNames[number] => atlasSceneNames.includes(scene as typeof atlasSceneNames[number]))
-  return { url: art.imageUrl ?? art.url, scene: tile?.scene ?? 'maze-garden', contentBounds: null }
+  return { title: art.title, url: art.imageUrl ?? art.url, scene: tile?.scene ?? 'maze-garden', contentBounds: null }
 }

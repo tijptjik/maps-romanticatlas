@@ -5,7 +5,7 @@ export function isFakeRenderTile({ x, y }: { x: number; y: number }) {
   return ((hash ^ (hash >>> 16)) >>> 0) / 0x100000000 < 0.5
 }
 
-export type RevealImage = { url: string; scene: string; contentBounds?: { x: number; y: number; width: number; height: number } | null }
+export type RevealImage = { title?: string; url: string; scene: string; contentBounds?: { x: number; y: number; width: number; height: number } | null }
 export type FakeRenderState = {
   ready: RevealImage | null
   claims: Record<string, RevealImage>
