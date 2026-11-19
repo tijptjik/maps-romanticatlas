@@ -43,7 +43,7 @@ body {
   pointer-events: none;
   opacity: 0.32;
   mix-blend-mode: multiply;
-  background: url("/romantic-paper-texture.png") repeat;
+  background: url("/romantic-paper-texture.webp") repeat;
   background-size: 512px 512px;
 }
 
@@ -484,7 +484,7 @@ body {
   color: #3b2518;
   background:
     linear-gradient(rgba(248, 237, 207, 0.96), rgba(239, 220, 175, 0.96)),
-    url("/romantic-paper-texture.png");
+    url("/romantic-paper-texture.webp");
   box-shadow: 0 0.25rem 1rem rgba(59, 37, 24, 0.28);
   font-family: "Cormorant Garamond", Georgia, serif;
   opacity: 0;
@@ -765,7 +765,7 @@ body {
   color: #4c3024;
   background:
     linear-gradient(rgba(248, 237, 207, 0.97), rgba(239, 220, 175, 0.97)),
-    url("/romantic-paper-texture.png");
+    url("/romantic-paper-texture.webp");
   box-shadow:
     inset 0 0 0 0.18rem #edc779,
     0 0.7rem 2rem rgba(12, 8, 14, 0.48);
@@ -1448,11 +1448,11 @@ body {
 .note-spread { display: grid; grid-template-columns: 1fr 1fr; }
 .note-leaf {
   padding: clamp(1.5rem, 3.1vw, 3rem);
-  background: linear-gradient(90deg, #fff7dfaa, #f9efd788 82%, #ad987194), url("/romantic-paper-texture.png") center / 32rem;
+  background: linear-gradient(90deg, #fff7dfaa, #f9efd788 82%, #ad987194), url("/romantic-paper-texture.webp") center / 32rem;
 }
 .note-leaf + .note-leaf, .note-face--right > .note-leaf {
   padding-top: clamp(2.6rem, 4.5vw, 4rem);
-  background: linear-gradient(90deg, #a38c6694, #fff1d6a8 10%, #fff8e1aa), url("/romantic-paper-texture.png") center / 32rem;
+  background: linear-gradient(90deg, #a38c6694, #fff1d6a8 10%, #fff8e1aa), url("/romantic-paper-texture.webp") center / 32rem;
 }
 .note-leaf .artist-statement__copy { display: block; }
 .note-leaf .artist-statement__copy p { font-size: 1.13rem; line-height: 1.44; font-weight: 600; }
@@ -1463,7 +1463,7 @@ body {
 .artist-statement__close { z-index: 1; }
 @media (max-width: 700px) {
   .note-spread { display: block; }
-  .note-leaf, .note-leaf + .note-leaf { padding: 2.6rem 1.4rem 1rem; background: linear-gradient(90deg,#c8b58f66,#fff4dccc 8%,#f6ebd1cc), url("/romantic-paper-texture.png") center / 32rem; }
+  .note-leaf, .note-leaf + .note-leaf { padding: 2.6rem 1.4rem 1rem; background: linear-gradient(90deg,#c8b58f66,#fff4dccc 8%,#f6ebd1cc), url("/romantic-paper-texture.webp") center / 32rem; }
   .note-leaf + .note-leaf { padding-top: 0; }
 }
 

@@ -148,7 +148,7 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean, n
   function draw(unit: Unit, opacity: number) {
     const {layer, art, footprint: {bounds: {west, east, north, south}}} = unit
     const coordinates: [[number, number], [number, number], [number, number], [number, number]] = [[west,north],[east,north],[east,south],[west,south]]
-    map.addSource(layer, { type: 'image', url: art.animation?.plate ?? art.url, coordinates })
+    map.addSource(layer, { type: 'image', url: art.animation?.plate ?? art.imageUrl ?? art.url, coordinates })
     map.addLayer({id: layer, type: 'raster', source: layer, paint: { 'raster-opacity': opacity, 'raster-fade-duration': 0 }}, edges)
   }
 
@@ -333,7 +333,7 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean, n
     if (!image) {
       const selectionAtClick = sequence
       const plate = new Image()
-      plate.src = next.art.animation?.plate ?? next.art.url
+      plate.src = next.art.animation?.plate ?? next.art.imageUrl ?? next.art.url
       try {
         await plate.decode()
       } catch {

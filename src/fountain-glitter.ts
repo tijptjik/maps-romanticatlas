@@ -23,7 +23,7 @@ export function installFountainGlitter(map: AtlasMap, tile: { x: number, y: numb
   return anchorArtwork(map, plume, tile, tile.glitterOrigin, 100)
 }
 
-export function installAirworksFigure(map: AtlasMap, tile, folder: string) {
+export function installAirworksFigure(map: AtlasMap, tile, folder: string, spriteUrl?: string) {
   const { box, sprite } = tile.motion
   const size = tile.illustration.pixelsPerTile
   const actor = document.createElement('div')
@@ -33,7 +33,7 @@ export function installAirworksFigure(map: AtlasMap, tile, folder: string) {
   const track = document.createElement('div')
   track.className = sprite
   const image = new Image(box[2] - box[0], box[3] - box[1])
-  image.src = '/' + folder + '/' + sprite + '.webp'
+  image.src = spriteUrl ?? '/' + folder + '/' + sprite + '.webp'
   image.alt = ''
   track.append(image)
   actor.append(track)
@@ -180,7 +180,7 @@ export function installArtworkAnimations(map: AtlasMap) {
       } else if (animation.auditoriumOriginPixels) {
         overlays.set(art.url, installTheatreSpotlights(map, tile, animation.auditoriumOriginPixels))
       } else if (animation.motion && animation.folder) {
-        overlays.set(art.url, installAirworksFigure(map, { ...tile, motion: animation.motion }, animation.folder))
+        overlays.set(art.url, installAirworksFigure(map, { ...tile, motion: animation.motion }, animation.folder, animation.spriteUrl))
       }
     }
     for (const [url, show] of overlays) show(visible.has(url))

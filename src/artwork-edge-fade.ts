@@ -1,22 +1,13 @@
 import { addProtocol, type RequestTransformFunction } from 'maplibre-gl'
-import metadata from '../releases/artwork-presentation.json'
+import { artworkPresentation } from './artwork-presentation'
 
-function assetKey(asset: URL) {
-  asset.searchParams.sort()
-  return asset.pathname + asset.search
-}
-
-type Presentation = { edgeFade: boolean; waterFadeStart?: number; backgroundMask?: number[][] }
-const presentation = new Map<string, Presentation>(Object.entries(metadata).map(([url, settings]) =>
-  [assetKey(new URL(url, location.origin)), settings] as const))
 const protocol = 'atlas-edge-fade://'
 
 export const artworkRequest: RequestTransformFunction = (url, type) => {
   if (type !== 'Image') return { url }
   const asset = new URL(url, document.baseURI)
   if (asset.origin !== location.origin) return { url }
-  const key = assetKey(asset)
-  return { url: presentation.get(key)?.edgeFade ? protocol + key : url }
+  return { url: artworkPresentation(asset)?.edgeFade ? protocol + asset.pathname + asset.search + asset.hash : url }
 }
 
 export function installArtworkEdgeFade() {
@@ -30,7 +21,7 @@ export function installArtworkEdgeFade() {
       const canvas = new OffscreenCanvas(width, height)
       const context = canvas.getContext('2d')!
       context.drawImage(image, 0, 0)
-      const settings = presentation.get(assetKey(new URL(url.slice(protocol.length), location.origin)))
+      const settings = artworkPresentation(new URL(url.slice(protocol.length), location.origin))
       if (settings?.backgroundMask) {
         context.save()
         context.globalCompositeOperation = 'destination-out'

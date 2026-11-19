@@ -1,5 +1,6 @@
+import { discoveryObjects, latestDecisions } from '../src/artwork-purge'
 import { execFile } from 'node:child_process'
-import { readdir } from 'node:fs/promises'
+import { readFile, readdir } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { promisify } from 'node:util'
@@ -10,7 +11,7 @@ const cacheDirectory = path.join(rootDirectory, 'generated-tiles')
 const bucket = process.env.ATLAS_R2_BUCKET ?? 'maps-romanticatlas-atlas'
 const concurrency = 6
 
-const collectFiles = async directory => {
+const collectFiles = async (directory: string): Promise<string[]> => {
   const entries = await readdir(directory, { withFileTypes: true })
   const files = []
   for (const entry of entries) {
@@ -21,7 +22,20 @@ const collectFiles = async directory => {
   return files
 }
 
-const files = (await collectFiles(cacheDirectory)).sort()
+const reviews = JSON.parse(await readFile(path.join(rootDirectory, 'releases/v2-reviews.json'), 'utf8'))
+const config = Bun.JSONC.parse(await readFile(path.join(rootDirectory, 'wrangler.jsonc'), 'utf8')) as {
+  vars: { ATLAS_ALLOWED_ORIGIN: string }
+}
+const live = await fetch(new URL('/api/artwork-reviews', config.vars.ATLAS_ALLOWED_ORIGIN), { cache: 'no-store' })
+if (!live.ok) throw new Error(`Could not check production artwork reviews: HTTP ${live.status}`)
+const rejected = new Set([reviews, await live.json()].flatMap(records =>
+  [...latestDecisions(records)].flatMap(([url, status]) =>
+    status === 'rejected' ? discoveryObjects(url)?.keys ?? [] : [])))
+const files = (await collectFiles(cacheDirectory)).filter(filename => {
+  const key = path.relative(cacheDirectory, filename)
+  return /^18\/\d+\/\d+\/[a-z0-9-]+(?:\.v\d+(?:\.[a-z0-9-]+)?)?\.(?:json|image)$/.test(key) &&
+    !rejected.has(`atlas/${key}`)
+}).sort()
 if (!files.length) throw new Error(`No cache files found in ${cacheDirectory}`)
 
 let completed = 0

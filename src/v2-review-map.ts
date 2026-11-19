@@ -36,7 +36,7 @@ export function installV2ReviewMap(map: AtlasMap, onCount = (_count: number) => 
       const {west,east,north,south} = footprint(art).bounds
       if (!view.intersects([[west,south],[east,north]])) continue
       displayed.push(art)
-      const url = art.animation?.plate ?? art.url
+      const url = art.animation?.plate ?? art.imageUrl ?? art.url
       const coordinates: ImageSource['coordinates'] = [[west,north],[east,north],[east,south],[west,south]]
       if (!loaded.has(id)) {
         map.addSource(id, { type:'image', url, coordinates })

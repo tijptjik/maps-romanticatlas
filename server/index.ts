@@ -1,4 +1,4 @@
-import { releaseCatalog, releaseMediaKeys } from '../src/release-media.ts'
+import { releaseCatalog, mediaCacheControl, releaseObjectKey, releaseMediaPath } from '../src/release-media.ts'
 import { createServer } from 'node:http'
 import { createHmac, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto'
 import {
@@ -1166,21 +1166,26 @@ const server = createServer(async (request, response) => {
       if (pathname === '/atlas-v2/catalog.json' && (isProduction || !await Bun.file(path.join(rootDirectory, 'public', pathname)).exists())) {
         return sendJson(response, 200, releaseCatalog)
       }
-      const key = releaseMediaKeys.get(pathname)
-      if (key && (isProduction || !await Bun.file(path.join(rootDirectory, 'public', pathname)).exists())) {
+      const localPath = releaseMediaPath(pathname)
+      const key = releaseObjectKey(pathname)
+      if (!key && pathname.startsWith('/release-assets/'))
+        return sendError(response, 404, 'Unknown release asset.')
+      if (key && (isProduction || !await Bun.file(path.join(rootDirectory, 'public', localPath)).exists())) {
         const origin = process.env.ATLAS_SHARE_ASSET_ORIGIN || 'https://romanticassets.hype.hk'
         const media = await fetch(new URL(key, origin), {
           method: request.method,
-          headers: request.headers.range ? { range: request.headers.range } : {},
+          headers: Object.fromEntries(['range', 'if-range', 'if-none-match', 'if-modified-since']
+            .filter(name => typeof request.headers[name] === 'string').map(name => [name, request.headers[name] as string])),
         })
-        const headers = { 'cache-control': 'no-cache' }
-        for (const name of ['content-type', 'content-range', 'accept-ranges']) {
+        const headers = { 'cache-control': mediaCacheControl(pathname, key, media.status) }
+        for (const name of ['content-type', 'content-range', 'accept-ranges', 'etag', 'last-modified']) {
           const value = media.headers.get(name)
           if (value) headers[name] = value
         }
         response.writeHead(media.status, headers)
         return response.end(Buffer.from(await media.arrayBuffer()))
       }
+      if (localPath !== pathname) request.url = localPath + new URL(request.url, 'http://localhost').search
     }
 
     if (!isProduction && request.method === 'GET' && pathname.startsWith(liveJobPath)) {

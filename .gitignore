@@ -14,3 +14,15 @@ shared-maps/
 # Local generator working files
 .tmp/
 __pycache__/
+
+# Local release previews, locks and generator intermediates
+/.local/
+
+# Locally exported artwork and media. Tracked source files remain tracked.
+/public/atlas-v2/
+/public/parcel-diversity-*/
+/public/**/*.webp
+/public/**/*.png
+/public/**/*.jpg
+/public/**/*.ogg
+/public/**/*.wav

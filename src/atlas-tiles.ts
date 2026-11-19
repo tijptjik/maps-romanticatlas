@@ -2915,7 +2915,7 @@ export const installAtlasTileInteractions = (
       fog.invalidate()
       try {
         const image = new Image()
-        const plate = art.animation?.plate ?? art.url
+        const plate = art.animation?.plate ?? art.imageUrl ?? art.url
         image.src = plate
         await image.decode()
         if (tileState.get(id) !== 'checking') return

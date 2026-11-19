@@ -3,6 +3,7 @@ export type Painting = { title: string; x: number; y: number; rows: number; colu
   glitterOrigin?: number[]
   auditoriumOriginPixels?: number[]
   motion?: { box: number[]; sprite: string }
+  spriteUrl?: string
   folder?: string
   plate?: string
 } }

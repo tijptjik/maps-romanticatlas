@@ -58,7 +58,11 @@ Open the local URL printed by the server (use `http://localhost:5173`).
 | `bun run dev:remote`            | Run the Worker locally with the configured remote R2 buckets.                                                |
 | `bun run build`                 | Build the browser bundle into `dist/`.                                                                       |
 | `bun run preview`               | Serve the existing `dist/` build through the production-mode Node server. Run `bun run build` first.         |
-| `bun run deploy`                | Build and deploy the static asset Worker with Wrangler.                                                      |
+| `bun release`                   | Publish accepted artwork and deploy the production app.                                                      |
+| `bun release --dry-run`         | Compile the local release plan into `.local/release/` for inspection.                                        |
+| `bun purge`                     | Compare both R2 buckets with the deployed release and write `.local/rejected/plan.json`.                                        |
+| `bun purge --apply`             | Archive and remove eligible objects after rechecking the deployed release.                         |
+| `bun run deploy`                | Alias for `bun release`.                                                                                     |
 | `bun run typecheck`             | Run TypeScript checking without emitting files.                                                              |
 | `bun run lint`                  | Run Biome linting.                                                                                           |
 | `bun run format`                | Format source files and Markdown.                                                                            |
@@ -94,11 +98,73 @@ bun run build
 bun run preview
 ```
 
-Deploy the built app and Worker with:
+Run the production release from the checkout containing the reviewed artwork:
 
 ```sh
-bun run deploy
+bun release
 ```
+
+The release reads `public/atlas-v2/catalog.json` (or the checked-in release catalog on a
+clean checkout) and applies `releases/v2-reviews.json` by exact artwork URL. An
+individual decision overrides an accepted sheet. Accepted discoveries and other
+individually accepted paintings retain their coordinates even when the working catalog
+has no sheet for them. Production admin review overrides stored in R2 continue to apply
+at runtime. The local release command uses the checkout’s review decisions.
+
+The command publishes paintings, animation plates and sprites to the media bucket under
+`release-assets/<sha256>.<extension>`. It also verifies the existing interface media
+listed in `releases/assets.json` (pavilion, audio and root assets). Optimised WebP
+editions keep the original painting’s review URL. Accepted generated tiles use the tile
+bucket’s versioned image and metadata keys. Wrangler credentials need read/write access
+to both configured buckets and permission to deploy the Worker. When the login has
+multiple accounts, set `CLOUDFLARE_ACCOUNT_ID` to the release account.
+
+The first release verifies object bytes and saves their SHA-256, strong R2 ETag and
+verification time in `.local/release/verified-objects.json`. Subsequent releases
+check exact-key R2 metadata for verified objects. A changed ETag or a 30-day-old
+verification triggers a full read. Use `bun release --audit` to force full reads
+during a production release. A missing object needs local source bytes. A conflicting object stops the
+release. Once verification succeeds, the command writes `releases/assets.json` and
+`releases/catalog.json`, builds the browser bundle, and deploys the Worker. Rerunning
+after an interrupted upload reuses verified objects. Commit the resulting manifests and
+review decisions to retain the release recipe in Git.
+
+Use `bun release --dry-run` to inspect both candidate manifests under `.local/release/`
+without contacting Cloudflare. The dry run checks local inputs; remote-only assets are
+verified during publication. Keep generator intermediates under ignored `.local/`.
+Browser-ready working exports stay under ignored media paths in `public/`, where the
+generators and dev server already expect them. Keep backups of unpublished originals and
+candidates; release storage contains only the selected delivery assets.
+
+The production catalog includes content-hashed display URLs for released paintings,
+animation plates and sprites. Browsers can cache these immutable responses for a year.
+Stable aliases revalidate, and review identities continue to use the original URL.
+The Worker caches R2 review overrides in a shared index for five minutes. A review
+save invalidates the index. Administrative review checks read current records.
+
+### Purging files outside the release
+
+`bun purge` lists both production R2 buckets with Wrangler read credentials. It
+compares stored keys with the deployed Worker's `/atlas-v2/release-objects.json`
+and writes the counts, candidate keys and byte sizes to `.local/rejected/plan.json`.
+The inventory includes the release media mappings (paintings, animation plates,
+sprites, interface media and audio) and both objects for each generated catalog tile.
+
+A file can qualify without any review history. The media bucket's content-addressed
+`release-assets/` files and the tile bucket's generated `atlas/` image and JSON
+pairs are eligible, including unversioned legacy tiles. Visitor shares, reviews,
+generation jobs, indexes and unrelated keys are preserved. `bun purge --local-catalog`
+previews the same live buckets using this checkout's compiled manifests, which is
+useful before deploying the inventory endpoint. Its report is marked **checkout**.
+
+After deploying the updated Worker, `bun purge --apply` recomputes the comparison
+and requires the production `ATLAS_ADMIN_TOKEN`. It saves verified bytes under
+`.local/rejected/<bucket>/<key>/<sha256>` and writes a receipt for every candidate before requesting
+any deletion. The Worker rechecks the deployed references and archive hashes for each
+group, including both halves of a tile pair. The CLI checks R2 after deletion.
+The command only changes bucket files and local archives. Stored catalog entries,
+tile manifest rows and review decisions are preserved. A cached response can persist
+until expiry, and a later explicit upload or tile generation can recreate a file.
 
 The deployment command records the current Git commit in the built app. Open the
 deployed map with `?admin` to see its abbreviated commit hash in the lower-left
