@@ -2353,5 +2353,14 @@
     "rows": 1,
     "url": "/atlas-v2/peak-maquette/hong-kong-in-the-clouds-scaled.png",
     "status": "accepted"
+  },
+  {
+    "title": "Hong Kong in the Clouds",
+    "x": 214185,
+    "y": 114426,
+    "columns": 3,
+    "rows": 1,
+    "url": "/atlas-v2/peak-maquette/hong-kong-in-the-clouds-landscape.png",
+    "status": "accepted"
   }
 ]
