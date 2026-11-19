@@ -1,5 +1,7 @@
 import { neighborhoodLabelLayerId } from './map-style'
+import { installArtworkAnimations } from './fountain-glitter'
 import type { GeoJSONSource, Map as AtlasMap } from 'maplibre-gl'
+import { atlasSceneTitle } from './atlas-title-cards'
 import { csrfToken, fetchAdmin } from './cached-tile-admin'
 import { reviewEndpoint, type ArtworkReview, type Painting } from './artwork-review'
 import { installAtlasTileInteractions, tileId } from './atlas-tiles'
@@ -33,9 +35,10 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean, n
   }
   const status = new Map<string, ArtworkReview['status']>()
   try {
-    const [catalogResponse, reviewResponse] = await Promise.all([
+    const [catalogResponse, reviewResponse, discoveryResponse] = await Promise.all([
       fetch('/atlas-v2/catalog.json', { cache: 'no-cache' }),
       fetch(reviewEndpoint, { cache: 'no-store' }),
+      diagnostics ? fetch('/api/atlas-tiles/cached?diagnostics=true&collection=discovery', { cache: 'no-store' }) : null,
     ])
     if ((!catalogResponse.ok && catalogResponse.status !== 404) || !reviewResponse.ok) throw Error('Artwork catalog or reviews unavailable')
     // Static hosts can return their HTML entry point when no catalog is installed.
@@ -53,6 +56,19 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean, n
       for (const art of sheet.art) {
         const decision = status.get(art.url)
         if (diagnostics ? decision !== 'rejected' : decision === 'accepted') add(art)
+      }
+    }
+    if (discoveryResponse) {
+      if (!discoveryResponse.ok) throw Error('Generated artwork unavailable')
+      const { tiles } = await discoveryResponse.json()
+      for (const tile of tiles) {
+        if (tile.variant.startsWith('discovery-') && status.get(tile.url) !== 'rejected') {
+          add({ x: tile.x, y: tile.y, rows: 1, title: atlasSceneTitle(tile.scene), url: tile.url })
+        }
+      }
+    } else {
+      for (const art of reviews) {
+        if (art.url.startsWith('/generated-tiles/') && status.get(art.url) === 'accepted') add(art)
       }
     }
   } catch (error) {
@@ -73,6 +89,29 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean, n
     return atlas.resetReveals
   }
 
+  const copyStatus = document.createElement('div')
+  copyStatus.className = 'atlas-copy-status'
+  copyStatus.setAttribute('role', 'status')
+  map.getContainer().append(copyStatus)
+  let clearCopyStatus: number
+
+  async function copyReference({ art, footprint }: Unit) {
+    const reference = JSON.stringify({
+      title: art.title,
+      image: new URL(art.url, location.href).href,
+      southwestTile: tileId(art),
+      tiles: footprint.cells.map(tileId),
+    })
+    try {
+      await navigator.clipboard.writeText(reference)
+      copyStatus.textContent = 'Copied reference for ' + art.title
+      window.clearTimeout(clearCopyStatus)
+      clearCopyStatus = window.setTimeout(() => { copyStatus.textContent = '' }, 2200)
+    } catch {
+      window.prompt('Copy the regeneration reference for ' + art.title, reference)
+    }
+  }
+
   function positionLabels() {
     const view = map.getBounds()
     for (const { element, title, bounds } of labels.values()) {
@@ -90,10 +129,12 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean, n
     }
   }
 
+  const showAnimations = installArtworkAnimations(map)
+
   function draw(unit: Unit, opacity: number) {
     const {layer, art, footprint: {bounds: {west, east, north, south}}} = unit
     const coordinates: [[number, number], [number, number], [number, number], [number, number]] = [[west,north],[east,north],[east,south],[west,south]]
-    map.addSource(layer, { type: 'image', url: art.url, coordinates })
+    map.addSource(layer, { type: 'image', url: art.animation?.plate ?? art.url, coordinates })
     map.addLayer({id: layer, type: 'raster', source: layer, paint: { 'raster-opacity': opacity, 'raster-fade-duration': 0 }}, edges)
   }
 
@@ -187,6 +228,7 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean, n
       map.moveLayer(unit.layer, edges)
       for (const cell of unit.footprint.cells) top.set(tileId(cell), unit)
     }
+    showAnimations(new Set([...top.values()].map(unit => unit.art)))
     if (gridSize !== byCell.size) {
       gridSize = byCell.size
       const coordinates = [...byCell.keys()].map(id => {
@@ -203,7 +245,8 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean, n
         element.className = 'atlas-image-count'
         element.setAttribute('role', 'group')
         element.innerHTML = '<span class="atlas-image-pips"></span><output></output><button type="button" data-action="accepted">✓</button><button type="button" data-action="rejected">×</button>'
-        const title = document.createElement('span')
+        const title = document.createElement('button')
+        title.type = 'button'
         title.className = 'atlas-discovery-title'
         title.dataset.tile = id
         map.getContainer().append(title, element)
@@ -213,6 +256,12 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean, n
       }
       const {element, title} = label
       title.textContent = current.art.title
+      title.title = 'Copy regeneration reference for ' + current.art.title
+      title.setAttribute('aria-label', title.title)
+      title.onclick = event => {
+        event.stopPropagation()
+        void copyReference(current)
+      }
       element.setAttribute('aria-label', choices.length + ' images on tile ' + id)
       element.querySelector('output')!.value = String(choices.length)
       const pips = element.querySelector('.atlas-image-pips')!

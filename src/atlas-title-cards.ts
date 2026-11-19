@@ -1,7 +1,7 @@
 import { atlasScenes } from './atlas-scenes.ts'
 import { tileBounds } from './tile-geometry.ts'
 
-const titleCase = value =>
+export const atlasSceneTitle = (value: string) =>
   value
     .split('-')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
@@ -10,11 +10,11 @@ const titleCase = value =>
 export const createAtlasTitleCard = (container, scene, displayTitle?: string) => {
   const card = document.createElement('aside')
   card.className = 'atlas-title-card is-awaiting-focus'
-  card.setAttribute('aria-label', displayTitle ?? `${titleCase(scene)}: ${atlasScenes[scene]}`)
+  card.setAttribute('aria-label', displayTitle ?? `${atlasSceneTitle(scene)}: ${atlasScenes[scene]}`)
 
   const title = document.createElement('strong')
   title.className = 'atlas-title-card__title'
-  title.textContent = displayTitle ?? titleCase(scene)
+  title.textContent = displayTitle ?? atlasSceneTitle(scene)
 
   card.append(title)
   container.append(card)

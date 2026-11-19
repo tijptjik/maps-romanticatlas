@@ -1,0 +1,30 @@
+{
+  "/generated-tiles/18/214183/114433/tropical-aquarium?version=6&variant=discovery-2243a5da-28ba-4bb0-89ff-1b75dcc98607-f745b7a24386": {
+    "edgeFade": true
+  },
+  "/generated-tiles/18/214185/114421/steampunk-city?version=6&variant=discovery-2243a5da-28ba-4bb0-89ff-1b75dcc98607-7b98bbc4415f": {
+    "edgeFade": false
+  },
+  "/atlas-v2/coasters/counterweight-ballet-cleared.png": {
+    "edgeFade": true,
+    "waterFadeStart": 0.72,
+    "backgroundMask": [
+      [
+        0,
+        0
+      ],
+      [
+        0.78,
+        0
+      ],
+      [
+        0.31,
+        0.205
+      ],
+      [
+        0,
+        0.25
+      ]
+    ]
+  }
+}

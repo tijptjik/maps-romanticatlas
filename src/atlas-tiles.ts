@@ -1,4 +1,5 @@
 import { originalArtwork } from './artwork-sampling'
+import { installArtworkAnimations } from './fountain-glitter'
 import type { Painting } from './artwork-review'
 import { createFogSilhouette } from './fog-silhouette'
 import { fogShapeSeed } from './fog-pattern.js'
@@ -669,7 +670,6 @@ const createGenerationArtifacts = (map, sourceCanvas, northWest, southEast) => {
 }
 
 const decodedTileImages = new Map()
-const fadedTileUrls = new Map()
 
 const decodeTileImage = url => {
   if (decodedTileImages.has(url)) return decodedTileImages.get(url)
@@ -684,47 +684,6 @@ const decodeTileImage = url => {
   return promise
 }
 
-const createFadedTileUrl = async url => {
-  const image = await decodeTileImage(url)
-
-  const size = image.naturalWidth
-  const fade = size * 0.1
-  const canvas = document.createElement('canvas')
-  canvas.width = size
-  canvas.height = size
-  const context = canvas.getContext('2d')
-  context.drawImage(image, 0, 0, size, size)
-
-  const pixels = context.getImageData(0, 0, size, size)
-  for (let y = 0; y < size; y += 1) {
-    for (let x = 0; x < size; x += 1) {
-      const distance = Math.min(x, y, size - 1 - x, size - 1 - y)
-      const amount = Math.min(1, distance / fade)
-      const smoothAmount = amount * amount * (3 - 2 * amount)
-      pixels.data[(y * size + x) * 4 + 3] = Math.round(
-        pixels.data[(y * size + x) * 4 + 3] * smoothAmount,
-      )
-    }
-  }
-  context.putImageData(pixels, 0, 0)
-  return canvas.toDataURL('image/png')
-}
-
-const getFadedTileUrl = url => {
-  if (fadedTileUrls.has(url)) return fadedTileUrls.get(url)
-  const promise = createFadedTileUrl(url)
-  fadedTileUrls.set(url, promise)
-  promise.catch(() => {
-    if (fadedTileUrls.get(url) === promise) fadedTileUrls.delete(url)
-  })
-  return promise
-}
-
-const forgetPreloadedTileImage = url => {
-  decodedTileImages.delete(url)
-  fadedTileUrls.delete(url)
-}
-
 export const addGeneratedTile = async (
   map,
   tile,
@@ -733,21 +692,19 @@ export const addGeneratedTile = async (
   titleCards,
   contentBounds,
   initialOpacity = 0,
-  preparedUrl = undefined,
   signal?: AbortSignal,
   placement?: { bounds: ReturnType<typeof tileBounds>; title: string; image: HTMLImageElement },
 ) => {
   const id = `atlas-tile-${tile.x}-${tile.y}`
   if (map.getLayer(id)) return
   const bounds = placement?.bounds ?? tileBounds(tile)
-  const fadedUrl = preparedUrl ?? (await withinClickBudget(getFadedTileUrl(url), signal))
   const alpha = scene && titleCards
     ? sampleArtworkAlpha(placement?.image ?? await withinClickBudget(decodeTileImage(url), signal))
     : undefined
   signal?.throwIfAborted()
   map.addSource(id, {
     type: 'image',
-    url: fadedUrl,
+    url,
     coordinates: [
       [bounds.west, bounds.north],
       [bounds.east, bounds.north],
@@ -2221,6 +2178,8 @@ export const installAtlasTileInteractions = (
   const tileState = new Map()
   const revealedTileIds = new Set()
   const artworkFrames = new Map<string, ArtworkFrame>()
+  const animatedPaintings = new Set<Painting>()
+  const showAnimations = installArtworkAnimations(map)
   const titleCards = new Map()
   const clearanceNotice = createClearanceNotice(map)
   const fogErrorAnnouncer = createFogErrorAnnouncer(map)
@@ -2303,7 +2262,7 @@ export const installAtlasTileInteractions = (
       if (!tileState.has(id)) {
         cachedTileRequests.delete(id)
         preloadedTileRequests.delete(id)
-        if (indexed?.url) forgetPreloadedTileImage(indexed.url)
+        if (indexed?.url) decodedTileImages.delete(indexed.url)
       }
     })
   }
@@ -2654,7 +2613,7 @@ export const installAtlasTileInteractions = (
         )
       : []
     if (body?.cached !== true || rejectedUrls.has(body.url) || !belongsToVisit(body.url)) {
-      return { cached: false, scenes, preparedUrl: undefined }
+      return { cached: false, scenes }
     }
     if (
       typeof body.url !== 'string' ||
@@ -2672,7 +2631,6 @@ export const installAtlasTileInteractions = (
       scene: body.scene as AtlasScene,
       scenes,
       contentBounds: body.contentBounds,
-      preparedUrl: undefined,
     }
   }
 
@@ -2740,7 +2698,6 @@ export const installAtlasTileInteractions = (
         scene: indexed.scene,
         scenes: [],
         contentBounds: indexed.contentBounds,
-        preparedUrl: undefined,
       })
     }
 
@@ -2804,12 +2761,8 @@ export const installAtlasTileInteractions = (
         fog.invalidate()
         updateCloudDiagnostics()
         audio?.preloadScene(status.scene)
-        return {
-          ...status,
-          // Do the decode and edge fade while the tile is merely visible. The
-          // click path can then add the ready-to-render image immediately.
-          preparedUrl: await getFadedTileUrl(status.url),
-        }
+        await decodeTileImage(status.url)
+        return status
       })
       .catch(error => {
         if (preloadedTileRequests.get(id) !== request) throw error
@@ -2886,17 +2839,22 @@ export const installAtlasTileInteractions = (
       fog.invalidate()
       try {
         const image = new Image()
-        image.src = art.url
+        const plate = art.animation?.plate ?? art.url
+        image.src = plate
         await image.decode()
         if (tileState.get(id) !== 'checking') return
-        await addGeneratedTile(map, art, art.url, art.title, titleCards, undefined,
-          0, art.url, undefined, { bounds: footprint.bounds, title: art.title, image })
+        await addGeneratedTile(map, art, plate, art.title, titleCards, undefined,
+          0, undefined, { bounds: footprint.bounds, title: art.title, image })
         const frame = { bounds: footprint.bounds, width: image.naturalWidth, height: image.naturalHeight }
         for (const cell of cells) artworkFrames.set(cell, frame)
         const anchor = tileId(art)
         revealedTileIds.add(anchor)
         audio?.playFogLift()
         fog.animateReveal(cells, [`atlas-tile-${art.x}-${art.y}`], 1, () => {
+          if (art.animation) {
+            animatedPaintings.add(art)
+            showAnimations(animatedPaintings)
+          }
           focusAtlasTile(map, art, () => titleCards.get(anchor)?.card.classList.remove('is-awaiting-focus'), frame)
           onRevealCountChange(revealedTileIds.size)
         })
@@ -2957,7 +2915,6 @@ export const installAtlasTileInteractions = (
           titleCards,
           cacheStatus.contentBounds,
           0,
-          cacheStatus.preparedUrl,
           budget,
         )
         revealGeneratedTile(id, cacheStatus.scene)
@@ -3024,7 +2981,6 @@ export const installAtlasTileInteractions = (
             titleCards,
             recovered.contentBounds,
             0,
-            recovered.preparedUrl,
             budget,
           )
           revealGeneratedTile(id, recovered.scene)
@@ -3092,7 +3048,6 @@ export const installAtlasTileInteractions = (
         titleCards,
         body.contentBounds,
         0,
-        undefined,
         budget,
       )
       cachedTileIds.add(id)
@@ -3120,6 +3075,8 @@ export const installAtlasTileInteractions = (
   })
 
   const resetReveals = () => {
+    animatedPaintings.clear()
+    showAnimations(animatedPaintings)
     const revealedLayerIds = [...revealedTileIds]
       .map(id => `atlas-tile-${tileFromId(id).x}-${tileFromId(id).y}`)
       .filter(layerId => map.getLayer(layerId))

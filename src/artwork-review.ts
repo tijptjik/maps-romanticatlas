@@ -1,4 +1,11 @@
-export type Painting = { title: string; x: number; y: number; rows: number; columns?: number; url: string }
+export type Painting = { title: string; x: number; y: number; rows: number; columns?: number; url: string; animation?: {
+  pixelsPerTile: number
+  glitterOrigin?: number[]
+  auditoriumOriginPixels?: number[]
+  motion?: { box: number[]; sprite: string }
+  folder?: string
+  plate?: string
+} }
 export type ArtworkReview = Painting & { status: 'accepted' | 'rejected' }
 export const reviewEndpoint = '/api/artwork-reviews'
 
@@ -9,7 +16,7 @@ export function parseArtworkReview(value: unknown): ArtworkReview | null {
       !Number.isInteger(x) || x < 0 || x >= 2 ** 18 ||
       !Number.isInteger(y) || y < 0 || y >= 2 ** 18 ||
       (rows !== 1 && rows !== 2) || y < rows - 1 ||
-      (columns !== undefined && (columns !== 1 && columns !== 2 || x + columns > 2 ** 18)) ||
+      (columns !== undefined && (columns !== 1 && columns !== 2 && columns !== 3 || x + columns > 2 ** 18)) ||
       typeof url !== 'string' || url.length > 500 ||
       !/^\/(?:[a-z0-9_-]+\/)+[a-z0-9_.-]+(?:\?[a-z0-9_=&%-]+)?$/i.test(url) ||
       url.includes('/../') || (status !== 'accepted' && status !== 'rejected')) return null

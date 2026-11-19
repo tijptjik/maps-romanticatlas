@@ -446,7 +446,7 @@ const publishManifestEntry = async (env: AtlasEnv, cached: CachedTile) => {
   await env.ATLAS_MANIFEST.getByName(manifestShardName(entry)).upsert([entry])
 }
 
-const listCachedTiles = async (bucket: R2Bucket, requested: number | null = null) => {
+const listCachedTiles = async (bucket: R2Bucket, requested: number | null = null, discoveryOnly = false) => {
   const cachedVariants = new Map<
     string,
     { tile: Tile; version: number; variant: string }
@@ -464,6 +464,7 @@ const listCachedTiles = async (bucket: R2Bucket, requested: number | null = null
       const [, x, y, scene, versionText, variantText] = match
       const version = Number(versionText)
       const variant = variantText ?? defaultAtlasVariant
+      if (discoveryOnly && !variant.startsWith('discovery-')) continue
       const numericX = Number(x)
       const numericY = Number(y)
       const tileCount = atlasTileCount()
@@ -1338,10 +1339,11 @@ export const handleAtlasApi = async (
             : undefined,
         )
     }
-    const version = adminMode
+    const discoveryOnly = diagnosticsModeEnabled(request) && url.searchParams.get('collection') === 'discovery'
+    const version = adminMode || discoveryOnly
       ? requestedVersion(request)
       : requestedVersion(request) ?? generationVersion
-    const tiles = await listCachedTiles(env.ATLAS_BUCKET, version)
+    const tiles = await listCachedTiles(env.ATLAS_BUCKET, version, discoveryOnly)
     const csrf = adminMode ? await csrfToken(env.ATLAS_ADMIN_TOKEN as string) : null
     const secureCookie = url.protocol === 'https:' ? '; Secure' : ''
     return json(

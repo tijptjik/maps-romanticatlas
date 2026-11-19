@@ -1,10 +1,11 @@
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
 import { once } from 'node:events'
-import { cp, mkdtemp, readFile, rm, symlink } from 'node:fs/promises'
+import { cp, mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
+import sharp from 'sharp'
 
 test('Bun server persists authenticated artwork decisions by image', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'atlas-reviews-'))
@@ -25,8 +26,20 @@ test('Bun server persists authenticated artwork decisions by image', async () =>
       const session = await fetch(address + '/api/atlas-tiles/cached?admin=true', { headers })
       assert.equal(session.status, 200)
       const cookie = session.headers.get('set-cookie')!.split(';')[0]
+      const directory = path.join(root, 'generated-tiles/18/10/20')
+      await mkdir(directory, { recursive: true })
+      const variant = 'discovery-' + crypto.randomUUID() + '-0123456789ab'
+      const png = await sharp({ create: { width: 1, height: 1, channels: 3, background: 'white' } }).png().toBuffer()
+      for (const name of ['circus.v5.' + variant, 'circus.v6']) {
+        await writeFile(path.join(directory, name + '.image'), png)
+        await writeFile(path.join(directory, name + '.json'), JSON.stringify({ contentType: 'image/png' }))
+      }
+      const listing = await fetch(address + '/api/atlas-tiles/cached?diagnostics=true&collection=discovery')
+      const { tiles } = await listing.json()
+      const url = '/generated-tiles/18/10/20/circus?version=5&variant=' + variant
+      assert.deepEqual(tiles.map(tile => tile.url), [url])
       const endpoint = address + '/api/artwork-reviews'
-      const art = { title: 'Review fixture', x: 10, y: 20, rows: 2, url: '/atlas-v2/fixture.webp' }
+      const art = { title: 'Circus', x: 10, y: 20, rows: 1, url }
       const write = (status: string, authenticated: boolean) => fetch(endpoint + '?admin=true', {
         method: 'PUT',
         headers: { ...headers, 'content-type': 'application/json', ...(authenticated

@@ -1,3 +1,4 @@
+import { artworkRequest, installArtworkEdgeFade } from './artwork-edge-fade.ts'
 import { installArtworkSampling } from './artwork-sampling.ts'
 import * as maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
@@ -48,7 +49,9 @@ const minimumZoom = diagnosticsModeEnabled() ? minimumFogZoom : 16
 const nativeMaxZoom = nativeTileZoom(atlasTileSize)
 const initialMaxZoom = adminMap ? nativeMaxZoom : Math.max(minimumZoom, nativeMaxZoom)
 
+installArtworkEdgeFade()
 const map = new maplibregl.Map({
+  transformRequest: artworkRequest,
   container: 'map',
   style: hongKongStyle,
   ...initialView,
@@ -56,7 +59,7 @@ const map = new maplibregl.Map({
   maxPitch: 0,
   dragRotate: false,
   keyboard: false,
-  touchZoomRotate: false,
+  touchZoomRotate: true,
   touchPitch: false,
   pitchWithRotate: false,
   // Atlas interactions use the z18 tile grid. The fog remains visible above it,
@@ -71,6 +74,7 @@ map.getContainer().addEventListener('contextmenu', event => {
   if (event.pointerType === 'touch' || event.pointerType === 'pen') event.preventDefault()
 }, { capture: true })
 
+map.touchZoomRotate.disableRotation()
 installArtworkSampling(map)
 installNativeTileZoom(map, map.getMinZoom())
 installBasemapPreload(map)
@@ -214,6 +218,13 @@ window.addEventListener(
   { capture: true },
 )
 installModeShortcuts(() => Boolean(intro.element.hidden))
+window.addEventListener('keydown', event => {
+  if (event.key !== 'Escape' || event.defaultPrevented || event.repeat || event.isComposing ||
+      event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || kioskMode ||
+      intro.element.classList.contains('is-visible')) return
+  event.preventDefault()
+  returnToPavilion()
+})
 scheduleIdleReset()
 
 const collapseAttribution = () => {
