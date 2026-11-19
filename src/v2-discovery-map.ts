@@ -20,7 +20,7 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean, n
 
   function add(art: Painting) {
     if (units.has(art.url)) return
-    const footprint = drawingFootprint({ ...art, tileSpan: { columns: 1, rows: art.rows } })
+    const footprint = drawingFootprint({ ...art, tileSpan: { columns: art.columns ?? 1, rows: art.rows } })
     const unit = { art, footprint, layer: 'discovery-' + units.size }
     units.set(art.url, unit)
     for (const cell of footprint.cells) {

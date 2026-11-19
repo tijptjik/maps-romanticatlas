@@ -2236,7 +2236,13 @@ export const installAtlasTileInteractions = (
   const belongsToVisit = (url: string) => !discoveryVisit || (
     new URL(url, location.href).searchParams.get('variant')?.startsWith('discovery-' + discoveryVisit + '-')
   )
-  const selected = isFogPatternSelected
+  const spansMultipleTiles = (art: Painting) => art.rows > 1 || (art.columns ?? 1) > 1
+  const multiTileCells = new Set<string>()
+  for (const [id, paintings] of artwork ?? []) {
+    if (paintings.some(spansMultipleTiles)) multiTileCells.add(id)
+  }
+  const hasFootprintOverride = tile => multiTileCells.has(tileId(tile))
+  const selected = tile => hasFootprintOverride(tile) || isFogPatternSelected(tile)
   const cachedTileIds = new Set<string>(artwork?.keys())
   const indexedCachedTiles = new Map()
   const fogIndexTiles = new Map()
@@ -2424,21 +2430,19 @@ export const installAtlasTileInteractions = (
     if (fogIndexUpdateTimer !== undefined) return
     fogIndexUpdateTimer = window.setTimeout(updateFogIndexes, 24)
   }
-  const isFogTileLand = tile => {
-    if (artwork && cachedTileIds.has(tileId(tile))) return true
+  const isTargetableLand = tile => {
     const id = tileId(tile)
     if (fogLandState.has(id)) return fogLandState.get(id).isTargetable
     scheduleFogIndexUpdate()
     return false
   }
 
-  const isFogTileRenderable = tile =>
-    isFogTileLand(tile)
+  const isFogTileLand = tile => hasFootprintOverride(tile) || isTargetableLand(tile)
   const fog = createFogCanvas(
     map,
     tileState,
     cachedTileIds,
-    isFogTileRenderable,
+    isFogTileLand,
     noNoise,
     selected,
   )
@@ -2867,11 +2871,15 @@ export const installAtlasTileInteractions = (
       focusAtlasTile(map, tile, undefined, frame)
       return
     }
-    const paintings = artwork?.get(id)
+    const choices = artwork?.get(id)
+    const paintings = choices && multiTileCells.has(id) &&
+      !(isFogPatternSelected(tile) && isTargetableLand(tile))
+      ? choices.filter(spansMultipleTiles)
+      : choices
     if (paintings?.length) {
       if (tileState.has(id)) return
       const art = paintings[Math.floor(Math.random() * paintings.length)]
-      const footprint = drawingFootprint({ ...art, tileSpan: { columns: 1, rows: art.rows } })
+      const footprint = drawingFootprint({ ...art, tileSpan: { columns: art.columns ?? 1, rows: art.rows } })
       const cells = footprint.cells.map(tileId)
       if (cells.some(cell => tileState.has(cell))) return
       for (const cell of cells) tileState.set(cell, 'checking')
