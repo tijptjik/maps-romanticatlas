@@ -1,3 +1,4 @@
+import creditPetalUrl from './assets/tijptjik-petal.webp?url'
 import type { PavilionCue } from './pavilion-audio'
 import { installPavilionScene } from './pavilion-scene'
 
@@ -57,7 +58,7 @@ const splashMarkup = `
     </button>
     <a class="pavilion-credit" draggable="false" href="https://type.hk/" target="_blank" rel="noopener noreferrer" aria-label="By TIJPTJIK — Type.hk">
       <span class="pavilion-credit__petal">
-        <img data-piece="bauhinia-petal" alt="" /><span>by <b>TIJPTJIK</b></span>
+        <span class="pavilion-credit__art"><img src="${creditPetalUrl}" alt="" /></span>
       </span>
     </a>
   </div>
@@ -87,7 +88,7 @@ async function preparePavilion(pieces: NodeListOf<HTMLImageElement>) {
 
 export const createIntroSplash = (
   mapContainer: HTMLElement,
-  onEnter = () => {},
+  onEnter: () => void | Promise<void> = () => {},
   initiallyVisible = true,
   onMapVisible = () => {},
   playCue: PavilionCue = () => {},
@@ -122,7 +123,7 @@ export const createIntroSplash = (
     tap = undefined
     if (released && event.timeStamp - released.started < 500) released.control.click()
   })
-  const pieces = splash.querySelectorAll<HTMLImageElement>('img[data-piece]')
+  const pieces = splash.querySelectorAll<HTMLImageElement>('img')
   const book = splash.querySelector<HTMLButtonElement>('.pavilion-book')!
   book.querySelector('img')!.addEventListener('error', () => splash.classList.add('without-illustrations'))
   splash.tabIndex = -1
@@ -139,7 +140,9 @@ export const createIntroSplash = (
   let opening = initiallyVisible
   let preparing = false
 
+  let entering = false
   const show = async () => {
+    entering = false
     if (preparing || splash.classList.contains('is-visible')) return
     window.clearTimeout(transitionTimer)
     for (const piece of pieces) {
@@ -183,15 +186,18 @@ export const createIntroSplash = (
     }
   }
 
-  const dismiss = () => {
-    if (preparing || !splash.classList.contains('is-visible')) return
+  const dismiss = async () => {
+    if (entering || preparing || !splash.classList.contains('is-visible')) return
+    entering = true
+    await onEnter()
+    if (!entering) return
+    entering = false
     window.clearTimeout(lightTimer)
     window.clearTimeout(transitionTimer)
     splash.classList.remove('is-returning')
     aimAtBook()
     splash.classList.replace('is-visible', 'is-exiting')
     splash.inert = true
-    onEnter()
     mapContainer.querySelector<HTMLElement>('.maplibregl-canvas')?.focus({ preventScroll: true })
     transitionTimer = window.setTimeout(() => {
       setSceneVisible?.(false)
@@ -244,8 +250,8 @@ export const createIntroSplash = (
   }
   orrery.addEventListener('click', () => toggleLight(true))
   book.addEventListener('click', dismiss)
-  if (initiallyVisible) show()
-  else splash.hidden = true
+  splash.hidden = !initiallyVisible
+  const ready = initiallyVisible ? show() : Promise.resolve()
 
-  return { element: splash, dismiss, show }
+  return { element: splash, dismiss, show, ready }
 }

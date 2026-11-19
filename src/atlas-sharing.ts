@@ -11,11 +11,11 @@ const exportHeight = 1350 * exportPixelRatio
 const maximumShareImageBytes = 8_000_000
 const maximumCapturePixelRatio = 4
 const minimumReveals = 5
-const cameraIcon = `<svg class="atlas-camera-icon" viewBox="0 0 32 26" fill="none"
-  stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true">
-  <path d="M3 7h6l3-4h8l3 4h6v16H3z"/>
-  <circle cx="16" cy="14" r="5.5"/><circle cx="16" cy="14" r="3.3"/>
-  <path d="M24 10h2"/>
+const cameraIcon = `<svg class="atlas-camera-icon" viewBox="0 0 36 26" fill="currentColor"
+  aria-hidden="true" focusable="false">
+  <path fill-rule="evenodd" d="M3 7h2V4h6v2h4l2-3h11l2 4h2a2 2 0 0 1 2 2v12a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V9a2 2 0 0 1 1-2Z
+    M5 10v3h6v-3Z M27.5 15a6.5 6.5 0 1 0-13 0 6.5 6.5 0 1 0 13 0Z"/>
+  <circle cx="21" cy="15" r="3.5"/>
 </svg>`
 
 const actionIcon = (paths: string) => `<svg viewBox="0 0 24 24" fill="none"
@@ -349,13 +349,23 @@ export const installAtlasSharing = (
   const qrImage = document.createElement('img')
   qrImage.className = 'atlas-share-qr'
   qrImage.alt = 'QR code for your map image'
+  const previewLink = document.createElement('a')
+  previewLink.textContent = 'Open image'
+  previewLink.target = '_blank'
+  previewLink.rel = 'noopener noreferrer'
+  const devShareOrigin = import.meta.env.DEV && import.meta.env.VITE_ATLAS_DEV_SHARE_ORIGIN
+  if (devShareOrigin) {
+    resultCopy.textContent = 'Scan or open the image on a device connected to your tailnet.'
+  }
   const retakeButton = document.createElement('button')
   retakeButton.className = 'atlas-share-retake'
   retakeButton.type = 'button'
   retakeButton.title = 'Retake'
   retakeButton.setAttribute('aria-label', 'Retake')
   retakeButton.innerHTML = retakeIcon
-  result.append(resultTitle, resultCopy, qrImage, retakeButton)
+  result.append(resultTitle, resultCopy, qrImage)
+  if (devShareOrigin) result.append(previewLink)
+  result.append(retakeButton)
 
   const flash = document.createElement('div')
   flash.className = 'atlas-share-flash'
@@ -444,7 +454,11 @@ export const installAtlasSharing = (
       if (!response.ok || typeof body?.url !== 'string') {
         throw new Error(body?.error ?? 'Could not save your map.')
       }
-      qrImage.src = await QRCode.toDataURL(body.url, {
+      const imageUrl = devShareOrigin
+        ? new URL(new URL(body.url).pathname, devShareOrigin).href
+        : body.url
+      if (devShareOrigin) previewLink.href = imageUrl
+      qrImage.src = await QRCode.toDataURL(imageUrl, {
         errorCorrectionLevel: 'M',
         margin: 4,
         width: 720,

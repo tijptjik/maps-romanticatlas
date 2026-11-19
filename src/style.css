@@ -35,7 +35,7 @@ body {
   background: #efe0bd;
 }
 
-#map::after {
+#map.maplibregl-map::after {
   content: "";
   position: absolute;
   z-index: 1;
@@ -437,6 +437,11 @@ body {
 
 .atlas-share-result p {
   font: italic 500 1.12rem / 1.15 "Cormorant Garamond", Georgia, serif;
+}
+
+.atlas-share-result a {
+  color: inherit;
+  text-underline-offset: 0.15em;
 }
 
 .atlas-share-qr {

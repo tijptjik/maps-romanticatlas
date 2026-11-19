@@ -8,6 +8,8 @@ export const edgesAndFigures = {
     "Finish each exposed edge at a real feature: a retaining wall turns the corner, a stair reaches its last landing, and a gate meets the existing path at grade.",
     "Use parcel lines to place objects. Where a roof, stall or workshop would protrude past the usable site, shorten its span or move it inward so its end gable, projecting eave and return wall are all visible.",
     "Trace each exposed outline as if the basemap were hidden. Give it a built or living end even where it runs alongside a straight street. Preserve fine projections and the openings between them when isolating the painting.",
+    "Then inspect that outline against the registered map. A crop is justified only at the actual tile boundary where the same surveyed building footprint or ground route demonstrably continues beyond it. A parcel boundary, placement-guide edge or inset safety margin is not evidence of continuation. Do not invent off-tile continuation to excuse an unfinished object.",
+    "At every other exposed end, finish the object in three dimensions: roof ridge and eave meet a return wall, deck boards meet a fascia and complete supports, railings turn or terminate at posts, and planting beds retain their soil. Never slice a raised walkway, canopy, tree, person or planter merely to expose the street beneath it. Where the street must remain visible, redesign complete objects on either side before drawing.",
     "Allow clearance for the projected tops of structures, foliage, animals, people and contact shade inside the outer frame.",
     "For a multi-tile composition apply this clearance to the outside of the combined frame; carry continuous features through its internal seam.",
     "Preserve the source map's exact ground colour and registered streets in all untouched areas.",
@@ -15,6 +17,7 @@ export const edgesAndFigures = {
     "For a keyed overlay, carry the uniform key right up to that silhouette and through exposed gaps.",
     "Keep a raised object continuous wherever it passes in front of a mapped feature behind it. Open a gap only where the viewer can see through the painted structure. Leave detached outlines of existing roads and roofs to the basemap.",
     "Keep the edge crisp: no rectangular feather, haze, colour halo, clipped steps or stray fragments of neighbouring paths.",
+    "Before finishing, inspect every side of every painted island and every internal opening, not only the most conspicuous defect. Trace each roof, wall, deck, railing, tree canopy and path to its end. Check that visible approaches reach a real entrance or continue along the surveyed route; do not leave detached road strips ending in empty water or ground. In a repair, recheck the entire perimeter after editing and preserve useful site coverage rather than shrinking the composition to hide a cutoff.",
   ].join(' '),
   figures: [
     "Use the tile's ground scale and the same vertical projection for every person.",
@@ -82,7 +85,7 @@ export const atlasPrompt = (scene: AtlasScene, hasSea: boolean) => {
 
   const tileRule = `Create ${atlasScenes[scene]} on the mapped parcels in this single z18 map tile, leaving a ${waterfront ? 5 : 10}% safety margin.`
   const continuityRule =
-    'This image is a cropped window onto one continuous world map, never a complete, framed illustration: neighbouring map tiles continue beyond every edge.'
+    'The basemap continues beyond this tile. Added objects require complete exposed endings; only a continuation demonstrated by the surveyed footprint or ground route at the actual tile boundary can justify a crop. An inset edge inside the tile is never a continuation boundary.'
   const referenceRule =
     'The first image is the source map. The second image is a zoning guide: brighter green marks priority building footprints and the remaining green areas are safe to transform, amber permits upper architecture to overlap a background street, blue permits moored vessels and shore-connected piers, piled buildings or floating platforms over existing sea, and red is protected. Use the guide as an instruction, not as artwork.'
   const preservationRule =

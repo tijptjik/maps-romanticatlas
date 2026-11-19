@@ -42,7 +42,7 @@ export const tilePolygon = tile => {
   ]
 }
 
-// Experiment images are anchored at their southwest tile and extend north and east.
+// Artwork images are anchored at their southwest tile and extend north and east.
 export const drawingFootprint = (tile: {
   x: number; y: number; scene?: string; tileSpan?: { columns: number; rows: number }
 }) => {

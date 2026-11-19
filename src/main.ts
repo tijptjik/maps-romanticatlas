@@ -7,9 +7,7 @@ import { installDiscoveryMap } from './v2-discovery-map'
 import { installCachedTileAdmin } from './cached-tile-admin'
 import { installAtlasTileInteractions, minimumFogZoom } from './atlas-tiles'
 import { installV2ReviewMap } from './v2-review-map'
-import { createIntroSplash } from './intro-splash.ts'
-import { installArtistStatement } from './artist-statement.ts'
-import { installAtlasAudio } from './atlas-audio.ts'
+import type { Pavilion } from './landing'
 import { installAtlasSharing } from './atlas-sharing.ts'
 import { createMapFlight } from './map-flight.ts'
 import { hongKongStyle } from './map-style.ts'
@@ -18,18 +16,15 @@ import { installNativeTileZoom, nativeTileZoom } from './native-tile-zoom.ts'
 import { installBasemapPreload } from './basemap-preload.ts'
 import {
   mapModePath,
+  adminModeEnabled,
   reviewModeEnabled,
   reviewQueueEnabled,
   revealedModeEnabled,
-  adminModeEnabled,
   diagnosticsModeEnabled,
   cloudDiagnosticsModeEnabled,
   noNoiseEnabled,
   kioskModeEnabled,
-  noMusicEnabled,
-  noSplashEnabled,
 } from './runtime-modes.ts'
-import './style.css'
 
 // Vite emits MapLibre's module worker as a self-contained same-origin asset.
 maplibregl.setWorkerUrl(workerUrl)
@@ -44,13 +39,7 @@ const initialView = {
 const kioskFlightCenter = [114.1455, 22.2759] as [number, number]
 const reviewMode = reviewModeEnabled()
 const kioskMode = kioskModeEnabled()
-const restoringMap = history.state?.atlasView === 'map' ||
-  (!history.state?.atlasView && Boolean(history.state?.atlasModeCamera))
-if (reviewMode || revealedModeEnabled() || kioskMode || noSplashEnabled() || restoringMap) {
-  document.documentElement.classList.remove('atlas-boot')
-}
-
-// The experiment overview can span several districts, including on narrow screens.
+// The review overview can span several districts, including on narrow screens.
 const adminMap = !reviewMode && adminModeEnabled()
 const minimumZoom = reviewMode ? 10 : diagnosticsModeEnabled() ? minimumFogZoom : 16
 const nativeMaxZoom = nativeTileZoom(atlasTileSize)
@@ -110,24 +99,26 @@ function installModeShortcuts(mapVisible: () => boolean) {
   })
 }
 
+map.addControl(new maplibregl.AttributionControl({
+  compact: true,
+  customAttribution: reviewMode ? undefined :
+    '<a href="https://github.com/tijptjik/maps-romanticatlas/blob/main/THIRD_PARTY_NOTICES.md" target="_blank" rel="noopener noreferrer">Sounds</a>',
+}))
+// Initialize the compact state before asynchronous source credits arrive.
+const credits = map.getContainer().querySelector<HTMLDetailsElement>('.maplibregl-ctrl-attrib')!
+credits.classList.add('maplibregl-compact')
+credits.classList.remove('maplibregl-compact-show')
+credits.open = false
+
 if (reviewMode) {
   installModeShortcuts(() => true)
-  map.addControl(new maplibregl.AttributionControl({ compact: true }))
-  if (reviewQueueEnabled()) {
-    const credits = map.getContainer().querySelector<HTMLDetailsElement>('.maplibregl-ctrl-attrib')!
-    credits.classList.add('maplibregl-compact')
-    credits.classList.remove('maplibregl-compact-show')
-    credits.open = false
-  }
   map.once('load', () => {
     if (reviewQueueEnabled()) void installDiscoveryMap(map, 'queue', true, () => {}, undefined)
     else installV2ReviewMap(map)
   })
-} else {
-  await startAtlas()
 }
 
-async function startAtlas() {
+export function startAtlas(pavilion: Pavilion) {
   const installDeployCommit = (mapContainer: HTMLElement) => {
     if (!adminModeEnabled()) return
 
@@ -142,46 +133,12 @@ async function startAtlas() {
 
   installDeployCommit(map.getContainer())
 
-  const skipSplash = revealedModeEnabled() || noSplashEnabled() || kioskMode
-  const audio = installAtlasAudio(map.getContainer(), {
-    initiallyMuted: noMusicEnabled() || kioskMode,
-  })
-  const enterMap = () => {
-    if (history.state?.atlasView !== 'map') {
-      history.replaceState({ ...history.state, atlasView: 'pavilion' }, '')
-      history.pushState({ ...history.state, atlasView: 'map' }, '')
-    }
-    audio.unlock()
-  }
-  const intro = createIntroSplash(map.getContainer(), enterMap, !skipSplash && !restoringMap, () => {
-    audio.start()
-    scheduleIdleReset()
-  }, audio.playPavilionCue)
-  const statement = installArtistStatement(map.getContainer(), {
-    showMapTrigger: !adminModeEnabled(),
-    onBookmarkPull: () => audio.playPavilionCue('book', 'pull'),
-    onPavilionClose: () => audio.playPavilionCue('book', 'fall'),
-  })
+  const { audio, intro, returnToPavilion } = pavilion
   const sharing = installAtlasSharing(map, audio)
-  const showPavilion = () => {
+  pavilion.onReturn = () => {
     window.clearTimeout(idleTimer)
-    void statement.close()
-    void intro.show()
-    audio.stop()
     sharing.reset()
   }
-  const returnToPavilion = () => {
-    if (history.state?.atlasView === 'map') history.back()
-    else showPavilion()
-  }
-  window.addEventListener('popstate', event => {
-    if (event.state?.atlasView === 'pavilion') {
-      showPavilion()
-    } else if (event.state?.atlasView === 'map') {
-      void statement.close()
-      intro.dismiss()
-    }
-  })
   const idleDelay = 120_000
   const kioskIdleDelay = 30_000
   let idleTimer: number | undefined
@@ -206,6 +163,7 @@ async function startAtlas() {
       }
     }, idleDelay)
   }
+  pavilion.onMapVisible = scheduleIdleReset
 
   const scheduleKioskFlight = () => {
     if (!kioskMode) return
@@ -228,7 +186,7 @@ async function startAtlas() {
   for (const type of ['pointerdown', 'pointerup', 'pointermove', 'wheel', 'touchstart', 'touchmove', 'keydown']) {
     window.addEventListener(type, noteActivity, { passive: true, capture: true })
   }
-  if (skipSplash || restoringMap) map.once('click', () => audio.start())
+  if (pavilion.directEntry) map.once('click', () => audio.start())
   window.addEventListener(
     'keydown',
     event => {
@@ -256,23 +214,6 @@ async function startAtlas() {
   })
   scheduleIdleReset()
 
-  const collapseAttribution = () => {
-    const attribution = map
-      .getContainer()
-      .querySelector<HTMLElement>('.maplibregl-ctrl-attrib')
-    attribution?.classList.remove('maplibregl-compact-show')
-    attribution?.removeAttribute('open')
-  }
-
-  map.addControl(
-    new maplibregl.AttributionControl({
-      compact: true,
-      customAttribution:
-        '<a href="https://github.com/tijptjik/maps-romanticatlas/blob/main/THIRD_PARTY_NOTICES.md" target="_blank" rel="noopener noreferrer">Sounds</a>',
-    }),
-  )
-  collapseAttribution()
-  map.once('idle', collapseAttribution)
   map.on('load', async () => {
     const params = new URLSearchParams(location.search)
     if (adminMap && (params.get('view') === 'cache' || params.has('version'))) {

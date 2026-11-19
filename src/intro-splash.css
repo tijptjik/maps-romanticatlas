@@ -27,6 +27,10 @@
 .atlas-intro.is-returning { animation-direction: reverse; }
 
 .pavilion-room {
+  --orrery-width: min(15cqw, 22cqh);
+  --atlas-width: min(53cqw, 75cqh);
+  /* Center each side object in the space beside the open atlas. */
+  --side-center: calc((100cqw - var(--atlas-width)) / 4);
   position: relative;
   isolation: isolate;
   overflow: hidden;
@@ -144,7 +148,7 @@
   z-index: 2;
   bottom: 13%;
   left: 50%;
-  width: min(53cqw, 75cqh);
+  width: var(--atlas-width);
   padding: 0;
   border: 0;
   background: transparent;
@@ -191,9 +195,10 @@
 .pavilion-book:is(:hover,:focus-visible) .pavilion-page-light { opacity: 1; }
 
 .pavilion-orrery {
-  bottom: 18.2%;
-  right: 7.5%;
-  width: min(15cqw, 22cqh);
+  bottom: 17.1%;
+  right: var(--side-center);
+  translate: 50% 0;
+  width: var(--orrery-width);
   aspect-ratio: 456 / 546;
 }
 .pavilion-orrery::before { inset: auto 24% 4%; }
@@ -216,57 +221,33 @@
   bottom: 12%;
   width: clamp(105px, 9.5cqw, 146px);
   display: block;
-  --petal-tint: 0;
-  color: var(--petal-ink, var(--petal-rest-ink, #602f40));
   text-decoration: none;
 }
 .pavilion-credit__petal {
-  display: grid;
-  place-items: center;
-  isolation: isolate;
+  position: relative;
+  display: block;
+  aspect-ratio: 864 / 382;
   transform: translateY(-6px);
 }
-.pavilion-credit__petal > * { grid-area: 1 / 1; }
+.pavilion-credit__art {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  isolation: isolate;
+}
+.pavilion-credit__art > img { grid-area: 1 / 1; }
 .pavilion-credit img { display: block; width: 100%; filter: drop-shadow(1px 3px 2px #47311973); }
-.pavilion-credit__petal::before,
-.is-night .pavilion-credit__petal::after {
+.is-night .pavilion-credit__art::after {
   content: "";
   grid-area: 1 / 1;
   z-index: 1;
   place-self: stretch;
   pointer-events: none;
-  mask: url("/pavilion/bauhinia-petal.webp") center / 100% 100% no-repeat;
-}
-.pavilion-credit__petal::before {
-  opacity: var(--petal-tint);
-  background: linear-gradient(150deg, #ffc7e6 6%, #e167ad 34%, #ba438c 57%, #f58fc9 82%, #ffd1e6);
-  mix-blend-mode: multiply;
-}
-.pavilion-credit__petal > span {
-  z-index: 2;
-  margin: 0 0 0 8%;
-  font: italic 600 clamp(13px, 1.3cqw, 19px)/1 "Cormorant Garamond", Georgia, serif;
-}
-.pavilion-credit b { font-variant: small-caps; font-weight: 700; letter-spacing: .025em; }
-.pavilion-credit:any-link:is(:focus-visible, :active) {
-  --petal-tint: .52;
-  --petal-ink: #fff1ed;
-}
-@media (hover: hover) {
-  .pavilion-credit:any-link:hover {
-    --petal-tint: .52;
-    --petal-ink: #fff1ed;
-  }
-}
-@media (prefers-reduced-motion: no-preference) {
-  .pavilion-credit { transition: color 220ms ease-in-out; }
-  .pavilion-credit__petal::before, .is-night .pavilion-credit__petal::after {
-    transition: opacity 220ms ease-in-out;
-  }
-  .is-night .pavilion-credit img { transition: filter 220ms ease-in-out; }
+  mask: url("./assets/tijptjik-petal.webp") center / 100% 100% no-repeat;
 }
 @media (max-aspect-ratio: 9/10) {
   .pavilion-room { background-image: url("/pavilion/glasshouse-portrait.webp"); }
+  .pavilion-orrery { translate: none; }
   .pavilion-title { top: 30%; }
   .pavilion-title h1 { margin: .18em auto 0; font-size: 10cqw; }
   .pavilion-book { width: min(91cqw, 75cqh); bottom: 16%; }
@@ -276,6 +257,51 @@
 @media (max-height: 560px) and (min-aspect-ratio: 9/10) {
   .pavilion-room { min-height: 320px; }
   .pavilion-credit { bottom: 6%; width: 100px; }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pavilion-credit {
+    --petal-center: calc(1.5 * var(--side-center) + var(--orrery-width) / 4);
+    right: var(--petal-center);
+    translate: 50% 0;
+    margin-bottom: min(3cqh, 28px);
+    aspect-ratio: 864 / 382;
+    display: grid;
+    grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+    place-items: center;
+  }
+  .pavilion-credit__petal {
+    width: 72%;
+    height: 38%;
+    transform: rotate(-4deg) skewX(-5deg);
+  }
+  .pavilion-credit__art { grid-template: minmax(0, 1fr) / minmax(0, 1fr); }
+  .pavilion-credit img { height: 100%; }
+  .pavilion-credit:any-link:is(:hover, :focus-visible) .pavilion-credit__petal {
+    width: 137.5%;
+    height: 137.5%;
+    transform: none;
+  }
+}
+@media (max-aspect-ratio: 9/10) and (hover: hover) and (pointer: fine) {
+  /* In the stacked pavilion the atlas extends behind the orrery. */
+  .pavilion-credit { --petal-center: 33%; }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .pavilion-credit__petal { transition: width 300ms ease-out, height 300ms ease-out, transform 300ms ease-out; }
+  .pavilion-credit:any-link:is(:hover, :focus-visible) .pavilion-credit__petal {
+    offset-path: path("M 0 0 Q -4 -24 -13 -10 Q -30 -65 0 0");
+    offset-position: normal;
+    offset-anchor: 0 0;
+    offset-rotate: 0deg;
+    animation: pavilion-petal-flight 1180ms;
+  }
+}
+/* Resize the painted image at each point in the gust, including the foreshortened edge-on poses. */
+@keyframes pavilion-petal-flight {
+  0% { offset-distance: 0%; width: 72%; height: 38%; transform: rotate(-4deg) skewX(-5deg); animation-timing-function: cubic-bezier(.18,.62,.36,1); }
+  32% { offset-distance: 28%; width: 81%; height: 52%; transform: rotate(-13deg) skewX(5deg); animation-timing-function: cubic-bezier(.56,0,.27,1); }
+  100% { offset-distance: 100%; width: 137.5%; height: 137.5%; transform: none; }
 }
 
 .pavilion-orb {
@@ -372,7 +398,8 @@
 .pavilion-notes {
   position: absolute;
   z-index: 3;
-  left: 5%;
+  left: var(--side-center);
+  translate: -50% 0;
   bottom: 15%;
   width: min(21cqw, 33cqh);
   min-height: 44px;
@@ -487,6 +514,7 @@
   .pavilion-orb { width: min(27cqw, 15cqh); }
   .pavilion-orb { bottom: 65%; }
   .pavilion-notes { left: 3%; bottom: 13.7%; width: clamp(150px, 43cqw, 235px); }
+  .pavilion-notes { translate: none; }
   .pavilion-book { bottom: 22%; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -540,16 +568,11 @@
   color: #e4c58e;
   text-shadow: 0 1px 1px #281d16;
 }
-.is-night .pavilion-credit {
-  --petal-rest-ink: #301826;
-  text-shadow: none;
-}
 /* The credit lies below and to the right of the tabletop sun. */
 .is-night .pavilion-credit img {
-  filter: saturate(calc(.74 + .34 * var(--petal-tint))) brightness(calc(.78 + .13 * var(--petal-tint))) drop-shadow(2px 3px 2px #120d18bf);
+  filter: saturate(.74) brightness(.78) drop-shadow(2px 3px 2px #120d18bf);
 }
-.is-night .pavilion-credit__petal::after {
-  opacity: calc(1 - var(--petal-tint));
+.is-night .pavilion-credit__art::after {
   background: radial-gradient(ellipse at var(--petal-light-x, 12%) 0%, #ffcc83c2, #ffbe6838 50%, transparent 85%);
   mix-blend-mode: screen;
 }

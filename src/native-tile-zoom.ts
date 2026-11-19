@@ -27,7 +27,7 @@ export const installNativeTileZoom = (map: AtlasMap, minimumZoom: number) => {
       if (se.x <= 0 || se.y <= 0 || nw.x >= width || nw.y >= height) continue
       if (se.x <= nw.x || se.y <= nw.y) continue
       const distance = (nw.x + se.x - width) ** 2 + (nw.y + se.y - height) ** 2
-      // Later layers are drawn on top when experiments share a grid cell.
+      // Later layers are drawn on top when artworks share a grid cell.
       if (distance <= nearest) {
         nearest = distance
         const image = originalArtwork(source.image)
