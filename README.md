@@ -67,10 +67,65 @@ Open the local URL printed by the server (use `http://localhost:5173`).
 | `bun run lint`                  | Run Biome linting.                                                                                           |
 | `bun run format`                | Format source files and Markdown.                                                                            |
 | `bun run format:markdown:check` | Check Markdown formatting.                                                                                   |
-| `bun run generate:paper`        | Generate `public/romantic-paper-texture.png` through OpenRouter.                                             |
+| `bun run generate:paper`        | Generate `public/romantic-paper-texture.webp` through OpenRouter.                                             |
 | `bun run generate:audio`        | Render scene cues and clip the recorded CC0 excerpts in `public/atlas-audio/`; see `THIRD_PARTY_NOTICES.md`. |
 | `bun run sync:tiles`            | Upload local generated tile images and metadata to the configured R2 bucket.                                 |
 | `bun run backfill:manifest`     | Index existing production atlas assets after deploying the manifest migration.                               |
+
+Use `bun run atlas:v2:queue` to prepare the production artwork queue,
+`bun run atlas:v2:production status` to check its progress, and
+`bun run atlas:v2:export` to rebuild the map review catalog.
+
+The [artwork generation runbook](docs/artwork-generation.md) documents the
+one-child-process-per-image workflow, file-backed recovery, HKU ring quotas,
+rejection backfills and planning for selected-area coverage.
+Use `bun run atlas:v2:production plan --scope hku --scope north` to preview current
+deficits, then replace `plan` with `run` to dispatch that selection. Repeated
+`--cell 18/X/Y` arguments select individual registered cells. Scoped runs save a
+resumable manifest and recheck accepted replacements and pending candidates before
+dispatch. `bun run test:atlas-scope` checks selection, deduplication and recovery.
+`bun run test:atlas-scope-browser JOB_ID...` verifies the dispatched paintings on
+their contact-card maps through managed Chrome on Li.
+The runbook includes managed Python commands for the local image dependencies.
+
+`bun run atlas:v2:edges` screens the current non-rejected V2 inventory for long
+straight silhouette boundaries, including diagonal edges and interior openings.
+It requires Python with Pillow, NumPy and OpenCV. On managed desktops, run
+`dev-check /home/io/.venv/bin/python3 scripts/atlas-v2-edge-audit.py`.
+The contextual review queue is written to
+`generated-tiles/dream-atlas/edge-audit/index.html`, with exact-edition hashes and
+measurements in `report.json`. Segments start at 48 pixels at a normalized
+1024-pixel width; length and boundary detail determine review priority. This is
+a candidate screen, not an automatic rejection or repair. Opaque paintings and
+unflagged images remain unreviewed. Check all sides against the original drawing,
+registered footprint and actual neighbouring map before repairing any object.
+Verify the review queue and exact-painting navigation with
+`dev-remote --port 5173 chrome bun run test:atlas-edges` against the existing server.
+
+For reviewed production-job repairs, `bun run atlas:v2:repair stage JOB_ID
+--image GENERATED_PNG --expected-sha CURRENT_OVERLAY_SHA` saves a versioned
+candidate, runs the existing registration checks, and renders a before/after
+map comparison. Save its generation prompt under
+`generated-tiles/dream-atlas/edge-repairs/dataset/JOB_ID/prompt.txt` first.
+Use the managed Python environment through `dev-check` on managed desktops.
+Installation with `atlas:v2:repair promote STAGE_DIRECTORY` requires a
+`review.json` bound to the candidate overlay hash, with evidence for top, right,
+bottom, left, internal openings, access connections, basemap continuations and
+coverage/scale. It refuses stale editions, concurrent rejections and coverage
+loss greater than 10%. Previous editions are archived; artistic acceptance is
+not transferred. Refresh contact cards with the existing production-card script
+after installation. The hash-bound dataset work ledger is
+`generated-tiles/dream-atlas/edge-audit/repair-ledger.json`.
+Pending repairs of previously accepted coastal scenes keep their original review
+slot. The catalogue follows archived repair receipts to find that approval;
+acceptance is not copied to the repaired pixels, and a rejection overrides the
+repair lineage. Check this selection behavior with
+`dev-check bun run test:atlas-grid` (Python standard library only).
+Verify installed editions with
+`dev-remote --port 5173 chrome bun run test:atlas-repairs JOB_ID:OVERLAY_SHA256`.
+Multiple ID/hash pairs can be checked in one job. The check compares exact live
+asset bytes, decodes the contact card and opens the matching map alternative;
+unrelated concurrent editorial decisions do not invalidate a target's check.
 
 ## Performance verification
 
@@ -159,8 +214,8 @@ useful before deploying the inventory endpoint. Its report is marked **checkout*
 
 After deploying the updated Worker, `bun purge --apply` recomputes the comparison
 and requires the production `ATLAS_ADMIN_TOKEN`. It saves verified bytes under
-`.local/rejected/<bucket>/<key>/<sha256>` and writes a receipt for every candidate before requesting
-any deletion. The Worker rechecks the deployed references and archive hashes for each
+`.local/rejected/<bucket>/<key>/<sha256>` and writes a receipt before requesting
+deletion. The Worker rechecks the deployed references and archive hashes for each
 group, including both halves of a tile pair. The CLI checks R2 after deletion.
 The command only changes bucket files and local archives. Stored catalog entries,
 tile manifest rows and review decisions are preserved. A cached response can persist
@@ -170,11 +225,18 @@ The deployment command records the current Git commit in the built app. Open the
 deployed map with `?admin` to see its abbreviated commit hash in the lower-left
 corner; hovering it reveals the complete hash.
 
+For development previews on your tailnet, set `VITE_ATLAS_DEV_SHARE_ORIGIN` in
+`.env.local` to the HTTPS origin that Tailscale Serve routes to this Atlas server.
+The capture dialog encodes the saved PNG’s tailnet URL in its QR code and offers
+an **Open image** link you can copy. Recipients need tailnet access, and the
+development server must be running to serve the file from `shared-maps/`.
+
 To enable visitor map sharing, make the existing `maps-romanticatlas-assets` bucket
 public through an R2 custom domain (or its `r2.dev` public-development URL), then set
 `ATLAS_SHARE_ASSET_ORIGIN` to that origin with no path, query string, or trailing asset
-name. For this deployment, use `https://romanticassets.hype.hk`. The app writes each
-1080×1350 PNG to `shared-maps/` in that bucket and the QR code contains the direct R2
+name. For this deployment, use `https://romanticassets.hype.hk`. The app exports a
+2160×2700 PNG and scales it to 1080×1350 if it exceeds the 8 MB sharing limit.
+It writes the PNG to `shared-maps/` in that bucket and the QR code contains the direct R2
 asset URL only; it never contains the application URL. Set the value in the deployed
 Worker environment (for example, `wrangler secret put ATLAS_SHARE_ASSET_ORIGIN`) before
 deploying the sharing feature.
@@ -357,6 +419,7 @@ The supported environment variables are:
 - The regular map uses a fixed seed to select clouds with a 75% chance per eligible tile, including tiles with accepted artwork. White clouds render new scenes with the original poetry while waiting. Coloured clouds reveal accepted V2 artwork or scenes the visitor generated during this map visit. Reveals use the catalog’s viewer image and title. Review decisions override the release defaults for the exact image URL.
 - Open `?revealed` or press `W` to see the whole map already revealed. Each artwork location shows one random non-rejected painting with its regular title card. The choice stays fixed as you pan. Empty locations retain the regular cloud grid. Press `R` for the regular map.
 - Press `D` on the map (or use `?diagnostics`) to show artwork immediately.
+  The review map includes images generated on the regular map across visits. Accepting one adds that exact image to the regular map’s collection for its tile.
   Dashed lines outline each covered z18 tile. A small cross and the displayed artwork’s title sit at the top. At the lower edge, the number counts
   distinct images and the ring marks the displayed image. Select a pip to show its
   image, or click the tile to cycle. Green means accepted for production, blue

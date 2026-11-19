@@ -22,6 +22,16 @@
     "format:markdown:check": "bun run scripts/checks/markdown.ts --check",
     "lint": "biome lint . && bun run format:markdown:check",
     "test:performance": "node scripts/checks/fog-performance.mjs",
+    "atlas:v2:export": "python3 scripts/export-v2-map.py",
+    "atlas:v2:queue": "python3 scripts/atlas-v2-queue.py",
+    "atlas:v2:production": "python3 scripts/atlas-v2-production.py",
+    "atlas:v2:edges": "python3 scripts/atlas-v2-edge-audit.py",
+    "atlas:v2:repair": "python3 scripts/atlas-v2-edge-repair.py",
+    "test:atlas-edges": "node scripts/checks/edge-audit-review.mjs",
+    "test:atlas-repairs": "node scripts/checks/edge-repair-map.mjs",
+    "test:atlas-grid": "python3 scripts/checks/atlas-v2-grid.test.py",
+    "test:atlas-scope": "python3 scripts/checks/atlas-v2-scope.test.py",
+    "test:atlas-scope-browser": "node scripts/checks/scoped-production.mjs",
     "test:markdown": "bun test scripts/checks/markdown.test.ts"
   },
   "dependencies": {
