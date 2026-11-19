@@ -18,7 +18,7 @@ try {
     })
     let themeRequests = 0
     page.on('request', request => {
-      if (request.url().endsWith('/atlas-audio/harbour-light-legato.flac')) themeRequests++
+      if (request.url().endsWith('/atlas-audio/harbour-light-legato.ogg')) themeRequests++
     })
     let releaseAtlas
     const heldAtlas = new Promise(resolve => { releaseAtlas = resolve })
@@ -227,7 +227,7 @@ try {
     assert.ok(await paintedCover.evaluate(el => el.parentElement.classList.contains('pavilion-notes')))
     assert.equal(await note.evaluate(el => el === document.activeElement), true)
     assert.equal(themeRequests, 0, 'Reading the booklet keeps the pavilion silent')
-    const themeStarted = page.waitForRequest('**/atlas-audio/harbour-light-legato.flac')
+    const themeStarted = page.waitForRequest('**/atlas-audio/harbour-light-legato.ogg')
     const orb = book.locator('.pavilion-orb')
     if (mobile) await orb.tap()
     else {

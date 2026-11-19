@@ -16,7 +16,7 @@ try {
       window.effectStarts = []
       const play = HTMLMediaElement.prototype.play
       HTMLMediaElement.prototype.play = function () {
-        if (this.src.endsWith('/pavilion/book-shelf-pull.wav')) {
+        if (this.src.endsWith('/pavilion/book-shelf-pull.ogg')) {
           window.effectStarts.push(this)
         }
         return play.call(this)

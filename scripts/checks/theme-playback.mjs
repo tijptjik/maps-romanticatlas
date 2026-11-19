@@ -23,7 +23,7 @@ try {
     }
   })
   await page.goto(process.env.PLAYWRIGHT_BASE_URL, { waitUntil: 'domcontentloaded' })
-  const response = page.waitForResponse('**/atlas-audio/harbour-light-legato.flac')
+  const response = page.waitForResponse('**/atlas-audio/harbour-light-legato.ogg')
   await page.getByRole('button', { name: 'Enter the Fog', exact: true }).click()
   assert.equal((await response).status(), 200)
   await page.waitForFunction(() => window.themeStarts.length === 1)

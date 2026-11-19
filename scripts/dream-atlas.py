@@ -501,7 +501,7 @@ def cards(jobs, force=False):
                 label = html.escape(card['title'])
                 filename = html.escape(card['file'], quote=True)
                 key = html.escape(card['id'], quote=True)
-                gallery.append(f'<figure><figcaption>{label} · <a href="/?review=true&amp;card={key}&amp;painting=1">Review on map</a></figcaption>'
+                gallery.append(f'<figure><figcaption>{label} · <a href="/?review&amp;card={key}&amp;painting=1">Review on map</a></figcaption>'
                                f'<a href="{filename}"><img loading="lazy" src="{filename}" alt="{label}"></a></figure>')
             gallery.append('</section>')
     page = ('<!doctype html><html lang="en"><meta charset="utf-8">'
