@@ -42,7 +42,15 @@ test('release validates and uploads dependencies before installing manifests and
     const frame = new Uint8Array([15])
     const key = `release-assets/${digest(frame)}.webp`
     await save('releases/assets.json', { '/pavilion/frame.webp': key })
+    const revisionId = '0a2ad6a81ad147219b9ee1ba2ebc954e'
+    const revisionUrl = `/artwork-revisions/${revisionId}.png`
+    const job = join(root, 'generated-tiles/dream-atlas/review-revisions/jobs', revisionId)
+    await mkdir(job, { recursive: true })
+    const candidate = new Uint8Array([19])
+    await writeFile(join(job, 'candidate.png'), candidate)
+    const revisionKey = `release-assets/${digest(candidate)}.png`
     await save('releases/v2-reviews.json', [
+      { ...art, url: revisionUrl, status: 'accepted' },
       {
         ...art,
         url: '/generated-tiles/18/2/3/wind-farm?version=6&variant=discovery-test',
@@ -94,15 +102,14 @@ test('release validates and uploads dependencies before installing manifests and
       const compiled: Catalog = JSON.parse(
         await readFile(join(root, 'releases/catalog.json'), 'utf8'),
       )
-      expect(compiled.sheets.flatMap(s => s.art)).toHaveLength(2)
+      expect(compiled.sheets.flatMap(s => s.art)).toHaveLength(3)
       expect(remote.has('tiles/atlas/18/2/3/wind-farm.v6.discovery-test.json')).toBe(
         true,
       )
-      expect(
-        Object.keys(
-          JSON.parse(await readFile(join(root, 'releases/assets.json'), 'utf8')),
-        ),
-      ).toHaveLength(4)
+      const assets = JSON.parse(await readFile(join(root, 'releases/assets.json'), 'utf8'))
+      expect(Object.keys(assets)).toHaveLength(5)
+      expect(assets[revisionUrl]).toBe(revisionKey)
+      expect(remote.get(`media/${revisionKey}`)).toEqual(candidate)
       deployed++
     }
     await release(
@@ -122,6 +129,7 @@ test('release validates and uploads dependencies before installing manifests and
     ).toHaveLength(0)
     remote.set(`media/${key}`, frame)
     await release(root, false, async () => store, deploy)
+    await rm(job, { recursive: true })
     const firstDownloads = downloads
     const firstUploads = uploads
     await release(root, false, async () => store, deploy)

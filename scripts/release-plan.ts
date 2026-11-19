@@ -1,6 +1,8 @@
 import { createHash } from 'node:crypto'
 import { existsSync, readFileSync } from 'node:fs'
 import { extname, join } from 'node:path'
+import { revisionFile } from '../server/review-revisions'
+import { revisionImagePattern } from '../src/artwork-revision'
 import type { ArtworkReview, Painting } from '../src/artwork-review'
 import {
   atlasImageKey,
@@ -115,7 +117,8 @@ export function planRelease(root: string) {
     const webp = path.replace(/\.png$/, '.webp')
     if (webp !== path && (previous[webp] || existsSync(file(`public${webp}`))))
       path = webp
-    const local = file(`public${path}`)
+    const revision = revisionImagePattern.exec(path)
+    const local = revision ? revisionFile(revision[1], root) : file(`public${path}`)
     const exists = existsSync(local)
     const sha = exists ? digest(readFileSync(local)) : undefined
     const key = sha ? `release-assets/${sha}${extname(path)}` : previous[path]

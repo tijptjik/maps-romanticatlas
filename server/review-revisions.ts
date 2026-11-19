@@ -3,7 +3,8 @@ import { readFile, readdir } from 'node:fs/promises'
 import type { Revision } from '../src/artwork-revision'
 
 const root = path.resolve(import.meta.dir, '..')
-const jobs = path.join(root, 'generated-tiles/dream-atlas/review-revisions/jobs')
+const jobsDirectory = 'generated-tiles/dream-atlas/review-revisions/jobs'
+const jobs = path.join(root, jobsDirectory)
 const script = path.join(root, 'scripts/review-revisions.py')
 
 export async function revisionList(): Promise<Revision[]> {
@@ -13,7 +14,8 @@ export async function revisionList(): Promise<Revision[]> {
   })
   return Promise.all(entries.map(async id => JSON.parse(await readFile(path.join(jobs, id, 'revision.json'), 'utf8'))))
 }
-export const revisionFile = (id: string) => path.join(jobs, id, 'candidate.png')
+export const revisionFile = (id: string, projectRoot = root) =>
+  path.join(projectRoot, jobsDirectory, id, 'candidate.png')
 
 let running = false
 let requested = false
