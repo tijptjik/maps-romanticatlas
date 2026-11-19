@@ -1,5 +1,5 @@
-import { revisionEndpoint, revisionImagePattern } from '../src/artwork-revision'
-import { revisionFile, revisionList } from './review-revisions'
+import { revisionEndpoint, revisionImagePattern, revisionRequest } from '../src/artwork-revision'
+import { resumeRevisions, revisionFile, revisionList, submitRevision } from './review-revisions'
 import { createFakeRenderStore } from './fake-render-store'
 import { isFakeRenderTile, isRotatingVariant } from '../src/fake-render-state'
 import { fakeRenderSeed } from '../src/fake-render-seed'
@@ -1155,10 +1155,10 @@ const readReviews = async (): Promise<ArtworkReview[]> => {
 }
 let reviewWrite = Promise.resolve()
 
-async function saveReview(review: ArtworkReview) {
+async function saveReview(review: ArtworkReview, undo: boolean) {
   const previous = await readReviews()
   const reviews = previous.filter(item => item.url !== review.url)
-  reviews.push(review)
+  if (!undo) reviews.push(review)
   const temporary = reviewsPath + '.' + randomUUID()
   await mkdir(path.dirname(reviewsPath), { recursive: true })
   await writeFile(temporary, JSON.stringify(reviews, null, 2) + '\n')
@@ -1260,17 +1260,23 @@ const server = createServer(async (request, response) => {
       response.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'public, max-age=31536000, immutable' })
       return response.end(bytes)
     }
-    if (pathname === revisionEndpoint && request.method === 'GET')
-      return sendJson(response, 200, await revisionList(), { 'cache-control': 'no-store' })
+    if (pathname === revisionEndpoint) {
+      if (request.method === 'GET') return sendJson(response, 200, await revisionList(), { 'cache-control': 'no-store' })
+      if (request.method !== 'POST') return sendError(response, 405, 'Unsupported revision method.')
+      if (rejectAdminAccess(request, response, { requireOrigin: true, requireCsrf: true })) return
+      const body = revisionRequest(await readRequestBody(request).catch(() => null))
+      if (!body) return sendError(response, 400, 'Invalid artwork revision.')
+      return sendJson(response, 202, await submitRevision(body))
+    }
 
     if (pathname === reviewEndpoint) {
       if (request.method === 'GET') {
         sendJson(response, 200, await readReviews(), { 'cache-control': 'no-store' })
-      } else if (request.method === 'PUT') {
+      } else if (request.method === 'PUT' || request.method === 'DELETE') {
         if (rejectAdminAccess(request, response, { requireOrigin: true, requireCsrf: true })) return
         const review = parseArtworkReview(await readRequestBody(request).catch(() => null))
         if (!review) return sendError(response, 400, 'Invalid artwork review.')
-        const write = reviewWrite.then(() => saveReview(review))
+        const write = reviewWrite.then(() => saveReview(review, request.method === 'DELETE'))
         reviewWrite = write.catch(() => {})
         await write
         sendJson(response, 200, review)
@@ -1399,6 +1405,7 @@ const server = createServer(async (request, response) => {
 
 const port = Number(process.env.PORT ?? 5173)
 server.listen(port, '127.0.0.1', () => {
+  void resumeRevisions()
   const address = server.address()
   if (address && typeof address !== 'string') console.log(`Hong Kong Map is running at http://127.0.0.1:${address.port}`)
 })

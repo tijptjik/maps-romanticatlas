@@ -1676,3 +1676,29 @@ body {
   border-radius: 3px;
   cursor: pointer;
 }
+
+.atlas-review-queue {
+  width: max-content;
+  max-width: min(28rem, 85vw);
+  padding-inline: 20px;
+  gap: 5px;
+}
+.atlas-review-queue[data-complete="true"] {
+  left: 50% !important;
+  top: auto !important;
+  bottom: 1.5rem;
+  translate: -50%;
+}
+
+.atlas-revision-actions:not([hidden]) { display: flex; gap: .6rem; justify-content: center; }
+.atlas-revision-actions button {
+  pointer-events: auto;
+  cursor: pointer;
+  background: transparent;
+  color: #583e2b;
+  border: 0;
+  border-bottom: 1px solid #ac8961;
+  padding: 2px 4px;
+  font: 600 .85rem "Cormorant Garamond", Georgia, serif;
+}
+.atlas-revision-actions button:disabled { opacity: .55; cursor: wait; }

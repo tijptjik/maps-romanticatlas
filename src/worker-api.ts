@@ -1,4 +1,4 @@
-import { revisionEndpoint, revisionImagePattern } from './artwork-revision'
+import { revisionEndpoint, revisionImagePattern, revisionRequest } from './artwork-revision'
 import { isFakeRenderTile, isRotatingVariant } from './fake-render-state'
 import { fakeRenderSeed } from './fake-render-seed'
 import { generator, startSiGeneration, siGenerationStatus } from './si-generation'
@@ -1396,20 +1396,33 @@ export const handleAtlasApi = async (
     const stored = await env.ATLAS_BUCKET.get(key)
     return new Response(stored.body, { headers })
   }
-  if (url.pathname === revisionEndpoint && request.method === 'GET') return generator(env, '/revisions')
+  if (url.pathname === revisionEndpoint) {
+    if (request.method === 'GET') return generator(env, '/revisions')
+    if (request.method !== 'POST') return errorResponse(405, 'Unsupported revision method.')
+    const denied = await adminMutationIsAllowed(request, env)
+    if (denied) return errorResponse(denied.status, denied.error)
+    const body = revisionRequest(await readJsonBody(request).catch(() => null))
+    if (!body) return errorResponse(400, 'Invalid artwork revision.')
+    return generator(env, '/revisions', { method: 'POST', body: JSON.stringify(body) })
+  }
   if (url.pathname === reviewEndpoint) {
     const prefix = 'v2-artwork-reviews/'
     if (request.method === 'GET') {
       return json(await allArtworkReviews(env, !adminModeEnabled(request)))
     }
-    if (request.method !== 'PUT') return errorResponse(405, 'Unsupported review method.')
+    if (request.method !== 'PUT' && request.method !== 'DELETE') return errorResponse(405, 'Unsupported review method.')
     const error = await adminMutationIsAllowed(request, env)
     if (error) return errorResponse(error.status, error.error)
     const review = parseArtworkReview(await readJsonBody(request).catch(() => null))
     if (!review) return errorResponse(400, 'Invalid artwork review.')
-    await env.ATLAS_BUCKET.put(prefix + encodeURIComponent(review.url), '', {
-      customMetadata: { review: encodeURIComponent(JSON.stringify(review)) },
-    })
+    const key = prefix + encodeURIComponent(review.url)
+    if (request.method === 'DELETE') {
+      await env.ATLAS_BUCKET.delete(key)
+    } else {
+      await env.ATLAS_BUCKET.put(key, '', {
+        customMetadata: { review: encodeURIComponent(JSON.stringify(review)) },
+      })
+    }
     await invalidateReviewIndex(env)
     return json(review)
   }

@@ -367,7 +367,7 @@ The supported environment variables are:
   to the beginning if needed. A tile with only rejected images loses its review controls. Press `R` to return to the regular map, which draws from accepted images.
   The Bun server saves decisions in `releases/v2-reviews.json`. The Worker uses
   that optional release file plus decisions saved in its R2 bucket.
-- Press `A` or open `?admin` to manage Atlas V2 paintings across their full map footprints. Select a pip to inspect an alternative and use ✓ or × to save a review. The toolbar counts distinct non-rejected paintings and links to the artwork review and tile cache.
+- Press `A` or open `?admin` to manage Atlas V2 paintings across their full map footprints. Select a pip to inspect an alternative and use ✓ or × to save a review. The toolbar counts distinct non-rejected paintings and links to the review queue and tile cache.
 - Press `V` or open `?review` to browse artwork by contact card. Use `R`, `D`, or `A` to return to the regular, diagnostics, or admin view.
 - `?admin&view=cache`: marks visible z18 tiles that will not render a cloud with compact
   reason icons for the deterministic fog pattern, land coverage, street coverage, or
@@ -427,3 +427,12 @@ Production stores per-tile claim receipts and replacement alarms in the
 `FakeRenderCloud` Durable Object, with source images and artwork in R2.
 Development keeps claims in `.local/fake-render/clouds.sqlite` and uses the
 local Codex renderer.
+
+In the artwork queue at `/review`, click **[A]djust** or press `A` to revise
+road intersections, cut-off silhouettes and disconnected approaches. Click
+**[S]pread** or press `S` to keep the concept and reassess its coverage across
+the entire site. Each job receives the selected edition and a newly rendered
+north-up basemap. Pending jobs survive reloads. A completed edition returns to
+review with the same title and tile footprint. A failed job has a retry button that survives a refresh. Local revision requests live in
+`generated-tiles/dream-atlas/review-revisions/jobs/<id>/revision.json`. The local Bun server runs the Codex renderer, and the Worker uses
+the SI generator gateway and worker with `scripts/review-revisions.py`.

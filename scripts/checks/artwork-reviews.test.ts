@@ -14,9 +14,35 @@ test('Bun server persists authenticated artwork decisions by image', async () =>
   try {
     await cp('server', path.join(root, 'server'), { recursive: true })
     for (const name of ['src', 'node_modules']) await symlink(path.resolve(name), path.join(root, name))
+    await mkdir(path.join(root, 'scripts'))
+    for (const name of ['dream-atlas.py', 'review-revisions.py']) {
+      await cp(path.join('scripts', name), path.join(root, 'scripts', name))
+    }
+    // Exercise the actual queue, prompt assembly, thread recovery and PNG extraction
+    // with an isolated image-tool receipt instead of spending a generation.
+    await writeFile(path.join(root, 'codex'), `#!/usr/bin/env python3
+import json, os, shutil, sys, uuid
+from pathlib import Path
+folder = Path(os.environ['ATLAS_TEST_ROOT'])
+args = sys.argv[1:]
+assert args.count('--image') == 2
+prompt = sys.stdin.read()
+assert 'road intersection' in prompt or 'roughly 20% less density' in prompt
+assert 'fixture concept' in prompt
+thread = str(uuid.uuid4())
+target = Path(os.environ['CODEX_HOME'])/'generated_images'/thread
+target.mkdir(parents=True)
+shutil.copyfile(folder/'generated.png',target/'result.png')
+print(json.dumps({'type':'thread.started','thread_id':thread}))
+`, { mode: 0o700 })
+    const generated = await sharp({ create: { width: 1024, height: 1024, channels: 3, background: '#ff00ff' } })
+      .composite([{ input: await sharp({ create: { width: 200, height: 220, channels: 3, background: 'green' } }).png().toBuffer() }])
+      .png().toBuffer()
+    await writeFile(path.join(root, 'generated.png'), generated)
     const server = spawn('bun', ['server/index.ts'], {
       cwd: root, env: { ...process.env, PORT: '0', NODE_ENV: 'production', ATLAS_ADMIN_TOKEN: token,
-        ATLAS_ALLOWED_ORIGIN: 'http://localhost' }, stdio: ['ignore', 'pipe', 'inherit'],
+        ATLAS_ALLOWED_ORIGIN: 'http://localhost', ATLAS_TEST_ROOT: root, CODEX_HOME: path.join(root, 'isolated'),
+        PATH: root + ':' + process.env.PATH }, stdio: ['ignore', 'pipe', 'inherit'],
     })
     try {
       const [message] = await once(server.stdout, 'data', {signal: AbortSignal.timeout(15000)})
@@ -40,8 +66,8 @@ test('Bun server persists authenticated artwork decisions by image', async () =>
       assert.deepEqual(tiles.map(tile => tile.url), [url])
       const endpoint = address + '/api/artwork-reviews'
       const art = { title: 'Circus', x: 10, y: 20, rows: 1, url }
-      const write = (status: string, authenticated: boolean) => fetch(endpoint + '?admin', {
-        method: 'PUT',
+      const write = (status: string, authenticated: boolean, method = 'PUT') => fetch(endpoint + '?admin', {
+        method,
         headers: { ...headers, 'content-type': 'application/json', ...(authenticated
           ? { cookie, 'x-atlas-csrf-token': cookie.slice(cookie.indexOf('=') + 1) } : {}) },
         body: JSON.stringify({ ...art, status }),
@@ -52,6 +78,40 @@ test('Bun server persists authenticated artwork decisions by image', async () =>
         const expected = [{ ...art, status }]
         assert.deepEqual(await (await fetch(endpoint)).json(), expected)
         assert.deepEqual(JSON.parse(await readFile(release, 'utf8')), expected)
+      }
+      assert.equal((await write('rejected', false, 'DELETE')).status, 403)
+      assert.equal((await write('rejected', true, 'DELETE')).status, 200)
+      assert.deepEqual(await (await fetch(endpoint)).json(), [])
+      assert.deepEqual(JSON.parse(await readFile(release, 'utf8')), [])
+      const revisionUrl = address + '/api/artwork-revisions'
+      const reference = await sharp(generated).negate().png().toBuffer()
+      const mapImage = 'data:image/png;base64,' + reference.toString('base64')
+      for (const mode of ['adjust', 'spread']) {
+        const source = { ...art, title: 'fixture concept', rows: 2, url: '/fixture/' + mode + '.png' }
+        const submit = (authenticated: boolean) => fetch(revisionUrl + '?admin', {
+          method: 'POST', headers: { ...headers, 'content-type': 'application/json',
+            ...(authenticated ? { cookie, 'x-atlas-csrf-token': cookie.split('=')[1] } : {}) },
+          body: JSON.stringify({ source, mode, mapImage, previousImage: mapImage }),
+        })
+        assert.equal((await submit(false)).status, 403)
+        const response = await submit(true)
+        assert.equal(response.status, 202)
+        const job = await response.json()
+        assert.equal((await (await submit(true)).json()).id, job.id)
+        let result = job
+        const deadline = Date.now() + 15000
+        while (result.state === 'pending' && Date.now() < deadline) {
+          await Bun.sleep(100)
+          result = (await (await fetch(revisionUrl)).json()).find(r => r.id === job.id)
+        }
+        assert.equal(result.state, 'ready')
+        assert.equal(result.candidate.title, source.title)
+        const image = await fetch(address + result.candidate.url)
+        assert.equal(image.status, 200)
+        const meta = await sharp(Buffer.from(await image.arrayBuffer())).metadata()
+        assert.equal(meta.hasAlpha, true)
+        assert.deepEqual([meta.width, meta.height], [512, 1024])
+        assert.deepEqual(await (await fetch(endpoint)).json(), [])
       }
     } finally {
       const stopped = once(server, 'exit')

@@ -4,6 +4,7 @@ import fcntl
 import hashlib
 import hmac
 import io
+import importlib.util
 import re
 import json
 import os
@@ -27,7 +28,15 @@ GUARD = threading.Lock()
 SCENES = json.loads((ROOT / 'releases/si-scenes.json').read_text())
 
 
-revision_jobs = ROOT / 'generated-tiles/dream-atlas/review-revisions/jobs'
+spec = importlib.util.spec_from_file_location('revisions', ROOT / 'scripts/review-revisions.py')
+revisions = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(revisions)
+
+
+def revision_worker():
+    while True:
+        revisions.drain()
+        time.sleep(2)
 
 
 def save(path, value):
@@ -66,10 +75,15 @@ class Handler(BaseHTTPRequestHandler):
         if not hmac.compare_digest(self.headers.get('Authorization', ''), 'Bearer ' + TOKEN):
             return self.reply(401, {'error': 'Authentication required.'})
         parts = self.path.strip('/').split('/')
-        if parts == ['revisions'] and self.command == 'GET':
-            return self.reply(200, [json.loads(p.read_text()) for p in sorted(revision_jobs.glob('*/revision.json'))])
+        if parts == ['revisions']:
+            if self.command == 'GET':
+                return self.reply(200, revisions.records())
+            length = int(self.headers.get('Content-Length', '0'))
+            if not 0 < length <= MAX_BODY:
+                return self.reply(413, {'error': 'Revision references exceed the input limit.'})
+            return self.reply(202, revisions.submit(json.loads(self.rfile.read(length))))
         if len(parts) == 2 and parts[0] == 'revisions' and re.fullmatch(r'[a-f0-9]{32}', parts[1]) and self.command == 'GET':
-            path = revision_jobs / parts[1] / 'candidate.png'
+            path = revisions.JOBS / parts[1] / 'candidate.png'
             if not path.is_file():
                 return self.reply(404, {'error': 'Revision unavailable.'})
             data = path.read_bytes()
@@ -202,6 +216,7 @@ if __name__ == '__main__':
     JOBS.mkdir(parents=True, exist_ok=True)
     if sys.argv[1:] == ['work']:
         workers = [threading.Thread(target=work) for _ in range(3)]
+        workers.append(threading.Thread(target=revision_worker))
         for worker in workers:
             worker.start()
         for worker in workers:

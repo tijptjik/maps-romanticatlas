@@ -19,6 +19,7 @@ import { installBasemapPreload } from './basemap-preload.ts'
 import {
   mapModePath,
   reviewModeEnabled,
+  reviewQueueEnabled,
   revealedModeEnabled,
   adminModeEnabled,
   diagnosticsModeEnabled,
@@ -71,7 +72,7 @@ const map = new maplibregl.Map({
   // Atlas interactions use the z18 tile grid. The fog remains visible above it,
   // while generation still requires a complete z18 tile in the viewport.
   ...(adminMap ? {} : { minZoom: minimumZoom, maxBounds: [113.8, 22.1, 114.5, 22.6] as [number, number, number, number] }),
-  maxZoom: initialMaxZoom,
+  maxZoom: reviewQueueEnabled() ? 22 : initialMaxZoom,
   attributionControl: false,
   canvasContextAttributes: { preserveDrawingBuffer: true },
 })
@@ -82,7 +83,7 @@ map.getContainer().addEventListener('contextmenu', event => {
 
 map.touchZoomRotate.disableRotation()
 installArtworkSampling(map)
-installNativeTileZoom(map, map.getMinZoom())
+if (!reviewQueueEnabled()) installNativeTileZoom(map, map.getMinZoom())
 installBasemapPreload(map)
 
 function installModeShortcuts(mapVisible: () => boolean) {
@@ -92,12 +93,14 @@ function installModeShortcuts(mapVisible: () => boolean) {
         event.altKey || event.ctrlKey || event.metaKey || event.shiftKey ||
         (event.target instanceof Element && event.target.closest('input, textarea, select, [contenteditable], [role="dialog"]'))) return
     const key = event.key.toLowerCase()
+    if (reviewQueueEnabled() && key === 'a') return
     if (key !== 'r' && key !== 'd' && key !== 'a' && key !== 'v' && key !== 'w') return
     event.preventDefault()
     const url = new URL(location.href)
     const selected = modes[key]
     const flags = ['admin', 'diagnostics', 'review', 'revealed']
-    if (flags.every(flag => modeEnabled(url.searchParams, flag) === (flag === selected))) return
+    if (!reviewQueueEnabled() && flags.every(flag => modeEnabled(url.searchParams, flag) === (flag === selected))) return
+    if (reviewQueueEnabled()) url.pathname = '/'
     for (const flag of flags) url.searchParams.delete(flag)
     if (selected) url.searchParams.set(selected, '')
     history.replaceState({ ...history.state, atlasModeCamera: {
@@ -110,7 +113,16 @@ function installModeShortcuts(mapVisible: () => boolean) {
 if (reviewMode) {
   installModeShortcuts(() => true)
   map.addControl(new maplibregl.AttributionControl({ compact: true }))
-  map.once('load', () => installV2ReviewMap(map))
+  if (reviewQueueEnabled()) {
+    const credits = map.getContainer().querySelector<HTMLDetailsElement>('.maplibregl-ctrl-attrib')!
+    credits.classList.add('maplibregl-compact')
+    credits.classList.remove('maplibregl-compact-show')
+    credits.open = false
+  }
+  map.once('load', () => {
+    if (reviewQueueEnabled()) void installDiscoveryMap(map, 'queue', true, () => {}, undefined)
+    else installV2ReviewMap(map)
+  })
 } else {
   await startAtlas()
 }

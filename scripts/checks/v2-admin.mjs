@@ -31,7 +31,7 @@ try {
   const toolbar = page.getByRole('navigation', {name: 'Atlas V2 admin'})
   await toolbar.waitFor({timeout: 60000})
   assert.match(await toolbar.locator('output').textContent(), /^[1-9]\d* paintings?$/)
-  assert.equal(await toolbar.getByText('Artwork review').getAttribute('href'), '/?review')
+  assert.equal(await toolbar.getByText('Review queue').getAttribute('href'), '/review')
   assert.equal(new URL(await toolbar.getByText('Tile cache').getAttribute('href')).searchParams.get('view'), 'cache')
   const alternatives = page.locator('.atlas-image-count:visible').filter({has: page.locator('.atlas-image-pips button:nth-child(2)')}).first()
   const next = alternatives.locator('.atlas-image-pips button[aria-pressed="false"]').first()

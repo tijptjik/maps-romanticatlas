@@ -9,7 +9,8 @@ const modeEnabled = (name: string) =>
 
 export const revealedModeEnabled = () => modeEnabled('revealed')
 
-export const reviewModeEnabled = () => modeEnabled('review')
+export const reviewQueueEnabled = () => /^\/review\/?$/.test(location.pathname)
+export const reviewModeEnabled = () => reviewQueueEnabled() || modeEnabled('review')
 
 export const adminModeEnabled = () => modeEnabled('admin')
 
