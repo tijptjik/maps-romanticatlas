@@ -196,6 +196,8 @@ const noteActivity = () => {
   scheduleIdleReset()
 }
 
+map.getContainer().addEventListener('atlas-generation-progress', noteActivity)
+
 for (const type of ['pointerdown', 'pointerup', 'pointermove', 'wheel', 'touchstart', 'touchmove', 'keydown']) {
   window.addEventListener(type, noteActivity, { passive: true, capture: true })
 }

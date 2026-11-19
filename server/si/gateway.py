@@ -163,13 +163,19 @@ def publish():
                 continue
             try:
                 req = urllib.request.Request(ORIGIN + '/api/discovery-jobs/' + directory.name,
-                    data=b'', headers={'Authorization': 'Bearer ' + TOKEN}, method='POST')
+                    data=b'', headers={'Authorization': 'Bearer ' + TOKEN, 'User-Agent': 'RomanticAtlas-SI/1.0'}, method='POST')
                 with urllib.request.urlopen(req, timeout=60) as response:
                     if response.status in (200, 502):
                         save(directory / 'published.json', {'time': time.time()})
             except Exception as exc:
                 # A terminal generator failure is also recorded in the Worker job.
+                terminal = False
                 if getattr(exc, 'code', None) == 502:
+                    try:
+                        terminal = json.loads(exc.read()).get('failed') is True
+                    except (ValueError, OSError):
+                        pass
+                if terminal:
                     save(directory / 'published.json', {'time': time.time()})
                 else:
                     print('Publication retry', directory.name, type(exc).__name__, flush=True)

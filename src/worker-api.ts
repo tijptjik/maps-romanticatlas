@@ -1279,7 +1279,16 @@ export const handleAtlasApi = async (
 ): Promise<Response | null> => {
   const url = new URL(request.url)
   const job = url.pathname.match(/^\/api\/discovery-jobs\/([a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12})$/)
-  if (job) return siGenerationStatus(request, env, job[1])
+  if (job) {
+    try {
+      return await siGenerationStatus(request, env, job[1])
+    } catch (error) {
+      console.error('[atlas] SI job status unavailable', job[1], error)
+      return request.method === 'GET'
+        ? json({ pending: true }, 202)
+        : errorResponse(503, 'Please retry the completion callback.')
+    }
+  }
   if (url.pathname === reviewEndpoint) {
     const prefix = 'v2-artwork-reviews/'
     if (request.method === 'GET') {

@@ -68,7 +68,7 @@ export async function siGenerationStatus(request: Request, env: GeneratorEnv, id
   const object = await env.ATLAS_BUCKET.get(jobKey(id))
   if (!object) return reply({ error: 'Unknown generation job.' }, 404)
   const job = await object.json<Job>()
-  if (job.status === 'failed') return reply({ error: job.error }, 502)
+  if (job.status === 'failed') return reply({ error: job.error, failed: true }, 502)
   const payload = () => cachedTilePayload({
     tile: job.tile, version: generationVersion, variant: job.variant,
     contentType: 'image/png', contentBounds: null,
@@ -80,13 +80,13 @@ export async function siGenerationStatus(request: Request, env: GeneratorEnv, id
     job.status = 'failed'
     job.error = 'Generation timed out. Please try this clearing again.'
     await env.ATLAS_BUCKET.put(jobKey(id), JSON.stringify(job))
-    return reply({ error: job.error }, 502)
+    return reply({ error: job.error, failed: true }, 502)
   }
   if (remote.status === 502) {
     job.status = 'failed'
     job.error = 'SI could not complete the artwork. Please retry this clearing.'
     await env.ATLAS_BUCKET.put(jobKey(id), JSON.stringify(job))
-    return reply({ error: job.error }, 502)
+    return reply({ error: job.error, failed: true }, 502)
   }
   if (!remote.ok) return reply({ pending: true }, 202)
   const receipt = await remote.json<{ sha256: string; width: number; height: number; source: string }>()
