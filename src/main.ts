@@ -175,7 +175,7 @@ async function startAtlas() {
   let isResetting = false
   let kioskFlight: ReturnType<typeof createMapFlight> | undefined
 
-  const scheduleIdleReset = () => {
+  function scheduleIdleReset() {
     if (kioskMode || !intro.element.hidden) return
     if (idleTimer) window.clearTimeout(idleTimer)
     idleTimer = window.setTimeout(async () => {
