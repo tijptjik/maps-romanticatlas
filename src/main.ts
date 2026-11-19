@@ -122,7 +122,10 @@ const enterMap = () => {
   }
   audio.unlock()
 }
-const intro = createIntroSplash(map.getContainer(), enterMap, !skipSplash && !restoringMap, audio.start, audio.playPavilionCue)
+const intro = createIntroSplash(map.getContainer(), enterMap, !skipSplash && !restoringMap, () => {
+  audio.start()
+  scheduleIdleReset()
+}, audio.playPavilionCue)
 const statement = installArtistStatement(map.getContainer(), {
   showMapTrigger: !adminModeEnabled(),
   onBookmarkPull: () => audio.playPavilionCue('book', 'pull'),
@@ -130,7 +133,9 @@ const statement = installArtistStatement(map.getContainer(), {
 })
 const sharing = installAtlasSharing(map, audio)
 const showPavilion = () => {
-  intro.show()
+  window.clearTimeout(idleTimer)
+  void statement.close()
+  void intro.show()
   audio.stop()
   sharing.reset()
 }
@@ -140,14 +145,13 @@ const returnToPavilion = () => {
 }
 window.addEventListener('popstate', event => {
   if (event.state?.atlasView === 'pavilion') {
-    void statement.close()
     showPavilion()
   } else if (event.state?.atlasView === 'map') {
     void statement.close()
     intro.dismiss()
   }
 })
-const idleDelay = 180_000
+const idleDelay = 120_000
 const kioskIdleDelay = 30_000
 let idleTimer: number | undefined
 let kioskTimer: number | undefined
@@ -156,19 +160,18 @@ let isResetting = false
 let kioskFlight: ReturnType<typeof createMapFlight> | undefined
 
 const scheduleIdleReset = () => {
-  if (kioskMode) return
+  if (kioskMode || !intro.element.hidden) return
   if (idleTimer) window.clearTimeout(idleTimer)
   idleTimer = window.setTimeout(async () => {
-    if (isResetting || !resetAtlas) return
+    if (isResetting || !intro.element.hidden) return
     isResetting = true
     returnToPavilion()
     map.stop()
-    map.easeTo({ ...initialView, duration: 900, essential: true })
+    map.easeTo({ ...initialView, duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 900 })
     try {
-      await resetAtlas()
+      await resetAtlas?.()
     } finally {
       isResetting = false
-      scheduleIdleReset()
     }
   }, idleDelay)
 }
@@ -189,13 +192,10 @@ const noteActivity = () => {
   scheduleIdleReset()
 }
 
-// A visitor reading the fog poetry is still waiting for an active clearing.
-map.getContainer().addEventListener('atlas-generation-progress', scheduleIdleReset)
-window.addEventListener('pointerdown', () => noteActivity(), { passive: true })
+for (const type of ['pointerdown', 'pointerup', 'pointermove', 'wheel', 'touchstart', 'touchmove', 'keydown']) {
+  window.addEventListener(type, noteActivity, { passive: true, capture: true })
+}
 if (skipSplash || restoringMap) map.once('click', () => audio.start())
-window.addEventListener('pointermove', () => noteActivity(), { passive: true })
-window.addEventListener('wheel', () => noteActivity(), { passive: true })
-window.addEventListener('touchstart', () => noteActivity(), { passive: true })
 window.addEventListener(
   'keydown',
   event => {
@@ -214,7 +214,7 @@ window.addEventListener(
   { capture: true },
 )
 installModeShortcuts(() => Boolean(intro.element.hidden))
-window.addEventListener('keydown', () => noteActivity())
+scheduleIdleReset()
 
 const collapseAttribution = () => {
   const attribution = map
@@ -233,7 +233,6 @@ map.addControl(
 )
 collapseAttribution()
 map.once('idle', collapseAttribution)
-map.on('mousemove', () => noteActivity())
 map.on('load', async () => {
   if (adminModeEnabled()) {
     await installCachedTileAdmin(map)
@@ -252,7 +251,5 @@ map.on('load', async () => {
   if (kioskMode) {
     kioskFlight = createMapFlight(map, kioskFlightCenter)
     kioskFlight.start()
-  } else {
-    scheduleIdleReset()
   }
 })

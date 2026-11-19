@@ -18,7 +18,8 @@
 .pavilion-room :is(img, button, .pavilion-credit) {
   -webkit-touch-callout: none;
 }
-.atlas-intro.is-exiting { animation: pavilion-approach 1550ms both; pointer-events: none; }
+.atlas-intro:is(.is-exiting, .is-returning) { animation: pavilion-approach 1550ms both; pointer-events: none; }
+.atlas-intro.is-returning { animation-direction: reverse; }
 
 .pavilion-room {
   position: relative;
@@ -350,6 +351,8 @@
 }
 .is-exiting .pavilion-orb { animation: pavilion-launch 680ms ease-in both; }
 .is-exiting .pavilion-book::after { animation: pavilion-bloom 1.1s ease-out both; }
+.is-returning .pavilion-orb { animation: pavilion-launch 680ms 870ms ease-in reverse both; }
+.is-returning .pavilion-book::after { animation: pavilion-bloom 1.1s 450ms ease-out reverse both; }
 @keyframes pavilion-launch {
   20% { transform: translate(-50%, 8%) scale(1.1); }
   to { transform: translate(-50%, -75cqh) scale(.48, 1.6); opacity: 0; }
@@ -487,7 +490,7 @@
   .pavilion-book { bottom: 22%; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .atlas-intro *, .atlas-intro.is-exiting, .artist-statement.from-pavilion:not([hidden]) {
+  .atlas-intro *, .atlas-intro *::after, .atlas-intro:is(.is-exiting, .is-returning), .artist-statement.from-pavilion:not([hidden]) {
     animation: none !important;
     transition: none !important;
   }

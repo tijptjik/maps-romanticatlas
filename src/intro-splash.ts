@@ -127,14 +127,21 @@ export const createIntroSplash = (
   book.querySelector('img')!.addEventListener('error', () => splash.classList.add('without-illustrations'))
   splash.tabIndex = -1
   let setSceneVisible: ReturnType<typeof installPavilionScene> | undefined
-  let exitTimer: number | undefined
+  let transitionTimer: number | undefined
+  let lightTimer: number | undefined
+  const transitionDuration = () => matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 1550
+  const aimAtBook = () => {
+    const bounds = book.getBoundingClientRect()
+    const frame = splash.getBoundingClientRect()
+    splash.style.transformOrigin = `${bounds.left - frame.left + bounds.width / 2}px ${bounds.top - frame.top + bounds.height * 0.48}px`
+  }
 
   let opening = initiallyVisible
   let preparing = false
 
   const show = async () => {
-    if (preparing) return
-    window.clearTimeout(exitTimer)
+    if (preparing || splash.classList.contains('is-visible')) return
+    window.clearTimeout(transitionTimer)
     for (const piece of pieces) {
       piece.draggable = false
       if (!piece.hasAttribute('src')) piece.src = `/pavilion/${piece.dataset.piece}.webp`
@@ -145,6 +152,12 @@ export const createIntroSplash = (
     splash.classList.remove('is-exiting')
     splash.classList.add('is-visible')
     splash.scrollTop = 0
+    const ready = () => {
+      splash.classList.remove('is-returning')
+      splash.inert = false
+      splash.focus({ preventScroll: true })
+      scheduleLightChange()
+    }
     if (opening) {
       preparing = true
       mapContainer.inert = true
@@ -161,26 +174,31 @@ export const createIntroSplash = (
       curtain.remove()
       mapContainer.inert = false
       opening = preparing = false
+      ready()
+    } else {
+      aimAtBook()
+      splash.inert = true
+      splash.classList.add('is-returning')
+      transitionTimer = window.setTimeout(ready, transitionDuration())
     }
-    splash.inert = false
-    splash.focus({ preventScroll: true })
   }
 
   const dismiss = () => {
     if (preparing || !splash.classList.contains('is-visible')) return
-    const bounds = book.getBoundingClientRect()
-    const frame = splash.getBoundingClientRect()
-    splash.style.transformOrigin = `${bounds.left - frame.left + bounds.width / 2}px ${bounds.top - frame.top + bounds.height * 0.48}px`
+    window.clearTimeout(lightTimer)
+    window.clearTimeout(transitionTimer)
+    splash.classList.remove('is-returning')
+    aimAtBook()
     splash.classList.replace('is-visible', 'is-exiting')
     splash.inert = true
     onEnter()
     mapContainer.querySelector<HTMLElement>('.maplibregl-canvas')?.focus({ preventScroll: true })
-    exitTimer = window.setTimeout(() => {
+    transitionTimer = window.setTimeout(() => {
       setSceneVisible?.(false)
       splash.hidden = true
       onMapVisible()
       splash.classList.remove('is-exiting')
-    }, window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 1550)
+    }, transitionDuration())
   }
 
   const orrery = splash.querySelector<HTMLButtonElement>('.pavilion-orrery')!
@@ -210,13 +228,19 @@ export const createIntroSplash = (
     button.addEventListener('focus', update)
     button.addEventListener('blur', update)
   }
-  orrery.addEventListener('click', () => {
+  const toggleLight = (manual: boolean) => {
     const night = splash.classList.toggle('is-night')
-    playCue('sun', night ? 'rise' : 'fall')
+    if (manual) playCue('sun', night ? 'rise' : 'fall')
     setSceneVisible?.(true)
     orrery.setAttribute('aria-pressed', String(night))
     orrery.title = night ? 'Switch to day' : 'Switch to night'
-  })
+    scheduleLightChange()
+  }
+  const scheduleLightChange = () => {
+    window.clearTimeout(lightTimer)
+    lightTimer = window.setTimeout(() => toggleLight(false), 5 * 60_000)
+  }
+  orrery.addEventListener('click', () => toggleLight(true))
   book.addEventListener('click', dismiss)
   if (initiallyVisible) show()
   else splash.hidden = true

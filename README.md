@@ -171,7 +171,7 @@ the windows and coloured mist drifts across the open atlas beside an illustrated
 the atlas or its hovering orb to enter the fog. The illustrated spread follows the
 shoreline in a north-up Victoria Harbour reference from [Esri World Imagery](https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer).
 The green booklet on the right flips open to the Cartographer’s Note. Press Ctrl+M at any
-time to return to the introduction. After 3 minutes without activity, locally revealed
+time to return to the introduction. The pavilion alternates between day and night every five minutes. Selecting the orrery switches the light immediately and restarts that cycle. After two minutes without map interaction, locally revealed
 tiles fade back into the fog, the view returns to its starting position, and the
 introduction animates in again. A quiet, looping ambient theme begins after the first
 visitor gesture. The bottom-left sound control cycles through all sounds on, music off
