@@ -37,7 +37,7 @@ export function installV2ReviewMap(map: AtlasMap, onCount = (_count: number) => 
       if (!view.intersects([[west,south],[east,north]])) continue
       displayed.push(art)
       const url = art.animation?.plate ?? art.url
-      const coordinates = [[west,north],[east,north],[east,south],[west,south]]
+      const coordinates: ImageSource['coordinates'] = [[west,north],[east,north],[east,south],[west,south]]
       if (!loaded.has(id)) {
         map.addSource(id, { type:'image', url, coordinates })
         map.addLayer({id,type:'raster',source:id,paint:{'raster-fade-duration':0}}, neighborhoodLabelLayerId)

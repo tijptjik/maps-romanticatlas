@@ -1,0 +1,44 @@
+[
+  {
+    "number": 6,
+    "title": "The Borrowed Horizon",
+    "slug": "the-borrowed-horizon",
+    "heightMetres": 152,
+    "viewerImage": "/hku-skyscrapers-in-place/mirror-garden/the-borrowed-horizon.webp"
+  },
+  {
+    "number": 16,
+    "title": "The Harbour Rehearsal Tank",
+    "slug": "the-harbour-rehearsal-tank",
+    "heightMetres": 22,
+    "brief": "A working coastal engineering school enclosing one vast shallow physical model of Victoria Harbour. Place the water in the broad middle and SOUTHERN part of the parcel, on a thick low deck. Across the street-facing front the weight bears on cellular concrete walls about three storeys high; one glazed opening reveals pumps, no hollow four-court facade. Waterline only 12 m above the entry. Show the long Kowloon peninsula opposite the indented island shore in a broad blue-green channel. At one end wave paddles send parallel ripples through the model. A removable quay hangs just off its test position from a small travelling gantry. A service walk follows the rim; machinery and model shops are integral to the thick sidewalls. A single inhabited building fills the surveyed outline. Keep the joke of an entire working harbour on campus.",
+    "edition": "lower-basin",
+    "viewerImage": "/hku-skyscrapers-in-place/campus-editions/the-harbour-rehearsal-tank.webp"
+  },
+  {
+    "number": 20,
+    "title": "An Address for Lost Streets",
+    "slug": "an-address-for-lost-streets",
+    "heightMetres": 91,
+    "brief": "What if a Hong Kong street facing demolition could move to the university? Design a vertical neighbourhood archive made of three entire SHORT walkable lanes on deep inhabited levels. Each lane retains actual human-scale front rooms, repaired green shutters, covered five-foot ways, deep interiors and party walls salvaged from a different generation of tong lau. Upper lanes recede markedly to expose each lower lane from above. Stairs at the block ends stitch them together. Across one missing bay, a travelling hoist is returning a single tiled balcony to its old neighbours. This must read as three distinct inhabited Hong Kong streets climbing the hillside, with occasional trees and drying laundry at domestic scale, not as a shelf of isolated facade samples. A strong diagonal slice opens the mass to the street entrance. Three different rooflines, muted local pigments and enough calm wall to make the streets legible.",
+    "viewerImage": "/hku-skyscrapers-in-place/campus-editions/an-address-for-lost-streets.webp"
+  },
+  {
+    "number": 21,
+    "title": "The Quiet Eye",
+    "slug": "the-quiet-eye",
+    "heightMetres": 75,
+    "brief": "An experimental storm refuge built round a single conspicuously calm street-level public square. Unequal tapering brick and concrete wings turn their convex backs toward the prevailing wind. Broad curved weather screens on the upper floors guide gusts along two open exhaust passages and past the city-facing sides. At the open windward mouth narrow vermilion test pennants stream sideways. In the sheltered interior a second identical row hangs slack over a still rectangular reflecting pool and a tea stall. The two rows of pennants and calm pool explain the research. One asymmetrically split, inhabited spiral reaching the outer edge of the HKU site, narrow workshops and storm shutters in its thick curved walls, discontinuities showing paths through. Do not draw a tornado, dramatic weather, arrows or a circular stadium. All neighbours remain a quiet map, tiny figures in scale.",
+    "reviewEdition": "campus-paths",
+    "viewerImage": "/hku-skyscrapers-in-place/shard-shelter/the-quiet-eye.webp"
+  },
+  {
+    "number": 22,
+    "title": "The Theatre That Grows Back",
+    "slug": "the-theatre-that-grows-back",
+    "heightMetres": 83,
+    "brief": "Imagine the temporary Cantonese bamboo opera theatre becoming a permanent university by being continuously remade. One rolling, asymmetric woven vault spans the whole campus site; three generations of the SAME roof visible along its length. At the entrance the finished deep teal oiled-cloth canopy covers real backstage rooms and stage. At the middle a section of fabric folds back to expose a magnificent three-dimensional crisscross shell of golden paired bamboo arches. At the far end bare curving ribs rise from visible masonry sockets while a slender suspended work platform and bundles of fresh poles explain the next bay being woven by apprentices. A narrow covered street runs through the building from the actual campus paths. Show closely spaced braced and lashed bundles, real roof thickness and tiny human-scale access. silhouette like a cresting wave, low at the west and sweeping up over the east, not a domed stadium, pagoda or theatre seating bowl. Living bamboo grows along both flanks of the theatre. The taller western grove, smaller eastern stand and bundle of harvested poles at the entrance connect the planting to the woven roof.",
+    "edition": "living-bamboo",
+    "viewerImage": "/hku-skyscrapers-in-place/campus-editions/the-theatre-that-grows-back.webp"
+  }
+]
