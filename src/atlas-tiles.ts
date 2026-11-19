@@ -2,6 +2,8 @@ import { originalArtwork } from './artwork-sampling'
 import { installArtworkAnimations } from './fountain-glitter'
 import type { Painting } from './artwork-review'
 import { createFogSilhouette } from './fog-silhouette'
+import hkuSite from '../experiments/dream-atlas/hku-site.json'
+import hkuTowers from '../experiments/dream-atlas/hku-selection.json'
 import { fogShapeSeed } from './fog-pattern.js'
 import { clickRevealBudgetMs } from './atlas-protocol.ts'
 import { planAtlasRoads } from './atlas-road-plan.ts'
@@ -162,6 +164,11 @@ export const viewportFogTiles = (map, spill = 0, margin = Math.ceil(spill)) => {
 const visibleFogTiles = (map, spill = 0) =>
   map.getZoom() < minimumFogZoom ? [] : viewportFogTiles(map, spill)
 
+const hkuBase = hkuSite.tiles[0]
+const hkuDrawing = drawingFootprint(hkuBase)
+const hkuCells = hkuDrawing.cells.map(tileId)
+const isHkuSite = tile => hkuCells.includes(tileId(tile))
+const isFogged = tile => isHkuSite(tile) || isFogPatternSelected(tile)
 // Shared image/cache work can still serve another click after this one expires.
 const withinClickBudget = <T>(work: Promise<T>, signal?: AbortSignal): Promise<T> => {
   if (!signal) return work
@@ -301,7 +308,7 @@ const hideTextLabels = map => {
   return hiddenLayerIds
 }
 
-export const captureTile = async (map, tile, pixelSize = atlasTileSize) => {
+export const captureTile = async (map, tile, pixelSize = atlasTileSize, study = false) => {
   if (![512, 1024, 2048].includes(pixelSize))
     throw new Error('Unsupported capture size')
   const hiddenLayerIds = hideTextLabels(map)
@@ -334,6 +341,7 @@ export const captureTile = async (map, tile, pixelSize = atlasTileSize) => {
     const unique = new Map()
     for (const f of roads) unique.set(JSON.stringify([f.geometry, f.properties]), f)
     const plan = planAtlasRoads([...unique.values()], bounds)
+    let roadCleanup: string | undefined
     if (plan.removedPaths.length) {
       const original = context.getImageData(0, 0, pixelSize, pixelSize)
       const source = 'atlas-capture-roads'
@@ -383,17 +391,22 @@ export const captureTile = async (map, tile, pixelSize = atlasTileSize) => {
         } else patch.data[i+3] = 0
       }
       context.putImageData(original,0,0)
-
+      if (study) {
+        diff.putImageData(patch,0,0)
+        roadCleanup = delta.toDataURL('image/png')
+      }
     }
     const generationArtifacts = createGenerationArtifacts(
       map,
       tileCanvas,
       northWest,
       southEast,
+      study,
     )
     return {
       sourceImage: tileCanvas.toDataURL('image/png'),
       ...generationArtifacts,
+      ...(study ? { roadCleanup, reclaimedConnectors: plan.removedPaths.length } : {}),
     }
   } finally {
     for (const restore of restoreRoads.reverse()) restore()
@@ -498,7 +511,7 @@ const drawGeometry = (
   }
 }
 
-const createGenerationArtifacts = (map, sourceCanvas, northWest, southEast) => {
+const createGenerationArtifacts = (map, sourceCanvas, northWest, southEast, study) => {
   const pixelSize = sourceCanvas.width
   const pixelRatio = pixelSize / atlasTileSize
   const scaleX = pixelSize / (southEast.x - northWest.x)
@@ -606,10 +619,17 @@ const createGenerationArtifacts = (map, sourceCanvas, northWest, southEast) => {
       }
     }
   }
+  const maskUrl = pixels => {
+    const canvas = document.createElement('canvas')
+    canvas.width = canvas.height = pixelSize
+    canvas.getContext('2d').putImageData(pixels, 0, 0)
+    return canvas.toDataURL('image/png')
+  }
   for (let i = 3; i < deck.data.length; i += 4) {
     if (deck.data[i]) maskPixels.data.set([255, 255, 255, 255], i-3)
   }
   safeContext.putImageData(maskPixels, 0, 0)
+  const groundMask = study ? safeCanvas.toDataURL('image/png') : undefined
   let contentLeft = pixelSize
   let contentTop = pixelSize
   let contentRight = -1
@@ -649,13 +669,15 @@ const createGenerationArtifacts = (map, sourceCanvas, northWest, southEast) => {
     overlayPixels.data[index] = sourcePixels.data[index]
     overlayPixels.data[index + 1] = sourcePixels.data[index + 1]
     overlayPixels.data[index + 2] = sourcePixels.data[index + 2]
-    overlayPixels.data[index + 3] = projection.data[index + 3] ? 0 : linePixels.data[index + 3]
+    overlayPixels.data[index + 3] = !study && projection.data[index + 3] ? 0 : linePixels.data[index + 3]
   }
   lineContext.putImageData(overlayPixels, 0, 0)
 
   return {
+    ...(study ? { buildingMask: buildings.toDataURL('image/png'),
+      projectionMask: maskUrl(projection), mooringMask: maskUrl(mooring), deckMask: maskUrl(deck) } : {}),
     guideImage: guideCanvas.toDataURL('image/png'),
-    safeMask: safeCanvas.toDataURL('image/png'),
+    safeMask: groundMask ?? safeCanvas.toDataURL('image/png'),
     lineOverlay: lineCanvas.toDataURL('image/png'),
     contentBounds:
       contentRight >= contentLeft && contentBottom >= contentTop
@@ -890,7 +912,7 @@ export const createFogCanvas = (
   cachedTileIds,
   isFogTileRenderable,
   noNoise = false,
-  isSelected = isFogPatternSelected,
+  isSelected = isFogged,
   maskTiles = visibleFogTiles,
   shouldAnimate = () => true,
   cloudBounds = tileBounds,
@@ -2200,7 +2222,7 @@ export const installAtlasTileInteractions = (
   for (const [id, paintings] of artwork ?? []) {
     if (paintings.some(spansMultipleTiles)) multiTileCells.add(id)
   }
-  const hasFootprintOverride = tile => multiTileCells.has(tileId(tile))
+  const hasFootprintOverride = artwork ? tile => multiTileCells.has(tileId(tile)) : isHkuSite
   const selected = tile => hasFootprintOverride(tile) || isFogPatternSelected(tile)
   const cachedTileIds = new Set<string>(artwork?.keys())
   const indexedCachedTiles = new Map()
@@ -2444,7 +2466,7 @@ export const installAtlasTileInteractions = (
         return
       }
 
-      const patternIncluded = isFogPatternSelected(hoveredTile)
+      const patternIncluded = isFogged(hoveredTile)
       const cloudIncluded =
         patternIncluded && eligibility.isTargetable
       addTooltipRow(
@@ -2495,7 +2517,7 @@ export const installAtlasTileInteractions = (
         const id = tileId(tile)
         visibleIds.add(id)
         let reasons: { icon: string; label: string }[] | undefined
-        if (!isFogPatternSelected(tile)) {
+        if (!isFogged(tile)) {
           reasons = [cloudExclusion.fogPattern]
         } else {
           const eligibility = fogLandState.get(id)
@@ -2531,7 +2553,7 @@ export const installAtlasTileInteractions = (
         // visually replace the cloud with a red panel.
         label.classList.toggle(
           'atlas-cloud-diagnostic--fog-pattern-included',
-          isFogPatternSelected(tile),
+          isFogged(tile),
         )
         label.replaceChildren(
           ...reasons.map(reason => createCloudDiagnosticIcon(reason.icon)),
@@ -2865,6 +2887,35 @@ export const installAtlasTileInteractions = (
       }
       return
     }
+    if (!artwork && isHkuSite(tile)) {
+      const baseId = tileId(hkuBase)
+      if (tileState.has(baseId)) return
+      for (const cell of hkuCells) tileState.set(cell, 'checking')
+      const tower = hkuTowers[Math.floor(Math.random() * hkuTowers.length)]
+      const image = new Image()
+      image.src = '/hku-skyscrapers-in-place/' + tower.slug + '.webp'
+      const layerId = `atlas-tile-${hkuBase.x}-${hkuBase.y}`
+      try {
+        await image.decode()
+        if (tileState.get(baseId) !== 'checking') return
+        await addGeneratedTile(map, hkuBase, image.src, tower.slug, titleCards, undefined,
+          0, undefined, { bounds: hkuDrawing.bounds, title: tower.title, image })
+        revealedTileIds.add(baseId)
+        const frame = { bounds: hkuDrawing.bounds, width: image.naturalWidth, height: image.naturalHeight }
+        for (const cell of hkuCells) artworkFrames.set(cell, frame)
+        focusAtlasTile(map, hkuBase, undefined, frame)
+        fog.animateReveal(hkuCells, [layerId], generatedTileOpacity, () => {
+          titleCards.get(baseId)?.card.classList.remove('is-awaiting-focus')
+          onRevealCountChange(revealedTileIds.size)
+        })
+      } catch {
+        for (const cell of hkuCells) tileState.delete(cell)
+        const message = 'The HKU tower could not load. Click either tile to try again.'
+        fog.showError(id, message)
+        fogErrorAnnouncer.announce(message)
+      }
+      return
+    }
     if (tileState.get(id) === 'generated') {
       focusRevealedTile(tile)
       return
@@ -3077,6 +3128,9 @@ export const installAtlasTileInteractions = (
   const resetReveals = () => {
     animatedPaintings.clear()
     showAnimations(animatedPaintings)
+    if (tileState.has(tileId(hkuBase))) {
+      for (const cell of hkuCells) { fog.cancelReveal(cell); tileState.set(cell, 'resetting') }
+    }
     const revealedLayerIds = [...revealedTileIds]
       .map(id => `atlas-tile-${tileFromId(id).x}-${tileFromId(id).y}`)
       .filter(layerId => map.getLayer(layerId))

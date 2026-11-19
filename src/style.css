@@ -1404,6 +1404,23 @@ body {
   }
 }
 
+.v2-review {
+  position: absolute;
+  z-index: 3;
+  top: 12px;
+  left: 12px;
+  max-width: calc(100% - 24px);
+  padding: 8px 12px;
+  background: #fff9eb;
+  color: #362a20;
+  border: 1px solid #aa9375;
+  font: 16px Georgia, serif;
+}
+.v2-review label, .v2-review div { display: flex; align-items: center; gap: 8px; }
+.v2-review div { margin-top: 4px; justify-content: space-between; }
+.v2-review select { min-width: 0; max-width: 65vw; }
+.v2-review button { min-width: 32px; font-size: 20px; cursor: pointer; }
+
 /* Facing leaves, a sewn gutter and a thin stack of gilt-edged paper. */
 .artist-statement .artist-statement__dialog {
   width: min(65rem, 100%);

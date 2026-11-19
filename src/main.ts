@@ -6,6 +6,7 @@ import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url'
 import { installDiscoveryMap } from './v2-discovery-map'
 import { installCachedTileAdmin } from './cached-tile-admin'
 import { installAtlasTileInteractions, minimumFogZoom } from './atlas-tiles'
+import { installV2ReviewMap } from './v2-review-map'
 import { createIntroSplash } from './intro-splash.ts'
 import { installArtistStatement } from './artist-statement.ts'
 import { installAtlasAudio } from './atlas-audio.ts'
@@ -37,15 +38,17 @@ const initialView = {
 }
 
 const kioskFlightCenter = [114.1455, 22.2759] as [number, number]
+const experimentMode = new URLSearchParams(location.search).get('experiment') === 'true'
 const kioskMode = kioskModeEnabled()
 const restoringMap = history.state?.atlasView === 'map' ||
   (!history.state?.atlasView && Boolean(history.state?.atlasModeCamera))
-if (kioskMode || noSplashEnabled() || restoringMap) {
+if (experimentMode || kioskMode || noSplashEnabled() || restoringMap) {
   document.documentElement.classList.remove('atlas-boot')
 }
 
-const adminMap = adminModeEnabled()
-const minimumZoom = diagnosticsModeEnabled() ? minimumFogZoom : 16
+// The experiment overview can span several districts, including on narrow screens.
+const adminMap = !experimentMode && adminModeEnabled()
+const minimumZoom = experimentMode ? 10 : diagnosticsModeEnabled() ? minimumFogZoom : 16
 const nativeMaxZoom = nativeTileZoom(atlasTileSize)
 const initialMaxZoom = adminMap ? nativeMaxZoom : Math.max(minimumZoom, nativeMaxZoom)
 
@@ -80,17 +83,17 @@ installNativeTileZoom(map, map.getMinZoom())
 installBasemapPreload(map)
 
 function installModeShortcuts(mapVisible: () => boolean) {
-  const modes = { r: null, d: 'diagnostics', a: 'admin' } as const
+  const modes = { r: null, d: 'diagnostics', a: 'admin', e: 'experiment' } as const
   window.addEventListener('keydown', event => {
     if (kioskMode || !mapVisible() || event.repeat || event.isComposing ||
         event.altKey || event.ctrlKey || event.metaKey || event.shiftKey ||
         (event.target instanceof Element && event.target.closest('input, textarea, select, [contenteditable], [role="dialog"]'))) return
     const key = event.key.toLowerCase()
-    if (key !== 'r' && key !== 'd' && key !== 'a') return
+    if (key !== 'r' && key !== 'd' && key !== 'a' && key !== 'e') return
     event.preventDefault()
     const url = new URL(location.href)
     const selected = modes[key]
-    const flags = ['admin', 'diagnostics']
+    const flags = ['admin', 'diagnostics', 'experiment']
     if (flags.every(flag => (url.searchParams.get(flag) === 'true') === (flag === selected))) return
     for (const flag of flags) url.searchParams.delete(flag)
     if (selected) url.searchParams.set(selected, 'true')
@@ -101,166 +104,176 @@ function installModeShortcuts(mapVisible: () => boolean) {
   })
 }
 
-const installDeployCommit = (mapContainer: HTMLElement) => {
-  if (!adminModeEnabled()) return
-
-  const commit = import.meta.env.VITE_DEPLOY_COMMIT?.trim()
-  const label = document.createElement('output')
-  label.className = 'atlas-deploy-commit'
-  label.textContent = `DEPLOY ${commit ? commit.slice(0, 7) : 'UNKNOWN'}`
-  label.title = commit ? `Deployed commit: ${commit}` : 'Deployed commit unavailable'
-  label.setAttribute('aria-label', label.title)
-  mapContainer.append(label)
+if (experimentMode) {
+  installModeShortcuts(() => true)
+  map.addControl(new maplibregl.AttributionControl({ compact: true }))
+  map.once('load', () => installV2ReviewMap(map))
+} else {
+  await startAtlas()
 }
 
-installDeployCommit(map.getContainer())
+async function startAtlas() {
+  const installDeployCommit = (mapContainer: HTMLElement) => {
+    if (!adminModeEnabled()) return
 
-const skipSplash = noSplashEnabled() || kioskMode
-const audio = installAtlasAudio(map.getContainer(), {
-  initiallyMuted: noMusicEnabled() || kioskMode,
-})
-const enterMap = () => {
-  if (history.state?.atlasView !== 'map') {
-    history.replaceState({ ...history.state, atlasView: 'pavilion' }, '')
-    history.pushState({ ...history.state, atlasView: 'map' }, '')
+    const commit = import.meta.env.VITE_DEPLOY_COMMIT?.trim()
+    const label = document.createElement('output')
+    label.className = 'atlas-deploy-commit'
+    label.textContent = `DEPLOY ${commit ? commit.slice(0, 7) : 'UNKNOWN'}`
+    label.title = commit ? `Deployed commit: ${commit}` : 'Deployed commit unavailable'
+    label.setAttribute('aria-label', label.title)
+    mapContainer.append(label)
   }
-  audio.unlock()
-}
-const intro = createIntroSplash(map.getContainer(), enterMap, !skipSplash && !restoringMap, () => {
-  audio.start()
-  scheduleIdleReset()
-}, audio.playPavilionCue)
-const statement = installArtistStatement(map.getContainer(), {
-  showMapTrigger: !adminModeEnabled(),
-  onBookmarkPull: () => audio.playPavilionCue('book', 'pull'),
-  onPavilionClose: () => audio.playPavilionCue('book', 'fall'),
-})
-const sharing = installAtlasSharing(map, audio)
-const showPavilion = () => {
-  window.clearTimeout(idleTimer)
-  void statement.close()
-  void intro.show()
-  audio.stop()
-  sharing.reset()
-}
-const returnToPavilion = () => {
-  if (history.state?.atlasView === 'map') history.back()
-  else showPavilion()
-}
-window.addEventListener('popstate', event => {
-  if (event.state?.atlasView === 'pavilion') {
-    showPavilion()
-  } else if (event.state?.atlasView === 'map') {
+
+  installDeployCommit(map.getContainer())
+
+  const skipSplash = noSplashEnabled() || kioskMode
+  const audio = installAtlasAudio(map.getContainer(), {
+    initiallyMuted: noMusicEnabled() || kioskMode,
+  })
+  const enterMap = () => {
+    if (history.state?.atlasView !== 'map') {
+      history.replaceState({ ...history.state, atlasView: 'pavilion' }, '')
+      history.pushState({ ...history.state, atlasView: 'map' }, '')
+    }
+    audio.unlock()
+  }
+  const intro = createIntroSplash(map.getContainer(), enterMap, !skipSplash && !restoringMap, () => {
+    audio.start()
+    scheduleIdleReset()
+  }, audio.playPavilionCue)
+  const statement = installArtistStatement(map.getContainer(), {
+    showMapTrigger: !adminModeEnabled(),
+    onBookmarkPull: () => audio.playPavilionCue('book', 'pull'),
+    onPavilionClose: () => audio.playPavilionCue('book', 'fall'),
+  })
+  const sharing = installAtlasSharing(map, audio)
+  const showPavilion = () => {
+    window.clearTimeout(idleTimer)
     void statement.close()
-    intro.dismiss()
+    void intro.show()
+    audio.stop()
+    sharing.reset()
   }
-})
-const idleDelay = 120_000
-const kioskIdleDelay = 30_000
-let idleTimer: number | undefined
-let kioskTimer: number | undefined
-let resetAtlas: (() => Promise<void>) | undefined
-let isResetting = false
-let kioskFlight: ReturnType<typeof createMapFlight> | undefined
-
-const scheduleIdleReset = () => {
-  if (kioskMode || !intro.element.hidden) return
-  if (idleTimer) window.clearTimeout(idleTimer)
-  idleTimer = window.setTimeout(async () => {
-    if (isResetting || !intro.element.hidden) return
-    isResetting = true
-    returnToPavilion()
-    map.stop()
-    map.easeTo({ ...initialView, duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 900 })
-    try {
-      await resetAtlas?.()
-    } finally {
-      isResetting = false
+  const returnToPavilion = () => {
+    if (history.state?.atlasView === 'map') history.back()
+    else showPavilion()
+  }
+  window.addEventListener('popstate', event => {
+    if (event.state?.atlasView === 'pavilion') {
+      showPavilion()
+    } else if (event.state?.atlasView === 'map') {
+      void statement.close()
+      intro.dismiss()
     }
-  }, idleDelay)
-}
+  })
+  const idleDelay = 120_000
+  const kioskIdleDelay = 30_000
+  let idleTimer: number | undefined
+  let kioskTimer: number | undefined
+  let resetAtlas: (() => Promise<void>) | undefined
+  let isResetting = false
+  let kioskFlight: ReturnType<typeof createMapFlight> | undefined
 
-const scheduleKioskFlight = () => {
-  if (!kioskMode) return
-  if (kioskTimer) window.clearTimeout(kioskTimer)
-  kioskTimer = window.setTimeout(() => kioskFlight?.start(), kioskIdleDelay)
-}
-
-const noteActivity = () => {
-  if (isResetting) return
-  if (kioskMode) {
-    kioskFlight?.pause()
-    scheduleKioskFlight()
-    return
-  }
-  scheduleIdleReset()
-}
-
-for (const type of ['pointerdown', 'pointerup', 'pointermove', 'wheel', 'touchstart', 'touchmove', 'keydown']) {
-  window.addEventListener(type, noteActivity, { passive: true, capture: true })
-}
-if (skipSplash || restoringMap) map.once('click', () => audio.start())
-window.addEventListener(
-  'keydown',
-  event => {
-    if (event.ctrlKey && !event.altKey && event.key.toLowerCase() === 'm') {
-      event.preventDefault()
-      event.stopPropagation()
-      if (kioskMode) {
-        kioskFlight?.pause()
-        scheduleKioskFlight()
-        return
-      }
+  const scheduleIdleReset = () => {
+    if (kioskMode || !intro.element.hidden) return
+    if (idleTimer) window.clearTimeout(idleTimer)
+    idleTimer = window.setTimeout(async () => {
+      if (isResetting || !intro.element.hidden) return
+      isResetting = true
       returnToPavilion()
-      noteActivity()
+      map.stop()
+      map.easeTo({ ...initialView, duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 900 })
+      try {
+        await resetAtlas?.()
+      } finally {
+        isResetting = false
+      }
+    }, idleDelay)
+  }
+
+  const scheduleKioskFlight = () => {
+    if (!kioskMode) return
+    if (kioskTimer) window.clearTimeout(kioskTimer)
+    kioskTimer = window.setTimeout(() => kioskFlight?.start(), kioskIdleDelay)
+  }
+
+  const noteActivity = () => {
+    if (isResetting) return
+    if (kioskMode) {
+      kioskFlight?.pause()
+      scheduleKioskFlight()
+      return
     }
-  },
-  { capture: true },
-)
-installModeShortcuts(() => Boolean(intro.element.hidden))
-window.addEventListener('keydown', event => {
-  if (event.key !== 'Escape' || event.defaultPrevented || event.repeat || event.isComposing ||
-      event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || kioskMode ||
-      intro.element.classList.contains('is-visible')) return
-  event.preventDefault()
-  returnToPavilion()
-})
-scheduleIdleReset()
+    scheduleIdleReset()
+  }
 
-const collapseAttribution = () => {
-  const attribution = map
-    .getContainer()
-    .querySelector<HTMLElement>('.maplibregl-ctrl-attrib')
-  attribution?.classList.remove('maplibregl-compact-show')
-  attribution?.removeAttribute('open')
+  for (const type of ['pointerdown', 'pointerup', 'pointermove', 'wheel', 'touchstart', 'touchmove', 'keydown']) {
+    window.addEventListener(type, noteActivity, { passive: true, capture: true })
+  }
+  if (skipSplash || restoringMap) map.once('click', () => audio.start())
+  window.addEventListener(
+    'keydown',
+    event => {
+      if (event.ctrlKey && !event.altKey && event.key.toLowerCase() === 'm') {
+        event.preventDefault()
+        event.stopPropagation()
+        if (kioskMode) {
+          kioskFlight?.pause()
+          scheduleKioskFlight()
+          return
+        }
+        returnToPavilion()
+        noteActivity()
+      }
+    },
+    { capture: true },
+  )
+  installModeShortcuts(() => Boolean(intro.element.hidden))
+  window.addEventListener('keydown', event => {
+    if (event.key !== 'Escape' || event.defaultPrevented || event.repeat || event.isComposing ||
+        event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || kioskMode ||
+        intro.element.classList.contains('is-visible')) return
+    event.preventDefault()
+    returnToPavilion()
+  })
+  scheduleIdleReset()
+
+  const collapseAttribution = () => {
+    const attribution = map
+      .getContainer()
+      .querySelector<HTMLElement>('.maplibregl-ctrl-attrib')
+    attribution?.classList.remove('maplibregl-compact-show')
+    attribution?.removeAttribute('open')
+  }
+
+  map.addControl(
+    new maplibregl.AttributionControl({
+      compact: true,
+      customAttribution:
+        '<a href="https://github.com/tijptjik/maps-romanticatlas/blob/main/THIRD_PARTY_NOTICES.md" target="_blank" rel="noopener noreferrer">Sounds</a>',
+    }),
+  )
+  collapseAttribution()
+  map.once('idle', collapseAttribution)
+  map.on('load', async () => {
+    if (adminModeEnabled()) {
+      await installCachedTileAdmin(map)
+      const atlas = installAtlasTileInteractions(map, audio, {
+        cloudDiagnostics: cloudDiagnosticsModeEnabled(),
+        noNoise: noNoiseEnabled(),
+        onRevealCountChange: sharing.setRevealCount,
+      })
+      resetAtlas = async () => { await atlas.resetReveals() }
+    } else {
+      const reset = await installDiscoveryMap(map, diagnosticsModeEnabled(), noNoiseEnabled(),
+        sharing.setRevealCount, audio)
+      resetAtlas = async () => { await reset() }
+    }
+
+    if (kioskMode) {
+      kioskFlight = createMapFlight(map, kioskFlightCenter)
+      kioskFlight.start()
+    }
+  })
 }
-
-map.addControl(
-  new maplibregl.AttributionControl({
-    compact: true,
-    customAttribution:
-      '<a href="https://github.com/tijptjik/maps-romanticatlas/blob/main/THIRD_PARTY_NOTICES.md" target="_blank" rel="noopener noreferrer">Sounds</a>',
-  }),
-)
-collapseAttribution()
-map.once('idle', collapseAttribution)
-map.on('load', async () => {
-  if (adminModeEnabled()) {
-    await installCachedTileAdmin(map)
-    const atlas = installAtlasTileInteractions(map, audio, {
-      cloudDiagnostics: cloudDiagnosticsModeEnabled(),
-      noNoise: noNoiseEnabled(),
-      onRevealCountChange: sharing.setRevealCount,
-    })
-    resetAtlas = async () => { await atlas.resetReveals() }
-  } else {
-    const reset = await installDiscoveryMap(map, diagnosticsModeEnabled(), noNoiseEnabled(),
-      sharing.setRevealCount, audio)
-    resetAtlas = async () => { await reset() }
-  }
-
-  if (kioskMode) {
-    kioskFlight = createMapFlight(map, kioskFlightCenter)
-    kioskFlight.start()
-  }
-})

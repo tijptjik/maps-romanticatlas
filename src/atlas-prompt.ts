@@ -30,6 +30,7 @@ export const edgesAndFigures = {
 }
 
 export const atlasCompositionDirection = [
+  'Use the street plan to determine the shape of the work. Fix the through-routes and their intersections first. Turn rows along the local street bearings, step their lengths at a taper, and bend a frontage where the street curves. Place gates at actual approaches. Design complete objects within that layout, using shorter spans or separate work areas where a lane cuts across the site.',
   'Read the surveyed paths and parcels first. For a broad inland tile, aim for roughly 65–75% of the full tile in actual painted site area where the ground permits. Respect protected streets, site boundaries and any scene-specific footprint or coastal coverage. Measure painted coverage, excluding open gaps, against the full tile: a bounding rectangle overstates coverage.',
   'Let the central activity grow across the site in two dimensions. Give its stages distinct spaces linked by a real walk or working connection. Place preparation, transformation and use where their entrances and levels make sense. Keep buildings ancillary unless the brief calls for the building itself.',
   'Make the idea readable on a thumbnail without its caption. Show the material, the part that acts on it and the visible result close enough to trace their relationship. A run of distinct phases can lead a viewer through several courts. Extend the operation to gain coverage; keep people, furniture and tools at the measured scale.',
@@ -58,6 +59,17 @@ const atlasSiteDirection = [
 export const atlasDrawingDirection = [
   atlasSiteDirection,
   'A raised roof may hide an amber street behind the building. Keep the street aligned where it reappears on both sides. Leave foreground streets visible and finish every roof and rear corner inside the safety margin.',
+].join(' ')
+
+export const atlasSkyscraperPrompt = (brief: string, heightMetres: number) => [
+  brief,
+  'Draw one complete inhabited skyscraper as a single illustration. In the guide, the filled polygon is the surveyed ground footprint and the separate gauge measures projected height from its rear edge. Preserve the foot of each visible wall, the entry orientation and the parcel boundary. Invent the entire structure above it.',
+  `The highest point is ${heightMetres} metres above the base. The tower rises from the southern tile into the tile to its north.`,
+  atlasProjectionDirection,
+  'Begin with the extraordinary thing this place allows someone to do in the sky. Let that action determine the section and silhouette. A flight path might hollow out an inhabited ring; performers might cross a suspended stage between folded shells; water might descend through a split tower whose counterweight hangs in the gap. Choose a structural idea specific to this brief. Across a series, vary the load paths, crown heights, asymmetry and openings as well as the colour.',
+  'Follow the route from the street to the principal sky space. Show where a shell bears on a pier, where a suspended room hangs, or where a bridge lands. Compose foreground, middle and rear volumes with enough open air to see between them. Keep the finished back edges and crown inside the image.',
+  atlasIllustrationDirection,
+  'Isolate the whole silhouette on uniform pure magenta #ff00ff for alpha extraction, including open sky visible through holes. Reserve this colour for transparency. Keep shadows on the artwork itself. Omit labels, guide marks, frame and ground slab.',
 ].join(' ')
 
 export const atlasPrompt = (scene: AtlasScene, hasSea: boolean) => {
