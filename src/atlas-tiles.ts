@@ -2253,11 +2253,32 @@ export const installAtlasTileInteractions = (
     }
   }
   const readRotation = async (tile, includeCache: boolean, signal: AbortSignal) => {
-    const response = await fetch(rotationUrl(tile) + (includeCache ? '&includeCache=1' : ''), { signal, cache: 'no-store' })
-    if (!response.ok) throw Error('The cached artwork could not be loaded.')
-    const snapshot: ReturnType<typeof rotationSnapshot> = await response.json()
-    setCloudReady(tile, snapshot.ready)
-    return snapshot
+    const url = rotationUrl(tile) + (includeCache ? '&includeCache=1' : '')
+    let response: Response | undefined
+    try {
+      response = await fetch(url, {
+        signal: AbortSignal.any([signal, AbortSignal.timeout(5000)]),
+        cache: 'no-store',
+      })
+      if (!response.ok) {
+        const body = await response.json().catch(() => null)
+        throw Error(body?.error ?? response.statusText)
+      }
+      const snapshot: ReturnType<typeof rotationSnapshot> = await response.json()
+      if (typeof snapshot?.ready !== 'boolean' || !Array.isArray(snapshot.released) ||
+          snapshot.released.some(image => !image?.url || typeof image.scene !== 'string')) {
+        throw Error('Invalid released artwork list.')
+      }
+      setCloudReady(tile, snapshot.ready)
+      return snapshot.released
+    } catch (error) {
+      console.warn('[atlas] Released artwork lookup failed', {
+        tile: tileId(tile), url, status: response?.status,
+        ray: response?.headers.get('cf-ray'), error,
+      })
+      signal.throwIfAborted()
+      return []
+    }
   }
 
   const indexedCachedTiles = new Map()
@@ -3016,14 +3037,20 @@ export const installAtlasTileInteractions = (
         }
       }
       if (!result) {
-        const snapshot = await readRotation(tile, !paintings.length, budget)
+        const released = await readRotation(tile, !paintings.length, budget)
         const catalog = new Map(paintings.map(art => [art.imageUrl ?? art.url, art]))
         const choices = new Map<string, RevealImage>()
-        for (const image of [cached, ...snapshot.released]) {
+        for (const image of [cached, ...released]) {
           if (image && !rejectedUrls.has(image.url)) choices.set(image.url, image)
         }
+        if (!catalog.size && !choices.size) {
+          const status = await withinClickBudget(checkCachedTile(tile), budget)
+          if (status.cached && status.url && status.scene && !rejectedUrls.has(status.url)) {
+            choices.set(status.url, { url: status.url, scene: status.scene, contentBounds: status.contentBounds })
+          }
+        }
         const urls = [...new Set([...catalog.keys(), ...choices.keys()])]
-        if (!urls.length) throw Error('This cloud has no released artwork yet.')
+        if (!urls.length) throw Error('Artwork is unavailable. Click the cloud to try again.')
         const url = urls[Math.floor(Math.random() * urls.length)]
         const painting = catalog.get(url)
         if (painting) {
@@ -3044,7 +3071,10 @@ export const installAtlasTileInteractions = (
     } catch (error) {
       tileState.delete(id)
       fog.cancelReveal(id)
-      fog.showError(id, error instanceof Error ? error.message : 'Please try this cloud again.')
+      console.warn('[atlas] Cached cloud reveal failed', { tile: id, error })
+      const message = error instanceof Error ? error.message : 'Please try this cloud again.'
+      fog.showError(id, message)
+      fogErrorAnnouncer.announce(message)
       fog.invalidate()
     } finally { window.clearInterval(keepAlive) }
   }
