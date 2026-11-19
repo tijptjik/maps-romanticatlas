@@ -13,10 +13,12 @@ import { installAtlasAudio } from './atlas-audio.ts'
 import { installAtlasSharing } from './atlas-sharing.ts'
 import { createMapFlight } from './map-flight.ts'
 import { hongKongStyle } from './map-style.ts'
-import { atlasTileSize } from './atlas-protocol.ts'
+import { atlasTileSize, modeEnabled } from './atlas-protocol.ts'
 import { installNativeTileZoom, nativeTileZoom } from './native-tile-zoom.ts'
 import { installBasemapPreload } from './basemap-preload.ts'
 import {
+  mapModePath,
+  reviewModeEnabled,
   adminModeEnabled,
   diagnosticsModeEnabled,
   cloudDiagnosticsModeEnabled,
@@ -38,17 +40,17 @@ const initialView = {
 }
 
 const kioskFlightCenter = [114.1455, 22.2759] as [number, number]
-const experimentMode = new URLSearchParams(location.search).get('experiment') === 'true'
+const reviewMode = reviewModeEnabled()
 const kioskMode = kioskModeEnabled()
 const restoringMap = history.state?.atlasView === 'map' ||
   (!history.state?.atlasView && Boolean(history.state?.atlasModeCamera))
-if (experimentMode || kioskMode || noSplashEnabled() || restoringMap) {
+if (reviewMode || kioskMode || noSplashEnabled() || restoringMap) {
   document.documentElement.classList.remove('atlas-boot')
 }
 
 // The experiment overview can span several districts, including on narrow screens.
-const adminMap = !experimentMode && adminModeEnabled()
-const minimumZoom = experimentMode ? 10 : diagnosticsModeEnabled() ? minimumFogZoom : 16
+const adminMap = !reviewMode && adminModeEnabled()
+const minimumZoom = reviewMode ? 10 : diagnosticsModeEnabled() ? minimumFogZoom : 16
 const nativeMaxZoom = nativeTileZoom(atlasTileSize)
 const initialMaxZoom = adminMap ? nativeMaxZoom : Math.max(minimumZoom, nativeMaxZoom)
 
@@ -83,28 +85,28 @@ installNativeTileZoom(map, map.getMinZoom())
 installBasemapPreload(map)
 
 function installModeShortcuts(mapVisible: () => boolean) {
-  const modes = { r: null, d: 'diagnostics', a: 'admin', e: 'experiment' } as const
+  const modes = { r: null, d: 'diagnostics', a: 'admin', v: 'review' } as const
   window.addEventListener('keydown', event => {
     if (kioskMode || !mapVisible() || event.repeat || event.isComposing ||
         event.altKey || event.ctrlKey || event.metaKey || event.shiftKey ||
         (event.target instanceof Element && event.target.closest('input, textarea, select, [contenteditable], [role="dialog"]'))) return
     const key = event.key.toLowerCase()
-    if (key !== 'r' && key !== 'd' && key !== 'a' && key !== 'e') return
+    if (key !== 'r' && key !== 'd' && key !== 'a' && key !== 'v') return
     event.preventDefault()
     const url = new URL(location.href)
     const selected = modes[key]
-    const flags = ['admin', 'diagnostics', 'experiment']
-    if (flags.every(flag => (url.searchParams.get(flag) === 'true') === (flag === selected))) return
+    const flags = ['admin', 'diagnostics', 'review']
+    if (flags.every(flag => modeEnabled(url.searchParams, flag) === (flag === selected))) return
     for (const flag of flags) url.searchParams.delete(flag)
-    if (selected) url.searchParams.set(selected, 'true')
+    if (selected) url.searchParams.set(selected, '')
     history.replaceState({ ...history.state, atlasModeCamera: {
       center: map.getCenter().toArray(), zoom: map.getZoom(),
-    } }, '', url)
+    } }, '', mapModePath(url))
     location.reload()
   })
 }
 
-if (experimentMode) {
+if (reviewMode) {
   installModeShortcuts(() => true)
   map.addControl(new maplibregl.AttributionControl({ compact: true }))
   map.once('load', () => installV2ReviewMap(map))

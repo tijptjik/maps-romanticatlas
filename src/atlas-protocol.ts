@@ -157,8 +157,11 @@ export const cookieValue = (cookieHeader: unknown, name: string) =>
 
 export const modeEnabled = (
   searchParams: URLSearchParams,
-  mode: 'admin' | 'diagnostics',
-) => searchParams.get(mode) === 'true'
+  mode: string,
+) => {
+  const value = searchParams.get(mode)
+  return value === '' || value === 'true'
+}
 
 const localHostPattern = /^(?:localhost|127\.0\.0\.1)(?::\d+)?$/
 const isLocalHost = (host: string) => localHostPattern.test(host)

@@ -13,7 +13,7 @@ if (!token) {
   )
 }
 
-const response = await fetch(`${origin}/api/atlas-tiles/manifest/rebuild?admin=true`, {
+const response = await fetch(`${origin}/api/atlas-tiles/manifest/rebuild?admin`, {
   method: 'POST',
   headers: {
     authorization: `Bearer ${token}`,

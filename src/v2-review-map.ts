@@ -1,3 +1,4 @@
+import { mapModePath } from './runtime-modes'
 import { neighborhoodLabelLayerId } from './map-style'
 import type { Map as AtlasMap, ImageSource } from 'maplibre-gl'
 import { drawingFootprint, tileForPosition } from './tile-geometry'
@@ -87,7 +88,7 @@ export function installV2ReviewMap(map: AtlasMap, onCount = (_count: number) => 
     const url = new URL(location.href)
     url.searchParams.set('card',sheet.id)
     url.searchParams.set('painting',String(index+1))
-    history.replaceState(history.state,'',url)
+    history.replaceState(history.state,'',mapModePath(url))
   }
 
   select.onchange = () => {

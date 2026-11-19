@@ -23,7 +23,7 @@ test('Bun server persists authenticated artwork decisions by image', async () =>
       const address = String(message).match(/http:\/\/127\.0\.0\.1:\d+/)?.[0]
       assert.ok(address)
       const headers = { Host: 'localhost', Origin: 'http://localhost', Authorization: 'Bearer ' + token }
-      const session = await fetch(address + '/api/atlas-tiles/cached?admin=true', { headers })
+      const session = await fetch(address + '/api/atlas-tiles/cached?admin', { headers })
       assert.equal(session.status, 200)
       const cookie = session.headers.get('set-cookie')!.split(';')[0]
       const directory = path.join(root, 'generated-tiles/18/10/20')
@@ -34,13 +34,13 @@ test('Bun server persists authenticated artwork decisions by image', async () =>
         await writeFile(path.join(directory, name + '.image'), png)
         await writeFile(path.join(directory, name + '.json'), JSON.stringify({ contentType: 'image/png' }))
       }
-      const listing = await fetch(address + '/api/atlas-tiles/cached?diagnostics=true&collection=discovery')
+      const listing = await fetch(address + '/api/atlas-tiles/cached?diagnostics&collection=discovery')
       const { tiles } = await listing.json()
       const url = '/generated-tiles/18/10/20/circus?version=5&variant=' + variant
       assert.deepEqual(tiles.map(tile => tile.url), [url])
       const endpoint = address + '/api/artwork-reviews'
       const art = { title: 'Circus', x: 10, y: 20, rows: 1, url }
-      const write = (status: string, authenticated: boolean) => fetch(endpoint + '?admin=true', {
+      const write = (status: string, authenticated: boolean) => fetch(endpoint + '?admin', {
         method: 'PUT',
         headers: { ...headers, 'content-type': 'application/json', ...(authenticated
           ? { cookie, 'x-atlas-csrf-token': cookie.slice(cookie.indexOf('=') + 1) } : {}) },

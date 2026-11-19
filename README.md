@@ -101,7 +101,7 @@ bun run deploy
 ```
 
 The deployment command records the current Git commit in the built app. Open the
-deployed map with `?admin=true` to see its abbreviated commit hash in the lower-left
+deployed map with `?admin` to see its abbreviated commit hash in the lower-left
 corner; hovering it reveals the complete hash.
 
 To enable visitor map sharing, make the existing `maps-romanticatlas-assets` bucket
@@ -130,7 +130,7 @@ bun run deploy
 
 The bucket name must match `wrangler.jsonc`. To enable production cache administration,
 set the matching secret with `wrangler secret put ATLAS_ADMIN_TOKEN`, then open the app
-with `?admin=true`. The browser admin panel prompts for that token and uses a
+with `?admin`. The browser admin panel prompts for that token and uses a
 same-origin CSRF cookie for cache changes.
 
 The map's tiles, fonts, and sprite assets are loaded from remote services, so it needs
@@ -153,8 +153,8 @@ because Cloudflare does not support remote Durable Object bindings in local deve
 Tiles generated during the session are written to remote R2 and are immediately usable;
 pre-existing remote tiles can still be fetched by their known image URL, but are not
 included in local manifest lookups until they are encountered or regenerated. Add
-`?admin=true` for cache administration, `?diagnostics=true` for tile outlines,
-`?admin=true` also labels only cloud-excluded tiles with their failing condition; add
+`?admin` for cache administration, `?diagnostics` for tile outlines,
+`?admin` also labels only cloud-excluded tiles with their failing condition; add
 `&cloudDiagnostics=false` to hide those labels. Use `?noNoise=true` for smooth fog
 without the animated cloud noise, `?kioskMode=true` for a clockwise camera circuit 1 km
 from Victoria Peak, completing each loop in 240 seconds, and `&version=3` to replay an
@@ -281,7 +281,7 @@ The supported environment variables are:
   `https://romanticatlas.hype.hk`.
 - `ATLAS_SHARE_ASSET_ORIGIN`: required in production for map sharing; the HTTPS public
   R2 origin that serves the `maps-romanticatlas-assets` bucket directly.
-- `?admin=true`: enables the cache manifest, image cycling, rerendering, and deletion UI
+- `?admin`: enables the cache manifest, image cycling, rerendering, and deletion UI
   in either local or production mode. The admin listing includes every retained image
   version by default; add `?version=1` through `?version=6` to inspect one version.
   Unversioned legacy images are excluded. The rerender control selects a scene using the
@@ -289,7 +289,7 @@ The supported environment variables are:
   image to reveal its controls. Different tile coordinates can render independently,
   while a coordinate accepts only one active render at a time.
 - The regular map uses a fixed seed to select clouds with a 75% chance per eligible tile, including tiles with accepted artwork. White clouds render new scenes with the original poetry while waiting. Coloured clouds reveal accepted V2 artwork or scenes the visitor generated during this map visit. Reveals use the catalog’s viewer image and title. Review decisions override the release defaults for the exact image URL.
-- Press `D` on the map (or use `?diagnostics=true`) to show artwork immediately.
+- Press `D` on the map (or use `?diagnostics`) to show artwork immediately.
   Dashed lines outline each covered z18 tile. A small cross and the displayed artwork’s title sit at the top. At the lower edge, the number counts
   distinct images and the ring marks the displayed image. Select a pip to show its
   image, or click the tile to cycle. Green means accepted for production, blue
@@ -301,11 +301,12 @@ The supported environment variables are:
   The Bun server saves decisions in `releases/v2-reviews.json`. The Worker uses
   that optional release file plus decisions saved in its R2 bucket.
 - Press `A` on the map to open the admin interface.
-- `?admin=true`: marks visible z18 tiles that will not render a cloud with compact
+- Press `V` or open `?review` to browse artwork by contact card. Use `R`, `D`, or `A` to return to the regular, diagnostics, or admin view.
+- `?admin`: marks visible z18 tiles that will not render a cloud with compact
   reason icons for the deterministic fog pattern, land coverage, street coverage, or
   regional map data. Tiles that would render a cloud are left unmarked. Add
   `&cloudDiagnostics=false` to hide these labels.
-- `ATLAS_ADMIN_TOKEN`: required when using `?admin=true`; use a long random secret. The
+- `ATLAS_ADMIN_TOKEN`: required when using `?admin`; use a long random secret. The
   admin UI prompts for it once per browser session. The server also requires a
   same-origin Origin header and a signed CSRF cookie/header pair for cache changes.
 

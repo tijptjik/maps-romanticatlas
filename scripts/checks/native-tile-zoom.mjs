@@ -22,7 +22,7 @@ try {
     for (const card of ['harbour-curiosities-v2-01', 'coasters']) {
       const art = catalog.sheets.find(sheet => sheet.id === card).art[0]
       const layer = 'v2-' + art.x + '-' + art.y
-      await page.goto(base + '/?experiment=true&card=' + card, { waitUntil: 'domcontentloaded' })
+      await page.goto(base + '/?review&card=' + card, { waitUntil: 'domcontentloaded' })
       await page.waitForFunction(id => window.testAtlasMap?.getSource(id)?.image?.width, layer)
       const expected = await page.evaluate(async url => {
         const image = new Image()

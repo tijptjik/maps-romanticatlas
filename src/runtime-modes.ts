@@ -1,10 +1,13 @@
+import { modeEnabled as queryModeEnabled } from './atlas-protocol'
 import { disableExternalLinks } from './external-links'
 
 const noLinkOut = new URLSearchParams(location.search).get('noLinkOut')
 if (noLinkOut === '' || noLinkOut === 'true') disableExternalLinks()
 
 const modeEnabled = (name: string) =>
-  new URLSearchParams(window.location.search).get(name) === 'true'
+  queryModeEnabled(new URLSearchParams(window.location.search), name)
+
+export const reviewModeEnabled = () => modeEnabled('review')
 
 export const adminModeEnabled = () => modeEnabled('admin')
 
@@ -25,6 +28,12 @@ export const noMusicEnabled = () =>
 
 export const noNoiseEnabled = () => modeEnabled('noNoise')
 
+// URLSearchParams adds '=' to empty values. Keep map mode links bare.
+export const mapModePath = (url: URL) => {
+  const search = url.search.replace(/(^\?|&)(admin|diagnostics|review)=(?:true)?(?=&|$)/g, '$1$2')
+  return url.pathname + search + url.hash
+}
+
 export const runtimeModeUrl = (path: string) => {
   const url = new URL(path, window.location.origin)
   if (adminModeEnabled() || url.searchParams.get('admin') === '')
@@ -32,17 +41,18 @@ export const runtimeModeUrl = (path: string) => {
   if (diagnosticsModeEnabled() || url.searchParams.get('diagnostics') === '')
     url.searchParams.set('diagnostics', 'true')
   if (cloudDiagnosticsModeEnabled()) url.searchParams.set('cloudDiagnostics', 'true')
-  return `${url.pathname}${url.search}${url.hash}`
+  return url.pathname + url.search + url.hash
 }
 
 const toggleModeAndReload = (name: 'admin' | 'diagnostics') => {
   const url = new URL(window.location.href)
-  if (url.searchParams.get(name) === 'true') {
+  if (queryModeEnabled(url.searchParams, name)) {
     url.searchParams.delete(name)
   } else {
-    url.searchParams.set(name, 'true')
+    for (const flag of ['admin', 'diagnostics', 'review']) url.searchParams.delete(flag)
+    url.searchParams.set(name, '')
   }
-  window.location.assign(url.toString())
+  window.location.assign(mapModePath(url))
 }
 
 declare global {
@@ -61,5 +71,5 @@ window.toggle_cloud_diagnostics = () => {
     'cloudDiagnostics',
     cloudDiagnosticsModeEnabled() ? 'false' : 'true',
   )
-  window.location.assign(url.toString())
+  window.location.assign(mapModePath(url))
 }
