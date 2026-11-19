@@ -18,7 +18,7 @@ from PIL import Image
 
 ROOT = Path(os.environ.get('ATLAS_GENERATOR_ROOT', '/var/lib/codex-vpn/atlas'))
 JOBS = ROOT / 'generated-tiles/dream-atlas/live/jobs'
-TOKEN = Path(os.environ.get('ATLAS_GENERATOR_TOKEN_FILE', '/etc/atlas-generator/token')).read_text().strip()
+TOKEN = '' if sys.argv[1:] == ['work'] else Path(os.environ.get('ATLAS_GENERATOR_TOKEN_FILE', '/etc/atlas-generator/token')).read_text().strip()
 ORIGIN = os.environ.get('ATLAS_PRODUCTION_ORIGIN', 'https://romanticatlas.hype.hk')
 MAX_BODY = 7_000_000
 MAX_ACTIVE = 3

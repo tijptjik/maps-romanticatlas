@@ -10,7 +10,7 @@ Group=codex-vpn
 NetworkNamespacePath=/run/netns/codex-vpn
 BindReadOnlyPaths=/etc/codex-vpn/resolv.conf:/etc/resolv.conf
 BindReadOnlyPaths=/etc/codex-vpn/nsswitch.conf:/etc/nsswitch.conf
-InaccessiblePaths=-/run/nscd/socket -/run/systemd/resolve
+InaccessiblePaths=-/run/nscd/socket -/run/systemd/resolve /etc/atlas-generator/token
 Environment=CODEX_HOME=/var/lib/codex-vpn
 Environment=PATH=/opt/codex-vpn/bin:/opt/atlas-generator/bin:/usr/bin:/bin
 WorkingDirectory=/var/lib/codex-vpn/atlas
