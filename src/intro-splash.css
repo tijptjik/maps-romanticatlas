@@ -12,8 +12,7 @@
   -webkit-tap-highlight-color: transparent;
 }
 .atlas-intro[hidden] { display: none; }
-.atlas-intro :is(:focus, :active, :target),
-.artist-statement.from-pavilion :is(:focus, :active, :target) {
+.atlas-intro :is(:focus, :active, :target) {
   border: 0;
   outline: none;
 }
