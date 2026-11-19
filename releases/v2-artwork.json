@@ -1,0 +1,587 @@
+{
+  "release": "v2",
+  "status": "accepted",
+  "collections": [
+    {
+      "title": "HKU Main Building",
+      "source": "experiments/dream-atlas/hku-selection.json",
+      "site": "experiments/dream-atlas/hku-site.json",
+      "clickTiles": [
+        [
+          18,
+          214184,
+          114419
+        ],
+        [
+          18,
+          214184,
+          114420
+        ]
+      ],
+      "artworks": [
+        {
+          "title": "The Borrowed Horizon",
+          "image": "public/hku-skyscrapers-in-place/the-borrowed-horizon.webp",
+          "sha256": "333c3ed4a3a61a078d72a3f2727f3153183f6d5188f6894954ed5972d4d15d4c",
+          "original": "generated-tiles/dream-atlas/hku-in-place/the-borrowed-horizon/painting.png"
+        },
+        {
+          "title": "The Harbour Rehearsal Tank",
+          "edition": "lower-basin",
+          "image": "public/hku-skyscrapers-in-place/the-harbour-rehearsal-tank.webp",
+          "sha256": "d8a8311b482e16a0816febcfa937a0c0e85ea8b30f961d32717808820166fed1",
+          "original": "generated-tiles/dream-atlas/hku-in-place/the-harbour-rehearsal-tank/lower-basin/painting.png"
+        },
+        {
+          "title": "An Address for Lost Streets",
+          "image": "public/hku-skyscrapers-in-place/an-address-for-lost-streets.webp",
+          "sha256": "1d37cd6599c0aa7a895930c547f46caff285cd63c6ab911bf00a58ee875db526",
+          "original": "generated-tiles/dream-atlas/hku-in-place/an-address-for-lost-streets/painting.png"
+        },
+        {
+          "title": "The Quiet Eye",
+          "image": "public/hku-skyscrapers-in-place/the-quiet-eye.webp",
+          "sha256": "61d93bad5fcd1bcb3399574017ecc280b7d207235d65cb2993dcf275e420767c",
+          "original": "generated-tiles/dream-atlas/hku-in-place/the-quiet-eye/painting.png"
+        },
+        {
+          "title": "The Theatre That Grows Back",
+          "edition": "living-bamboo",
+          "image": "public/hku-skyscrapers-in-place/the-theatre-that-grows-back.webp",
+          "sha256": "6d83b2f49d86a9c12c864228b7fd900d91883379aa1fd0ac043974b6d44ea3e1",
+          "original": "generated-tiles/dream-atlas/hku-in-place/the-theatre-that-grows-back/living-bamboo/painting.png"
+        }
+      ],
+      "galleryCards": [
+        "hku-skyscrapers-current.jpg"
+      ]
+    },
+    {
+      "title": "Harbour Curiosities",
+      "source": "experiments/harbour-curiosities.json",
+      "artworks": [
+        {
+          "title": "Mermaid Transformation Station",
+          "tile": [
+            18,
+            214205,
+            114420
+          ],
+          "image": "public/harbour-curiosities/214205-114420.webp",
+          "sha256": "82de5196697b91525ce9f6f0f2d696895bfc10833d1a132f8aea8fd4c8d4744c",
+          "edition": "corrected-figure-scale",
+          "initialPainting": "generated-tiles/harbour-curiosities/mermaid-station.raw.png"
+        },
+        {
+          "title": "The Walking Yacht Club",
+          "tile": [
+            18,
+            214209,
+            114419
+          ],
+          "image": "public/harbour-curiosities/214209-114419.webp",
+          "sha256": "9bfa9a33a83001edfb336d5089dc9124b6a6607333dfa65058997a34b9c77d4b",
+          "original": "generated-tiles/harbour-curiosities/walking-yacht-club.raw.png"
+        },
+        {
+          "title": "The Staircase Foundation",
+          "tile": [
+            18,
+            214210,
+            114419
+          ],
+          "image": "public/harbour-curiosities/214210-114419.webp",
+          "sha256": "35872eb7dceab0fb2b4c385a076f3a771b00d932b6195486ede1331f2e9545fd",
+          "original": "generated-tiles/harbour-curiosities/staircase-foundation.raw.png"
+        },
+        {
+          "title": "The Car-to-Boat Works",
+          "tile": [
+            18,
+            214211,
+            114419
+          ],
+          "image": "public/harbour-curiosities/214211-114419.webp",
+          "sha256": "aa68798ced4a84f1a4c127499ffadc92d8f997748d7617a4ef3390915c3f0045",
+          "original": "generated-tiles/harbour-curiosities/car-boat-works.raw.png"
+        },
+        {
+          "title": "Flying Fish Burger Pier",
+          "tile": [
+            18,
+            214211,
+            114420
+          ],
+          "image": "public/harbour-curiosities/214211-114420.webp",
+          "sha256": "2bf3a5e8a5969ba4c30f3517da6f60f6864bbbafd9c1a737d068d52d46384f0e",
+          "edition": "corrected-figure-scale-and-fish-catch",
+          "initialPainting": "generated-tiles/harbour-curiosities/flying-fish-burgers.raw.png"
+        },
+        {
+          "title": "The Bottle Post Sorting Office",
+          "tile": [
+            18,
+            214212,
+            114420
+          ],
+          "image": "public/harbour-curiosities/214212-114420.webp",
+          "sha256": "3ca61892b9e9b0df38e918425486c853ec03886489b4f7445cf4a7cf4c0f6145",
+          "original": "generated-tiles/harbour-curiosities/bottled-post.raw.png"
+        },
+        {
+          "title": "The Breakwater Organ",
+          "tile": [
+            18,
+            214213,
+            114420
+          ],
+          "image": "public/harbour-curiosities/214213-114420.webp",
+          "sha256": "554f9f1394b2cc4fe5486e463b62aa4cadd2992541064651526697114303f0fb",
+          "original": "generated-tiles/harbour-curiosities/wave-organ.raw.png"
+        },
+        {
+          "title": "The Moon Jelly Lantern Library",
+          "tile": [
+            18,
+            214214,
+            114420
+          ],
+          "image": "public/harbour-curiosities/214214-114420.webp",
+          "sha256": "eeb01a62e7f5f4767c1653156e0cf39bd071ca368e96967d798ac61c65dd6510",
+          "edition": "corrected-figure-scale",
+          "initialPainting": "generated-tiles/harbour-curiosities/moon-jelly-lanterns.raw.png"
+        }
+      ],
+      "contactCard": "generated-tiles/harbour-curiosities/eight-harbour-curiosities.jpg",
+      "galleryCards": [
+        "harbour-curiosities-v2-01.jpg",
+        "harbour-curiosities-v2-02.jpg"
+      ]
+    },
+    {
+      "title": "Hong Kong Island’s Southern Shore",
+      "source": "experiments/south-island-shore.json",
+      "artworks": [
+        {
+          "title": "Lighthouse and Signal Station · Cape D’Aguilar",
+          "tile": [
+            18,
+            214272,
+            114478
+          ],
+          "image": "public/south-island-shore/214272-114478.webp",
+          "sha256": "14341ef2b5e4f5dd4bdfc96c9a3e9cade86268ed855a865fa346b7f3c9699de3",
+          "original": "generated-tiles/south-island-shore/lighthouse.raw.png"
+        },
+        {
+          "title": "Pirate Harbour · Shek O",
+          "tile": [
+            18,
+            214268,
+            114463
+          ],
+          "image": "public/south-island-shore/214268-114463.webp",
+          "sha256": "aec572f2863158f122dc795af2c43075c3c2e86b9ecc012d53811be2f4a8f739",
+          "original": "generated-tiles/south-island-shore/pirate-harbour.raw.png"
+        },
+        {
+          "title": "Victorian Canal Lock · Aberdeen",
+          "tile": [
+            18,
+            214195,
+            114448
+          ],
+          "image": "public/south-island-shore/214195-114448.webp",
+          "sha256": "4210446bf286c633ff534d5c03bcb155972de66ac3ea3d1e61303c4b3de9effd",
+          "original": "generated-tiles/south-island-shore/canal-lock.raw.png"
+        },
+        {
+          "title": "Victorian pleasure pier · Repulse Bay",
+          "tile": [
+            18,
+            214227,
+            114457
+          ],
+          "image": "public/south-island-shore/214227-114457.webp",
+          "sha256": "314e5617885bd27a65f08aa1b089a61d9bdf21dbf11877be0c79893139125c82",
+          "original": "generated-tiles/south-island-shore/pleasure-pier.raw.png"
+        },
+        {
+          "title": "Tidal bathhouse · South Bay",
+          "tile": [
+            18,
+            214228,
+            114469
+          ],
+          "image": "public/south-island-shore/214228-114469.webp",
+          "sha256": "26b56dee80247463d717387aab2f0fb1e1674981ec70d6e42e048dd34ce08723",
+          "original": "generated-tiles/south-island-shore/tidal-bathhouse.raw.png"
+        },
+        {
+          "title": "Floating opera · Stanley",
+          "tile": [
+            18,
+            214236,
+            114472
+          ],
+          "image": "public/south-island-shore/214236-114472.webp",
+          "sha256": "5d0342fecb0118aa8e49f50b3f51f95cd60a98aa3d88580e19c9db418692a5eb",
+          "original": "generated-tiles/south-island-shore/floating-opera.raw.png"
+        },
+        {
+          "title": "Shipwrights’ floating dry dock · Wong Chuk Hang",
+          "tile": [
+            18,
+            214204,
+            114453
+          ],
+          "image": "public/south-island-shore/214204-114453.webp",
+          "sha256": "7f033d1f0260a899b4a9d42aa13da338501c064dff95c19dc2056f93a12065cc",
+          "original": "generated-tiles/south-island-shore/shipwright-dock.raw.png"
+        },
+        {
+          "title": "Marine botanical conservatory · Chung Hom Kok",
+          "tile": [
+            18,
+            214227,
+            114477
+          ],
+          "image": "public/south-island-shore/214227-114477.webp",
+          "sha256": "bb09a642080f2b34b575792079c8f0f67e9fd77f9b00552c8a99230c25532401",
+          "original": "generated-tiles/south-island-shore/kelp-conservatory.raw.png"
+        },
+        {
+          "title": "Mermaid Transformation Station · Deep Water Bay",
+          "tile": [
+            18,
+            214216,
+            114450
+          ],
+          "image": "public/south-island-shore/214216-114450.webp",
+          "sha256": "c5a5147dbef74c12bad9eadf128c6120e43fbc694e282072506d3cf834836c55",
+          "original": "generated-tiles/south-island-shore/mermaid-station.raw.png"
+        },
+        {
+          "title": "The Walking Yacht Club · Middle Island Channel",
+          "tile": [
+            18,
+            214221,
+            114456
+          ],
+          "image": "public/south-island-shore/214221-114456.webp",
+          "sha256": "58fc7a18ec1bfbdec2df3b84de1427337994137040c4046ffe35c09835d3fb41",
+          "original": "generated-tiles/south-island-shore/walking-yacht-club.raw.png"
+        },
+        {
+          "title": "The Staircase Foundation · Bluff Head",
+          "tile": [
+            18,
+            214238,
+            114489
+          ],
+          "image": "public/south-island-shore/214238-114489.webp",
+          "sha256": "73c6222d7116ea219da01ef9d86615253687e3ac2b23ba19c590d57057263524",
+          "original": "generated-tiles/south-island-shore/staircase-foundation.raw.png"
+        },
+        {
+          "title": "The Car-to-Boat Works · Wah Fu",
+          "tile": [
+            18,
+            214183,
+            114447
+          ],
+          "image": "public/south-island-shore/214183-114447.webp",
+          "sha256": "cd06d1b23e0129f10105c28a3c2677b9c8b09cfb2aa8e1c0bd535e44a0542514",
+          "original": "generated-tiles/south-island-shore/car-boat-works.raw.png"
+        },
+        {
+          "title": "Flying Fish Burger Pier · St. Stephen’s Beach",
+          "tile": [
+            18,
+            214238,
+            114478
+          ],
+          "image": "public/south-island-shore/214238-114478.webp",
+          "sha256": "abd68e3241198616053e3d02fbec4789c6067687f290a712413c843aa1fe648f",
+          "original": "generated-tiles/south-island-shore/flying-fish-burgers.raw.png"
+        },
+        {
+          "title": "The Bottle Post Sorting Office · Tai Tam Bay",
+          "tile": [
+            18,
+            214247,
+            114460
+          ],
+          "image": "public/south-island-shore/214247-114460.webp",
+          "sha256": "1541f19109f0ec301e26f23a6a4aa1b9a927538c41037b4b17f984c05e8e5289",
+          "original": "generated-tiles/south-island-shore/bottled-post.raw.png"
+        },
+        {
+          "title": "The Breakwater Organ · Brick Hill",
+          "tile": [
+            18,
+            214208,
+            114462
+          ],
+          "image": "public/south-island-shore/214208-114462.webp",
+          "sha256": "5a023e88b212ee972f09854df1af23e2438b9427046c62923bb8188b6dbb8b5c",
+          "original": "generated-tiles/south-island-shore/wave-organ.raw.png"
+        },
+        {
+          "title": "The Moon Jelly Lantern Library · Middle Bay",
+          "tile": [
+            18,
+            214228,
+            114462
+          ],
+          "image": "public/south-island-shore/214228-114462.webp",
+          "sha256": "c24d21b9206cc892201a596ad65837df48a30aeaf5244973719c9392db948092",
+          "original": "generated-tiles/south-island-shore/moon-jelly-lanterns.raw.png"
+        }
+      ],
+      "galleryCards": [
+        "south-island-shore-v2-01.jpg",
+        "south-island-shore-v2-02.jpg",
+        "south-island-shore-v2-03.jpg",
+        "south-island-shore-v2-04.jpg"
+      ]
+    },
+    {
+      "title": "East of HKU Main Building",
+      "source": "public/atlas-v2/hku-ring-214185-114420/sheet.json",
+      "isolated": true,
+      "galleryCards": [
+        "hku-ring-214185-114420.jpg"
+      ],
+      "artworks": [
+        {
+          "title": "The Office of Unwanted Gifts",
+          "tile": [
+            18,
+            214185,
+            114420
+          ],
+          "image": "public/atlas-v2/hku-ring-214185-114420/office-of-unwanted-gifts.webp",
+          "sha256": "1aec592aab4c62381d41342dac0f78760d878f5227236e0c795b94b3b7a7eb6a",
+          "original": "/home/io/code/maps-romanticatlas/generated-tiles/dream-atlas/hku-next/unwanted-gifts/furnishing/jobs/0005/image.png"
+        },
+        {
+          "title": "The Bridge Takes a Breath",
+          "tile": [
+            18,
+            214185,
+            114420
+          ],
+          "image": "public/atlas-v2/hku-ring-214185-114420/2.webp",
+          "sha256": "d44489a4729d7f0b298aa87e5149403d0dd35d27c952304ba0c22e17ed08c3a3",
+          "original": "generated-tiles/dream-atlas/hku-next/jobs/0006/image.png"
+        },
+        {
+          "title": "The Shoe Tide",
+          "tile": [
+            18,
+            214185,
+            114420
+          ],
+          "image": "public/atlas-v2/hku-ring-214185-114420/3.webp",
+          "sha256": "9df7b8fe6834ec4f4f84cdb2cfbd4fb3d78f90cbd6766052c3abdd35459abf33",
+          "original": "generated-tiles/dream-atlas/hku-next/jobs/0007/image.png"
+        },
+        {
+          "title": "The Steam Laundry Express",
+          "tile": [
+            18,
+            214185,
+            114420
+          ],
+          "image": "public/atlas-v2/hku-ring-214185-114420/4.webp",
+          "sha256": "a3e1ea55b450783c39e747b22c2f30aebfdf4771ba8d433689074c637d91d30e",
+          "original": "generated-tiles/dream-atlas/hku-next/jobs/0008/image.png"
+        }
+      ]
+    },
+    {
+      "title": "South of HKU Main Building",
+      "source": "public/atlas-v2/hku-ring-214184-114421/sheet.json",
+      "isolated": true,
+      "galleryCards": [
+        "hku-ring-214184-114421.jpg"
+      ],
+      "artworks": [
+        {
+          "title": "Time in a Revolving Door",
+          "tile": [
+            18,
+            214184,
+            114421
+          ],
+          "image": "public/atlas-v2/hku-ring-214184-114421/1.webp",
+          "sha256": "2ba0f4f8f8f1494e72031ad51d9728ce45d2798b3334f7ae95c38f8efca8057e",
+          "original": "generated-tiles/dream-atlas/hku-next/jobs/0001/site-wide.png"
+        },
+        {
+          "title": "The Haptic Arcade",
+          "tile": [
+            18,
+            214184,
+            114421
+          ],
+          "image": "public/atlas-v2/hku-ring-214184-114421/2.webp",
+          "sha256": "2c7fc6b1273294519e50d94f0a792fc2fd7a442d3e6514a699207adac9dea1bb",
+          "original": "generated-tiles/dream-atlas/hku-next/jobs/0002/site-wide.png"
+        },
+        {
+          "title": "The Edible Moon Calendar",
+          "tile": [
+            18,
+            214184,
+            114421
+          ],
+          "image": "public/atlas-v2/hku-ring-214184-114421/3.webp",
+          "sha256": "fd4410385e409f5d1ed28eea1073c7fc9e5a2b51112f3b8e8bb24b6c26713ae4",
+          "original": "generated-tiles/dream-atlas/hku-next/jobs/0003/site-wide.png"
+        },
+        {
+          "title": "A City One Plank Deep",
+          "tile": [
+            18,
+            214184,
+            114421
+          ],
+          "image": "public/atlas-v2/hku-ring-214184-114421/4.webp",
+          "sha256": "2399c8a96a3a4c715511377ca20a76fedaa413ebf11562f101b426c41784d979",
+          "original": "generated-tiles/dream-atlas/hku-next/jobs/0004/site-wide.png"
+        }
+      ]
+    },
+    {
+      "title": "North of HKU Main Building",
+      "source": "public/atlas-v2/hku-ring-214184-114418/sheet.json",
+      "isolated": true,
+      "galleryCards": [
+        "hku-ring-214184-114418.jpg"
+      ],
+      "artworks": [
+        {
+          "title": "The Borrowing Orchard",
+          "tile": [
+            18,
+            214184,
+            114418
+          ],
+          "image": "public/atlas-v2/hku-ring-214184-114418/1.webp",
+          "sha256": "05f5e3da0959746fabbb8c78c846f630f5c4d5473eec906f1edc346a82aef78c",
+          "original": "generated-tiles/dream-atlas/hku-north/site-wide/jobs/0001/image.png"
+        },
+        {
+          "title": "An Orchestra Under Glass",
+          "tile": [
+            18,
+            214184,
+            114418
+          ],
+          "image": "public/atlas-v2/hku-ring-214184-114418/2.webp",
+          "sha256": "ef46f481956b57966513436637412dc308afc0935f0840c3ec5ad6691d43544f",
+          "original": "generated-tiles/dream-atlas/hku-north/site-wide/jobs/0002/image.png"
+        },
+        {
+          "title": "Wings Awaiting Bodies",
+          "tile": [
+            18,
+            214184,
+            114418
+          ],
+          "image": "public/atlas-v2/hku-ring-214184-114418/3.webp",
+          "sha256": "db0ee094c767fa7f7188ca756ba5c4bdc34a65518fb114548f61649dfb1500cc",
+          "original": "generated-tiles/dream-atlas/hku-north/site-wide/jobs/0003/image.png"
+        },
+        {
+          "title": "A Market by the Slice",
+          "tile": [
+            18,
+            214184,
+            114418
+          ],
+          "image": "public/atlas-v2/hku-ring-214184-114418/4.webp",
+          "sha256": "70ca41590f4acb80716540d5673f82cb076958c35c9a2b5c03f77b8c42d1dd49",
+          "original": "generated-tiles/dream-atlas/hku-north/site-wide/jobs/0004/image.png"
+        }
+      ]
+    },
+    {
+      "title": "Ancient Temple",
+      "source": "generated-tiles/dream-atlas/live/jobs/e9962d50-2f69-4180-9c43-3cdafaae5d02/result.json",
+      "fullTile": true,
+      "galleryCards": [
+        "ancient-temple.jpg"
+      ],
+      "artworks": [
+        {
+          "title": "Ancient Temple",
+          "tile": [
+            18,
+            214179,
+            114419
+          ],
+          "image": "public/atlas-v2/ancient-temple.png",
+          "sha256": "08c1b579d864a08491a6b56503ef89315c820b4368d395aca14cde7822bb0bde",
+          "original": "generated-tiles/dream-atlas/live/jobs/e9962d50-2f69-4180-9c43-3cdafaae5d02/image.png"
+        }
+      ]
+    },
+    {
+      "title": "Po Ga Building · West of HKU Main Building",
+      "source": "public/atlas-v2/hku-ring-214183-114419/sheet.json",
+      "isolated": true,
+      "galleryCards": [
+        "hku-ring-214183-114419.jpg"
+      ],
+      "artworks": [
+        {
+          "title": "A Constellation You Can Borrow",
+          "tile": [
+            18,
+            214183,
+            114419
+          ],
+          "image": "public/atlas-v2/hku-ring-214183-114419/1.webp",
+          "sha256": "1c28e6b651dff9b76f485cf6f2c5c88186774cb8f08bdb7a0bc046b1e716ed62",
+          "original": "generated-tiles/dream-atlas/hku-west-upper/street-edition/jobs/0001/registered.png"
+        },
+        {
+          "title": "The Afternoon Orchard",
+          "tile": [
+            18,
+            214183,
+            114419
+          ],
+          "image": "public/atlas-v2/hku-ring-214183-114419/2.webp",
+          "sha256": "4b595a2dd7e8081ac1c987b565d77ac7bf1cd147aa78477af376c8408c2ad74f",
+          "original": "generated-tiles/dream-atlas/hku-west-upper/street-edition/jobs/0002/registered.png"
+        },
+        {
+          "title": "The Root Readers",
+          "tile": [
+            18,
+            214183,
+            114419
+          ],
+          "image": "public/atlas-v2/hku-ring-214183-114419/3.webp",
+          "sha256": "b83ca561dc4dbc82156df658ef8309ae5565b0bb0e11bf4967256d1b035f5e16",
+          "original": "generated-tiles/dream-atlas/hku-west-upper/street-edition/jobs/0003/registered.png"
+        },
+        {
+          "title": "The Dye Stair",
+          "tile": [
+            18,
+            214183,
+            114419
+          ],
+          "image": "public/atlas-v2/hku-ring-214183-114419/4.webp",
+          "sha256": "24656997768945f54c37be0250bd9f6ca6c0dbdb7125d89fa9d28fc5c39cf94b",
+          "original": "generated-tiles/dream-atlas/hku-west-upper/street-edition/jobs/0004/registered.png"
+        }
+      ]
+    }
+  ]
+}
