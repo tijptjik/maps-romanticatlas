@@ -16,6 +16,12 @@ try {
  const center=[(tile.x+.5)/262144*360-180,Math.atan(Math.sinh(Math.PI*(1-2*(tile.y+.5)/262144)))*180/Math.PI]
  await page.addInitScript(center=>history.replaceState({atlasModeCamera:{center,zoom:18}},''),center)
  await page.addInitScript(() => {
+  window.poemDraws = 0
+  const fillText = CanvasRenderingContext2D.prototype.fillText
+  CanvasRenderingContext2D.prototype.fillText = function (...args) {
+   if (this.canvas.classList.contains('atlas-fog-loading')) window.poemDraws++
+   return fillText.apply(this, args)
+  }
   const original = crypto.getRandomValues.bind(crypto)
   crypto.getRandomValues = array => array instanceof Uint32Array && array.length === 1 ? array.fill(0) : original(array)
  })
@@ -35,6 +41,7 @@ try {
  await page.waitForFunction(()=>document.querySelector('.atlas-fog-loading'),{timeout:10000})
  await page.waitForTimeout(6000)
  assert.equal(claims,1)
+ assert.ok(await page.evaluate(() => window.poemDraws > 0),'Render cloud displays its poem')
  assert.equal(await page.locator('.atlas-title-card:not(.is-awaiting-focus)').count(),0,'No artwork reveal before the poem finishes')
  await page.screenshot({path:path.join(process.env.DEV_RUNNER_ARTIFACTS,'fake-poem.png')})
  await page.locator('.atlas-title-card:not(.is-awaiting-focus)').first().waitFor({state:'visible',timeout:150000})
@@ -47,9 +54,8 @@ try {
  await page.reload({waitUntil:'domcontentloaded'})
  await page.locator('.atlas-fog').waitFor();await page.waitForTimeout(5000)
  await page.mouse.click(720,500)
- await page.waitForTimeout(6000)
- assert.equal(await page.locator('.atlas-title-card:not(.is-awaiting-focus)').count(),0,'Rainbow waits for a poem')
- await page.locator('.atlas-title-card:not(.is-awaiting-focus)').first().waitFor({state:'visible',timeout:150000})
+ await page.locator('.atlas-title-card:not(.is-awaiting-focus)').first().waitFor({state:'visible',timeout:10000})
+ assert.equal(await page.evaluate(() => window.poemDraws),0,'Rainbow never draws a poem')
  assert.equal(claims,1,'Rainbow reveals released art while the replacement is pending')
  await page.screenshot({path:path.join(process.env.DEV_RUNNER_ARTIFACTS,'rainbow-after.png')})
  await page.goto(origin+'/?noSplash=true&noMusic=true&noFakeRender=true',{waitUntil:'domcontentloaded'})

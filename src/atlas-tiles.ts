@@ -1507,13 +1507,13 @@ export const createFogCanvas = (
     })
   }
 
+  const showsPoem = (state, id) => state === 'generating' || (state === 'checking' && singleReadings.has(id))
+
   const drawLoadingText = time => {
     if (!loadingContext) return
     const hasContent =
       Boolean(fogError) ||
-      [...tileState.values()].some(
-        state => state === 'checking' || state === 'generating',
-      )
+      [...tileState].some(([id, state]) => showsPoem(state, id))
     if (!hasContent && !loadingCanvasHasContent) return
     loadingCanvasHasContent = hasContent
     const ratio = loadingCanvas.width / Math.max(1, fogCanvasWidth)
@@ -1521,11 +1521,7 @@ export const createFogCanvas = (
     setOverlayContextTransform(loadingContext, ratio)
 
     tileState.forEach((state, id) => {
-      // Start the loading title as soon as a tile is clicked. Cache lookup is
-      // asynchronous too, so waiting for `generating` made the title appear
-      // only after that lookup (and made cached tiles skip it altogether).
-      const isLoading = state === 'checking' || state === 'generating'
-      if (!isLoading) {
+      if (!showsPoem(state, id)) {
         loadingSequences.delete(id)
         if (state !== 'revealing') generatingStartedAt.delete(id)
         return
@@ -2109,6 +2105,7 @@ export const createFogCanvas = (
         for (const id of ids) revealFootprints.set(id, group)
       }
       for (const id of ids) {
+        singleReadings.delete(id)
         tileState.set(id, 'revealing')
         revealStartedAt.set(id, animationTime)
       }
@@ -2944,17 +2941,17 @@ export const installAtlasTileInteractions = (
         : ''
   })
 
-  const revealPainting = async (id: string, art: Painting, reading?: Promise<void>) => {
+  const revealPainting = async (id: string, art: Painting) => {
     const footprint = drawingFootprint({ ...art, tileSpan: { columns: art.columns ?? 1, rows: art.rows } })
     const cells = footprint.cells.map(tileId)
-    if (cells.some(cell => tileState.has(cell) && !(reading && cell === id))) return
+    if (cells.some(cell => tileState.has(cell))) return
     for (const cell of cells) tileState.set(cell, 'checking')
     fog.invalidate()
     try {
       const image = new Image()
       const plate = art.animation?.plate ?? art.imageUrl ?? art.url
       image.src = plate
-      await Promise.all([image.decode(), reading])
+      await image.decode()
       if (tileState.get(id) !== 'checking') return
       await addGeneratedTile(map, art, plate, art.title, titleCards, undefined,
         0, undefined, { bounds: footprint.bounds, title: art.title, image })
@@ -2984,15 +2981,16 @@ export const installAtlasTileInteractions = (
     const id = tileId(tile)
     if (tileState.has(id)) return
     const budget = AbortSignal.timeout(35 * 60_000)
+    const claim = rotatingRequests.has(id) || fakeRenderTile(tile)
     tileState.set(id, 'checking')
     fog.clearError()
     fog.poke(id)
-    const reading = fog.readOnce(id)
+    let reading = claim ? fog.readOnce(id) : undefined
     const keepAlive = window.setInterval(() => map.getContainer().dispatchEvent(new Event('atlas-generation-progress')), 5000)
     fog.invalidate()
     try {
       let result: RevealImage | undefined
-      if (rotatingRequests.has(id) || fakeRenderTile(tile)) {
+      if (claim) {
         if ([...tileState.values()].filter(state => state === 'checking' || state === 'generating').length > concurrentGenerationLimit) {
           throw Error('Three tile clearings are already in progress. Wait for one to finish.')
         }
@@ -3008,6 +3006,9 @@ export const installAtlasTileInteractions = (
           // Another visitor took the slot. Their claim is already in the Rainbow pool.
           rotatingRequests.delete(id)
           setCloudReady(tile, false)
+          fog.cancelReveal(id)
+          reading = undefined
+          fog.invalidate()
         } else {
           const body = await response.json()
           if (!response.ok) throw Error(body.error ?? 'This clearing is unavailable.')
@@ -3026,7 +3027,8 @@ export const installAtlasTileInteractions = (
         const url = urls[Math.floor(Math.random() * urls.length)]
         const painting = catalog.get(url)
         if (painting) {
-          await revealPainting(id, painting, reading)
+          tileState.delete(id)
+          await revealPainting(id, painting)
           return
         }
         result = choices.get(url)!
@@ -3035,7 +3037,7 @@ export const installAtlasTileInteractions = (
       await Promise.all([
         addGeneratedTile(map, tile, result.url, result.scene, titleCards, result.contentBounds, 0, budget,
           result.title ? { bounds: tileBounds(tile), title: result.title, image } : undefined),
-        withinClickBudget(reading, budget),
+        reading && withinClickBudget(reading, budget),
       ])
       revealGeneratedTile(id, result.scene as AtlasScene)
       rotatingRequests.delete(id)
@@ -3068,8 +3070,7 @@ export const installAtlasTileInteractions = (
       return
     }
     if (paintings?.length) {
-      if (!tileState.has(id)) await revealPainting(id, paintings[Math.floor(Math.random() * paintings.length)],
-        noFakeRenderEnabled() || revealed ? undefined : fog.readOnce(id))
+      if (!tileState.has(id)) await revealPainting(id, paintings[Math.floor(Math.random() * paintings.length)])
       return
     }
     if (!artwork && isHkuSite(tile)) {

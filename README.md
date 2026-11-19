@@ -475,8 +475,8 @@ and `/etc/atlas-generator/token` for the shared secret. The HTTPS proxy includes
 ### Rotating clouds
 
 On each map load, approximately half of eligible single-tile cached cells are
-assigned FakeRender. The assignment stays stable while the map is open. Both
-FakeRender and Rainbow play one poem before revealing cached artwork.
+assigned FakeRender. The assignment stays stable while the map is open.
+FakeRender plays one poem. Rainbow reveals the cached artwork as soon as it loads.
 
 A FakeRender click claims the tile’s reserved image and starts its replacement
 on Si. A claim immediately adds the image to the tile’s Rainbow choices.
