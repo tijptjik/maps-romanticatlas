@@ -37,11 +37,13 @@ export const positionAtlasTitleCard = (map, card, tile, contentBounds) => {
 
   const tileWidth = Math.max(1, southEast.x - northWest.x)
   const tileHeight = Math.max(1, southEast.y - northWest.y)
-  const cardWidth = Math.min(224, tileWidth * 0.8)
-  const renderedCardWidth = Math.min(cardWidth, Math.max(1, canvas.clientWidth - 16))
-  card.style.width = `${renderedCardWidth}px`
-
-  const cardHeight = card.offsetHeight || 86
+  // Keep the title wrapped at its full size while the whole plaque shrinks.
+  const cardWidth = card.offsetWidth
+  const scale = Math.min(1, tileWidth * 0.8 / cardWidth, Math.max(1, canvas.clientWidth - 16) / cardWidth)
+  card.style.scale = String(scale)
+  const renderedCardWidth = cardWidth * scale
+  const layoutHeight = card.offsetHeight
+  const cardHeight = layoutHeight * scale
   const contentLeft = contentBounds
     ? northWest.x + (contentBounds.x / 512) * tileWidth
     : northWest.x
@@ -58,6 +60,7 @@ export const positionAtlasTitleCard = (map, card, tile, contentBounds) => {
     Math.min(canvas.clientWidth - renderedCardWidth - 8, preferredLeft),
   )
   const top = Math.max(8, Math.min(canvas.clientHeight - cardHeight - 8, preferredTop))
-  card.style.left = `${left}px`
-  card.style.top = `${top}px`
+  // Scaling about the center keeps the existing rotation and reveal animation aligned.
+  card.style.left = `${left - (cardWidth - renderedCardWidth) / 2}px`
+  card.style.top = `${top - (layoutHeight - cardHeight) / 2}px`
 }

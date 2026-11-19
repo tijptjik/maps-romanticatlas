@@ -127,6 +127,8 @@ const drawTitleCard = (
   context.save()
   context.globalAlpha = Number.isFinite(opacity) ? opacity : 1
   context.translate(left + width / 2, top + height / 2)
+  const scale = Number.parseFloat(getComputedStyle(card).scale) || 1
+  context.scale(scale, scale)
   if (matrix) {
     context.transform(matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f)
   }

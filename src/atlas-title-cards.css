@@ -4,8 +4,8 @@
      obscure them until their tile has cleared. */
   z-index: 1;
   display: flex;
-  min-width: 0;
-  padding: 0.55rem 0.65rem 0.6rem;
+  width: 166px;
+  padding: 7px 10px 8px;
   border: 1px solid rgba(125, 92, 67, 0.82);
   color: #3b2518;
   background:
@@ -64,7 +64,7 @@
 .atlas-title-card__title {
   padding-top: 0.08rem;
   font:
-    400 clamp(0.95rem, 1.8vw, 1.25rem) / 0.98 "IM Fell English SC",
+    400 16px / 0.98 "IM Fell English SC",
     Georgia,
     serif;
   letter-spacing: 0.025em;
