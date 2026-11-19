@@ -115,7 +115,7 @@ try {
     assert.equal(response.status(), 200, await response.text())
     const lines = await page.evaluate(() => window.titleLines)
     assert.ok(lines.includes('The Rain') && lines.includes('Inheritance'), JSON.stringify(lines))
-    assert.equal(lines.slice(-8).join(''), 'TIJPTJIK')
+    assert.ok(!lines.some(text => text.length === 1), 'Credit was typeset over the signed petal')
     const { url } = await response.json()
     const download = await page.request.get(url)
     assert.equal(download.status(), 200)

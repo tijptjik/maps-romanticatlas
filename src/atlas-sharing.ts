@@ -1,5 +1,6 @@
 import cameraFrameUrl from './assets/orchid-camera-frame.webp?url'
 import shareFrameUrl from './assets/orchid-share-frame.webp?url'
+import creditPetalUrl from './assets/tijptjik-petal.webp?url'
 import QRCode from 'qrcode'
 import type { Map as MapLibreMap } from 'maplibre-gl'
 
@@ -172,7 +173,7 @@ const drawTitleCard = (
 
 const drawCredit = async (context: CanvasRenderingContext2D, frameBounds: DOMRect) => {
   const petal = new Image()
-  petal.src = '/pavilion/bauhinia-petal.webp'
+  petal.src = creditPetalUrl
   await petal.decode()
 
   const width = frameBounds.width * 0.20
@@ -180,33 +181,7 @@ const drawCredit = async (context: CanvasRenderingContext2D, frameBounds: DOMRec
   const inset = frameBounds.width * 0.095
   const left = frameBounds.width - inset - width
   const top = frameBounds.height * 0.91 - height
-  context.save()
   context.drawImage(petal, left, top, width, height)
-  context.font = `italic 700 ${width * 0.16}px Georgia, serif`
-  context.textAlign = 'center'
-  context.textBaseline = 'middle'
-  context.fillStyle = '#502438'
-  const letters = [...'TIJPTJIK']
-  const advances = letters.map(letter => context.measureText(letter).width)
-  const textWidth = advances.reduce((total, advance) => total + advance, 0)
-  const scale = Math.min(1, width * 0.72 / textWidth)
-  let cursor = -textWidth / 2
-  context.translate(left + width * 0.54, top + height * 0.51)
-  context.scale(scale, scale)
-  // Follow the petal's rising centre vein, with a gentle arch through the middle.
-  letters.forEach((letter, index) => {
-    const x = cursor + advances[index] / 2
-    const position = x / (textWidth / 2)
-    const y = height * 0.10 * position * position - width * 0.025 * position
-    const slope = (height * 0.20 * position - width * 0.025) / (textWidth / 2)
-    context.save()
-    context.translate(x, y)
-    context.rotate(Math.atan(slope))
-    context.fillText(letter, 0, 0)
-    context.restore()
-    cursor += advances[index]
-  })
-  context.restore()
 }
 
 const captureMap = async (map: MapLibreMap, frame: HTMLImageElement) => {
