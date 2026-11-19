@@ -1,19 +1,37 @@
 import { DurableObject } from 'cloudflare:workers'
-import { claimImage, type FakeRenderState, type RevealImage } from './fake-render-state'
+import { claimImage, rotationSnapshot, type FakeRenderState, type RevealImage } from './fake-render-state'
 import { startSiGeneration, siGenerationStatus } from './si-generation'
 import type { AtlasScene } from './atlas-scenes'
 
 type Position = { zoom: number; x: number; y: number }
 export class FakeRenderCloud extends DurableObject<Env> {
+  async hasReadyImage() {
+    const state = await this.ctx.storage.get<FakeRenderState>('state')
+    return !state || Boolean(state.ready)
+  }
+
+  async snapshot() {
+    // Existing claim receipts are also the release history. Read every page so
+    // tiles that predate this feature participate without a migration.
+    return this.ctx.storage.transaction(async txn => {
+      const images: RevealImage[] = []
+      let startAfter: string | undefined
+      for (;;) {
+        const page = await txn.list<RevealImage>({ prefix: 'claim:', startAfter, limit: 256 })
+        images.push(...page.values())
+        if (page.size < 256) break
+        startAfter = [...page.keys()].at(-1)
+      }
+      return rotationSnapshot(await txn.get<FakeRenderState>('state'), images)
+    })
+  }
+
   async claim(position: Position, seed: RevealImage | null, requestId: string, sourceImage: string) {
     const priorClaim = await this.ctx.storage.get<RevealImage>('claim:' + requestId)
     if (priorClaim) return priorClaim
     const sourceKey = `fake-render-sources/${position.zoom}/${position.x}/${position.y}/${requestId}.txt`
     const previous = await this.ctx.storage.get<FakeRenderState>('state')
-    if (previous && !previous.ready) {
-      if (previous.attempts >= 3) throw Error('The replacement could not be rendered. Please choose another cloud.')
-      return null
-    }
+    if (previous && !previous.ready) return null
     await this.env.ATLAS_BUCKET.put(sourceKey, sourceImage)
     // The storage transaction serializes claims, including across Worker instances.
     const result = await this.ctx.storage.transaction(async txn => {
@@ -27,7 +45,6 @@ export class FakeRenderCloud extends DurableObject<Env> {
       const image = claimImage(state, requestId, sourceKey)
       if (image) await txn.put('claim:' + requestId, image)
       state.claims = {}
-      if (!image && state.attempts >= 3) throw Error('The replacement could not be rendered. Please choose another cloud.')
       await txn.put({ state, position })
       if (state.job && state.attempts < 3 && !await txn.getAlarm()) await txn.setAlarm(Date.now() + 100)
       return image

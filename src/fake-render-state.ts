@@ -1,6 +1,6 @@
-// A stable, shuffled half of single-tile cells. Overrides never change ownership.
-export function isFakeRenderTile({ x, y }: { x: number; y: number }) {
-  let hash = Math.imul(x, 0x45d9f3b) ^ Math.imul(y, 0x119de1f3)
+// The page seed keeps assignment stable during a visit. Seed zero supports older clients.
+export function isFakeRenderTile({ x, y }: { x: number; y: number }, visit = 0) {
+  let hash = Math.imul(x, 0x45d9f3b) ^ Math.imul(y, 0x119de1f3) ^ visit
   hash = Math.imul(hash ^ (hash >>> 16), 0x45d9f3b)
   return ((hash ^ (hash >>> 16)) >>> 0) / 0x100000000 < 0.5
 }
@@ -27,4 +27,12 @@ export function claimImage(state: FakeRenderState, requestId: string, sourceImag
   state.job = crypto.randomUUID()
   state.attempts = 0
   return image
+}
+
+export const isRotatingVariant = (variant: string) => variant.startsWith('discovery-rotating-')
+
+export function rotationSnapshot(state: FakeRenderState | null | undefined, claims: Iterable<RevealImage>) {
+  const released = new Map<string, RevealImage>()
+  for (const image of claims) released.set(image.url, image)
+  return { ready: !state || Boolean(state.ready), released: [...released.values()] }
 }

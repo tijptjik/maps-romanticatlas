@@ -1,5 +1,5 @@
 import { createFakeRenderStore } from './fake-render-store'
-import { isFakeRenderTile } from '../src/fake-render-state'
+import { isFakeRenderTile, isRotatingVariant } from '../src/fake-render-state'
 import { fakeRenderSeed } from '../src/fake-render-seed'
 import { releaseCatalog, mediaCacheControl, releaseObjectKey, releaseMediaPath } from '../src/release-media.ts'
 import { createServer } from 'node:http'
@@ -460,7 +460,7 @@ const serveFogIndex = async (request, response, match) => {
       eligibility: eligibility.eligibilities,
       // Keep development equivalent to production: every cached variant is
       // included so the browser can select and decode one before a click.
-      cached,
+      cached: cached.filter(entry => !isRotatingVariant(entry.variant)),
     })
   } catch (error) {
     sendError(
@@ -638,8 +638,7 @@ const getVersionedCachedTiles = async (tile, version) => {
 const requestedCacheVersion = request =>
   parseRequestedCacheVersion(requestSearchParams(request))
 
-const findCachedTile = async (tile, excludedUrls?: Set<string>, discovery?: string) => {
-  const cachedTiles = (
+const releasedCacheEntries = async tile => (
     await Promise.all(
       readableCacheVersions.flatMap(version =>
         atlasSceneNames.map(async scene =>
@@ -647,7 +646,10 @@ const findCachedTile = async (tile, excludedUrls?: Set<string>, discovery?: stri
         ),
       ),
     )
-  ).flat().filter(entry => (!discovery || entry.variant.startsWith(discovery + '-')) && !excludedUrls?.has(cachedTilePayload(entry).url))
+  ).flat().filter(entry => !isRotatingVariant(entry.variant))
+
+const findCachedTile = async (tile, excludedUrls?: Set<string>, discovery?: string) => {
+  const cachedTiles = (await releasedCacheEntries(tile)).filter(entry => (!discovery || entry.variant.startsWith(discovery + '-')) && !excludedUrls?.has(cachedTilePayload(entry).url))
   if (!cachedTiles.length) return null
   return cachedTiles[Math.floor(Math.random() * cachedTiles.length)]
 }
@@ -1164,12 +1166,24 @@ async function saveReview(review: ArtworkReview) {
 const rotatingClouds = createFakeRenderStore(path.join(rootDirectory, '.local/fake-render'))
 const rotatingJobs = new Set<string>()
 async function serveRotatingCloud(request, response, match: RegExpMatchArray) {
-  if (request.method !== 'POST' || !applicationRequestIsAllowed(request)) {
-    sendError(response, 403, 'Application POST required.')
+  if (!applicationRequestIsAllowed(request)) {
+    sendError(response, 403, 'Application origin required.')
     return
   }
   const tile = { zoom: 18, x: Number(match[1]), y: Number(match[2]) }
-  if (!isFakeRenderTile(tile) || !isFogPatternSelected(tile)) { sendError(response, 400, 'Not a rotating cloud.'); return }
+  const id = `${tile.x}/${tile.y}`
+  if (!isValidAtlasPosition(tile) || !isFogPatternSelected(tile)) return sendError(response, 400, 'Invalid cloud position.')
+  if (request.method === 'GET') {
+    if (requestSearchParams(request).has('availability')) {
+      const state = rotatingClouds.read(id)
+      return sendJson(response, 200, { ready: !state || Boolean(state.ready) }, { 'cache-control': 'no-store' })
+    }
+    const snapshot = rotatingClouds.snapshot(id)
+    const cached = requestSearchParams(request).has('includeCache') ? await releasedCacheEntries(tile) : []
+    return sendJson(response, 200, { ...snapshot, released: [...snapshot.released, ...cached.map(cachedTilePayload)] }, { 'cache-control': 'no-store' })
+  }
+  if (request.method !== 'POST') return sendError(response, 405, 'Use POST to reveal a cloud.')
+  if (!isFakeRenderTile(tile, Number(requestSearchParams(request).get('visit')))) { sendError(response, 400, 'Not a rotating cloud.'); return }
   const body = await readRequestBody(request)
   if (typeof body.requestId !== 'string' || !/^[a-f0-9-]{36}$/.test(body.requestId)) { sendError(response, 400, 'Invalid request ID.'); return }
   const source = parseImageDataUrl(body.sourceImage)
@@ -1178,12 +1192,10 @@ async function serveRotatingCloud(request, response, match: RegExpMatchArray) {
   if (!eligibilities[0]?.isTargetable) { sendError(response, 403, 'This tile cannot be rendered.'); return }
   const cached = await findCachedTile(tile)
   const seed = fakeRenderSeed(tile) ?? (cached ? cachedTilePayload(cached) : null)
-  const id = `${tile.x}/${tile.y}`
   const result = rotatingClouds.claim(id, seed, body.requestId, body.sourceImage)
   const state = rotatingClouds.read(id)
-  if (state?.attempts >= 3 && !result) { sendError(response, 503, 'Replacement failed. Please choose another cloud.'); return }
   sendJson(response, result ? 200 : 202, result ?? { pending: true }, { 'cache-control': 'no-store' })
-  if (!state?.job || rotatingJobs.has(id)) return
+  if (!state?.job || state.attempts >= 3 || rotatingJobs.has(id)) return
   rotatingJobs.add(id)
   try {
     const generated = await generateTile({ ...tile, scene: state.scene, hasSea: false }, state.sourceImage,

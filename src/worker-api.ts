@@ -1,4 +1,4 @@
-import { isFakeRenderTile } from './fake-render-state'
+import { isFakeRenderTile, isRotatingVariant } from './fake-render-state'
 import { fakeRenderSeed } from './fake-render-seed'
 import { startSiGeneration, siGenerationStatus } from './si-generation'
 import { orphanGroup, releaseObjects, removeArchivedObjects, type ArchivedObject, type AssetBucket } from './artwork-purge'
@@ -253,7 +253,7 @@ const cachedTilesFromBucket = async (
 }
 
 const findCachedTile = async (env: AtlasEnv, position: Omit<Tile, 'scene'>, discovery?: string) => {
-  const allowed = (entry: CachedTile) => !discovery || entry.variant.startsWith(discovery + '-')
+  const allowed = (entry: CachedTile) => !isRotatingVariant(entry.variant) && (!discovery || entry.variant.startsWith(discovery + '-'))
   const cached = (await manifestEntriesForPosition(env, position)).filter(allowed)
   if (cached.length) return randomItem(cached)
   if (!localDevelopmentEnabled(env)) return null
@@ -371,7 +371,7 @@ const fogIndexForTile = async (env: AtlasEnv, x: number, y: number) => {
       ),
     ).then(entries => entries.flat()),
   ])
-  const cached = manifestEntries
+  const cached = manifestEntries.filter(entry => !isRotatingVariant(entry.variant))
     .map(toCachedTile)
     .filter((entry): entry is CachedTile => entry !== null)
     .map(entry => ({
@@ -1109,7 +1109,7 @@ const serveCacheStatusBatch = async (
 
   return json({
     statuses: positions.map(position => {
-      const cached = cachedByPosition.get(positionId(position))?.filter(entry => !discovery || entry.variant.startsWith(discovery + '-'))
+      const cached = cachedByPosition.get(positionId(position))?.filter(entry => !isRotatingVariant(entry.variant) && (!discovery || entry.variant.startsWith(discovery + '-')))
       return cacheStatusPayload({
         cached: cached?.length ? randomItem(cached) : null,
         scenes: [...(scenesByPosition.get(positionId(position)) ?? [])],
@@ -1345,10 +1345,18 @@ export const handleAtlasApi = async (
   const url = new URL(request.url)
   const fake = url.pathname.match(/^\/api\/fake-render\/18\/(\d+)\/(\d+)$/)
   if (fake) {
-    if (request.method !== 'POST') return errorResponse(405, 'Use POST to reveal a cloud.')
     if (!applicationRequestIsAllowed(request, env)) return errorResponse(403, 'Application origin required.')
     const tile = { zoom: 18, x: Number(fake[1]), y: Number(fake[2]) }
-    if (!isFakeRenderTile(tile) || !isFogPatternSelected(tile)) return errorResponse(400, 'Not a rotating cloud.')
+    if (!isValidAtlasPosition(tile) || !isFogPatternSelected(tile)) return errorResponse(400, 'Invalid cloud position.')
+    const cloud = env.FAKE_RENDER_CLOUD.getByName(positionId(tile))
+    if (request.method === 'GET') {
+      if (url.searchParams.has('availability')) return json({ ready: await cloud.hasReadyImage() })
+      if (!url.searchParams.has('includeCache')) return json(await cloud.snapshot())
+      const [snapshot, cached] = await Promise.all([cloud.snapshot(), manifestEntriesForPosition(env, tile)])
+      return json({ ...snapshot, released: [...snapshot.released, ...cached.filter(entry => !isRotatingVariant(entry.variant)).map(cachedTilePayload)] })
+    }
+    if (request.method !== 'POST') return errorResponse(405, 'Use POST to reveal a cloud.')
+    if (!isFakeRenderTile(tile, Number(url.searchParams.get('visit')))) return errorResponse(400, 'Not a rotating cloud.')
     const body = await readJsonBody(request)
     if (typeof body.requestId !== 'string' || !/^[a-f0-9-]{36}$/.test(body.requestId))
       return errorResponse(400, 'A reveal request ID is required.')
@@ -1358,8 +1366,7 @@ export const handleAtlasApi = async (
     if (!eligibilities[0]?.isTargetable) return errorResponse(403, 'This tile cannot be rendered.')
     const cached = await findCachedTile(env, tile)
     const seed = fakeRenderSeed(tile) ?? (cached ? cachedTilePayload(cached) : null)
-    const result = await env.FAKE_RENDER_CLOUD.getByName(`18/${tile.x}/${tile.y}`)
-      .claim(tile, seed, body.requestId, String(body.sourceImage))
+    const result = await cloud.claim(tile, seed, body.requestId, String(body.sourceImage))
     return result ? json(result) : json({ pending: true }, 202)
   }
   const job = url.pathname.match(/^\/api\/discovery-jobs\/([a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12})$/)

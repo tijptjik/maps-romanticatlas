@@ -411,18 +411,19 @@ and `/etc/atlas-generator/token` for the shared secret. The HTTPS proxy includes
 
 ### Rotating clouds
 
-The regular map assigns approximately half of eligible single-tile cached cells
-to rotating white clouds; the other half retain rainbow cached clouds. Assignment
-is stable by cell. Multi-tile paintings keep their existing cached reveal.
-A rotating cloud plays one complete poem sequence before revealing its reserved
-image. Its replacement starts in the background on SI; later visitors wait for
-a fresh image if it is still rendering. Images already consumed by this flow
-are never reused by another reveal request. Network retries reuse a request ID.
-Use `?noFakeRender=true` (or `?no-fake-render`) to restore immediate cache reveals
-in both development and production. Revealed and diagnostic views are unchanged.
+On each map load, approximately half of eligible single-tile cached cells are
+assigned FakeRender. The assignment stays stable while the map is open. Both
+FakeRender and Rainbow play one poem before revealing cached artwork.
 
-Production uses the `FakeRenderCloud` Durable Object per cell for atomic claims
-and durable replacement alarms, with source images and completed artwork in R2.
-Development keeps claims in `.local/fake-render/clouds.sqlite` and uses the local
-Codex renderer. Failed replacements retain consumed-image history; they never
-silently fall back to the previous image.
+A FakeRender click claims the tile’s reserved image and starts its replacement
+on Si. A claim immediately adds the image to the tile’s Rainbow choices.
+The replacement becomes the next reserved image when Si finishes. It enters
+the Rainbow pool only when a visitor claims it. Retrying the same claim returns
+the same image. While the slot is empty, visitors see Rainbow and sample from
+the tile’s released images. Rainbow clicks do not start a generation.
+
+Use `?noFakeRender=true` (or `?no-fake-render`) for immediate cache reveals.
+Production stores per-tile claim receipts and replacement alarms in the
+`FakeRenderCloud` Durable Object, with source images and artwork in R2.
+Development keeps claims in `.local/fake-render/clouds.sqlite` and uses the
+local Codex renderer.

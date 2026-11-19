@@ -1,4 +1,4 @@
-import { isFakeRenderTile } from './fake-render-state'
+import { isFakeRenderTile, type RevealImage, type rotationSnapshot } from './fake-render-state'
 import { noFakeRenderEnabled } from './runtime-modes'
 import { originalArtwork } from './artwork-sampling'
 import { installArtworkAnimations } from './fountain-glitter'
@@ -2228,8 +2228,40 @@ export const installAtlasTileInteractions = (
   const hasFootprintOverride = artwork ? tile => multiTileCells.has(tileId(tile)) : isHkuSite
   const selected = tile => hasFootprintOverride(tile) || isFogPatternSelected(tile)
   const cachedTileIds = new Set<string>(revealed ? [] : artwork?.keys())
-  const fakeRenderTile = tile => !revealed && !noFakeRenderEnabled() &&
-    !multiTileCells.has(tileId(tile)) && isFogPatternSelected(tile) && isFakeRenderTile(tile)
+  const cloudVisit = crypto.getRandomValues(new Uint32Array(1))[0]
+  const rotationEnabled = tile => !revealed && !noFakeRenderEnabled() &&
+    !multiTileCells.has(tileId(tile)) && (artwork || !isHkuSite(tile)) && isFogPatternSelected(tile)
+  const rotationUrl = tile => `/api/fake-render/18/${tile.x}/${tile.y}?visit=${cloudVisit}`
+  const busyClouds = new Set<string>()
+  const fakeRenderTile = tile => rotationEnabled(tile) && !busyClouds.has(tileId(tile)) && isFakeRenderTile(tile, cloudVisit)
+  const setCloudReady = (tile, ready: boolean) => {
+    if (ready) busyClouds.delete(tileId(tile))
+    else busyClouds.add(tileId(tile))
+  }
+  const availabilityCheckedAt = new Map<string, number>()
+  const refreshCloudAvailability = () => {
+    if (revealed || noFakeRenderEnabled() || map.getZoom() < minimumFogZoom) return
+    for (const id of cachedTileIds) {
+      const tile = tileFromId(id)
+      if (!rotationEnabled(tile) || !isFakeRenderTile(tile, cloudVisit) ||
+          !intersectsViewport(map, tile, 1) || !fogLandState.get(id)?.isTargetable ||
+          Date.now() - (availabilityCheckedAt.get(id) ?? 0) < fogImageIndexRefreshMs) continue
+      availabilityCheckedAt.set(id, Date.now())
+      void fetch(rotationUrl(tile) + '&availability=1').then(async response => {
+        if (response.ok) {
+          setCloudReady(tile, (await response.json()).ready)
+          invalidateFog()
+        }
+      }).catch(() => {})
+    }
+  }
+  const readRotation = async (tile, includeCache: boolean, signal: AbortSignal) => {
+    const response = await fetch(rotationUrl(tile) + (includeCache ? '&includeCache=1' : ''), { signal, cache: 'no-store' })
+    if (!response.ok) throw Error('The cached artwork could not be loaded.')
+    const snapshot: ReturnType<typeof rotationSnapshot> = await response.json()
+    setCloudReady(tile, snapshot.ready)
+    return snapshot
+  }
 
   const indexedCachedTiles = new Map()
   const fogIndexTiles = new Map()
@@ -2371,6 +2403,7 @@ export const installAtlasTileInteractions = (
         updateCloudDiagnostics()
         updateCloudDiagnosticTooltip()
         preloadVisibleCachedTiles()
+        refreshCloudAvailability()
         scheduleFogIndexUpdate()
       })
     fogIndexRequests.set(id, request)
@@ -2822,6 +2855,7 @@ export const installAtlasTileInteractions = (
       map.on(eventName, preloadVisibleCachedTiles)
     },
   )
+  map.on('moveend', refreshCloudAvailability)
   scheduleFogIndexUpdate()
   preloadVisibleCachedTiles()
 
@@ -2910,14 +2944,45 @@ export const installAtlasTileInteractions = (
         : ''
   })
 
+  const revealPainting = async (id: string, art: Painting, reading?: Promise<void>) => {
+    const footprint = drawingFootprint({ ...art, tileSpan: { columns: art.columns ?? 1, rows: art.rows } })
+    const cells = footprint.cells.map(tileId)
+    if (cells.some(cell => tileState.has(cell) && !(reading && cell === id))) return
+    for (const cell of cells) tileState.set(cell, 'checking')
+    fog.invalidate()
+    try {
+      const image = new Image()
+      const plate = art.animation?.plate ?? art.imageUrl ?? art.url
+      image.src = plate
+      await Promise.all([image.decode(), reading])
+      if (tileState.get(id) !== 'checking') return
+      await addGeneratedTile(map, art, plate, art.title, titleCards, undefined,
+        0, undefined, { bounds: footprint.bounds, title: art.title, image })
+      const frame = { bounds: footprint.bounds, width: image.naturalWidth, height: image.naturalHeight }
+      for (const cell of cells) artworkFrames.set(cell, frame)
+      const anchor = tileId(art)
+      revealedTileIds.add(anchor)
+      audio?.playFogLift()
+      fog.animateReveal(cells, [`atlas-tile-${art.x}-${art.y}`], 1, () => {
+        if (art.animation) {
+          animatedPaintings.add(art)
+          showAnimations(animatedPaintings)
+        }
+        focusAtlasTile(map, art, () => titleCards.get(anchor)?.card.classList.remove('is-awaiting-focus'), frame)
+        onRevealCountChange(revealedTileIds.size)
+      })
+    } catch {
+      for (const cell of cells) tileState.delete(cell)
+      fog.cancelReveal(id)
+      fog.showError(id, 'The artwork could not load. Click the cloud to try again.')
+      fog.invalidate()
+    }
+  }
+
   const rotatingRequests = new Map<string, string>()
-  const revealRotatingCloud = async tile => {
+  const revealCachedCloud = async (tile, paintings: Painting[], cached?: RevealImage) => {
     const id = tileId(tile)
     if (tileState.has(id)) return
-    if ([...tileState.values()].filter(state => state === 'checking' || state === 'generating').length >= concurrentGenerationLimit) {
-      clearanceNotice.show('Three tile clearings are already in progress. Wait for one to finish.')
-      return
-    }
     const budget = AbortSignal.timeout(35 * 60_000)
     tileState.set(id, 'checking')
     fog.clearError()
@@ -2926,28 +2991,53 @@ export const installAtlasTileInteractions = (
     const keepAlive = window.setInterval(() => map.getContainer().dispatchEvent(new Event('atlas-generation-progress')), 5000)
     fog.invalidate()
     try {
-      await withinClickBudget(focusTileForCapture(tile), budget)
-      const captured = await withinClickBudget(captureTile(map, tile, 1024), budget)
-      const requestId = rotatingRequests.get(id) ?? crypto.randomUUID()
-      rotatingRequests.set(id, requestId)
-      let response: Response
-      do {
-        response = await fetch(`/api/fake-render/18/${tile.x}/${tile.y}`, {
+      let result: RevealImage | undefined
+      if (rotatingRequests.has(id) || fakeRenderTile(tile)) {
+        if ([...tileState.values()].filter(state => state === 'checking' || state === 'generating').length > concurrentGenerationLimit) {
+          throw Error('Three tile clearings are already in progress. Wait for one to finish.')
+        }
+        await withinClickBudget(focusTileForCapture(tile), budget)
+        const captured = await withinClickBudget(captureTile(map, tile, 1024), budget)
+        const requestId = rotatingRequests.get(id) ?? crypto.randomUUID()
+        rotatingRequests.set(id, requestId)
+        const response = await fetch(rotationUrl(tile), {
           method: 'POST', signal: budget, headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ sourceImage: captured.sourceImage, requestId }),
         })
-        if (response.status === 202) await new Promise(resolve => setTimeout(resolve, 2000))
-      } while (response.status === 202)
-      const result = await response.json()
-      if (!response.ok) throw Error(result.error ?? 'This clearing is unavailable. Please try again.')
-      // Decode while the single reading finishes; never substitute an old local cache.
+        if (response.status === 202) {
+          // Another visitor took the slot. Their claim is already in the Rainbow pool.
+          rotatingRequests.delete(id)
+          setCloudReady(tile, false)
+        } else {
+          const body = await response.json()
+          if (!response.ok) throw Error(body.error ?? 'This clearing is unavailable.')
+          result = body
+        }
+      }
+      if (!result) {
+        const snapshot = await readRotation(tile, !paintings.length, budget)
+        const catalog = new Map(paintings.map(art => [art.imageUrl ?? art.url, art]))
+        const choices = new Map<string, RevealImage>()
+        for (const image of [cached, ...snapshot.released]) {
+          if (image && !rejectedUrls.has(image.url)) choices.set(image.url, image)
+        }
+        const urls = [...new Set([...catalog.keys(), ...choices.keys()])]
+        if (!urls.length) throw Error('This cloud has no released artwork yet.')
+        const url = urls[Math.floor(Math.random() * urls.length)]
+        const painting = catalog.get(url)
+        if (painting) {
+          await revealPainting(id, painting, reading)
+          return
+        }
+        result = choices.get(url)!
+      }
       const image = await withinClickBudget(decodeTileImage(result.url), budget)
       await Promise.all([
         addGeneratedTile(map, tile, result.url, result.scene, titleCards, result.contentBounds, 0, budget,
           result.title ? { bounds: tileBounds(tile), title: result.title, image } : undefined),
         withinClickBudget(reading, budget),
       ])
-      revealGeneratedTile(id, result.scene)
+      revealGeneratedTile(id, result.scene as AtlasScene)
       rotatingRequests.delete(id)
     } catch (error) {
       tileState.delete(id)
@@ -2973,44 +3063,13 @@ export const installAtlasTileInteractions = (
       !(isFogPatternSelected(tile) && isTargetableLand(tile))
       ? choices.filter(spansMultipleTiles)
       : choices
-    if (fakeRenderTile(tile) && (paintings?.length || cachedTileIds.has(id))) {
-      await revealRotatingCloud(tile)
+    if (rotationEnabled(tile) && (paintings?.length || cachedTileIds.has(id))) {
+      await revealCachedCloud(tile, paintings ?? [])
       return
     }
     if (paintings?.length) {
-      if (tileState.has(id)) return
-      const art = paintings[Math.floor(Math.random() * paintings.length)]
-      const footprint = drawingFootprint({ ...art, tileSpan: { columns: art.columns ?? 1, rows: art.rows } })
-      const cells = footprint.cells.map(tileId)
-      if (cells.some(cell => tileState.has(cell))) return
-      for (const cell of cells) tileState.set(cell, 'checking')
-      fog.invalidate()
-      try {
-        const image = new Image()
-        const plate = art.animation?.plate ?? art.imageUrl ?? art.url
-        image.src = plate
-        await image.decode()
-        if (tileState.get(id) !== 'checking') return
-        await addGeneratedTile(map, art, plate, art.title, titleCards, undefined,
-          0, undefined, { bounds: footprint.bounds, title: art.title, image })
-        const frame = { bounds: footprint.bounds, width: image.naturalWidth, height: image.naturalHeight }
-        for (const cell of cells) artworkFrames.set(cell, frame)
-        const anchor = tileId(art)
-        revealedTileIds.add(anchor)
-        audio?.playFogLift()
-        fog.animateReveal(cells, [`atlas-tile-${art.x}-${art.y}`], 1, () => {
-          if (art.animation) {
-            animatedPaintings.add(art)
-            showAnimations(animatedPaintings)
-          }
-          focusAtlasTile(map, art, () => titleCards.get(anchor)?.card.classList.remove('is-awaiting-focus'), frame)
-          onRevealCountChange(revealedTileIds.size)
-        })
-      } catch {
-        for (const cell of cells) tileState.delete(cell)
-        fog.showError(id, 'The artwork could not load. Click the cloud to try again.')
-        fog.invalidate()
-      }
+      if (!tileState.has(id)) await revealPainting(id, paintings[Math.floor(Math.random() * paintings.length)],
+        noFakeRenderEnabled() || revealed ? undefined : fog.readOnce(id))
       return
     }
     if (!artwork && isHkuSite(tile)) {
@@ -3079,9 +3138,9 @@ export const installAtlasTileInteractions = (
     let rateLimited = false
     try {
       const cacheStatus = await withinClickBudget(checkCachedTile(tile), budget)
-      if (cacheStatus.cached && fakeRenderTile(tile)) {
+      if (cacheStatus.cached && rotationEnabled(tile)) {
         tileState.delete(id)
-        await revealRotatingCloud(tile)
+        await revealCachedCloud(tile, [], cacheStatus as RevealImage)
         return
       }
       if (cacheStatus.cached) {
