@@ -23,6 +23,11 @@ try {
     const capture = (target, state) => target.screenshot({ path: path.join(process.env.DEV_RUNNER_ARTIFACTS, mode + '-' + state + '.png') })
     const still = await capture(note, 'book')
     await note.hover()
+    await page.waitForFunction(() => {
+      const motion = document.querySelector('.pavilion-notes').getAnimations({ subtree: true })
+        .find(animation => animation.animationName === 'pavilion-compass-glint')
+      return motion?.effect.getComputedTiming().currentIteration >= 1
+    })
     await note.evaluate(el => {
       const movement = el.getAnimations({ subtree: true }).find(a => a.animationName === 'pavilion-compass-glint')
       movement.pause()
@@ -34,7 +39,7 @@ try {
       width: Math.floor(width * .14), height: Math.floor(height * .12) }).raw().toBuffer()
     assert.notDeepEqual(await patch(still, .23), await patch(lit, .23))
     assert.deepEqual(await patch(still, .75), await patch(lit, .75))
-    await note.evaluate(el => el.getAnimations({ subtree: true }).forEach(animation => animation.finish()))
+    await page.mouse.move(1, 1)
     const settled = await capture(note, 'book-settled')
     assert.deepEqual(await patch(still, .23), await patch(settled, .23))
     const sunLevel = async png => {

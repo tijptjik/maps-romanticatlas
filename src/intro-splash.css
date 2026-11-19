@@ -428,7 +428,7 @@
       transparent, #fff0ac 27deg, transparent 66deg);
     mix-blend-mode: soft-light;
     opacity: 0;
-    animation: var(--compass-motion) 850ms ease-in-out;
+    animation: var(--compass-motion) 850ms ease-in-out infinite;
   }
   @keyframes pavilion-compass-glint {
     0% { --compass-light-angle: -45deg; opacity: 0; }

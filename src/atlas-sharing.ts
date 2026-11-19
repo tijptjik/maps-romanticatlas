@@ -1,3 +1,5 @@
+const cameraFrameUrl = '/pavilion/orchid-camera-frame.webp'
+const shareFrameUrl = '/pavilion/orchid-share-frame.webp'
 import QRCode from 'qrcode'
 import type { Map as MapLibreMap } from 'maplibre-gl'
 
@@ -5,10 +7,22 @@ const instagramRatio = 4 / 5
 const exportPixelRatio = 2
 const exportWidth = 1080 * exportPixelRatio
 const exportHeight = 1350 * exportPixelRatio
+const maximumShareImageBytes = 8_000_000
 const maximumCapturePixelRatio = 4
 const minimumReveals = 5
-const captureSaturation = 1.15
-const captureContrast = 1.08
+const cameraIcon = `<svg class="atlas-camera-icon" viewBox="0 0 32 26" fill="none"
+  stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true">
+  <path d="M3 7h6l3-4h8l3 4h6v16H3z"/>
+  <circle cx="16" cy="14" r="5.5"/><circle cx="16" cy="14" r="3.3"/>
+  <path d="M24 10h2"/>
+</svg>`
+
+const actionIcon = (paths: string) => `<svg viewBox="0 0 24 24" fill="none"
+  stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"
+  aria-hidden="true" focusable="false">${paths}</svg>`
+
+const shareIcon = actionIcon('<path d="M12 15V3m-4 4 4-4 4 4M6 10H4v11h16V10h-2"/>')
+const retakeIcon = actionIcon('<path d="M5 8h3l2-3h5l2 3h4v11h-6"/><circle cx="13" cy="12" r="3"/><path d="M2 16a5 5 0 1 1 1 5m-1-9v4h4"/>')
 
 const nextFrame = () =>
   new Promise<void>(resolve => {
@@ -37,18 +51,6 @@ const canvasToPng = (canvas: HTMLCanvasElement) =>
     }, 'image/png')
   })
 
-const gradeCapture = (canvas: HTMLCanvasElement) => {
-  const gradedCanvas = document.createElement('canvas')
-  gradedCanvas.width = canvas.width
-  gradedCanvas.height = canvas.height
-  const context = gradedCanvas.getContext('2d')
-  if (!context) throw new Error('Could not prepare the map image.')
-
-  context.filter = `saturate(${captureSaturation}) contrast(${captureContrast})`
-  context.drawImage(canvas, 0, 0)
-  return gradedCanvas
-}
-
 const drawCanvasLayer = (
   context: CanvasRenderingContext2D,
   canvas: HTMLCanvasElement,
@@ -74,26 +76,17 @@ const drawCanvasLayer = (
   context.restore()
 }
 
-const letterSpacedWidth = (
-  context: CanvasRenderingContext2D,
-  text: string,
-  letterSpacing: number,
-) =>
-  [...text].reduce((width, letter) => width + context.measureText(letter).width, 0) +
-  letterSpacing * Math.max(0, text.length - 1)
-
 const wrapTitle = (
   context: CanvasRenderingContext2D,
   text: string,
   maxWidth: number,
-  letterSpacing: number,
 ) => {
   const lines: string[] = []
   let line = ''
 
   for (const word of text.trim().split(/\s+/)) {
     const nextLine = line ? `${line} ${word}` : word
-    if (line && letterSpacedWidth(context, nextLine, letterSpacing) > maxWidth) {
+    if (line && context.measureText(nextLine).width > maxWidth) {
       lines.push(line)
       line = word
     } else {
@@ -157,64 +150,49 @@ const drawTitleCard = (
     context.font = titleStyle?.font || "400 16px 'IM Fell English SC', Georgia, serif"
     context.textAlign = 'center'
     context.textBaseline = 'middle'
-    const letterSpacing = Number.parseFloat(titleStyle?.letterSpacing || '') || 0
+    context.letterSpacing = titleStyle?.letterSpacing || '0px'
     const lines = wrapTitle(
       context,
       title.textContent || '',
       title.clientWidth,
-      letterSpacing,
     )
     const lineHeight = Number.parseFloat(titleStyle?.lineHeight || '') || 16
     const titleCenter = title.offsetTop + title.offsetHeight / 2
     const firstLineCenter = titleCenter - ((lines.length - 1) * lineHeight) / 2
     lines.forEach((line, index) => {
-      drawLetterSpacedText(
-        context,
+      context.fillText(
         line,
         title.offsetLeft + title.clientWidth / 2,
         firstLineCenter + index * lineHeight,
-        letterSpacing,
       )
     })
   }
   context.restore()
 }
 
-const drawLetterSpacedText = (
-  context: CanvasRenderingContext2D,
-  text: string,
-  centerX: number,
-  baseline: number,
-  letterSpacing: number,
-) => {
-  const letters = [...text]
-  const textWidth = letterSpacedWidth(context, text, letterSpacing)
-  let x = centerX - textWidth / 2
-  for (const letter of letters) {
-    context.fillText(letter, x, baseline)
-    x += context.measureText(letter).width + letterSpacing
-  }
-}
+const drawCredit = async (context: CanvasRenderingContext2D, frameBounds: DOMRect) => {
+  const petal = new Image()
+  petal.src = '/pavilion/bauhinia-petal.webp'
+  await petal.decode()
 
-const drawCredit = (context: CanvasRenderingContext2D, frameBounds: DOMRect) => {
-  const fontSize = Math.max(17, Math.min(frameBounds.width * 0.018, 23))
-  const text = 'by TIJPTJIK'
+  const width = frameBounds.width * 0.20
+  const height = width * petal.naturalHeight / petal.naturalWidth
+  const inset = frameBounds.width * 0.095
+  const left = frameBounds.width - inset - width
+  const top = frameBounds.height * 0.91 - height
   context.save()
-  context.font = `${fontSize}px 'IM Fell English SC', Georgia, serif`
-  context.textAlign = 'left'
-  context.textBaseline = 'bottom'
-  context.fillStyle = '#74343c'
-  drawLetterSpacedText(
-    context,
-    text,
-    frameBounds.width / 2,
-    frameBounds.height - 28.8,
-    fontSize * 0.14,
-  )
+  context.drawImage(petal, left, top, width, height)
+  context.font = `italic 700 ${width * 0.16}px Georgia, serif`
+  context.textAlign = 'center'
+  context.textBaseline = 'middle'
+  context.fillStyle = '#502438'
+  context.translate(left + width * 0.55, top + height * 0.51)
+  context.rotate(-Math.PI / 36)
+  context.fillText('TIJPTJIK', 0, 0, width * 0.77)
   context.restore()
 }
 
-const captureMap = async (map: MapLibreMap, frame: HTMLElement) => {
+const captureMap = async (map: MapLibreMap, frame: HTMLImageElement) => {
   const frameBounds = frame.getBoundingClientRect()
   if (!frameBounds.width || !frameBounds.height) {
     throw new Error('The map is not ready to be captured.')
@@ -256,6 +234,12 @@ const captureMap = async (map: MapLibreMap, frame: HTMLElement) => {
     context.scale(exportWidth / frameBounds.width, exportHeight / frameBounds.height)
     context.imageSmoothingEnabled = true
     context.imageSmoothingQuality = 'high'
+    // Rail centerlines in the 864 × 1080 artwork. Leave the outer filigree on transparent pixels.
+    context.save()
+    context.beginPath()
+    context.rect(frameBounds.width * 55 / 864, frameBounds.height * 57 / 1080,
+      frameBounds.width * 750 / 864, frameBounds.height * 952 / 1080)
+    context.clip()
     context.drawImage(
       mapCanvas,
       cropLeft * scale,
@@ -285,8 +269,25 @@ const captureMap = async (map: MapLibreMap, frame: HTMLElement) => {
       if (canvas) drawCanvasLayer(context, canvas, frameBounds)
     }
 
-    drawCredit(context, frameBounds)
-    return await canvasToPng(gradeCapture(exportCanvas))
+    context.restore()
+    const printFrame = new Image()
+    printFrame.src = shareFrameUrl
+    await printFrame.decode()
+    context.drawImage(printFrame, 0, 0, frameBounds.width, frameBounds.height)
+    await drawCredit(context, frameBounds)
+    const image = await canvasToPng(exportCanvas)
+    if (image.size <= maximumShareImageBytes) return image
+
+    // A detailed 2x capture can exceed the sharing endpoint's PNG limit.
+    // At 1080 × 1350 even uncompressed RGBA pixels occupy less than 6 MB.
+    const resized = document.createElement('canvas')
+    resized.width = 1080
+    resized.height = 1350
+    const resizedContext = resized.getContext('2d')
+    if (!resizedContext) throw new Error('Could not prepare the map image.')
+    resizedContext.imageSmoothingQuality = 'high'
+    resizedContext.drawImage(exportCanvas, 0, 0, resized.width, resized.height)
+    return await canvasToPng(resized)
   } finally {
     if (changedPixelRatio) {
       map.setPixelRatio(normalPixelRatio)
@@ -307,17 +308,18 @@ export const installAtlasSharing = (
   const shareButton = document.createElement('button')
   shareButton.className = 'atlas-share-button atlas-share-button--trigger'
   shareButton.type = 'button'
-  shareButton.innerHTML = `
-    <span class="atlas-share-button__ornament" aria-hidden="true">✦</span>
-    <span class="atlas-share-button__label">Share your map</span>
-    <span class="atlas-share-button__arrow" aria-hidden="true">↗</span>
-  `
+  shareButton.innerHTML = shareIcon
+  shareButton.title = 'Share your map'
   shareButton.setAttribute('aria-label', 'Share your map')
   shareButton.hidden = true
 
-  const frame = document.createElement('div')
-  frame.className = 'atlas-share-frame'
-  frame.hidden = true
+  const frameMount = document.createElement('div')
+  frameMount.className = 'atlas-share-frame'
+  const frame = document.createElement('img')
+  frame.src = cameraFrameUrl
+  frame.alt = ''
+  frameMount.append(frame)
+  frameMount.hidden = true
   frame.setAttribute('aria-hidden', 'true')
 
   const composePanel = document.createElement('div')
@@ -331,19 +333,7 @@ export const installAtlasSharing = (
   snapButton.type = 'button'
   snapButton.setAttribute('aria-label', 'Snap this map')
   snapButton.title = 'Snap this map'
-  snapButton.innerHTML = `
-    <svg class="atlas-camera-obscura" viewBox="0 0 96 96" aria-hidden="true" focusable="false">
-      <circle class="atlas-camera-obscura__rim" cx="48" cy="48" r="43" />
-      <circle class="atlas-camera-obscura__beading" cx="48" cy="48" r="37" />
-      <path class="atlas-camera-obscura__filigree" d="M48 14c4 7 10 9 17 7-2 7 0 13 7 17-7 4-9 10-7 17-7-2-13 0-17 7-4-7-10-9-17-7 2-7 0-13-7-17 7-4 9-10 7-17 7 2 13 0 17-7Z" />
-      <path class="atlas-camera-obscura__body" d="M27 39h11l5-7h10l5 7h11v22H27Z" />
-      <path class="atlas-camera-obscura__top" d="M39 32v-5h18v5" />
-      <circle class="atlas-camera-obscura__lens-ring" cx="48" cy="50" r="13" />
-      <circle class="atlas-camera-obscura__lens" cx="48" cy="50" r="8" />
-      <path class="atlas-camera-obscura__shine" d="M44 46c2-3 6-4 9-2" />
-      <path class="atlas-camera-obscura__rays" d="m48 17 2 5m18 4-4 4m15 18-5 2m-6 20-4-4M48 83l-2-5M28 70l4-4m-15-18 5-2m6-20 4 4" />
-    </svg>
-  `
+  snapButton.innerHTML = cameraIcon
   const composeError = document.createElement('p')
   composeError.className = 'atlas-share-error'
   composeError.hidden = true
@@ -353,16 +343,14 @@ export const installAtlasSharing = (
   composeCloseButton.setAttribute('aria-label', 'Exit map capture mode')
   composeCloseButton.title = 'Exit map capture mode'
   composeCloseButton.innerHTML = '<span aria-hidden="true">×</span>'
-  composePanel.append(composeHint, snapButton, composeError, composeCloseButton)
+  frameMount.append(snapButton)
+  composePanel.append(composeHint, composeError, composeCloseButton)
 
-  const result = document.createElement('div')
+  const result = document.createElement('dialog')
   result.className = 'atlas-share-result'
-  result.hidden = true
-  result.setAttribute('role', 'dialog')
-  result.setAttribute('aria-modal', 'true')
   result.setAttribute('aria-label', 'Map image ready to scan')
   const resultTitle = document.createElement('h2')
-  resultTitle.textContent = 'Your map was pressed'
+  resultTitle.textContent = 'Your map is ready'
   const resultCopy = document.createElement('p')
   resultCopy.innerHTML =
     'Scan to get the image on your phone,<br>then share it anywhere.'
@@ -372,18 +360,16 @@ export const installAtlasSharing = (
   const retakeButton = document.createElement('button')
   retakeButton.className = 'atlas-share-retake'
   retakeButton.type = 'button'
-  retakeButton.textContent = 'Retake'
-  const closeButton = document.createElement('button')
-  closeButton.className = 'atlas-share-close'
-  closeButton.type = 'button'
-  closeButton.textContent = 'Back to map'
-  result.append(resultTitle, resultCopy, qrImage, retakeButton, closeButton)
+  retakeButton.title = 'Retake'
+  retakeButton.setAttribute('aria-label', 'Retake')
+  retakeButton.innerHTML = retakeIcon
+  result.append(resultTitle, resultCopy, qrImage, retakeButton)
 
   const flash = document.createElement('div')
   flash.className = 'atlas-share-flash'
   flash.setAttribute('aria-hidden', 'true')
 
-  ui.append(shareButton, frame, composePanel, result, flash)
+  ui.append(shareButton, frameMount, composePanel, result, flash)
   container.append(ui)
 
   let revealCount = 0
@@ -409,8 +395,8 @@ export const installAtlasSharing = (
     const frameHeight = Math.min(availableHeight, availableWidth / instagramRatio)
     const frameTop = Math.max(0, (height - frameHeight) / 2)
     const frameWidth = Math.max(0, frameHeight * instagramRatio)
-    frame.style.width = `${frameWidth}px`
-    frame.style.height = `${Math.max(0, frameHeight)}px`
+    frameMount.style.width = `${frameWidth}px`
+    frameMount.style.height = `${Math.max(0, frameHeight)}px`
     composePanel.style.setProperty('--atlas-share-frame-top', `${frameTop}px`)
     composePanel.style.setProperty('--atlas-share-frame-height', `${frameHeight}px`)
     composePanel.style.setProperty(
@@ -421,19 +407,20 @@ export const installAtlasSharing = (
 
   const showCompose = () => {
     mode = 'compose'
-    result.hidden = true
-    frame.hidden = false
+    result.close()
+    frameMount.hidden = false
     composePanel.hidden = false
     hideShareButton()
     composeError.hidden = true
     syncFrameSize()
+    snapButton.focus({ preventScroll: true })
   }
 
   const showMap = () => {
     mode = 'map'
-    frame.hidden = true
+    frameMount.hidden = true
     composePanel.hidden = true
-    result.hidden = true
+    result.close()
     if (revealCount >= minimumReveals) showShareButton()
     else hideShareButton()
   }
@@ -467,14 +454,14 @@ export const installAtlasSharing = (
       }
       qrImage.src = await QRCode.toDataURL(body.url, {
         errorCorrectionLevel: 'M',
-        margin: 2,
+        margin: 4,
         width: 720,
-        color: { dark: '#6e3540', light: '#f8edcf' },
+        color: { dark: '#173d35', light: '#fffdf4' },
       })
       mode = 'result'
-      frame.hidden = true
+      frameMount.hidden = true
       composePanel.hidden = true
-      result.hidden = false
+      result.showModal()
     } catch (error) {
       setError(error)
     } finally {
@@ -489,7 +476,16 @@ export const installAtlasSharing = (
   snapButton.addEventListener('click', snap)
   composeCloseButton.addEventListener('click', showMap)
   retakeButton.addEventListener('click', showCompose)
-  closeButton.addEventListener('click', showMap)
+  result.addEventListener('click', event => {
+    if (event.target !== result) return
+    const bounds = result.getBoundingClientRect()
+    if (event.clientX < bounds.left || event.clientX >= bounds.right ||
+      event.clientY < bounds.top || event.clientY >= bounds.bottom) showMap()
+  })
+  result.addEventListener('cancel', event => {
+    event.preventDefault()
+    showMap()
+  })
   map.on('resize', syncFrameSize)
 
   return {
