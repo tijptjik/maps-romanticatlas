@@ -107,7 +107,7 @@ try {
     assert.equal(response.status(), 200, await response.text())
     const lines = await page.evaluate(() => window.titleLines)
     assert.ok(lines.includes('The Rain') && lines.includes('Inheritance'), JSON.stringify(lines))
-    assert.ok(lines.includes('TIJPTJIK') && !lines.includes('by TIJPTJIK'))
+    assert.equal(lines.slice(-8).join(''), 'TIJPTJIK')
     const { url } = await response.json()
     const download = await page.request.get(url)
     assert.equal(download.status(), 200)
