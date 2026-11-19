@@ -36,7 +36,9 @@ export const installBasemapPreload = (map: AtlasMap) => {
   const pump = () => {
     // Give visible tiles priority whenever the camera enters a cold area.
     if (removed || !map.isSourceLoaded(sourceId)) return
-    while (pending.size < 4 && queue.length) {
+    // Fog indexes share this origin. Leave connections available when a drag
+    // suddenly turns a speculative neighbor into a visible tile request.
+    while (pending.size < 2 && queue.length) {
       const url = queue.shift()!
       if (completed.has(url) || pending.has(url)) continue
       pending.add(url)

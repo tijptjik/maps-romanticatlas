@@ -99,3 +99,20 @@ test('a coastal site needs half the tile free after road cleanup', () => {
   expect(coast.usableFraction).toBeLessThan(.5)
   expect(coast.isTargetable).toBe(false)
 })
+
+test('decodes a shared parent road once across adjacent children', () => {
+  let reads = 0
+  const crossing = road(256)
+  const source = { layers: { earth: layer([earth]), roads: layer([{
+    ...crossing,
+    loadGeometry() {
+      reads++
+      return crossing.loadGeometry()
+    },
+  }]) } }
+  for (const x of [0, 1]) {
+    const result = classifyFogEligibility(source, { zoom: 18, x, y: 0 })
+    expect(result.streetFraction).toBe(4 / 128)
+  }
+  expect(reads).toBe(1)
+})

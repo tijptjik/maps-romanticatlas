@@ -146,19 +146,47 @@ const squaredDistanceToSegment = (point, start, end) => {
   return x * x + y * y
 }
 
+// All 64 children share the same vector layer. Decode each line once and
+// keep its full geometry so junctions and continuations retain their meaning.
+const prepareRoadLines = layer => {
+  const lines = []
+  for (let index = 0; index < layer.length; index++) {
+    const feature = layer.feature(index)
+    if (feature.type !== 2) continue
+    for (const line of feature.loadGeometry()) {
+      let left = Infinity, right = -Infinity, top = Infinity, bottom = -Infinity
+      const coordinates = line.map(({ x, y }) => {
+        left = Math.min(left, x)
+        right = Math.max(right, x)
+        top = Math.min(top, y)
+        bottom = Math.max(bottom, y)
+        return [x / layer.extent, 1 - y / layer.extent]
+      })
+      lines.push({ left, right, top, bottom, properties: feature.properties,
+        geometry: { type: 'LineString', coordinates } })
+    }
+  }
+  return lines
+}
+
+const roadsByLayer = new WeakMap<object, ReturnType<typeof prepareRoadLines>>()
+
 const vectorTileStreetSpace = (sourceTile, tile) => {
   const roadsLayer = sourceTile.layers.roads
   if (!roadsLayer) return { streetFraction: 0, usableFraction: 1 }
 
   const { sourceTileSize, originX, originY } = sourceTileWindow(tile, roadsLayer)
   const halfStroke = (18 / 2) * (sourceTileSize / atlasTileSize)
-  const features = Array.from({ length: roadsLayer.length }, (_, index) => roadsLayer.feature(index))
-    .filter(feature => feature.type === 2)
-    .map(feature => ({
-      properties: feature.properties,
-      geometry: { type: 'MultiLineString', coordinates: feature.loadGeometry().map(line =>
-        line.map(point => [point.x / roadsLayer.extent, 1 - point.y / roadsLayer.extent])) },
-    }))
+  let lines = roadsByLayer.get(roadsLayer)
+  if (!lines) {
+    lines = prepareRoadLines(roadsLayer)
+    roadsByLayer.set(roadsLayer, lines)
+  }
+  // The planner only follows junctions inside this child. Include the
+  // stroke margin for roads outside it that can still cover a sample.
+  const features = lines.filter(line => line.right >= originX - halfStroke &&
+    line.left <= originX + sourceTileSize + halfStroke && line.bottom >= originY - halfStroke &&
+    line.top <= originY + sourceTileSize + halfStroke)
   const plan = planAtlasRoads(features, {
     west: originX / roadsLayer.extent, east: (originX + sourceTileSize) / roadsLayer.extent,
     north: 1 - originY / roadsLayer.extent, south: 1 - (originY + sourceTileSize) / roadsLayer.extent,

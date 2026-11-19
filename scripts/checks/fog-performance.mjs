@@ -9,16 +9,29 @@ const browser = await chromium.launch({
   headless: false,
   args: ['--ozone-platform=x11', `--class=${process.env.DEV_RUNNER_CHROME_CLASS}`],
 })
+const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } })
+const errors = []
+const failures = []
+const devServerErrors = []
 try {
-  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } })
-  const errors = []
+  page.on('requestfailed', request => failures.push([request.url(), request.failure()?.errorText]))
+  page.on('response', response => {
+    if (response.status() >= 400) failures.push([response.url(), response.status()])
+  })
   const requests = []
   const pendingFog = new Set()
   page.context().on('request', request => {
     if (request.url().includes('/api/fog-index/')) pendingFog.add(request)
   })
   page.context().on('requestfailed', request => pendingFog.delete(request))
-  page.on('pageerror', error => errors.push(error.message))
+  page.on('pageerror', error => {
+    // Li forwards the app port. Vite's separate hot-reload socket is local.
+    if (error.message === 'WebSocket closed without opened.' && error.stack?.includes('/@vite/client:')) {
+      devServerErrors.push(error.stack)
+    } else {
+      errors.push(error.stack ?? error.message)
+    }
+  })
   page.context().on('requestfinished', request => {
     pendingFog.delete(request)
     if (/mvt|fog-index/.test(request.url()))
@@ -140,12 +153,16 @@ try {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.waitForTimeout(1200)
   await page.screenshot({ path: `${output}/mobile.png` })
-  const report = { basemapReadyMs, cloudReadyMs, fogSettledMs, pan, requests, errors }
+  const report = { basemapReadyMs, cloudReadyMs, fogSettledMs, pan, requests, errors, devServerErrors }
   await writeFile(`${output}/performance.json`, JSON.stringify(report, null, 2))
   console.log(
     JSON.stringify({ basemapReadyMs, cloudReadyMs, fogSettledMs, pan, errors }),
   )
   assert.deepEqual(errors, [])
+} catch (error) {
+  console.error({ errors, failures })
+  await page.screenshot({ path: output + '/failure.png', timeout: 10000 }).catch(() => {})
+  throw error
 } finally {
   await browser.close()
 }

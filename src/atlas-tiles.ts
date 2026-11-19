@@ -42,9 +42,10 @@ const generatedTileRecoveryInterval = 2500
 // memory one additional parent tile beyond that request area.
 const fogIndexLoadMarginZ15 = 1
 const fogIndexRetainMarginZ15 = 2
-// Load the opening viewport's small index ring together. Production warms
-// these indexes after every release, so this remains a cache-read burst.
-const concurrentFogIndexRequestLimit = 12
+// Leave headroom for visible vector tiles on cold loads, and keep slots
+// available for newly visible fog parents when the camera changes direction.
+const concurrentFogIndexRequestLimit = 4
+const speculativeFogIndexRequestLimit = 2
 // Draw fog one z18 child outside the screen so its soft edge never clips.
 const fogRenderMarginZ18 = 1
 // Decode cached images only near the screen; these margins grow as a zoomed-out
@@ -918,8 +919,6 @@ export const createFogCanvas = (
   cloudBounds = tileBounds,
   cloudShapeSeed = fogShapeSeed,
 ) => {
-  const mapSourceIsReady = () =>
-    map.isStyleLoaded() && map.isSourceLoaded('hongkong-latest')
   const canvas = document.createElement('canvas')
   canvas.className = 'atlas-fog'
   canvas.setAttribute('aria-hidden', 'true')
@@ -1038,7 +1037,6 @@ export const createFogCanvas = (
   const maskFrameInterval = 1000 / 30
   const zoomMaskFrameInterval = 1000 / 20
   const cachedMistFrameInterval = 1000 / 15
-  let maskRetryTimer: number | undefined
   const loadingSequences = new Map()
   let fogError: { id: string; text: string; startedAt: number } | undefined
   const generatingStartedAt = new Map()
@@ -1938,18 +1936,8 @@ export const createFogCanvas = (
     }
     lastMaskFrame = frameTime
     if (!clientWidth || !clientHeight) return
-    if (!mapSourceIsReady() && !isMapMoving()) {
-      // The first render can happen before the vector source has finished its
-      // initial request. Keep the mask dirty and retry after the source settles
-      // instead of permanently accepting an empty mask.
-      if (maskRetryTimer === undefined) {
-        maskRetryTimer = window.setTimeout(() => {
-          maskRetryTimer = undefined
-          invalidate()
-        }, 250)
-      }
-      return
-    }
+    // Each eligibility response invalidates the mask independently, including
+    // while MapLibre is still fetching other visible vector tiles.
     paintMask(maskContext)
     uploadMask()
     maskAnchorScreen = map.project(fogAnchor)
@@ -1966,8 +1954,6 @@ export const createFogCanvas = (
       if (maskFrame !== undefined) cancelAnimationFrame(maskFrame)
       animationFrame = maskFrame = undefined
       previousFrameTime = undefined
-      if (maskRetryTimer !== undefined) window.clearTimeout(maskRetryTimer)
-      maskRetryTimer = undefined
     }
     return active
   }
@@ -2161,7 +2147,6 @@ export const createFogCanvas = (
       map.off('idle', invalidate)
       if (animationFrame) cancelAnimationFrame(animationFrame)
       if (maskFrame) cancelAnimationFrame(maskFrame)
-      if (maskRetryTimer !== undefined) window.clearTimeout(maskRetryTimer)
       fogError = undefined
       generatingStartedAt.clear()
       for (const frame of revealFrames.values()) cancelAnimationFrame(frame)
@@ -2403,8 +2388,9 @@ export const installAtlasTileInteractions = (
       if (!retained.has(fogIndexId(parent))) removeFogIndexTile(parent)
     })
     required.forEach(parent => {
-      if (fogIndexActiveRequests < concurrentFogIndexRequestLimit)
-        void loadFogIndexTile(parent)
+      const limit = visibleIds.has(fogIndexId(parent))
+        ? concurrentFogIndexRequestLimit : speculativeFogIndexRequestLimit
+      if (fogIndexActiveRequests < limit) void loadFogIndexTile(parent)
     })
   }
   const scheduleFogIndexUpdate = () => {
