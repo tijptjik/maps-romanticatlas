@@ -826,12 +826,14 @@ const fogFragmentShader = `
     if (maskOutside) discard;
     vec2 registeredUv = (u_mask_anchor_screen +
       (screenPosition - u_anchor_screen) / u_mask_scale - u_canvas_origin) / u_canvas_size;
-    float mask = mix(texture2D(u_mask, registeredUv).a, texture2D(u_mask, maskUv).a, 0.85);
-    if (mask < 0.01) discard;
+    float registeredMask = texture2D(u_mask, registeredUv).a;
+    float mask = mix(registeredMask, texture2D(u_mask, maskUv).a, 0.35);
+    // Keep the moving bank inside the feather of the geographic clearing.
+    mask = min(mask, 1.25 * registeredMask);
 
     // Keep a generous feather around each body so the ground fog reads as a
     // soft veil rather than a set of opaque, tile-sized clouds.
-    float softMask = smoothstep(0.0, 1.0, mask);
+    float softMask = mask;
     // Soft pearl shadows and a warm white crown. Vary light across the
     // whole cloud bank so the interior reads as one volume over dark water.
     float light = 0.5;
@@ -1218,6 +1220,35 @@ export const createFogCanvas = (
   const easeOutCubic = progress => 1 - (1 - progress) ** 3
   const easeInOutSine = progress => -(Math.cos(Math.PI * clampUnit(progress)) - 1) / 2
 
+  const revealProgressFor = id => {
+    const start = revealStartedAt.get(id)
+    return start === undefined ? 0 : clampUnit((performance.now() - start) / generatedRevealDuration)
+  }
+  const bankOpacity = id => 1 - easeInOutSine(revealProgressFor(id))
+
+  // Carry the bank's density to a shared edge before applying the artwork
+  // feather. Multiplying two already-fading edges would shift the visible
+  // midpoint back into the target, especially for narrow coloured banks.
+  const fillSharedEdges = (context, tile, x, y, size) => {
+    if (!tileState.size) return
+    for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+      const id = tileId({ x: tile.x + dx, y: tile.y + dy })
+      const state = tileState.get(id)
+      if (state !== 'generated' && state !== 'revealing') continue
+      context.save()
+      if (state === 'revealing') context.globalAlpha *= easeInOutSine(revealProgressFor(id))
+      context.translate(x + size * (1 + dx) / 2, y + size * (1 + dy) / 2)
+      context.scale(size * (dx ? 0.48 : 0.74), size * (dy ? 0.48 : 0.74))
+      const gradient = context.createRadialGradient(0, 0, 0, 0, 0, 1)
+      gradient.addColorStop(0, '#fff')
+      gradient.addColorStop(0.45, '#fff')
+      gradient.addColorStop(1, 'rgba(255,255,255,0)')
+      context.fillStyle = gradient
+      context.fillRect(-1, -1, 2, 2)
+      context.restore()
+    }
+  }
+
   const drawFogMask = (context, tile, state, time) => {
     const bounds = cloudBounds(tile)
     const [northWest, southEast] = screenBounds(map, bounds)
@@ -1239,10 +1270,6 @@ export const createFogCanvas = (
         ? 1 - generationProgress * 0.34
         : 1
     const radiusScale = baseRadiusScale * (footprint ? 1 : pokeScale)
-    const revealProgress = revealStartedAt.has(id)
-      ? clampUnit((time - revealStartedAt.get(id)) / generatedRevealDuration)
-      : 0
-
     context.save()
     if (footprint && pokeScale !== 1) {
       const [nw, se] = screenBounds(map, footprint.bounds)
@@ -1251,15 +1278,7 @@ export const createFogCanvas = (
       context.scale(pokeScale, pokeScale)
       context.translate(-cx, -cy)
     }
-    if (state === 'checking') {
-      // Keep the body opaque while it reacts to the click. The expansion
-      // should read as a physical exhale, not as the fog thinning out.
-      context.globalAlpha = 1
-    } else if (state === 'revealing') {
-      context.globalAlpha = 1 - revealProgress
-    } else {
-      context.globalAlpha = 1
-    }
+    context.globalAlpha = bankOpacity(id)
     const padding = 0.5
     const sprite = silhouette(seed, 1.1 * groundFogRadiusMultiplier, padding)
     const extent = size * radiusScale * (1 + 2 * padding)
@@ -1267,44 +1286,45 @@ export const createFogCanvas = (
     const offsetX = (seeded(seed + 43) - 0.5) * size * 0.28
     const offsetY = (seeded(seed + 47) - 0.5) * size * 0.28
     context.drawImage(sprite, x + (size - extent) / 2 + offsetX, y + (size - extent) / 2 + offsetY, extent, extent)
+    fillSharedEdges(context, tile, x, y, size)
     context.restore()
   }
 
-  const clearGeneratedTileMask = (context, tile, state, time) => {
-    const footprint = revealFootprints.get(tileId(tile))
-    const id = footprint?.key ?? tileId(tile)
-    const revealProgress = revealStartedAt.has(id)
-      ? clampUnit((time - revealStartedAt.get(id)) / generatedRevealDuration)
-      : state === 'generated'
-        ? 1
-        : 0
-    if (revealProgress <= 0) return
+  const appendClearing = (path, bounds) => {
+    const [nw, se] = screenBounds(map, bounds)
+    path.rect(nw.x, nw.y, se.x - nw.x, se.y - nw.y)
+  }
 
-    const [nw, se] = screenBounds(map, footprint?.bounds ?? tileBounds(tile))
-    const width = se.x - nw.x, height = se.y - nw.y
-    const progress = easeOutCubic(revealProgress)
-    const left = nw.x + width * (1 - progress) / 2
-    const top = nw.y + height * (1 - progress) / 2
-
-    context.save()
+  const featherClearing = (context, path) => {
+    // Blur the actual footprint: half the taper falls on each side of its edge.
+    const cellSize = 512 * 2 ** (map.getZoom() - atlasZoom)
     context.globalCompositeOperation = 'destination-out'
-    context.globalAlpha = 1
-    context.filter = `blur(${Math.max(4, Math.min(width, height) * 0.045)}px)`
-    context.fillStyle = '#ffffff'
-    if (!footprint || footprint.rectangular) {
-      context.fillRect(left, top, width * progress, height * progress)
-    } else {
-      // Overlapping drawings can leave a partial footprint. Feather its union once.
-      context.beginPath()
-      for (const cell of footprint.cells) {
-        const [start, end] = screenBounds(map, cell)
-        const x = Math.max(start.x, left), y = Math.max(start.y, top)
-        const w = Math.min(end.x, left + width * progress) - x
-        const h = Math.min(end.y, top + height * progress) - y
-        if (w > 0 && h > 0) context.rect(x, y, w, h)
-      }
-      context.fill()
+    context.filter = `blur(${cellSize * 0.15 * context.getTransform().a}px)`
+    context.fill(path)
+  }
+
+  const clearRevealingTile = (context, tile) => {
+    const footprint = revealFootprints.get(tileId(tile))
+    const progress = revealProgressFor(footprint?.key ?? tileId(tile))
+    if (progress <= 0) return
+
+    const bounds = footprint?.bounds ?? tileBounds(tile)
+    const path = new Path2D()
+    if (!footprint || footprint.rectangular) appendClearing(path, bounds)
+    else for (const cell of footprint.cells) appendClearing(path, cell)
+
+    // Thin the whole bank in place, with local variation in the fade rate.
+    const [nw, se] = screenBounds(map, bounds)
+    const seed = cloudShapeSeed(footprint ? tileFromId(footprint.key) : tile)
+    const gradient = context.createLinearGradient(nw.x, nw.y, se.x, se.y)
+    for (let i = 0; i <= 5; i++) {
+      const variation = (seeded(seed + i * 17) - 0.5) * 0.38
+      const alpha = easeInOutSine(progress + variation * Math.sin(Math.PI * progress))
+      gradient.addColorStop(i / 5, `rgba(255,255,255,${alpha})`)
     }
+    context.save()
+    context.fillStyle = gradient
+    featherClearing(context, path)
     context.restore()
   }
 
@@ -1443,6 +1463,10 @@ export const createFogCanvas = (
     cachedColourTileContext.scale(stretchX, stretchY)
     cachedColourTileContext.drawImage(sprite, -logicalWidth / 2, -logicalHeight / 2, logicalWidth, logicalHeight)
     cachedColourTileContext.restore()
+    cachedColourTileContext.save()
+    cachedColourTileContext.scale(colourScale, colourScale)
+    fillSharedEdges(cachedColourTileContext, tile, colourSpill, colourSpill, size)
+    cachedColourTileContext.restore()
     // Tint the finished mask across the entire buffer. Clipping an already
     // filled rectangle with a rotated image leaves untouched strips outside
     // that image's bounds, producing coloured square frames.
@@ -1460,6 +1484,32 @@ export const createFogCanvas = (
       logicalHeight,
     )
     return true
+  }
+
+  const clearRenderedArtwork = (context, tiles) => {
+    const finished = new Path2D()
+    let hasFinished = false
+    const painted = new Set<string>()
+    for (const tile of tiles) {
+      const id = tileId(tile)
+      const state = tileState.get(id)
+      if (state === 'generated') {
+        appendClearing(finished, tileBounds(tile))
+        hasFinished = true
+      } else if (state === 'revealing') {
+        const key = revealFootprints.get(id)?.key ?? id
+        if (painted.has(key)) continue
+        painted.add(key)
+        clearRevealingTile(context, tile)
+      }
+    }
+    if (hasFinished) {
+      // Blur the union once so adjoining paintings have no internal fog seams.
+      context.save()
+      context.fillStyle = '#fff'
+      featherClearing(context, finished)
+      context.restore()
+    }
   }
 
   const renderCachedColourFields = (frameTime, visualTime) => {
@@ -1485,10 +1535,17 @@ export const createFogCanvas = (
     cachedTileIds.forEach(id => {
       if (fakeRenderTile(tileFromId(id))) return
       const tile = tileFromId(id)
-      if (tileState.has(id) || !isSelected(tile) || !isFogTileRenderable(tile)) return
+      const state = tileState.get(id)
+      if ((state && state !== 'checking' && state !== 'revealing') || !isSelected(tile) || !isFogTileRenderable(tile)) return
+      mistContext.globalAlpha = bankOpacity(id)
       hasVisibleColourCloud =
         drawCachedColourField(tile, visualTime) || hasVisibleColourCloud
     })
+    mistContext.globalAlpha = 1
+    if (hasVisibleColourCloud && tileState.size) {
+      const tilePixels = 512 * 2 ** (map.getZoom() - atlasZoom)
+      clearRenderedArtwork(mistContext, maskTiles(map, Math.ceil(fogBleed / tilePixels) + 1))
+    }
     if (hasVisibleColourCloud && !colourCloudsVisible) {
       colourCloudsVisible = true
       // Let the transparent canvas paint once before transitioning it in.
@@ -1852,7 +1909,7 @@ export const createFogCanvas = (
     const tilePixels = 512 * 2 ** (map.getZoom() - atlasZoom)
     const tiles = maskTiles(map, Math.max(fogRenderMarginZ18, Math.ceil(fogBleed / tilePixels) + 1))
     const covered = tile => isFogTileRenderable(tile) && isSelected(tile) &&
-      !['generated', 'revealing'].includes(tileState.get(tileId(tile)))
+      tileState.get(tileId(tile)) !== 'generated'
     // Join selected neighbours with broad, bent banks. These cached sprites
     // are painted only when the mask changes, not on every animation frame.
     // Diagonal links break up the repeated rows without seeding excluded cells.
@@ -1871,6 +1928,7 @@ export const createFogCanvas = (
         const bend = (seeded(variant + 59) - 0.5) * size * 0.4
         const sprite = silhouette(variant, 1.1, 0.5)
         context.save()
+        context.globalAlpha = Math.min(bankOpacity(tileId(tile)), bankOpacity(tileId(neighbour)))
         context.translate((start.x + end.x) / 2, (start.y + end.y) / 2)
         context.rotate(Math.atan2(end.y - start.y, end.x - start.x))
         const length = Math.hypot(end.x - start.x, end.y - start.y) + size * 0.9
@@ -1886,15 +1944,13 @@ export const createFogCanvas = (
       const south = { x: tile.x, y: tile.y + 1 }
       const diagonal = { x: tile.x + 1, y: tile.y + 1 }
       if (![tile, east, south, diagonal].every(covered)) continue
-      const centres = [tile, east, diagonal, south].map(cell => {
-        const b = tileBounds(cell)
-        return map.project([(b.west + b.east) / 2, (b.north + b.south) / 2])
-      })
-      context.beginPath()
-      centres.forEach((point, index) => index ? context.lineTo(point.x, point.y) : context.moveTo(point.x, point.y))
-      context.closePath()
-      context.fillStyle = '#fff'
-      context.fill()
+      const bounds = tileBounds(tile)
+      const corner = map.project([bounds.east, bounds.south])
+      const extent = 1.8 * tilePixels
+      const sprite = silhouette(cloudShapeSeed(tile), 1.1, 0.5)
+      context.globalAlpha = Math.min(...[tile, east, south, diagonal].map(cell => bankOpacity(tileId(cell))))
+      context.drawImage(sprite, corner.x - extent / 2, corner.y - extent / 2, extent, extent)
+      context.globalAlpha = 1
     }
     tiles.forEach(tile => {
       const id = tileId(tile)
@@ -1909,18 +1965,7 @@ export const createFogCanvas = (
         drawFogMask(context, tile, state, animationTime)
       }
     })
-    if (tileState.size) {
-      const painted = new Set<string>()
-      for (const tile of tiles) {
-        const state = tileState.get(tileId(tile))
-        if (state === 'revealing' || state === 'generated') {
-          const group = revealFootprints.get(tileId(tile))
-          if (group && painted.has(group.key)) continue
-          if (group) painted.add(group.key)
-          clearGeneratedTileMask(context, tile, state, animationTime)
-        }
-      }
-    }
+    if (tileState.size) clearRenderedArtwork(context, tiles)
     // Eligibility controls cloud origins, not clipping. Let neighbouring banks
     // spill naturally into excluded cells just as they do into unselected cells.
   }
@@ -2107,7 +2152,7 @@ export const createFogCanvas = (
       for (const id of ids) {
         singleReadings.delete(id)
         tileState.set(id, 'revealing')
-        revealStartedAt.set(id, animationTime)
+        revealStartedAt.set(id, startedAt)
       }
       const frame = (time: number) => {
         revealFrames.delete(key)
@@ -2133,7 +2178,7 @@ export const createFogCanvas = (
       frame(startedAt)
     },
     beginReveal: id => {
-      revealStartedAt.set(id, animationTime)
+      revealStartedAt.set(id, performance.now())
     },
     finishReveal: id => {
       revealStartedAt.delete(id)

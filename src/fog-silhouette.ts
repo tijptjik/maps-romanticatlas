@@ -21,7 +21,7 @@ export function createFogSilhouette(
         0.75 +
         0.09 * Math.sin(angle * 3 + variant) +
         0.045 * Math.sin(angle * 5 - variant * 0.7)
-      const fade = Math.max(0, Math.min(1, (distance - 0.34) / (edge - 0.34)))
+      const fade = Math.max(0, Math.min(1, (distance - 0.16) / (edge - 0.16)))
       const offset = (y * sprite.width + x) * 4
       pixels.data[offset] = pixels.data[offset + 1] = pixels.data[offset + 2] = 255
       pixels.data[offset + 3] = Math.round(255 * (1 - fade * fade * (3 - 2 * fade)))
