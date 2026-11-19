@@ -27,8 +27,10 @@ export const noNoiseEnabled = () => modeEnabled('noNoise')
 
 export const runtimeModeUrl = (path: string) => {
   const url = new URL(path, window.location.origin)
-  if (adminModeEnabled()) url.searchParams.set('admin', 'true')
-  if (diagnosticsModeEnabled()) url.searchParams.set('diagnostics', 'true')
+  if (adminModeEnabled() || url.searchParams.get('admin') === '')
+    url.searchParams.set('admin', 'true')
+  if (diagnosticsModeEnabled() || url.searchParams.get('diagnostics') === '')
+    url.searchParams.set('diagnostics', 'true')
   if (cloudDiagnosticsModeEnabled()) url.searchParams.set('cloudDiagnostics', 'true')
   return `${url.pathname}${url.search}${url.hash}`
 }

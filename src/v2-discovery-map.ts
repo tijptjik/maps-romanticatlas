@@ -156,17 +156,24 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean, n
     saving.add(unit.art.url)
     renderDiagnostics()
     try {
-      // The existing authenticated manifest issues the signed CSRF cookie.
-      if (!csrfToken()) {
-        const session = await fetchAdmin('/api/atlas-tiles/cached?admin=true')
-        if (!session.ok) throw Error('Admin access required (' + session.status + ')')
-      }
-      const response = await fetchAdmin(reviewEndpoint + '?admin=true', {
+      const write = (token: string) => fetchAdmin(reviewEndpoint + '?admin=true', {
         method: 'PUT',
-        headers: { 'content-type': 'application/json', 'x-atlas-csrf-token': csrfToken() ?? '' },
+        headers: { 'content-type': 'application/json', 'x-atlas-csrf-token': token },
         body: JSON.stringify({ ...unit.art, status: decision }),
       })
-      if (!response.ok) throw Error('Review returned ' + response.status)
+      const existingToken = csrfToken()
+      let response = existingToken ? await write(existingToken) : null
+      if (!response || response.status === 403) {
+        const session = await fetchAdmin('/api/atlas-tiles/cached?admin=true')
+        if (!session.ok) throw Error('Admin access required (' + session.status + ')')
+        const token = csrfToken()
+        if (!token) throw Error('The browser did not receive the review session cookie.')
+        response = await write(token)
+      }
+      if (!response.ok) {
+        const details = await response.json().catch(() => null)
+        throw Error(details?.error || 'Review returned ' + response.status)
+      }
       const saved: ArtworkReview = await response.json()
       status.set(saved.url, saved.status)
       if (!disposed && sequence === selectionAtClick) {
