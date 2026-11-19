@@ -45,7 +45,7 @@ if (kioskMode || noSplashEnabled() || restoringMap) {
 
 const adminMap = adminModeEnabled()
 const minimumZoom = diagnosticsModeEnabled() ? minimumFogZoom : 16
-const nativeMaxZoom = nativeTileZoom(atlasTileSize, window.devicePixelRatio)
+const nativeMaxZoom = nativeTileZoom(atlasTileSize)
 const initialMaxZoom = adminMap ? nativeMaxZoom : Math.max(minimumZoom, nativeMaxZoom)
 
 const map = new maplibregl.Map({

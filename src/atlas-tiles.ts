@@ -912,8 +912,8 @@ export const focusAtlasTile = (map, tile, onApproach?: () => void, frame?: Artwo
   const scale = Math.min(
     canvas.clientWidth / width,
     canvas.clientHeight / height,
-    (frame?.width ?? image?.width ?? atlasTileSize) * canvas.clientWidth / (width * canvas.width),
-    (frame?.height ?? image?.height ?? atlasTileSize) * canvas.clientHeight / (height * canvas.height),
+    (frame?.width ?? image?.width ?? atlasTileSize) / width,
+    (frame?.height ?? image?.height ?? atlasTileSize) / height,
   )
   const zoom = map.getZoom() + Math.log2(scale)
   // The previous artwork may have set a smaller native-resolution ceiling.

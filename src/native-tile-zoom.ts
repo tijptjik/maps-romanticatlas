@@ -2,9 +2,9 @@ import { originalArtwork } from './artwork-sampling.ts'
 import type { ImageSource, Map as AtlasMap } from 'maplibre-gl'
 import { atlasTileSize, atlasZoom } from './atlas-protocol.ts'
 
-// At the grid zoom, a MapLibre tile spans 512 CSS pixels.
-export const nativeTileZoom = (imageWidth: number, pixelRatio: number) =>
-  atlasZoom + Math.log2(imageWidth / (512 * pixelRatio))
+// At the grid zoom a tile spans 512 CSS pixels. At the ceiling each artwork pixel spans one CSS pixel.
+export const nativeTileZoom = (imageWidth: number) =>
+  atlasZoom + Math.log2(imageWidth / 512)
 
 export const installNativeTileZoom = (map: AtlasMap, minimumZoom: number) => {
   let frame = 0
@@ -16,7 +16,7 @@ export const installNativeTileZoom = (map: AtlasMap, minimumZoom: number) => {
     if (!width || !height) return
 
     let nearest = Infinity
-    let imageWidth = atlasTileSize
+    let artworkZoom = nativeTileZoom(atlasTileSize)
     for (const id of map.getLayersOrder()) {
       const layer = map.getLayer(id)
       if (layer.type !== 'raster' || layer.visibility === 'none') continue
@@ -25,17 +25,19 @@ export const installNativeTileZoom = (map: AtlasMap, minimumZoom: number) => {
       const nw = map.project(source.coordinates[0])
       const se = map.project(source.coordinates[2])
       if (se.x <= 0 || se.y <= 0 || nw.x >= width || nw.y >= height) continue
+      if (se.x <= nw.x || se.y <= nw.y) continue
       const distance = (nw.x + se.x - width) ** 2 + (nw.y + se.y - height) ** 2
       // Later layers are drawn on top when experiments share a grid cell.
       if (distance <= nearest) {
         nearest = distance
-        imageWidth = originalArtwork(source.image).width
+        const image = originalArtwork(source.image)
+        const scale = Math.min(image.width / (se.x - nw.x), image.height / (se.y - nw.y))
+        artworkZoom = map.getZoom() + Math.log2(scale)
       }
     }
 
-    const density = canvas.width / width
-    const limit = Math.max(minimumZoom, nativeTileZoom(imageWidth, density))
-    if (limit !== map.getMaxZoom()) map.setMaxZoom(limit)
+    const limit = Math.max(minimumZoom, artworkZoom)
+    if (Math.abs(limit - map.getMaxZoom()) > 1e-6) map.setMaxZoom(limit)
   }
   const schedule = () => { frame ||= requestAnimationFrame(sync) }
   map.getContainer().addEventListener('load', schedule, true)
