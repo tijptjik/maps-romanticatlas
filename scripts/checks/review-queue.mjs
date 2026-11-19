@@ -27,7 +27,7 @@ try {
   const blue = await sharp({ create: { width: 128, height: 128, channels: 3, background: '#2244dd' } }).png().toBuffer()
   await page.route('**/fixture/*', route => {
     requested.add(new URL(route.request().url()).pathname)
-    return route.fulfill({ contentType: 'image/png', body: route.request().url().endsWith(first.url) ? png : blue })
+    return route.fulfill({ contentType: 'image/png', body: [first.url, '/fixture/North-revision.png'].some(url => route.request().url().endsWith(url)) ? png : blue })
   })
   await page.route('**/atlas-v2/catalog.json', route => route.fulfill({ json: { release: 'v2', sheets: [
     { art: [north, east, northeast, first, rejected, first] }, { accepted: true, art: [accepted] },
@@ -152,7 +152,24 @@ try {
   await complete.getByText('0 / 1 · 1 rendering').waitFor()
   const candidate = { ...north, url: '/fixture/North-revision.png' }
   Object.assign(revisionJobs[0], { state: 'ready', candidate })
-  await ready('North')
+  const diff = panel.getByRole('button', { name: '[D]iff' })
+  async function checkVersion(version, rgb) {
+    await ready('North · ' + version)
+    await page.evaluate(() => new Promise(resolve => {
+      window.atlasMap.once('idle', resolve)
+      window.atlasMap.triggerRepaint()
+    }))
+    const shot = await page.screenshot({ path: path.join(process.env.DEV_RUNNER_ARTIFACTS, 'diff-' + version + '.png') })
+    const sample = await sharp(shot).extract({ left: 148, top: 420, width: 1, height: 1 }).removeAlpha().raw().toBuffer()
+    // Compare the rendered pixel after the map’s paper treatment.
+    assert.ok(rgb.every((value, i) => Math.abs(sample[i] - value) <= 6),
+      version + ' rendered RGB ' + [...sample] + ', expected near ' + rgb)
+  }
+  await checkVersion('Replacement', [226, 42, 85])
+  await page.keyboard.press('d')
+  await checkVersion('Previous', [43, 73, 199])
+  await diff.click()
+  await checkVersion('Replacement', [226, 42, 85])
   await page.keyboard.press('a')
   await panel.getByText('0 / 1 · 1 rendering').waitFor()
   assert.equal(revisionJobs[1].mode, 'adjust')
@@ -166,9 +183,12 @@ try {
   await complete.getByText('0 / 1 · 1 rendering').waitFor()
   assert.equal(revisionJobs[2].source.url, candidate.url)
   Object.assign(revisionJobs[2], { state: 'ready', candidate: { ...north, url: '/fixture/final.png' } })
-  await ready('North')
+  await ready('North · Replacement')
+  await diff.click()
+  await checkVersion('Previous', [226, 42, 85])
   await page.keyboard.press('-')
   await complete.getByText('1 / 1', { exact: true }).waitFor()
+  assert.equal(records.get('/fixture/final.png').status, 'rejected')
 } finally {
   await browser.close()
 }

@@ -8,9 +8,10 @@ type Unit = { art: Painting; footprint: ReturnType<typeof drawingFootprint>; lay
 
 export function installReviewQueue(map: AtlasMap, units: Unit[],
   write: (review: ArtworkReview, method: 'PUT' | 'DELETE') => Promise<ArtworkReview>,
-  select: (unit?: Unit) => void,
+  select: (unit?: Unit, previous?: Painting) => void,
   revise: (art: Painting, mode: RevisionMode) => Promise<void>,
-  remainingUnits: () => Unit[], renderingCount: () => number, failedRevision: () => Revision | undefined) {
+  remainingUnits: () => Unit[], renderingCount: () => number, failedRevision: () => Revision | undefined,
+  previousVersion: (art: Painting) => Painting | undefined) {
   function ordered(items: Unit[]) {
     const rows = [...new Set(items.map(unit => unit.art.y))].sort((a, b) => b - a)
     const direction = new Map(rows.map((y, index) => [y, index % 2 ? -1 : 1]))
@@ -32,6 +33,14 @@ export function installReviewQueue(map: AtlasMap, units: Unit[],
   tools.innerHTML = '<button type="button" aria-keyshortcuts="A" title="Adjust roads and edges [A]">[A]djust</button><button type="button" aria-keyshortcuts="S" title="Spread this concept across the tile [S]">[S]pread</button>'
   card.append(tools)
   const [adjust, spread] = tools.querySelectorAll('button')
+  const diff = document.createElement('button')
+  diff.type = 'button'
+  diff.textContent = '[D]iff'
+  diff.title = 'Compare with the previous version [D]'
+  diff.setAttribute('aria-keyshortcuts', 'D')
+  tools.append(diff)
+  let previous: Painting | undefined
+  let showingPrevious = false
   const failedActions = document.createElement('div')
   failedActions.className = 'atlas-revision-actions'
   const retryRevision = document.createElement('button')
@@ -58,6 +67,7 @@ export function installReviewQueue(map: AtlasMap, units: Unit[],
     const waiting = Boolean(current && !ready()) || busy
     card.setAttribute('aria-busy', String(waiting))
     adjust.disabled = spread.disabled = waiting
+    diff.disabled = busy
     retryRevision.disabled = busy
   }
   function focus() {
@@ -85,21 +95,37 @@ export function installReviewQueue(map: AtlasMap, units: Unit[],
     output.value = rendering ? count + ' · ' + rendering + ' rendering' : count
     output.setAttribute('aria-label', current ? 'Image ' + output.value : output.value + ' reviewed')
   }
-  function show() {
+  function displayVersion() {
+    select(current, showingPrevious ? previous : undefined)
     retry.hidden = true
+    if (current) {
+      const layer = current.layer
+      const source = map.getSource<ImageSource>(layer)
+      source?.once('error', () => {
+        if (current?.layer === layer && map.getSource(layer) === source) retry.hidden = false
+      })
+    }
+    diff.hidden = !previous
+    diff.setAttribute('aria-pressed', String(showingPrevious))
+    const version = showingPrevious ? 'Previous' : 'Replacement'
+    title.textContent = current ? current.art.title + (previous ? ' · ' + version : '') : ''
+    updateLoading()
+  }
+  function toggleDiff() {
+    if (!previous || busy) return
+    showingPrevious = !showingPrevious
+    displayVersion()
+  }
+  function show() {
     current = units[decisions.length]
     focus()
-    select(current)
-    title.textContent = current?.art.title ?? ''
+    previous = current && previousVersion(current.art)
+    showingPrevious = false
+    displayVersion()
     tools.hidden = title.hidden = !current
     progress()
     card.dataset.complete = String(!current)
     card.hidden = false
-    if (current) {
-      const unit = current
-      const source = map.getSource<ImageSource>(unit.layer)
-      source?.once('error', () => { if (current === unit) retry.hidden = false })
-    }
     position()
     updateLoading()
   }
@@ -142,8 +168,14 @@ export function installReviewQueue(map: AtlasMap, units: Unit[],
     }
   }
   function keydown(event: KeyboardEvent) {
-    if (event.repeat || event.isComposing || event.altKey || (event.shiftKey && !['A', 'S'].includes(event.key)) ||
+    if (event.repeat || event.isComposing || event.altKey || (event.shiftKey && !['A', 'S', 'D'].includes(event.key)) ||
         (event.target instanceof Element && event.target.closest('input, textarea, select, [contenteditable]'))) return
+    if (!event.ctrlKey && !event.metaKey && event.key.toLowerCase() === 'd' && previous) {
+      event.preventDefault()
+      event.stopImmediatePropagation()
+      toggleDiff()
+      return
+    }
     const action = event.ctrlKey || event.metaKey ? (event.key.toLowerCase() === 'z' ? 'undo' : null)
       : event.key.toLowerCase() === 'a' ? 'adjust' : event.key.toLowerCase() === 's' ? 'spread'
       : event.key === '=' ? 'accepted' : event.key === '-' ? 'rejected' : null
@@ -151,15 +183,16 @@ export function installReviewQueue(map: AtlasMap, units: Unit[],
     event.preventDefault()
     void act(action)
   }
+  diff.onclick = toggleDiff
   adjust.onclick = () => void act('adjust')
   spread.onclick = () => void act('spread')
   map.on('sourcedata', updateLoading)
   map.on('move', position)
   map.on('resize', focus)
-  window.addEventListener('keydown', keydown)
+  window.addEventListener('keydown', keydown, true)
   map.once('remove', () => {
     removed = true
-    window.removeEventListener('keydown', keydown)
+    window.removeEventListener('keydown', keydown, true)
   })
   show()
   return reconcile

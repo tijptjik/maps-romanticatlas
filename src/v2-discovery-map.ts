@@ -23,7 +23,8 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
   const queue = diagnostics === 'queue'
   const units = new Map<string, Unit>()
   const byCell = new Map<string, Unit[]>()
-  const visibleLayers = new Set<string>()
+  const visibleLayers = new Map<string, Painting>()
+  let comparison: { unit: Unit; previous: Painting } | undefined
   const labels = new Map<string, Label>()
   const superseded = new Set<string>()
   let disposed = false
@@ -195,8 +196,8 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
 
   const showAnimations = installArtworkAnimations(map)
 
-  function draw(unit: Unit, opacity: number) {
-    const {layer, art, footprint: {bounds: {west, east, north, south}}} = unit
+  function draw(unit: Unit, art: Painting, opacity: number) {
+    const {layer, footprint: {bounds: {west, east, north, south}}} = unit
     const coordinates: [[number, number], [number, number], [number, number], [number, number]] = [[west,north],[east,north],[east,south],[west,south]]
     map.addSource(layer, { type: 'image', url: art.animation?.plate ?? art.imageUrl ?? art.url, coordinates })
     map.addLayer({id: layer, type: 'raster', source: layer, paint: { 'raster-opacity': opacity, 'raster-fade-duration': 0 }}, edges)
@@ -297,20 +298,21 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
       for (const id of cells) top.set(id, unit)
       return true
     })
-    const layers = new Set(displayed.map(unit => unit.layer))
-    for (const layer of visibleLayers) {
-      if (layers.has(layer)) continue
+    const layers = new Map(displayed.map(unit => [unit.layer, comparison?.unit === unit ? comparison.previous : unit.art]))
+    for (const [layer, art] of visibleLayers) {
+      if (layers.get(layer) === art) continue
       map.removeLayer(layer)
       map.removeSource(layer)
       visibleLayers.delete(layer)
     }
     for (const unit of displayed) {
       if (!visibleLayers.has(unit.layer)) {
-        draw(unit, 1)
-        visibleLayers.add(unit.layer)
+        const art = layers.get(unit.layer)!
+        draw(unit, art, 1)
+        visibleLayers.set(unit.layer, art)
       }
     }
-    showAnimations(new Set(displayed.map(unit => unit.art)))
+    showAnimations(new Set(layers.values()))
     if (gridSize !== byCell.size) {
       gridSize = byCell.size
       const coordinates = [...byCell.keys()].filter(id => !queue || byCell.get(id)!.some(unit => status.get(unit.art.url) !== 'rejected')).map(id => {
@@ -408,10 +410,14 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
         else status.set(saved.url, saved.status)
         gridSize = -1
         return saved
-      }, unit => {
+      }, (unit, previous) => {
+        comparison = unit && previous ? { unit, previous } : undefined
         if (unit) select(unit)
         else renderDiagnostics()
-      }, revise, remaining, () => revisions.filter(job => job.state === 'pending').length, failedRevision)
+      }, revise, remaining, () => revisions.filter(job => job.state === 'pending').length, failedRevision, art => {
+        const source = revisions.find(job => job.candidate?.url === art.url)?.source
+        return source && (units.get(source.url)?.art ?? source)
+      })
       let refreshing = false
       const timer = window.setInterval(async () => {
         if (refreshing || !revisions.some(item => item.state === 'pending')) return

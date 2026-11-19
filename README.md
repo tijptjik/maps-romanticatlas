@@ -433,6 +433,8 @@ road intersections, cut-off silhouettes and disconnected approaches. Click
 **[S]pread** or press `S` to keep the concept and reassess its coverage across
 the entire site. Each job receives the selected edition and a newly rendered
 north-up basemap. Pending jobs survive reloads. A completed edition returns to
-review with the same title and tile footprint. A failed job has a retry button that survives a refresh. Local revision requests live in
+review with the same title and tile footprint. Click **[D]iff** or press `D` to switch
+between the replacement and its previous version. Review decisions apply to the
+replacement in either view. A failed job has a retry button that survives a refresh. Local revision requests live in
 `generated-tiles/dream-atlas/review-revisions/jobs/<id>/revision.json`. The local Bun server runs the Codex renderer, and the Worker uses
 the SI generator gateway and worker with `scripts/review-revisions.py`.
