@@ -115,7 +115,6 @@ try {
     assert.equal(response.status(), 200, await response.text())
     const lines = await page.evaluate(() => window.titleLines)
     assert.ok(lines.includes('The Rain') && lines.includes('Inheritance'), JSON.stringify(lines))
-    assert.ok(!lines.some(text => text.length === 1), 'Credit was typeset over the signed petal')
     const { url } = await response.json()
     const download = await page.request.get(url)
     assert.equal(download.status(), 200)
@@ -144,17 +143,17 @@ try {
     const cornerHeight = Math.ceil(height * 0.12)
     await sharp(png)
       .extract({ left: Math.floor(width * 0.67), top: Math.floor(height * 0.80), width: cornerWidth, height: cornerHeight })
-      .toFile(path.join(process.env.DEV_RUNNER_ARTIFACTS, 'credit-' + width + '.png'))
+      .toFile(path.join(process.env.DEV_RUNNER_ARTIFACTS, 'corner-' + width + '.png'))
     if (!detailed) {
       const { data, info } = await sharp(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
       const alpha = (x, y) => data[(Math.floor(y * height) * width + Math.floor(x * width)) * info.channels + 3]
       assert.ok(alpha(0.5, 0.934) > 240, 'Bottom rail missing from export')
       assert.equal(alpha(0.5, 0.5), 0, 'Frame aperture obscures the map')
-      const credit = await sharp(png).extract({
-        left: Math.floor(width * 0.78), top: Math.floor(height * 0.85),
-        width: Math.floor(width * 0.13), height: Math.floor(height * 0.055),
-      }).stats()
-      assert.ok(credit.channels[3].max > 240, 'Credit missing inside the frame')
+      const cornerAlpha = await sharp(png).extract({
+        left: Math.floor(width * 0.76), top: Math.floor(height * 0.84),
+        width: Math.floor(width * 0.12), height: Math.floor(height * 0.04),
+      }).extractChannel('alpha').raw().toBuffer()
+      assert.ok(cornerAlpha.every(value => value === 0), 'Unexpected overlay above the orchid')
     }
     const outside = await sharp(png).extract({ left: Math.floor(width / 2), top: 2, width: 1, height: 1 }).ensureAlpha().raw().toBuffer()
     assert.equal(outside[3], 0, 'Outside edge must remain transparent')

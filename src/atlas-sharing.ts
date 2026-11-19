@@ -1,6 +1,5 @@
 import cameraFrameUrl from './assets/orchid-camera-frame.webp?url'
 import shareFrameUrl from './assets/orchid-share-frame.webp?url'
-import creditPetalUrl from './assets/tijptjik-petal.webp?url'
 import QRCode from 'qrcode'
 import type { Map as MapLibreMap } from 'maplibre-gl'
 
@@ -171,19 +170,6 @@ const drawTitleCard = (
   context.restore()
 }
 
-const drawCredit = async (context: CanvasRenderingContext2D, frameBounds: DOMRect) => {
-  const petal = new Image()
-  petal.src = creditPetalUrl
-  await petal.decode()
-
-  const width = frameBounds.width * 0.20
-  const height = width * petal.naturalHeight / petal.naturalWidth
-  const inset = frameBounds.width * 0.095
-  const left = frameBounds.width - inset - width
-  const top = frameBounds.height * 0.91 - height
-  context.drawImage(petal, left, top, width, height)
-}
-
 const captureMap = async (map: MapLibreMap, frame: HTMLImageElement) => {
   const frameBounds = frame.getBoundingClientRect()
   if (!frameBounds.width || !frameBounds.height) {
@@ -266,7 +252,6 @@ const captureMap = async (map: MapLibreMap, frame: HTMLImageElement) => {
     printFrame.src = shareFrameUrl
     await printFrame.decode()
     context.drawImage(printFrame, 0, 0, frameBounds.width, frameBounds.height)
-    await drawCredit(context, frameBounds)
     const image = await canvasToPng(exportCanvas)
     if (image.size <= maximumShareImageBytes) return image
 
