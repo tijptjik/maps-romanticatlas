@@ -1,0 +1,21 @@
+[Unit]
+Description=Romantic Atlas authenticated generation gateway
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=codex-vpn
+Group=codex-vpn
+WorkingDirectory=/var/lib/codex-vpn/atlas
+ExecStart=/usr/bin/python3 server/si/gateway.py
+Restart=on-failure
+RestartSec=3
+UMask=0077
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/codex-vpn/atlas/generated-tiles
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target
