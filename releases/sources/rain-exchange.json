@@ -1,0 +1,87 @@
+{
+  "title": "The Rain Exchange",
+  "slug": "rain-exchange",
+  "grid": {
+    "zoom": 18,
+    "x": 214197,
+    "y": 114419,
+    "size": 5
+  },
+  "tiles": [
+    {
+      "title": "The Rain Exchange",
+      "scene": "skyscraper",
+      "x": 214200,
+      "y": 114420,
+      "northBackdrop": "central-grid-v18/214200-114419",
+      "brief": "Cisterns and a glass orchard above water-piped residential galleries.",
+      "prompt": "Create a square architectural material sheet following this guide exactly. This is source art for a real mapped model. Top half: a continuous straight-down orthographic roof plan filling the rectangle edge to edge. Bottom half: continuous flat architectural elevation, exactly FOUR equal-height storeys, eight evenly spaced bays across, one row of small human-scale windows per storey, horizontal slab edges precisely at 50%, 62.5%, 75%, 87.5%, 100% image height. Flat front elevation with parallel horizontals. Printed Hong Kong storybook atlas: finely engraved inkwork but broad readable surfaces, weathered local materials and restrained beautiful colour. Draw interesting signs of habitation in the windows but no human figures, words, legends, arrows, shadows on ground, angled perspective, blank margin, surrounding streets, or gutters between panels. The Rain Exchange: a working rain-harvesting city. Bird's-eye roof catchment gutters, slate-blue cisterns and an elongated greenhouse orchard; below, sea-green painted metal window surrounds with slim indigo water pipes on warm brick, open drying balconies and little shutters.",
+      "observed": "Cisterns and a glass orchard above water-piped residential galleries.",
+      "streetFraction": 0.150390625,
+      "footprint": {
+        "name": "General Post Office",
+        "sourceLayer": "buildings",
+        "featureId": "35185419871555",
+        "sourceTile": [
+          15,
+          26775,
+          14302
+        ],
+        "coordinatesInBaseTile": [
+          [
+            0.2578125,
+            0.142578125
+          ],
+          [
+            0.296875,
+            0.078125
+          ],
+          [
+            0.578125,
+            0.25390625
+          ],
+          [
+            0.5390625,
+            0.314453125
+          ],
+          [
+            0.751953125,
+            0.447265625
+          ],
+          [
+            0.63671875,
+            0.630859375
+          ],
+          [
+            0.14453125,
+            0.322265625
+          ]
+        ]
+      },
+      "model": {
+        "materialSheet": "generated-tiles/rain-exchange/214200-114420-materials.png",
+        "roofSplitPixel": 625,
+        "pixelsPerTile": 1254,
+        "storeyMetres": 3.4,
+        "verticalProjection": 0.6,
+        "bayMetres": 3.6,
+        "adultMetres": 1.7,
+        "doorMetres": 2.1,
+        "tiers": [
+          [
+            12,
+            1
+          ],
+          [
+            12,
+            0.94
+          ],
+          [
+            8,
+            0.83
+          ]
+        ]
+      }
+    }
+  ]
+}

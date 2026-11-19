@@ -4,8 +4,8 @@
   "collections": [
     {
       "title": "HKU Main Building",
-      "source": "experiments/dream-atlas/hku-selection.json",
-      "site": "experiments/dream-atlas/hku-site.json",
+      "source": "releases/sources/hku-selection.json",
+      "site": "releases/sources/hku-site.json",
       "clickTiles": [
         [
           18,
@@ -58,7 +58,7 @@
     },
     {
       "title": "Harbour Curiosities",
-      "source": "experiments/harbour-curiosities.json",
+      "source": "releases/sources/harbour-curiosities.json",
       "artworks": [
         {
           "title": "Mermaid Transformation Station",
@@ -160,7 +160,7 @@
     },
     {
       "title": "Hong Kong Island’s Southern Shore",
-      "source": "experiments/south-island-shore.json",
+      "source": "releases/sources/south-island-shore.json",
       "artworks": [
         {
           "title": "Lighthouse and Signal Station · Cape D’Aguilar",

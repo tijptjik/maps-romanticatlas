@@ -1,0 +1,377 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "id": "bookbinders-railway",
+      "properties": {
+        "name": "The Bookbinders’ Railway",
+        "district": "Mid-Levels West",
+        "zoom": 18,
+        "x": 214189,
+        "y": 114420,
+        "tileSpan": {
+          "columns": 2,
+          "rows": 1
+        },
+        "cells": [
+          {
+            "x": 214189,
+            "y": 114420,
+            "landFraction": 1,
+            "usableFraction": 0.3409423828125,
+            "coastal": false
+          },
+          {
+            "x": 214190,
+            "y": 114420,
+            "landFraction": 1,
+            "usableFraction": 0.51922607421875,
+            "coastal": false
+          }
+        ],
+        "reference": "bookbinders-railway.png",
+        "brief": "A timber side-friction coaster folds its train like the signatures of a book. Put the loading shed and chain lift in the western cell. Cross east on a high open trestle, fold into three progressively lower camelbacks around the binding court, then cross west on the low return. Show one oxblood train, linen awnings and the people stitching at their benches. Use the paired north-up plate and aligned ground-contact mask. Elevate the entire ride, including the station. Place the full base of every pier, brace, stair landing and ground-level prop inside white areas. Span black areas freely with track and cantilevers above the roofs and streets; leave the mapped ground intact. Keep the entire projected silhouette, moving vehicles and shadows inside the combined tile outline, including at the highest point. Carry the ride through the internal seam.",
+        "basemapRelease": "eb78aacacfa67fc94a7b7a1915ea2354",
+        "groundContactMask": "bookbinders-railway-ground.png"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              114.14382934570312,
+              22.282742867647574
+            ],
+            [
+              114.14657592773438,
+              22.282742867647574
+            ],
+            [
+              114.14657592773438,
+              22.284013600962457
+            ],
+            [
+              114.14382934570312,
+              22.284013600962457
+            ],
+            [
+              114.14382934570312,
+              22.282742867647574
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "last-reel",
+      "properties": {
+        "name": "Last Reel on Ladder Street",
+        "district": "SoHo fringe, Sheung Wan",
+        "zoom": 18,
+        "x": 214194,
+        "y": 114422,
+        "tileSpan": {
+          "columns": 1,
+          "rows": 2
+        },
+        "cells": [
+          {
+            "x": 214194,
+            "y": 114422,
+            "landFraction": 0.96,
+            "usableFraction": 0.478759765625,
+            "coastal": false
+          },
+          {
+            "x": 214194,
+            "y": 114421,
+            "landFraction": 0.99,
+            "usableFraction": 0.33843994140625,
+            "coastal": false
+          }
+        ],
+        "reference": "last-reel.png",
+        "brief": "A suspended cinema coaster carries pairs of seats beneath a black steel rail. Load beneath the southern projection booth and swing north through a sequence of translucent amber film frames. Bank around a hand-cranked take-up reel in the northern court and cross south beside the outbound rail. Leave the mapped stairs visible below the swinging feet. Use the paired north-up plate and aligned ground-contact mask. Elevate the entire ride, including the station. Place the full base of every pier, brace, stair landing and ground-level prop inside white areas. Span black areas freely with track and cantilevers above the roofs and streets; leave the mapped ground intact. Keep the entire projected silhouette, moving vehicles and shadows inside the combined tile outline, including at the highest point. Carry the ride through the internal seam.",
+        "basemapRelease": "eb78aacacfa67fc94a7b7a1915ea2354",
+        "groundContactMask": "last-reel-ground.png"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              114.15069580078125,
+              22.28020136637175
+            ],
+            [
+              114.15206909179688,
+              22.28020136637175
+            ],
+            [
+              114.15206909179688,
+              22.282742867647574
+            ],
+            [
+              114.15069580078125,
+              22.282742867647574
+            ],
+            [
+              114.15069580078125,
+              22.28020136637175
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "rain-dividend",
+      "properties": {
+        "name": "The Rain Dividend",
+        "district": "Central",
+        "zoom": 18,
+        "x": 214198,
+        "y": 114423,
+        "tileSpan": {
+          "columns": 1,
+          "rows": 2
+        },
+        "cells": [
+          {
+            "x": 214198,
+            "y": 114423,
+            "landFraction": 1,
+            "usableFraction": 0.33856201171875,
+            "coastal": false
+          },
+          {
+            "x": 214198,
+            "y": 114422,
+            "landFraction": 1,
+            "usableFraction": 0.4002685546875,
+            "coastal": false
+          }
+        ],
+        "reference": "rain-dividend.png",
+        "brief": "Arrange a water park among the existing blocks. Board four-seat boats under a striped canopy in the south. A water jet lifts them north across the seam in a pale ceramic flume. Curl around a header tank, drop south over the seam into a splash pool sized to the available clear ground, and drift back to the station. Give bathers a separate shallow terrace with tipping buckets and a dry spectator bridge outside the splash run. Use the paired north-up plate and aligned ground-contact mask. Fit the complete beds and banks of ground-level pools and channels, wet decks, landings, and every footing inside white areas. Link separate pockets by raised watertight flumes on clear-ground piers. Keep the entire projected silhouette, moving vehicles and shadows inside the combined tile outline, including at the highest point. Carry the ride through the internal seam.",
+        "basemapRelease": "eb78aacacfa67fc94a7b7a1915ea2354",
+        "groundContactMask": "rain-dividend-ground.png"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              114.15618896484375,
+              22.278930598411865
+            ],
+            [
+              114.15756225585938,
+              22.278930598411865
+            ],
+            [
+              114.15756225585938,
+              22.281472122783818
+            ],
+            [
+              114.15618896484375,
+              22.281472122783818
+            ],
+            [
+              114.15618896484375,
+              22.278930598411865
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "photo-finish",
+      "properties": {
+        "name": "The Photo Finish",
+        "district": "Happy Valley",
+        "zoom": 18,
+        "x": 214215,
+        "y": 114427,
+        "tileSpan": {
+          "columns": 2,
+          "rows": 1
+        },
+        "cells": [
+          {
+            "x": 214215,
+            "y": 114427,
+            "landFraction": 1,
+            "usableFraction": 0.25164794921875,
+            "coastal": false
+          },
+          {
+            "x": 214216,
+            "y": 114427,
+            "landFraction": 1,
+            "usableFraction": 0.7178955078125,
+            "coastal": false
+          }
+        ],
+        "reference": "photo-finish.png",
+        "brief": "Two racing steel tracks launch side by side from an elevated platform beside the western grandstand. Carry both across the seam, let the jade train dive under the ochre train inside an eastern banked horseshoe, and bring them back west to a striped finishing gantry. Separate the levels at the crossover and show both trains at different points on the course. Use the paired north-up plate and aligned ground-contact mask. Elevate the entire ride, including the station. Place the full base of every pier, brace, stair landing and ground-level prop inside white areas. Span black areas freely with track and cantilevers above the roofs and streets; leave the mapped ground intact. Keep the entire projected silhouette, moving vehicles and shadows inside the combined tile outline, including at the highest point. Carry the ride through the internal seam.",
+        "basemapRelease": "eb78aacacfa67fc94a7b7a1915ea2354",
+        "groundContactMask": "photo-finish-ground.png"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              114.17953491210938,
+              22.27384741110462
+            ],
+            [
+              114.18228149414062,
+              22.27384741110462
+            ],
+            [
+              114.18228149414062,
+              22.275118225250548
+            ],
+            [
+              114.17953491210938,
+              22.275118225250548
+            ],
+            [
+              114.17953491210938,
+              22.27384741110462
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "counterweight-ballet",
+      "properties": {
+        "name": "The Counterweight Ballet",
+        "district": "West Kowloon, near M+",
+        "zoom": 18,
+        "x": 214200,
+        "y": 114407,
+        "tileSpan": {
+          "columns": 2,
+          "rows": 1
+        },
+        "cells": [
+          {
+            "x": 214200,
+            "y": 114407,
+            "landFraction": 0.42,
+            "usableFraction": 0.95916748046875,
+            "coastal": true
+          },
+          {
+            "x": 214201,
+            "y": 114407,
+            "landFraction": 0.17,
+            "usableFraction": 1,
+            "coastal": true
+          }
+        ],
+        "reference": "counterweight-ballet.png",
+        "brief": "Build a single shuttle coaster like a working harbour crane. A brass counterweight lifts a short train backwards up the western spike. The train releases through its open-sided loading platform, runs east over the seam and climbs a curved cantilever above a rigging yard. Leave both rail ends visible. The same train rolls home in reverse while the counterweight rises. Use the paired north-up plate and aligned ground-contact mask. Elevate the entire ride, including the station. Place the full base of every pier, brace, stair landing and ground-level prop inside white areas. Span black areas freely with track and cantilevers above the roofs and streets; leave the mapped ground intact. Keep the entire projected silhouette, moving vehicles and shadows inside the combined tile outline, including at the highest point. Carry the ride through the internal seam.",
+        "basemapRelease": "eb78aacacfa67fc94a7b7a1915ea2354",
+        "groundContactMask": "counterweight-ballet-ground.png"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              114.158935546875,
+              22.29926149974121
+            ],
+            [
+              114.16168212890625,
+              22.29926149974121
+            ],
+            [
+              114.16168212890625,
+              22.30053208287368
+            ],
+            [
+              114.158935546875,
+              22.30053208287368
+            ],
+            [
+              114.158935546875,
+              22.29926149974121
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "shutters-rise",
+      "properties": {
+        "name": "After the Shutters Rise",
+        "district": "Mong Kok",
+        "zoom": 18,
+        "x": 214205,
+        "y": 114394,
+        "tileSpan": {
+          "columns": 1,
+          "rows": 2
+        },
+        "cells": [
+          {
+            "x": 214205,
+            "y": 114394,
+            "landFraction": 1,
+            "usableFraction": 0.32037353515625,
+            "coastal": false
+          },
+          {
+            "x": 214205,
+            "y": 114393,
+            "landFraction": 1,
+            "usableFraction": 0.2703857421875,
+            "coastal": false
+          }
+        ],
+        "reference": "shutters-rise.png",
+        "brief": "A compact wild mouse runs over a market of rolled-up metal shutters. Put the lift above the southern block, run the single-car train north across the seam into a tight stack of level hairpins, then send it south over the seam on a lower rail to a brake run beneath striped awnings. Show one pivoting car taking a square corner and vendors setting out trays below. Use the paired north-up plate and aligned ground-contact mask. Elevate the entire ride, including the station. Place the full base of every pier, brace, stair landing and ground-level prop inside white areas. Span black areas freely with track and cantilevers above the roofs and streets; leave the mapped ground intact. Keep the entire projected silhouette, moving vehicles and shadows inside the combined tile outline, including at the highest point. Carry the ride through the internal seam.",
+        "basemapRelease": "eb78aacacfa67fc94a7b7a1915ea2354",
+        "groundContactMask": "shutters-rise-ground.png"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              114.16580200195312,
+              22.31577817893642
+            ],
+            [
+              114.16717529296875,
+              22.31577817893642
+            ],
+            [
+              114.16717529296875,
+              22.318319033097982
+            ],
+            [
+              114.16580200195312,
+              22.318319033097982
+            ],
+            [
+              114.16580200195312,
+              22.31577817893642
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

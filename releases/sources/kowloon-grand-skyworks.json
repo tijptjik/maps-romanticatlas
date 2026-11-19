@@ -1,0 +1,570 @@
+{
+  "title": "The Grand Skyworks of Kowloon",
+  "slug": "kowloon-grand-skyworks",
+  "grid": {
+    "zoom": 18,
+    "x": 214200,
+    "y": 114376,
+    "size": 36
+  },
+  "minimumFootprintM2": 3723,
+  "referenceBuilding": {
+    "name": "HSBC Main Building",
+    "featureId": "35184667496179",
+    "sourceTile": [
+      15,
+      26775,
+      14302
+    ],
+    "measuredAreaM2": 3722.78
+  },
+  "tiles": [
+    {
+      "title": "The Dragon Moon Gate",
+      "scene": "skyscraper",
+      "x": 214200,
+      "y": 114376,
+      "eligibility": {
+        "zoom": 18,
+        "x": 214200,
+        "y": 114376,
+        "isTargetable": true,
+        "regionalLandAvailable": true,
+        "landFraction": 1,
+        "streetFraction": 0.03204345703125,
+        "coastal": false,
+        "usableFraction": 0.88836669921875
+      },
+      "brief": "The Dragon Moon Gate is an inhabited flight school. Sweep an ascending arcade into a jade loop around the dragon’s turn. Cut a spectators’ court through the thick lower arc. A vermilion dragon banking through the opening overlaps the near rim while its tail disappears behind the far one. Show handlers at the launch stair, harnesses hung in a shaded bay and a worn landing ledge. Design the broad base as a working precinct occupying the entire outlined footprint. Show the ground-facing edges in the same orientation as the guide. Keep the roof, wings and airborne subject within the tile width. Depict only objects belonging to this particular activity; the museum, observatory and kite yard inform the quality of drawing, not its inventory. Adults and doors are tiny in this large complex, with dozens of inhabited levels. Compose a steep bird’s-eye view with generous roof planes. Keep the whole illustration comfortably inside the canvas.",
+      "footprint": {
+        "name": "Mapped Kowloon building",
+        "featureId": "35185389382447",
+        "sourceLayer": "buildings",
+        "sourceTile": [
+          15,
+          26775,
+          14297
+        ],
+        "coordinatesInBaseTile": [
+          [
+            0.23828125,
+            0.111328125
+          ],
+          [
+            0.8984375,
+            0.6484375
+          ],
+          [
+            0.73046875,
+            0.85546875
+          ],
+          [
+            0.068359375,
+            0.3203125
+          ]
+        ],
+        "areaM2": 4560.63
+      },
+      "illustration": {
+        "raw": "generated-tiles/kowloon-grand-skyworks/214200-114376-whole.png",
+        "guide": "generated-tiles/kowloon-grand-skyworks/214200-114376-plan.png",
+        "pixelsPerTile": 1254,
+        "heightMetres": 151,
+        "verticalProjection": 0.6,
+        "frontCorners": [
+          3,
+          2,
+          1
+        ],
+        "rawFrontPixels": [
+          [
+            21,
+            1149
+          ],
+          [
+            646,
+            1733
+          ],
+          [
+            850,
+            1500
+          ]
+        ],
+        "matchGroundCorners": true
+      },
+      "prompt": "The Dragon Moon Gate is an inhabited flight school. Sweep an ascending arcade into a jade loop around the dragon’s turn. Cut a spectators’ court through the thick lower arc. A vermilion dragon banking through the opening overlaps the near rim while its tail disappears behind the far one. Show handlers at the launch stair, harnesses hung in a shaded bay and a worn landing ledge. Design the broad base as a working precinct occupying the entire outlined footprint. Show the ground-facing edges in the same orientation as the guide. Keep the roof, wings and airborne subject within the tile width. Depict only objects belonging to this particular activity; the museum, observatory and kite yard inform the quality of drawing, not its inventory. Adults and doors are tiny in this large complex, with dozens of inhabited levels. Compose a steep bird’s-eye view with generous roof planes. Keep the whole illustration comfortably inside the canvas. Draw one complete inhabited skyscraper as a single illustration. In the guide, the filled polygon is the surveyed ground footprint and the separate gauge measures projected height from its rear edge. Preserve the foot of each visible wall, the entry orientation and the parcel boundary. Invent the entire structure above it. The highest point is 151 metres above the base. The tower rises from the southern tile into the tile to its north. Keep the map dead overhead and north-up. Use one parallel oblique projection for everything drawn on it. Ground contact points stay on the source plan. For a point above ground, start at its own plan position and shift it straight up the page by 0.60 times its physical height at local ground scale. Equal heights use equal offsets everywhere. Lay out each roof, landing and bridge at its own elevation. Horizontal planes retain their plan shapes and orientation; parallels stay parallel without a vanishing point. Join matching structural points across levels. Trace the near lip of an opening, its inner return and the far surface visible through it. Draw from back to front, letting a nearer eave hide part of a gallery. Use line weight, hatching and contact shade beneath overhangs to distinguish the layers. Use a 1.7-metre adult and 2.1-metre doorway at the same scale throughout. Carry a believable storey spacing up the occupied wings. Show larger spans where a performance hall, aviary or instrument actually needs them. Begin with the extraordinary thing this place allows someone to do in the sky. Let that action determine the section and silhouette. A flight path might hollow out an inhabited ring; performers might cross a suspended stage between folded shells; water might descend through a split tower whose counterweight hangs in the gap. Choose a structural idea specific to this brief. Across a series, vary the load paths, crown heights, asymmetry and openings as well as the colour. Follow the route from the street to the principal sky space. Show where a shell bears on a pier, where a suspended room hangs, or where a bridge lands. Compose foreground, middle and rear volumes with enough open air to see between them. Keep the finished back edges and crown inside the image. Draw a hand-coloured architectural atlas miniature in fine sepia ink on warm paper. At map zoom, make the site legible from its silhouette, open spaces and pattern of roofs. At native resolution let the eye discover who works here, what they handle and how they move through the place. Use the museum garden as a reference for composition: a path leads from the entrance past beds and glasshouses to specimen courts. Use the tidal observatory for architectural depth: curved copper-green wings enclose a brass pendulum, with galleries behind it and stepped basins below. Use the kite yard for human scale and colour: indigo and vermilion wings fill the yard while seated makers, bamboo spars, pigment bowls and drying cloth explain how the wings are made. Translate those relationships into the requested subject. Choose pigments from the materials of this site. Warm stone, inked timber and slate can frame expanses of signature colour such as patinated turquoise metal or patterned silk. Draw glazing ribs on glass, joints in stone, folds in fabric and wear at thresholds. Concentrate fine marks around use and construction; give the adjacent roof or court enough quiet space for that activity to read. Isolate the whole silhouette on uniform pure magenta #ff00ff for alpha extraction, including open sky visible through holes. Reserve this colour for transparency. Keep shadows on the artwork itself. Omit labels, guide marks, frame and ground slab.",
+      "observed": "A rider banks through a jade ring above a rising arcade and launch court."
+    },
+    {
+      "title": "The Saffron Balloon Inn",
+      "scene": "skyscraper",
+      "x": 214207,
+      "y": 114409,
+      "eligibility": {
+        "zoom": 18,
+        "x": 214207,
+        "y": 114409,
+        "isTargetable": true,
+        "regionalLandAvailable": true,
+        "landFraction": 1,
+        "streetFraction": 0.11376953125,
+        "coastal": false,
+        "usableFraction": 0.403076171875
+      },
+      "brief": "The Saffron Balloon Inn is a crescent harbour standing on end. Guest rooms follow a curved windbreak around an open landing basin; hang a reception gallery from the inner lip. A saffron balloon settles into the lee, its gondola level with a narrow boarding bridge. Porters steady a line while the next length of envelope silk dries on a roof terrace. Design the broad base as a working precinct occupying the entire outlined footprint. Show the ground-facing edges in the same orientation as the guide. Keep the roof, wings and airborne subject within the tile width. Depict only objects belonging to this particular activity; the museum, observatory and kite yard inform the quality of drawing, not its inventory. Adults and doors are tiny in this large complex, with dozens of inhabited levels. Compose a steep bird’s-eye view with generous roof planes. Keep the whole illustration comfortably inside the canvas.",
+      "footprint": {
+        "name": "新港中心Silvercord",
+        "featureId": "35184556849348",
+        "sourceLayer": "buildings",
+        "sourceTile": [
+          15,
+          26775,
+          14301
+        ],
+        "coordinatesInBaseTile": [
+          [
+            0.42578125,
+            0.69140625
+          ],
+          [
+            0.294921875,
+            0.048828125
+          ],
+          [
+            0.7265625,
+            0.0234375
+          ],
+          [
+            0.76953125,
+            0.146484375
+          ],
+          [
+            0.935546875,
+            0.666015625
+          ]
+        ],
+        "areaM2": 6156.42
+      },
+      "illustration": {
+        "raw": "generated-tiles/kowloon-grand-skyworks/214207-114409-whole.png",
+        "guide": "generated-tiles/kowloon-grand-skyworks/214207-114409-plan.png",
+        "pixelsPerTile": 1254,
+        "heightMetres": 190,
+        "verticalProjection": 0.6,
+        "frontCorners": [
+          1,
+          0,
+          4
+        ],
+        "rawFrontPixels": [
+          [
+            64,
+            971
+          ],
+          [
+            207,
+            1645
+          ],
+          [
+            847,
+            1619
+          ]
+        ],
+        "matchGroundCorners": true
+      },
+      "prompt": "The Saffron Balloon Inn is a crescent harbour standing on end. Guest rooms follow a curved windbreak around an open landing basin; hang a reception gallery from the inner lip. A saffron balloon settles into the lee, its gondola level with a narrow boarding bridge. Porters steady a line while the next length of envelope silk dries on a roof terrace. Design the broad base as a working precinct occupying the entire outlined footprint. Show the ground-facing edges in the same orientation as the guide. Keep the roof, wings and airborne subject within the tile width. Depict only objects belonging to this particular activity; the museum, observatory and kite yard inform the quality of drawing, not its inventory. Adults and doors are tiny in this large complex, with dozens of inhabited levels. Compose a steep bird’s-eye view with generous roof planes. Keep the whole illustration comfortably inside the canvas. Draw one complete inhabited skyscraper as a single illustration. In the guide, the filled polygon is the surveyed ground footprint and the separate gauge measures projected height from its rear edge. Preserve the foot of each visible wall, the entry orientation and the parcel boundary. Invent the entire structure above it. The highest point is 190 metres above the base. The tower rises from the southern tile into the tile to its north. Keep the map dead overhead and north-up. Use one parallel oblique projection for everything drawn on it. Ground contact points stay on the source plan. For a point above ground, start at its own plan position and shift it straight up the page by 0.60 times its physical height at local ground scale. Equal heights use equal offsets everywhere. Lay out each roof, landing and bridge at its own elevation. Horizontal planes retain their plan shapes and orientation; parallels stay parallel without a vanishing point. Join matching structural points across levels. Trace the near lip of an opening, its inner return and the far surface visible through it. Draw from back to front, letting a nearer eave hide part of a gallery. Use line weight, hatching and contact shade beneath overhangs to distinguish the layers. Use a 1.7-metre adult and 2.1-metre doorway at the same scale throughout. Carry a believable storey spacing up the occupied wings. Show larger spans where a performance hall, aviary or instrument actually needs them. Begin with the extraordinary thing this place allows someone to do in the sky. Let that action determine the section and silhouette. A flight path might hollow out an inhabited ring; performers might cross a suspended stage between folded shells; water might descend through a split tower whose counterweight hangs in the gap. Choose a structural idea specific to this brief. Across a series, vary the load paths, crown heights, asymmetry and openings as well as the colour. Follow the route from the street to the principal sky space. Show where a shell bears on a pier, where a suspended room hangs, or where a bridge lands. Compose foreground, middle and rear volumes with enough open air to see between them. Keep the finished back edges and crown inside the image. Draw a hand-coloured architectural atlas miniature in fine sepia ink on warm paper. At map zoom, make the site legible from its silhouette, open spaces and pattern of roofs. At native resolution let the eye discover who works here, what they handle and how they move through the place. Use the museum garden as a reference for composition: a path leads from the entrance past beds and glasshouses to specimen courts. Use the tidal observatory for architectural depth: curved copper-green wings enclose a brass pendulum, with galleries behind it and stepped basins below. Use the kite yard for human scale and colour: indigo and vermilion wings fill the yard while seated makers, bamboo spars, pigment bowls and drying cloth explain how the wings are made. Translate those relationships into the requested subject. Choose pigments from the materials of this site. Warm stone, inked timber and slate can frame expanses of signature colour such as patinated turquoise metal or patterned silk. Draw glazing ribs on glass, joints in stone, folds in fabric and wear at thresholds. Concentrate fine marks around use and construction; give the adjacent roof or court enough quiet space for that activity to read. Isolate the whole silhouette on uniform pure magenta #ff00ff for alpha extraction, including open sky visible through holes. Reserve this colour for transparency. Keep shadows on the artwork itself. Omit labels, guide marks, frame and ground slab.",
+      "observed": "Guest galleries curve around an elevated balloon basin; saffron cloth dries along the bridge."
+    },
+    {
+      "title": "The Flying Whale Post",
+      "scene": "skyscraper",
+      "x": 214208,
+      "y": 114381,
+      "eligibility": {
+        "zoom": 18,
+        "x": 214208,
+        "y": 114381,
+        "isTargetable": true,
+        "regionalLandAvailable": true,
+        "landFraction": 1,
+        "streetFraction": 0.11419677734375,
+        "coastal": false,
+        "usableFraction": 0.5709228515625
+      },
+      "brief": "The Flying Whale Post sorts the city’s letters in the air. A cantilevered sorting hall balances a silver whale zeppelin across a deep docking slot. Carry the loads back to a hollow masonry keel. Show the boarding bridge entering the gondola, mail sacks changing hands and red sorting chutes visible through the cut in the hall. Design the broad base as a working precinct occupying the entire outlined footprint. Show the ground-facing edges in the same orientation as the guide. Keep the roof, wings and airborne subject within the tile width. Depict only objects belonging to this particular activity; the museum, observatory and kite yard inform the quality of drawing, not its inventory. Adults and doors are tiny in this large complex, with dozens of inhabited levels. Compose a steep bird’s-eye view with generous roof planes. Keep the whole illustration comfortably inside the canvas.",
+      "footprint": {
+        "name": "Mapped Kowloon building",
+        "featureId": "35185699655052",
+        "sourceLayer": "buildings",
+        "sourceTile": [
+          15,
+          26776,
+          14297
+        ],
+        "coordinatesInBaseTile": [
+          [
+            0.240234375,
+            0.146484375
+          ],
+          [
+            0.8984375,
+            0.43359375
+          ],
+          [
+            0.775390625,
+            0.69140625
+          ],
+          [
+            0.75,
+            0.681640625
+          ],
+          [
+            0.703125,
+            0.78515625
+          ],
+          [
+            0.353515625,
+            0.626953125
+          ],
+          [
+            0.326171875,
+            0.6875
+          ],
+          [
+            0.287109375,
+            0.669921875
+          ],
+          [
+            0.212890625,
+            0.615234375
+          ],
+          [
+            0.197265625,
+            0.564453125
+          ],
+          [
+            0.091796875,
+            0.45703125
+          ]
+        ],
+        "areaM2": 5747.41
+      },
+      "illustration": {
+        "raw": "generated-tiles/kowloon-grand-skyworks/214208-114381-whole.png",
+        "guide": "generated-tiles/kowloon-grand-skyworks/214208-114381-plan.png",
+        "pixelsPerTile": 1254,
+        "heightMetres": 160,
+        "verticalProjection": 0.6,
+        "frontCorners": [
+          10,
+          9,
+          8,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1
+        ],
+        "rawFrontPixels": [
+          [
+            13,
+            1251
+          ],
+          [
+            99,
+            1341
+          ],
+          [
+            130,
+            1410
+          ],
+          [
+            207,
+            1469
+          ],
+          [
+            255,
+            1490
+          ],
+          [
+            282,
+            1438
+          ],
+          [
+            630,
+            1596
+          ],
+          [
+            680,
+            1492
+          ],
+          [
+            715,
+            1493
+          ],
+          [
+            870,
+            1185
+          ]
+        ],
+        "matchGroundCorners": true
+      },
+      "prompt": "The Flying Whale Post sorts the city’s letters in the air. A cantilevered sorting hall balances a silver whale zeppelin across a deep docking slot. Carry the loads back to a hollow masonry keel. Show the boarding bridge entering the gondola, mail sacks changing hands and red sorting chutes visible through the cut in the hall. Design the broad base as a working precinct occupying the entire outlined footprint. Show the ground-facing edges in the same orientation as the guide. Keep the roof, wings and airborne subject within the tile width. Depict only objects belonging to this particular activity; the museum, observatory and kite yard inform the quality of drawing, not its inventory. Adults and doors are tiny in this large complex, with dozens of inhabited levels. Compose a steep bird’s-eye view with generous roof planes. Keep the whole illustration comfortably inside the canvas. Draw one complete inhabited skyscraper as a single illustration. In the guide, the filled polygon is the surveyed ground footprint and the separate gauge measures projected height from its rear edge. Preserve the foot of each visible wall, the entry orientation and the parcel boundary. Invent the entire structure above it. The highest point is 160 metres above the base. The tower rises from the southern tile into the tile to its north. Keep the map dead overhead and north-up. Use one parallel oblique projection for everything drawn on it. Ground contact points stay on the source plan. For a point above ground, start at its own plan position and shift it straight up the page by 0.60 times its physical height at local ground scale. Equal heights use equal offsets everywhere. Lay out each roof, landing and bridge at its own elevation. Horizontal planes retain their plan shapes and orientation; parallels stay parallel without a vanishing point. Join matching structural points across levels. Trace the near lip of an opening, its inner return and the far surface visible through it. Draw from back to front, letting a nearer eave hide part of a gallery. Use line weight, hatching and contact shade beneath overhangs to distinguish the layers. Use a 1.7-metre adult and 2.1-metre doorway at the same scale throughout. Carry a believable storey spacing up the occupied wings. Show larger spans where a performance hall, aviary or instrument actually needs them. Begin with the extraordinary thing this place allows someone to do in the sky. Let that action determine the section and silhouette. A flight path might hollow out an inhabited ring; performers might cross a suspended stage between folded shells; water might descend through a split tower whose counterweight hangs in the gap. Choose a structural idea specific to this brief. Across a series, vary the load paths, crown heights, asymmetry and openings as well as the colour. Follow the route from the street to the principal sky space. Show where a shell bears on a pier, where a suspended room hangs, or where a bridge lands. Compose foreground, middle and rear volumes with enough open air to see between them. Keep the finished back edges and crown inside the image. Draw a hand-coloured architectural atlas miniature in fine sepia ink on warm paper. At map zoom, make the site legible from its silhouette, open spaces and pattern of roofs. At native resolution let the eye discover who works here, what they handle and how they move through the place. Use the museum garden as a reference for composition: a path leads from the entrance past beds and glasshouses to specimen courts. Use the tidal observatory for architectural depth: curved copper-green wings enclose a brass pendulum, with galleries behind it and stepped basins below. Use the kite yard for human scale and colour: indigo and vermilion wings fill the yard while seated makers, bamboo spars, pigment bowls and drying cloth explain how the wings are made. Translate those relationships into the requested subject. Choose pigments from the materials of this site. Warm stone, inked timber and slate can frame expanses of signature colour such as patinated turquoise metal or patterned silk. Draw glazing ribs on glass, joints in stone, folds in fabric and wear at thresholds. Concentrate fine marks around use and construction; give the adjacent roof or court enough quiet space for that activity to read. Isolate the whole silhouette on uniform pure magenta #ff00ff for alpha extraction, including open sky visible through holes. Reserve this colour for transparency. Keep shadows on the artwork itself. Omit labels, guide marks, frame and ground slab.",
+      "observed": "Red mail chutes link a whale-shaped airship to an open sorting floor above a hollow keel."
+    },
+    {
+      "title": "The Mothlight Opera",
+      "scene": "skyscraper",
+      "x": 214235,
+      "y": 114389,
+      "eligibility": {
+        "zoom": 18,
+        "x": 214235,
+        "y": 114389,
+        "isTargetable": true,
+        "regionalLandAvailable": true,
+        "landFraction": 1,
+        "streetFraction": 0.12750244140625,
+        "coastal": false,
+        "usableFraction": 0.4267578125
+      },
+      "brief": "The Mothlight Opera folds two unequal celadon shell roofs around an open plum-coloured theatre. Hang the stage between the shells and let the high rear gallery look down through a gap in the wings. Reveal the fly loft, a counterweighted scenery lift and technicians changing a painted silk backdrop. Wing ribs follow the actual span of the shell. Design the broad base as a working precinct occupying the entire outlined footprint. Show the ground-facing edges in the same orientation as the guide. Keep the roof, wings and airborne subject within the tile width. Depict only objects belonging to this particular activity; the museum, observatory and kite yard inform the quality of drawing, not its inventory. Adults and doors are tiny in this large complex, with dozens of inhabited levels. Compose a steep bird’s-eye view with generous roof planes. Keep the whole illustration comfortably inside the canvas.",
+      "footprint": {
+        "name": "Mapped Kowloon building",
+        "featureId": "35184555125368",
+        "sourceLayer": "buildings",
+        "sourceTile": [
+          15,
+          26779,
+          14298
+        ],
+        "coordinatesInBaseTile": [
+          [
+            0.3359375,
+            0.681640625
+          ],
+          [
+            0.294921875,
+            0.23828125
+          ],
+          [
+            0.7421875,
+            0.197265625
+          ],
+          [
+            0.7421875,
+            0.205078125
+          ],
+          [
+            0.76171875,
+            0.208984375
+          ],
+          [
+            0.775390625,
+            0.216796875
+          ],
+          [
+            0.796875,
+            0.244140625
+          ],
+          [
+            0.802734375,
+            0.263671875
+          ],
+          [
+            0.814453125,
+            0.263671875
+          ],
+          [
+            0.84375,
+            0.552734375
+          ],
+          [
+            0.81640625,
+            0.55859375
+          ],
+          [
+            0.79296875,
+            0.578125
+          ],
+          [
+            0.77734375,
+            0.607421875
+          ],
+          [
+            0.775390625,
+            0.634765625
+          ]
+        ],
+        "areaM2": 4424.96
+      },
+      "illustration": {
+        "raw": "generated-tiles/kowloon-grand-skyworks/214235-114389-whole.png",
+        "guide": "generated-tiles/kowloon-grand-skyworks/214235-114389-plan.png",
+        "pixelsPerTile": 1254,
+        "heightMetres": 150,
+        "verticalProjection": 0.6,
+        "frontCorners": [
+          1,
+          0,
+          13,
+          12,
+          11,
+          10,
+          9
+        ],
+        "rawFrontPixels": [
+          [
+            104,
+            1127
+          ],
+          [
+            164,
+            1699
+          ],
+          [
+            763,
+            1637
+          ],
+          [
+            766,
+            1614
+          ],
+          [
+            785,
+            1565
+          ],
+          [
+            817,
+            1535
+          ],
+          [
+            854,
+            1525
+          ]
+        ],
+        "matchGroundCorners": true
+      },
+      "prompt": "The Mothlight Opera folds two unequal celadon shell roofs around an open plum-coloured theatre. Hang the stage between the shells and let the high rear gallery look down through a gap in the wings. Reveal the fly loft, a counterweighted scenery lift and technicians changing a painted silk backdrop. Wing ribs follow the actual span of the shell. Design the broad base as a working precinct occupying the entire outlined footprint. Show the ground-facing edges in the same orientation as the guide. Keep the roof, wings and airborne subject within the tile width. Depict only objects belonging to this particular activity; the museum, observatory and kite yard inform the quality of drawing, not its inventory. Adults and doors are tiny in this large complex, with dozens of inhabited levels. Compose a steep bird’s-eye view with generous roof planes. Keep the whole illustration comfortably inside the canvas. Draw one complete inhabited skyscraper as a single illustration. In the guide, the filled polygon is the surveyed ground footprint and the separate gauge measures projected height from its rear edge. Preserve the foot of each visible wall, the entry orientation and the parcel boundary. Invent the entire structure above it. The highest point is 150 metres above the base. The tower rises from the southern tile into the tile to its north. Keep the map dead overhead and north-up. Use one parallel oblique projection for everything drawn on it. Ground contact points stay on the source plan. For a point above ground, start at its own plan position and shift it straight up the page by 0.60 times its physical height at local ground scale. Equal heights use equal offsets everywhere. Lay out each roof, landing and bridge at its own elevation. Horizontal planes retain their plan shapes and orientation; parallels stay parallel without a vanishing point. Join matching structural points across levels. Trace the near lip of an opening, its inner return and the far surface visible through it. Draw from back to front, letting a nearer eave hide part of a gallery. Use line weight, hatching and contact shade beneath overhangs to distinguish the layers. Use a 1.7-metre adult and 2.1-metre doorway at the same scale throughout. Carry a believable storey spacing up the occupied wings. Show larger spans where a performance hall, aviary or instrument actually needs them. Begin with the extraordinary thing this place allows someone to do in the sky. Let that action determine the section and silhouette. A flight path might hollow out an inhabited ring; performers might cross a suspended stage between folded shells; water might descend through a split tower whose counterweight hangs in the gap. Choose a structural idea specific to this brief. Across a series, vary the load paths, crown heights, asymmetry and openings as well as the colour. Follow the route from the street to the principal sky space. Show where a shell bears on a pier, where a suspended room hangs, or where a bridge lands. Compose foreground, middle and rear volumes with enough open air to see between them. Keep the finished back edges and crown inside the image. Draw a hand-coloured architectural atlas miniature in fine sepia ink on warm paper. At map zoom, make the site legible from its silhouette, open spaces and pattern of roofs. At native resolution let the eye discover who works here, what they handle and how they move through the place. Use the museum garden as a reference for composition: a path leads from the entrance past beds and glasshouses to specimen courts. Use the tidal observatory for architectural depth: curved copper-green wings enclose a brass pendulum, with galleries behind it and stepped basins below. Use the kite yard for human scale and colour: indigo and vermilion wings fill the yard while seated makers, bamboo spars, pigment bowls and drying cloth explain how the wings are made. Translate those relationships into the requested subject. Choose pigments from the materials of this site. Warm stone, inked timber and slate can frame expanses of signature colour such as patinated turquoise metal or patterned silk. Draw glazing ribs on glass, joints in stone, folds in fabric and wear at thresholds. Concentrate fine marks around use and construction; give the adjacent roof or court enough quiet space for that activity to read. Isolate the whole silhouette on uniform pure magenta #ff00ff for alpha extraction, including open sky visible through holes. Reserve this colour for transparency. Keep shadows on the artwork itself. Omit labels, guide marks, frame and ground slab.",
+      "observed": "A silk backdrop is suspended between two copper-green roof shells, with the fly lift exposed beside the stage."
+    },
+    {
+      "title": "The Cloud Jellyfish Nursery",
+      "scene": "skyscraper",
+      "x": 214234,
+      "y": 114390,
+      "eligibility": {
+        "zoom": 18,
+        "x": 214234,
+        "y": 114390,
+        "isTargetable": true,
+        "regionalLandAvailable": true,
+        "landFraction": 1,
+        "streetFraction": 0.128662109375,
+        "coastal": false,
+        "usableFraction": 0.374755859375
+      },
+      "brief": "The Cloud Jellyfish Nursery winds occupied laboratories around a descending chain of seawater bells. Put a sheltered nursery inside the low curve, a keeper’s bridge across the shaft and a release pool open to the sky. Show jellyfish at two ages, glass ribs against the water and keepers tending a feeding cradle. Design the broad base as a working precinct occupying the entire outlined footprint. Show the ground-facing edges in the same orientation as the guide. Keep the roof, wings and airborne subject within the tile width. Depict only objects belonging to this particular activity; the museum, observatory and kite yard inform the quality of drawing, not its inventory. Adults and doors are tiny in this large complex, with dozens of inhabited levels. Compose a steep bird’s-eye view with generous roof planes. Keep the whole illustration comfortably inside the canvas.",
+      "footprint": {
+        "name": "Mapped Kowloon building",
+        "featureId": "35184555127729",
+        "sourceLayer": "buildings",
+        "sourceTile": [
+          15,
+          26779,
+          14298
+        ],
+        "coordinatesInBaseTile": [
+          [
+            0.3984375,
+            0.15234375
+          ],
+          [
+            0.458984375,
+            0.884765625
+          ],
+          [
+            0.32421875,
+            0.89453125
+          ],
+          [
+            0.294921875,
+            0.9140625
+          ],
+          [
+            0.255859375,
+            0.9140625
+          ],
+          [
+            0.212890625,
+            0.890625
+          ],
+          [
+            0.1875,
+            0.845703125
+          ],
+          [
+            0.126953125,
+            0.140625
+          ],
+          [
+            0.35546875,
+            0.123046875
+          ]
+        ],
+        "areaM2": 4106.41
+      },
+      "illustration": {
+        "raw": "generated-tiles/kowloon-grand-skyworks/214234-114390-whole.png",
+        "guide": "generated-tiles/kowloon-grand-skyworks/214234-114390-plan.png",
+        "pixelsPerTile": 1254,
+        "heightMetres": 175,
+        "verticalProjection": 0.6,
+        "frontCorners": [
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1
+        ],
+        "rawFrontPixels": [
+          [
+            69,
+            872
+          ],
+          [
+            147,
+            1652
+          ],
+          [
+            178,
+            1710
+          ],
+          [
+            242,
+            1744
+          ],
+          [
+            296,
+            1744
+          ],
+          [
+            339,
+            1716
+          ],
+          [
+            525,
+            1701
+          ]
+        ],
+        "matchGroundCorners": true
+      },
+      "prompt": "The Cloud Jellyfish Nursery winds occupied laboratories around a descending chain of seawater bells. Put a sheltered nursery inside the low curve, a keeper’s bridge across the shaft and a release pool open to the sky. Show jellyfish at two ages, glass ribs against the water and keepers tending a feeding cradle. Design the broad base as a working precinct occupying the entire outlined footprint. Show the ground-facing edges in the same orientation as the guide. Keep the roof, wings and airborne subject within the tile width. Depict only objects belonging to this particular activity; the museum, observatory and kite yard inform the quality of drawing, not its inventory. Adults and doors are tiny in this large complex, with dozens of inhabited levels. Compose a steep bird’s-eye view with generous roof planes. Keep the whole illustration comfortably inside the canvas. Draw one complete inhabited skyscraper as a single illustration. In the guide, the filled polygon is the surveyed ground footprint and the separate gauge measures projected height from its rear edge. Preserve the foot of each visible wall, the entry orientation and the parcel boundary. Invent the entire structure above it. The highest point is 175 metres above the base. The tower rises from the southern tile into the tile to its north. Keep the map dead overhead and north-up. Use one parallel oblique projection for everything drawn on it. Ground contact points stay on the source plan. For a point above ground, start at its own plan position and shift it straight up the page by 0.60 times its physical height at local ground scale. Equal heights use equal offsets everywhere. Lay out each roof, landing and bridge at its own elevation. Horizontal planes retain their plan shapes and orientation; parallels stay parallel without a vanishing point. Join matching structural points across levels. Trace the near lip of an opening, its inner return and the far surface visible through it. Draw from back to front, letting a nearer eave hide part of a gallery. Use line weight, hatching and contact shade beneath overhangs to distinguish the layers. Use a 1.7-metre adult and 2.1-metre doorway at the same scale throughout. Carry a believable storey spacing up the occupied wings. Show larger spans where a performance hall, aviary or instrument actually needs them. Begin with the extraordinary thing this place allows someone to do in the sky. Let that action determine the section and silhouette. A flight path might hollow out an inhabited ring; performers might cross a suspended stage between folded shells; water might descend through a split tower whose counterweight hangs in the gap. Choose a structural idea specific to this brief. Across a series, vary the load paths, crown heights, asymmetry and openings as well as the colour. Follow the route from the street to the principal sky space. Show where a shell bears on a pier, where a suspended room hangs, or where a bridge lands. Compose foreground, middle and rear volumes with enough open air to see between them. Keep the finished back edges and crown inside the image. Draw a hand-coloured architectural atlas miniature in fine sepia ink on warm paper. At map zoom, make the site legible from its silhouette, open spaces and pattern of roofs. At native resolution let the eye discover who works here, what they handle and how they move through the place. Use the museum garden as a reference for composition: a path leads from the entrance past beds and glasshouses to specimen courts. Use the tidal observatory for architectural depth: curved copper-green wings enclose a brass pendulum, with galleries behind it and stepped basins below. Use the kite yard for human scale and colour: indigo and vermilion wings fill the yard while seated makers, bamboo spars, pigment bowls and drying cloth explain how the wings are made. Translate those relationships into the requested subject. Choose pigments from the materials of this site. Warm stone, inked timber and slate can frame expanses of signature colour such as patinated turquoise metal or patterned silk. Draw glazing ribs on glass, joints in stone, folds in fabric and wear at thresholds. Concentrate fine marks around use and construction; give the adjacent roof or court enough quiet space for that activity to read. Isolate the whole silhouette on uniform pure magenta #ff00ff for alpha extraction, including open sky visible through holes. Reserve this colour for transparency. Keep shadows on the artwork itself. Omit labels, guide marks, frame and ground slab.",
+      "observed": "Water spills from the rooftop release pool through graduated glass bells beside the keepers’ galleries."
+    }
+  ]
+}

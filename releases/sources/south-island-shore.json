@@ -1,0 +1,118 @@
+{
+  "title": "Hong Kong Island’s Southern Shore",
+  "slug": "south-island-shore",
+  "tiles": [
+    {
+      "scene": "lighthouse",
+      "title": "Lighthouse and Signal Station · Cape D’Aguilar",
+      "x": 214272,
+      "y": 114478,
+      "area": "Cape D’Aguilar"
+    },
+    {
+      "scene": "pirate-harbour",
+      "title": "Pirate Harbour · Shek O",
+      "x": 214268,
+      "y": 114463,
+      "area": "Shek O"
+    },
+    {
+      "scene": "canal-lock",
+      "title": "Victorian Canal Lock · Aberdeen",
+      "x": 214195,
+      "y": 114448,
+      "area": "Aberdeen"
+    },
+    {
+      "scene": "pleasure-pier",
+      "title": "Victorian pleasure pier · Repulse Bay",
+      "x": 214227,
+      "y": 114457,
+      "area": "Repulse Bay"
+    },
+    {
+      "scene": "tidal-bathhouse",
+      "title": "Tidal bathhouse · South Bay",
+      "x": 214228,
+      "y": 114469,
+      "area": "South Bay"
+    },
+    {
+      "scene": "floating-opera",
+      "title": "Floating opera · Stanley",
+      "x": 214236,
+      "y": 114472,
+      "area": "Stanley"
+    },
+    {
+      "scene": "shipwright-dock",
+      "title": "Shipwrights’ floating dry dock · Wong Chuk Hang",
+      "x": 214204,
+      "y": 114453,
+      "area": "Wong Chuk Hang"
+    },
+    {
+      "scene": "kelp-conservatory",
+      "title": "Marine botanical conservatory · Chung Hom Kok",
+      "x": 214227,
+      "y": 114477,
+      "area": "Chung Hom Kok"
+    },
+    {
+      "scene": "mermaid-station",
+      "title": "Mermaid Transformation Station · Deep Water Bay",
+      "x": 214216,
+      "y": 114450,
+      "area": "Deep Water Bay"
+    },
+    {
+      "scene": "walking-yacht-club",
+      "title": "The Walking Yacht Club · Middle Island Channel",
+      "x": 214221,
+      "y": 114456,
+      "area": "Middle Island Channel"
+    },
+    {
+      "scene": "staircase-foundation",
+      "title": "The Staircase Foundation · Bluff Head",
+      "x": 214238,
+      "y": 114489,
+      "area": "Bluff Head"
+    },
+    {
+      "scene": "car-boat-works",
+      "title": "The Car-to-Boat Works · Wah Fu",
+      "x": 214183,
+      "y": 114447,
+      "area": "Wah Fu"
+    },
+    {
+      "scene": "flying-fish-burgers",
+      "title": "Flying Fish Burger Pier · St. Stephen’s Beach",
+      "x": 214238,
+      "y": 114478,
+      "area": "St. Stephen’s Beach"
+    },
+    {
+      "scene": "bottled-post",
+      "title": "The Bottle Post Sorting Office · Tai Tam Bay",
+      "x": 214247,
+      "y": 114460,
+      "area": "Tai Tam Bay"
+    },
+    {
+      "scene": "wave-organ",
+      "title": "The Breakwater Organ · Brick Hill",
+      "x": 214208,
+      "y": 114462,
+      "area": "Brick Hill"
+    },
+    {
+      "scene": "moon-jelly-lanterns",
+      "title": "The Moon Jelly Lantern Library · Middle Bay",
+      "x": 214228,
+      "y": 114462,
+      "area": "Middle Bay"
+    }
+  ]
+}

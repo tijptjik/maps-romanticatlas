@@ -1,0 +1,53 @@
+{
+  "x": 214185,
+  "y": 114426,
+  "columns": 3,
+  "rows": 1,
+  "cells": [
+    {
+      "x": 214185,
+      "y": 114426,
+      "pattern": true,
+      "target": true,
+      "usable": 1,
+      "occupied": false
+    },
+    {
+      "x": 214186,
+      "y": 114426,
+      "pattern": true,
+      "target": true,
+      "usable": 0.961181640625,
+      "occupied": false
+    },
+    {
+      "x": 214187,
+      "y": 114426,
+      "pattern": true,
+      "target": true,
+      "usable": 1,
+      "occupied": false
+    }
+  ],
+  "score": 0,
+  "title": "Hong Kong in the Clouds",
+  "zoom": 18,
+  "tileSpan": {
+    "columns": 3,
+    "rows": 1
+  },
+  "bounds": {
+    "west": 114.13833618164062,
+    "south": 22.275118225250548,
+    "east": 114.1424560546875,
+    "north": 22.27638902785075
+  },
+  "source": {
+    "url": "https://romanticatlas.hype.hk/map-assets/saanseoi/hongkong-latest/15/26773/14303.mvt",
+    "sha256": "037a0e30bd7b41b9dbb5a2e70f53a9841d36903dcbf3f4fe88d4406f2e9bd131"
+  },
+  "image": "/atlas-v2/peak-maquette/hong-kong-in-the-clouds-landscape.png",
+  "imageSha256": "1ca6466396dec69f7ff5ada64ab340f602a79cab22923a4da2d6f85f27f2c94f",
+  "personHeightMetres": 1.7,
+  "verticalProjection": 0.6
+}

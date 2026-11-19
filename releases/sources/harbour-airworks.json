@@ -1,0 +1,786 @@
+{
+  "title": "The Harbour Airworks",
+  "slug": "harbour-airworks",
+  "grid": {
+    "zoom": 18,
+    "x": 214190,
+    "y": 114376,
+    "size": 80
+  },
+  "minimumFootprintM2": 3723,
+  "tiles": [
+    {
+      "title": "The Mica Fountain",
+      "x": 214192,
+      "y": 114377,
+      "scene": "skyscraper",
+      "region": "Kowloon",
+      "eligibility": {
+        "zoom": 18,
+        "x": 214192,
+        "y": 114377,
+        "isTargetable": true,
+        "regionalLandAvailable": true,
+        "landFraction": 1,
+        "streetFraction": 0.14013671875,
+        "coastal": false,
+        "usableFraction": 0.570068359375
+      },
+      "brief": "A public glitter fountain on a broad Kowloon textile mill footprint. A restrained silver-blue ceramic basin and a single copper nozzle at its open crown launch a spray of fine mica flakes carried downwind. Keep the mouth of the nozzle distinctly visible near the roof centre; leave most of the air clear for animation. The lower building is a hollow fluted stone drum split by a deep gallery; collectors can walk behind the polished trough. Prioritise one clear silhouette and a credible load path. Use two dominant materials and one accent; leave broad planes quiet. Keep roof planes aligned with the supplied polygon and front wall feet on its edges. A few local marks communicate human use. No unrelated machinery, arcades or gardens; treat the named references as drawing examples only.",
+      "footprint": {
+        "name": "香港紗廠工業大廈第一及二期 Hong Kong Spinners Industrial Building Phase I And II",
+        "areaM2": 6380.28,
+        "featureId": "35184727084587",
+        "sourceLayer": "buildings",
+        "sourceTile": [
+          15,
+          26774,
+          14297
+        ],
+        "coordinatesInBaseTile": [
+          [
+            0.1796875,
+            0.2890625
+          ],
+          [
+            0.6640625,
+            0.111328125
+          ],
+          [
+            0.705078125,
+            0.22265625
+          ],
+          [
+            0.779296875,
+            0.197265625
+          ],
+          [
+            0.9296875,
+            0.595703125
+          ],
+          [
+            0.375,
+            0.8125
+          ]
+        ]
+      },
+      "illustration": {
+        "raw": "generated-tiles/harbour-airworks/214192-114377-whole.png",
+        "guide": "generated-tiles/harbour-airworks/214192-114377-plan.png",
+        "pixelsPerTile": 1254,
+        "heightMetres": 152,
+        "verticalProjection": 0.6,
+        "frontCorners": [
+          0,
+          5,
+          4
+        ],
+        "matchGroundCorners": true,
+        "rawFrontPixels": [
+          [
+            70,
+            1188
+          ],
+          [
+            273,
+            1703
+          ],
+          [
+            848,
+            1483
+          ]
+        ]
+      },
+      "prompt": "A public glitter fountain on a broad Kowloon textile mill footprint. A restrained silver-blue ceramic basin and a single copper nozzle at its open crown launch a spray of fine mica flakes carried downwind. Keep the mouth of the nozzle distinctly visible near the roof centre; leave most of the air clear for animation. The lower building is a hollow fluted stone drum split by a deep gallery; collectors can walk behind the polished trough. Prioritise one clear silhouette and a credible load path. Use two dominant materials and one accent; leave broad planes quiet. Keep roof planes aligned with the supplied polygon and front wall feet on its edges. A few local marks communicate human use. No unrelated machinery, arcades or gardens; treat the named references as drawing examples only. Draw one complete inhabited skyscraper as a single illustration. In the guide, the filled polygon is the surveyed ground footprint and the separate gauge measures projected height from its rear edge. Preserve the foot of each visible wall, the entry orientation and the parcel boundary. Invent the entire structure above it. The highest point is 152 metres above the base. The tower rises from the southern tile into the tile to its north. Keep the map dead overhead and north-up. Use one parallel oblique projection for everything drawn on it. Ground contact points stay on the source plan. For a point above ground, start at its own plan position and shift it straight up the page by 0.60 times its physical height at local ground scale. Equal heights use equal offsets everywhere. Lay out each roof, landing and bridge at its own elevation. Horizontal planes retain their plan shapes and orientation; parallels stay parallel without a vanishing point. Join matching structural points across levels. Trace the near lip of an opening, its inner return and the far surface visible through it. Draw from back to front, letting a nearer eave hide part of a gallery. Use line weight, hatching and contact shade beneath overhangs to distinguish the layers. Use a 1.7-metre adult and 2.1-metre doorway at the same scale throughout. Carry a believable storey spacing up the occupied wings. Show larger spans where a performance hall, aviary or instrument actually needs them. Begin with the extraordinary thing this place allows someone to do in the sky. Let that action determine the section and silhouette.  Choose a structural idea specific to this brief. Across a series, vary the load paths, crown heights, asymmetry and openings as well as the colour. Follow the route from the street to the principal sky space. Show where a shell bears on a pier, where a suspended room hangs, or where a bridge lands. Compose foreground, middle and rear volumes with enough open air to see between them. Keep the finished back edges and crown inside the image. Draw a hand-coloured architectural atlas miniature in fine sepia ink on warm paper. At map zoom, make the site legible from its silhouette, open spaces and pattern of roofs. At native resolution let the eye discover who works here, what they handle and how they move through the place. Keep the working spaces of this particular building legible: readable entries, visible supports and quiet occupied rooms. Choose pigments from the materials of this site. Warm stone, inked timber and slate can frame expanses of signature colour such as patinated turquoise metal or patterned silk. Draw glazing ribs on glass, joints in stone, folds in fabric and wear at thresholds. Concentrate fine marks around use and construction; give the adjacent roof or court enough quiet space for that activity to read. Isolate the whole silhouette on uniform pure magenta #ff00ff for alpha extraction, including open sky visible through holes. Reserve this colour for transparency. Keep shadows on the artwork itself. Omit labels, guide marks, frame and ground slab. No circus performers, market stalls, flags, domes or cloth canopies. Render with a disciplined architect’s hand. Tiny windows grouped in bands. At least a third of the building should be quiet, uninterrupted material. Show a single brass jet on the upper roof against clear air. Omit painted glitter, as real animated glitter is added later. The body forms a tall, elegantly fluted, pale blue-grey porcelain drum branching into the roof bowl. One narrow occupied cut; cool, luminous, monumental.",
+      "observed": "Flutes carry the open porcelain bowl down to its arcade; the brass jet stands in the centre of the basin.",
+      "glitterOrigin": [
+        0.537065,
+        -0.376339
+      ]
+    },
+    {
+      "title": "The Highwire Exchange",
+      "x": 214246,
+      "y": 114421,
+      "scene": "skyscraper",
+      "region": "Hong Kong Island",
+      "eligibility": {
+        "zoom": 18,
+        "x": 214246,
+        "y": 114421,
+        "isTargetable": true,
+        "regionalLandAvailable": true,
+        "landFraction": 1,
+        "streetFraction": 0.18511962890625,
+        "coastal": false,
+        "usableFraction": 0.54168701171875
+      },
+      "brief": "A tightrope-walking school in the air. Two unequal vermilion masonry pylons lean inward above a deep public court. One taut cable with a barely perceptible loaded sag joins anchored eyelets between projecting launch decks. A tiny lone walker balances midway with a transverse pole. The negative space under the wire is the subject. Show exactly where the anchor loads return through buttresses to the occupied plinth. Prioritise one clear silhouette and a credible load path. Use two dominant materials and one accent; leave broad planes quiet. Keep roof planes aligned with the supplied polygon and front wall feet on its edges. A few local marks communicate human use. No unrelated machinery, arcades or gardens; treat the named references as drawing examples only.",
+      "footprint": {
+        "name": "西灣河市政大廈 Sai Wan Ho Municipal Services Building",
+        "areaM2": 5690.33,
+        "featureId": "35185185807849",
+        "sourceLayer": "buildings",
+        "sourceTile": [
+          15,
+          26780,
+          14302
+        ],
+        "coordinatesInBaseTile": [
+          [
+            0.24609375,
+            0.90625
+          ],
+          [
+            0.041015625,
+            0.572265625
+          ],
+          [
+            0.08984375,
+            0.53515625
+          ],
+          [
+            0.068359375,
+            0.50390625
+          ],
+          [
+            0.525390625,
+            0.16015625
+          ],
+          [
+            0.796875,
+            0.51953125
+          ]
+        ]
+      },
+      "illustration": {
+        "raw": "generated-tiles/harbour-airworks/214246-114421-whole.png",
+        "guide": "generated-tiles/harbour-airworks/214246-114421-plan.png",
+        "pixelsPerTile": 1254,
+        "heightMetres": 165,
+        "verticalProjection": 0.6,
+        "frontCorners": [
+          1,
+          0,
+          5
+        ],
+        "matchGroundCorners": true,
+        "rawFrontPixels": [
+          [
+            30,
+            1389
+          ],
+          [
+            246,
+            1676
+          ],
+          [
+            827,
+            1303
+          ]
+        ]
+      },
+      "prompt": "A tightrope-walking school in the air. Two unequal vermilion masonry pylons lean inward above a deep public court. One taut cable with a barely perceptible loaded sag joins anchored eyelets between projecting launch decks. A tiny lone walker balances midway with a transverse pole. The negative space under the wire is the subject. Show exactly where the anchor loads return through buttresses to the occupied plinth. Prioritise one clear silhouette and a credible load path. Use two dominant materials and one accent; leave broad planes quiet. Keep roof planes aligned with the supplied polygon and front wall feet on its edges. A few local marks communicate human use. No unrelated machinery, arcades or gardens; treat the named references as drawing examples only. Draw one complete inhabited skyscraper as a single illustration. In the guide, the filled polygon is the surveyed ground footprint and the separate gauge measures projected height from its rear edge. Preserve the foot of each visible wall, the entry orientation and the parcel boundary. Invent the entire structure above it. The highest point is 165 metres above the base. The tower rises from the southern tile into the tile to its north. Keep the map dead overhead and north-up. Use one parallel oblique projection for everything drawn on it. Ground contact points stay on the source plan. For a point above ground, start at its own plan position and shift it straight up the page by 0.60 times its physical height at local ground scale. Equal heights use equal offsets everywhere. Lay out each roof, landing and bridge at its own elevation. Horizontal planes retain their plan shapes and orientation; parallels stay parallel without a vanishing point. Join matching structural points across levels. Trace the near lip of an opening, its inner return and the far surface visible through it. Draw from back to front, letting a nearer eave hide part of a gallery. Use line weight, hatching and contact shade beneath overhangs to distinguish the layers. Use a 1.7-metre adult and 2.1-metre doorway at the same scale throughout. Carry a believable storey spacing up the occupied wings. Show larger spans where a performance hall, aviary or instrument actually needs them. Begin with the extraordinary thing this place allows someone to do in the sky. Let that action determine the section and silhouette.  Choose a structural idea specific to this brief. Across a series, vary the load paths, crown heights, asymmetry and openings as well as the colour. Follow the route from the street to the principal sky space. Show where a shell bears on a pier, where a suspended room hangs, or where a bridge lands. Compose foreground, middle and rear volumes with enough open air to see between them. Keep the finished back edges and crown inside the image. Draw a hand-coloured architectural atlas miniature in fine sepia ink on warm paper. At map zoom, make the site legible from its silhouette, open spaces and pattern of roofs. At native resolution let the eye discover who works here, what they handle and how they move through the place. Keep the working spaces of this particular building legible: readable entries, visible supports and quiet occupied rooms. Choose pigments from the materials of this site. Warm stone, inked timber and slate can frame expanses of signature colour such as patinated turquoise metal or patterned silk. Draw glazing ribs on glass, joints in stone, folds in fabric and wear at thresholds. Concentrate fine marks around use and construction; give the adjacent roof or court enough quiet space for that activity to read. Isolate the whole silhouette on uniform pure magenta #ff00ff for alpha extraction, including open sky visible through holes. Reserve this colour for transparency. Keep shadows on the artwork itself. Omit labels, guide marks, frame and ground slab. No circus performers, market stalls, flags, domes or cloth canopies. Render with a disciplined architect’s hand. Tiny windows grouped in bands. At least a third of the building should be quiet, uninterrupted material.",
+      "observed": "A single walker crosses the cable between vermilion piers; diagonal braces transfer the platform loads into the base.",
+      "motion": {
+        "sprite": "wire-walker",
+        "box": [
+          380,
+          925,
+          526,
+          982
+        ]
+      }
+    },
+    {
+      "title": "The Cloud Catcher",
+      "x": 214240,
+      "y": 114385,
+      "scene": "skyscraper",
+      "region": "Kowloon",
+      "eligibility": {
+        "zoom": 18,
+        "x": 214240,
+        "y": 114385,
+        "isTargetable": true,
+        "regionalLandAvailable": true,
+        "landFraction": 1,
+        "streetFraction": 0.12078857421875,
+        "coastal": false,
+        "usableFraction": 0.56072998046875
+      },
+      "brief": "A sky cistern gathers fog in two sweeping ivory mesh sails hung between blue-green ceramic masts. Moisture runs along the sagging lower hems into a tilted collector, then a visible downpipe to a deep oval reservoir. Thread a single wisp of pale mist through the nets while keeping the tension cables and attachment points clear. Prioritise one clear silhouette and a credible load path. Use two dominant materials and one accent; leave broad planes quiet. Keep roof planes aligned with the supplied polygon and front wall feet on its edges. A few local marks communicate human use. No unrelated machinery, arcades or gardens; treat the named references as drawing examples only.",
+      "footprint": {
+        "name": "彩盈坊 Choi Ying Place",
+        "areaM2": 3810.59,
+        "featureId": "35184585615825",
+        "sourceLayer": "buildings",
+        "sourceTile": [
+          15,
+          26780,
+          14298
+        ],
+        "coordinatesInBaseTile": [
+          [
+            0.49609375,
+            0.044921875
+          ],
+          [
+            0.529296875,
+            0.09765625
+          ],
+          [
+            0.75,
+            0.3828125
+          ],
+          [
+            0.607421875,
+            0.486328125
+          ],
+          [
+            0.59375,
+            0.466796875
+          ],
+          [
+            0.568359375,
+            0.486328125
+          ],
+          [
+            0.583984375,
+            0.5078125
+          ],
+          [
+            0.45703125,
+            0.58984375
+          ],
+          [
+            0.296875,
+            0.361328125
+          ],
+          [
+            0.26953125,
+            0.375
+          ],
+          [
+            0.24609375,
+            0.40625
+          ],
+          [
+            0.216796875,
+            0.42578125
+          ],
+          [
+            0.197265625,
+            0.431640625
+          ],
+          [
+            0.177734375,
+            0.431640625
+          ],
+          [
+            0.154296875,
+            0.4296875
+          ],
+          [
+            0.1328125,
+            0.419921875
+          ],
+          [
+            0.109375,
+            0.40234375
+          ],
+          [
+            0.091796875,
+            0.37890625
+          ],
+          [
+            0.08203125,
+            0.349609375
+          ],
+          [
+            0.08203125,
+            0.318359375
+          ],
+          [
+            0.087890625,
+            0.29296875
+          ],
+          [
+            0.103515625,
+            0.26953125
+          ],
+          [
+            0.119140625,
+            0.25390625
+          ],
+          [
+            0.13671875,
+            0.2421875
+          ],
+          [
+            0.15625,
+            0.236328125
+          ],
+          [
+            0.177734375,
+            0.232421875
+          ],
+          [
+            0.1953125,
+            0.21875
+          ],
+          [
+            0.185546875,
+            0.189453125
+          ],
+          [
+            0.43359375,
+            0.052734375
+          ],
+          [
+            0.451171875,
+            0.076171875
+          ]
+        ]
+      },
+      "illustration": {
+        "raw": "generated-tiles/harbour-airworks/214240-114385-whole.png",
+        "guide": "generated-tiles/harbour-airworks/214240-114385-plan.png",
+        "pixelsPerTile": 1254,
+        "heightMetres": 147,
+        "verticalProjection": 0.6,
+        "frontCorners": [
+          18,
+          17,
+          16,
+          15,
+          14,
+          13,
+          12,
+          11,
+          10,
+          9,
+          8,
+          7,
+          6,
+          4,
+          3,
+          2
+        ],
+        "matchGroundCorners": true,
+        "rawFrontPixels": [
+          [
+            27,
+            1455
+          ],
+          [
+            39,
+            1482
+          ],
+          [
+            60,
+            1507
+          ],
+          [
+            89,
+            1526
+          ],
+          [
+            115,
+            1534
+          ],
+          [
+            143,
+            1538
+          ],
+          [
+            167,
+            1537
+          ],
+          [
+            191,
+            1533
+          ],
+          [
+            227,
+            1517
+          ],
+          [
+            255,
+            1498
+          ],
+          [
+            288,
+            1506
+          ],
+          [
+            483,
+            1665
+          ],
+          [
+            638,
+            1566
+          ],
+          [
+            650,
+            1558
+          ],
+          [
+            666,
+            1548
+          ],
+          [
+            840,
+            1436
+          ]
+        ]
+      },
+      "prompt": "A sky cistern gathers fog in two sweeping ivory mesh sails hung between blue-green ceramic masts. Moisture runs along the sagging lower hems into a tilted collector, then a visible downpipe to a deep oval reservoir. Thread a single wisp of pale mist through the nets while keeping the tension cables and attachment points clear. Prioritise one clear silhouette and a credible load path. Use two dominant materials and one accent; leave broad planes quiet. Keep roof planes aligned with the supplied polygon and front wall feet on its edges. A few local marks communicate human use. No unrelated machinery, arcades or gardens; treat the named references as drawing examples only. Draw one complete inhabited skyscraper as a single illustration. In the guide, the filled polygon is the surveyed ground footprint and the separate gauge measures projected height from its rear edge. Preserve the foot of each visible wall, the entry orientation and the parcel boundary. Invent the entire structure above it. The highest point is 147 metres above the base. The tower rises from the southern tile into the tile to its north. Keep the map dead overhead and north-up. Use one parallel oblique projection for everything drawn on it. Ground contact points stay on the source plan. For a point above ground, start at its own plan position and shift it straight up the page by 0.60 times its physical height at local ground scale. Equal heights use equal offsets everywhere. Lay out each roof, landing and bridge at its own elevation. Horizontal planes retain their plan shapes and orientation; parallels stay parallel without a vanishing point. Join matching structural points across levels. Trace the near lip of an opening, its inner return and the far surface visible through it. Draw from back to front, letting a nearer eave hide part of a gallery. Use line weight, hatching and contact shade beneath overhangs to distinguish the layers. Use a 1.7-metre adult and 2.1-metre doorway at the same scale throughout. Carry a believable storey spacing up the occupied wings. Show larger spans where a performance hall, aviary or instrument actually needs them. Begin with the extraordinary thing this place allows someone to do in the sky. Let that action determine the section and silhouette.  Choose a structural idea specific to this brief. Across a series, vary the load paths, crown heights, asymmetry and openings as well as the colour. Follow the route from the street to the principal sky space. Show where a shell bears on a pier, where a suspended room hangs, or where a bridge lands. Compose foreground, middle and rear volumes with enough open air to see between them. Keep the finished back edges and crown inside the image. Draw a hand-coloured architectural atlas miniature in fine sepia ink on warm paper. At map zoom, make the site legible from its silhouette, open spaces and pattern of roofs. At native resolution let the eye discover who works here, what they handle and how they move through the place. Keep the working spaces of this particular building legible: readable entries, visible supports and quiet occupied rooms. Choose pigments from the materials of this site. Warm stone, inked timber and slate can frame expanses of signature colour such as patinated turquoise metal or patterned silk. Draw glazing ribs on glass, joints in stone, folds in fabric and wear at thresholds. Concentrate fine marks around use and construction; give the adjacent roof or court enough quiet space for that activity to read. Isolate the whole silhouette on uniform pure magenta #ff00ff for alpha extraction, including open sky visible through holes. Reserve this colour for transparency. Keep shadows on the artwork itself. Omit labels, guide marks, frame and ground slab. No circus performers, market stalls, flags, domes or cloth canopies. Render with a disciplined architect’s hand. Tiny windows grouped in bands. At least a third of the building should be quiet, uninterrupted material.",
+      "observed": "Two sagging mesh collectors lead to a glazed trough; a downpipe empties into the exposed reservoir."
+    },
+    {
+      "title": "The Eclipse Theatre",
+      "auditoriumOriginPixels": [460, 1290],
+      "x": 214231,
+      "y": 114455,
+      "scene": "skyscraper",
+      "region": "Hong Kong Island",
+      "eligibility": {
+        "zoom": 18,
+        "x": 214231,
+        "y": 114455,
+        "isTargetable": true,
+        "regionalLandAvailable": true,
+        "landFraction": 0.98,
+        "streetFraction": 0.04638671875,
+        "coastal": false,
+        "usableFraction": 0.86578369140625
+      },
+      "brief": "A daylight theatre operates by occultation. A large dark bronze disc travels on a visible curved rail in front of an amber-glass oculus, casting a crescent of light inside a terraced open auditorium. One shell cradles the audience and a shorter counterweight pier supports the rail. The disc must be visibly connected to its carriage. Prioritise one clear silhouette and a credible load path. Use two dominant materials and one accent; leave broad planes quiet. Keep roof planes aligned with the supplied polygon and front wall feet on its edges. A few local marks communicate human use. No unrelated machinery, arcades or gardens; treat the named references as drawing examples only.",
+      "footprint": {
+        "name": "Hong Kong International School - Lower Primary",
+        "areaM2": 3729.59,
+        "featureId": "52776564712955",
+        "sourceLayer": "buildings",
+        "sourceTile": [
+          15,
+          26778,
+          14306
+        ],
+        "coordinatesInBaseTile": [
+          [
+            0.443359375,
+            0.6640625
+          ],
+          [
+            0.4609375,
+            0.6875
+          ],
+          [
+            0.333984375,
+            0.78125
+          ],
+          [
+            0.27734375,
+            0.6953125
+          ],
+          [
+            0.26953125,
+            0.625
+          ],
+          [
+            0.255859375,
+            0.623046875
+          ],
+          [
+            0.2421875,
+            0.544921875
+          ],
+          [
+            0.166015625,
+            0.529296875
+          ],
+          [
+            0.134765625,
+            0.4921875
+          ],
+          [
+            0.123046875,
+            0.29296875
+          ],
+          [
+            0.154296875,
+            0.251953125
+          ],
+          [
+            0.259765625,
+            0.24609375
+          ],
+          [
+            0.30859375,
+            0.248046875
+          ],
+          [
+            0.34375,
+            0.21484375
+          ],
+          [
+            0.392578125,
+            0.240234375
+          ],
+          [
+            0.427734375,
+            0.212890625
+          ],
+          [
+            0.40234375,
+            0.19140625
+          ],
+          [
+            0.6015625,
+            0.033203125
+          ],
+          [
+            0.697265625,
+            0.15234375
+          ],
+          [
+            0.5078125,
+            0.302734375
+          ],
+          [
+            0.537109375,
+            0.3203125
+          ]
+        ]
+      },
+      "illustration": {
+        "raw": "generated-tiles/harbour-airworks/214231-114455-whole.png",
+        "guide": "generated-tiles/harbour-airworks/214231-114455-plan.png",
+        "pixelsPerTile": 1254,
+        "heightMetres": 128,
+        "verticalProjection": 0.6,
+        "frontCorners": [
+          9,
+          8,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2,
+          1,
+          20,
+          18
+        ],
+        "placement": "uniform",
+        "groundAnchorCorner": 2,
+        "sourceFrontWidth": 833
+      },
+      "prompt": "A daylight theatre operates by occultation. A large dark bronze disc travels on a visible curved rail in front of an amber-glass oculus, casting a crescent of light inside a terraced open auditorium. One shell cradles the audience and a shorter counterweight pier supports the rail. The disc must be visibly connected to its carriage. Prioritise one clear silhouette and a credible load path. Use two dominant materials and one accent; leave broad planes quiet. Keep roof planes aligned with the supplied polygon and front wall feet on its edges. A few local marks communicate human use. No unrelated machinery, arcades or gardens; treat the named references as drawing examples only. Draw one complete inhabited skyscraper as a single illustration. In the guide, the filled polygon is the surveyed ground footprint and the separate gauge measures projected height from its rear edge. Preserve the foot of each visible wall, the entry orientation and the parcel boundary. Invent the entire structure above it. The highest point is 128 metres above the base. The tower rises from the southern tile into the tile to its north. Keep the map dead overhead and north-up. Use one parallel oblique projection for everything drawn on it. Ground contact points stay on the source plan. For a point above ground, start at its own plan position and shift it straight up the page by 0.60 times its physical height at local ground scale. Equal heights use equal offsets everywhere. Lay out each roof, landing and bridge at its own elevation. Horizontal planes retain their plan shapes and orientation; parallels stay parallel without a vanishing point. Join matching structural points across levels. Trace the near lip of an opening, its inner return and the far surface visible through it. Draw from back to front, letting a nearer eave hide part of a gallery. Use line weight, hatching and contact shade beneath overhangs to distinguish the layers. Use a 1.7-metre adult and 2.1-metre doorway at the same scale throughout. Carry a believable storey spacing up the occupied wings. Show larger spans where a performance hall, aviary or instrument actually needs them. Begin with the extraordinary thing this place allows someone to do in the sky. Let that action determine the section and silhouette.  Choose a structural idea specific to this brief. Across a series, vary the load paths, crown heights, asymmetry and openings as well as the colour. Follow the route from the street to the principal sky space. Show where a shell bears on a pier, where a suspended room hangs, or where a bridge lands. Compose foreground, middle and rear volumes with enough open air to see between them. Keep the finished back edges and crown inside the image. Draw a hand-coloured architectural atlas miniature in fine sepia ink on warm paper. At map zoom, make the site legible from its silhouette, open spaces and pattern of roofs. At native resolution let the eye discover who works here, what they handle and how they move through the place. Keep the working spaces of this particular building legible: readable entries, visible supports and quiet occupied rooms. Choose pigments from the materials of this site. Warm stone, inked timber and slate can frame expanses of signature colour such as patinated turquoise metal or patterned silk. Draw glazing ribs on glass, joints in stone, folds in fabric and wear at thresholds. Concentrate fine marks around use and construction; give the adjacent roof or court enough quiet space for that activity to read. Isolate the whole silhouette on uniform pure magenta #ff00ff for alpha extraction, including open sky visible through holes. Reserve this colour for transparency. Keep shadows on the artwork itself. Omit labels, guide marks, frame and ground slab. No circus performers, market stalls, flags, domes or cloth canopies. Render with a disciplined architect’s hand. Tiny windows grouped in bands. At least a third of the building should be quiet, uninterrupted material.",
+      "observed": "The bronze shutter rides a curved rail across amber glazing, throwing a crescent of light into the theatre."
+    },
+    {
+      "title": "The Samara Port",
+      "x": 214190,
+      "y": 114379,
+      "scene": "skyscraper",
+      "region": "Kowloon",
+      "eligibility": {
+        "zoom": 18,
+        "x": 214190,
+        "y": 114379,
+        "isTargetable": true,
+        "regionalLandAvailable": true,
+        "landFraction": 1,
+        "streetFraction": 0.18792724609375,
+        "coastal": false,
+        "usableFraction": 0.3673095703125
+      },
+      "brief": "A windborne seed exchange for the city gardens. A great asymmetrical maple seed wing in russet translucent silk is docked above a sloping launch ramp. A small capsule hangs directly under its weighted tip. A second tiny seed glider has just left the ramp. Laminar timber ribs, one seed-sorting gallery and an open lee court make the port legible. Prioritise one clear silhouette and a credible load path. Use two dominant materials and one accent; leave broad planes quiet. Keep roof planes aligned with the supplied polygon and front wall feet on its edges. A few local marks communicate human use. No unrelated machinery, arcades or gardens; treat the named references as drawing examples only.",
+      "footprint": {
+        "name": "Mapped Kowloon building",
+        "areaM2": 4206.92,
+        "featureId": "35184475337406",
+        "sourceLayer": "buildings",
+        "sourceTile": [
+          15,
+          26773,
+          14297
+        ],
+        "coordinatesInBaseTile": [
+          [
+            0.2265625,
+            0.3671875
+          ],
+          [
+            0.62109375,
+            0.22265625
+          ],
+          [
+            0.83203125,
+            0.80078125
+          ],
+          [
+            0.771484375,
+            0.80078125
+          ],
+          [
+            0.708984375,
+            0.796875
+          ],
+          [
+            0.6484375,
+            0.787109375
+          ],
+          [
+            0.587890625,
+            0.771484375
+          ],
+          [
+            0.53125,
+            0.75
+          ],
+          [
+            0.474609375,
+            0.72265625
+          ],
+          [
+            0.421875,
+            0.69140625
+          ],
+          [
+            0.373046875,
+            0.654296875
+          ],
+          [
+            0.326171875,
+            0.61328125
+          ],
+          [
+            0.28515625,
+            0.56640625
+          ],
+          [
+            0.248046875,
+            0.517578125
+          ],
+          [
+            0.216796875,
+            0.46484375
+          ],
+          [
+            0.208984375,
+            0.44921875
+          ],
+          [
+            0.20703125,
+            0.4140625
+          ],
+          [
+            0.2109375,
+            0.3984375
+          ]
+        ]
+      },
+      "illustration": {
+        "raw": "generated-tiles/harbour-airworks/214190-114379-whole.png",
+        "guide": "generated-tiles/harbour-airworks/214190-114379-plan.png",
+        "pixelsPerTile": 1254,
+        "heightMetres": 138,
+        "verticalProjection": 0.6,
+        "frontCorners": [
+          16,
+          15,
+          14,
+          13,
+          12,
+          11,
+          10,
+          9,
+          8,
+          7,
+          6,
+          5,
+          4,
+          3,
+          2
+        ],
+        "matchGroundCorners": true,
+        "rawFrontPixels": [
+          [
+            81,
+            1243
+          ],
+          [
+            83,
+            1258
+          ],
+          [
+            93,
+            1277
+          ],
+          [
+            130,
+            1343
+          ],
+          [
+            174,
+            1402
+          ],
+          [
+            222,
+            1454
+          ],
+          [
+            278,
+            1505
+          ],
+          [
+            335,
+            1547
+          ],
+          [
+            398,
+            1584
+          ],
+          [
+            465,
+            1615
+          ],
+          [
+            532,
+            1639
+          ],
+          [
+            604,
+            1657
+          ],
+          [
+            675,
+            1665
+          ],
+          [
+            749,
+            1669
+          ],
+          [
+            821,
+            1670
+          ]
+        ]
+      },
+      "prompt": "A windborne seed exchange for the city gardens. A great asymmetrical maple seed wing in russet translucent silk is docked above a sloping launch ramp. A small capsule hangs directly under its weighted tip. A second tiny seed glider has just left the ramp. Laminar timber ribs, one seed-sorting gallery and an open lee court make the port legible. Prioritise one clear silhouette and a credible load path. Use two dominant materials and one accent; leave broad planes quiet. Keep roof planes aligned with the supplied polygon and front wall feet on its edges. A few local marks communicate human use. No unrelated machinery, arcades or gardens; treat the named references as drawing examples only. Draw one complete inhabited skyscraper as a single illustration. In the guide, the filled polygon is the surveyed ground footprint and the separate gauge measures projected height from its rear edge. Preserve the foot of each visible wall, the entry orientation and the parcel boundary. Invent the entire structure above it. The highest point is 138 metres above the base. The tower rises from the southern tile into the tile to its north. Keep the map dead overhead and north-up. Use one parallel oblique projection for everything drawn on it. Ground contact points stay on the source plan. For a point above ground, start at its own plan position and shift it straight up the page by 0.60 times its physical height at local ground scale. Equal heights use equal offsets everywhere. Lay out each roof, landing and bridge at its own elevation. Horizontal planes retain their plan shapes and orientation; parallels stay parallel without a vanishing point. Join matching structural points across levels. Trace the near lip of an opening, its inner return and the far surface visible through it. Draw from back to front, letting a nearer eave hide part of a gallery. Use line weight, hatching and contact shade beneath overhangs to distinguish the layers. Use a 1.7-metre adult and 2.1-metre doorway at the same scale throughout. Carry a believable storey spacing up the occupied wings. Show larger spans where a performance hall, aviary or instrument actually needs them. Begin with the extraordinary thing this place allows someone to do in the sky. Let that action determine the section and silhouette.  Choose a structural idea specific to this brief. Across a series, vary the load paths, crown heights, asymmetry and openings as well as the colour. Follow the route from the street to the principal sky space. Show where a shell bears on a pier, where a suspended room hangs, or where a bridge lands. Compose foreground, middle and rear volumes with enough open air to see between them. Keep the finished back edges and crown inside the image. Draw a hand-coloured architectural atlas miniature in fine sepia ink on warm paper. At map zoom, make the site legible from its silhouette, open spaces and pattern of roofs. At native resolution let the eye discover who works here, what they handle and how they move through the place. Keep the working spaces of this particular building legible: readable entries, visible supports and quiet occupied rooms. Choose pigments from the materials of this site. Warm stone, inked timber and slate can frame expanses of signature colour such as patinated turquoise metal or patterned silk. Draw glazing ribs on glass, joints in stone, folds in fabric and wear at thresholds. Concentrate fine marks around use and construction; give the adjacent roof or court enough quiet space for that activity to read. Isolate the whole silhouette on uniform pure magenta #ff00ff for alpha extraction, including open sky visible through holes. Reserve this colour for transparency. Keep shadows on the artwork itself. Omit labels, guide marks, frame and ground slab. No circus performers, market stalls, flags, domes or cloth canopies. Render with a disciplined architect’s hand. Tiny windows grouped in bands. At least a third of the building should be quiet, uninterrupted material.",
+      "observed": "A russet wing rests on timber ribs, a seed capsule hangs at its weighted tip and a second glider clears the ramp.",
+      "motion": {
+        "sprite": "samara-glider",
+        "box": [
+          989,
+          1400,
+          1085,
+          1444
+        ]
+      }
+    }
+  ]
+}

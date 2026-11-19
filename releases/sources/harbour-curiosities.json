@@ -1,0 +1,60 @@
+{
+  "title": "Harbour Curiosities",
+  "slug": "harbour-curiosities",
+  "grid": {
+    "zoom": 18,
+    "x": 214205,
+    "y": 114419,
+    "size": 10
+  },
+  "tiles": [
+    {
+      "scene": "mermaid-station",
+      "title": "Mermaid Transformation Station",
+      "x": 214205,
+      "y": 114420
+    },
+    {
+      "scene": "walking-yacht-club",
+      "title": "The Walking Yacht Club",
+      "x": 214209,
+      "y": 114419
+    },
+    {
+      "scene": "staircase-foundation",
+      "title": "The Staircase Foundation",
+      "x": 214210,
+      "y": 114419
+    },
+    {
+      "scene": "car-boat-works",
+      "title": "The Car-to-Boat Works",
+      "x": 214211,
+      "y": 114419
+    },
+    {
+      "scene": "flying-fish-burgers",
+      "title": "Flying Fish Burger Pier",
+      "x": 214211,
+      "y": 114420
+    },
+    {
+      "scene": "bottled-post",
+      "title": "The Bottle Post Sorting Office",
+      "x": 214212,
+      "y": 114420
+    },
+    {
+      "scene": "wave-organ",
+      "title": "The Breakwater Organ",
+      "x": 214213,
+      "y": 114420
+    },
+    {
+      "scene": "moon-jelly-lanterns",
+      "title": "The Moon Jelly Lantern Library",
+      "x": 214214,
+      "y": 114420
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "id": "hong-kong-international-airport",
+  "title": "Hong Kong International Airport",
+  "accepted": true,
+  "art": [
+    {
+      "title": "The Monsoon Chart House",
+      "x": 214011,
+      "y": 114402,
+      "columns": 2,
+      "rows": 1,
+      "url": "/atlas-v2/airport/monsoon-atlas.webp?v=2d9a7bb013353b78"
+    },
+    {
+      "title": "The Great Silk Loft",
+      "x": 214010,
+      "y": 114403,
+      "columns": 2,
+      "rows": 1,
+      "url": "/atlas-v2/airport/silk-loft.webp?v=0893266d08e0b967"
+    },
+    {
+      "title": "The Night Mail Exchange",
+      "x": 214029,
+      "y": 114407,
+      "columns": 2,
+      "rows": 1,
+      "url": "/atlas-v2/airport/night-mail.webp?v=4bc52d2e27a3cfbb"
+    },
+    {
+      "title": "The Swallows’ Passport Garden",
+      "x": 214037,
+      "y": 114400,
+      "columns": 1,
+      "rows": 2,
+      "url": "/atlas-v2/airport/migration-garden.webp?v=eca11a4e51d0a6e6"
+    },
+    {
+      "title": "The Cloud Sounding Press",
+      "x": 214036,
+      "y": 114403,
+      "columns": 1,
+      "rows": 2,
+      "url": "/atlas-v2/airport/cloud-soundings.webp?v=f0193995f5816928"
+    },
+    {
+      "title": "The Court of Returning Stars",
+      "x": 214036,
+      "y": 114395,
+      "columns": 1,
+      "rows": 2,
+      "url": "/atlas-v2/airport/returning-stars.webp?v=d92d9718d57edf34"
+    }
+  ]
+}
