@@ -33,6 +33,7 @@
   ],
   "durable_objects": {
     "bindings": [
+      { "name": "FAKE_RENDER_CLOUD", "class_name": "FakeRenderCloud" },
       {
         "name": "ATLAS_MANIFEST",
         "class_name": "AtlasManifest"
@@ -60,7 +61,8 @@
           "to": "FogEligibilityIndexCache"
         }
       ]
-    }
+    },
+    { "tag": "v4-fake-render", "new_sqlite_classes": ["FakeRenderCloud"] }
   ],
   "observability": {
     "enabled": true,

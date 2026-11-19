@@ -14,6 +14,7 @@ interface __BaseEnv_Env {
 	ATLAS_ADMIN_MODE: string;
 	ATLAS_LOCAL_DEV: string;
 	ATLAS_MANIFEST_TOKEN: string;
+	FAKE_RENDER_CLOUD: DurableObjectNamespace<import("./src/worker").FakeRenderCloud>;
 	ATLAS_MANIFEST: DurableObjectNamespace<import("./src/worker").AtlasManifest>;
 	FOG_ELIGIBILITY_INDEX_CACHE: DurableObjectNamespace<import("./src/worker").FogEligibilityIndexCache>;
 }

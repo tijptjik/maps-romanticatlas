@@ -1,5 +1,7 @@
 import { handleAtlasApi } from './worker-api.ts'
 
+export { FakeRenderCloud } from './fake-render-cloud.ts'
+
 export { AtlasManifest } from './atlas-manifest.ts'
 export { FogEligibilityIndexCache } from './fog-eligibility-index-cache.ts'
 

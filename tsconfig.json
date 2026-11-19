@@ -15,6 +15,7 @@
     "src/worker.ts",
     "src/worker-api.ts",
     "src/si-generation.ts",
+    "src/fake-render-cloud.ts",
     "src/atlas-manifest.ts",
     "src/fog-eligibility-index-cache.ts"
   ]

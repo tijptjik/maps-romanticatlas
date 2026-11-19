@@ -28,6 +28,8 @@ export const kioskModeEnabled = () => modeEnabled('kioskMode')
 export const noMusicEnabled = () =>
   new URLSearchParams(window.location.search).has('noMusic')
 
+export const noFakeRenderEnabled = () => modeEnabled('noFakeRender') || modeEnabled('no-fake-render')
+
 export const noNoiseEnabled = () => modeEnabled('noNoise')
 
 // URLSearchParams adds '=' to empty values. Keep map mode links bare.

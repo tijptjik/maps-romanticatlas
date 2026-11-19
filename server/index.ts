@@ -1,3 +1,6 @@
+import { createFakeRenderStore } from './fake-render-store'
+import { isFakeRenderTile } from '../src/fake-render-state'
+import { fakeRenderSeed } from '../src/fake-render-seed'
 import { releaseCatalog, mediaCacheControl, releaseObjectKey, releaseMediaPath } from '../src/release-media.ts'
 import { createServer } from 'node:http'
 import { createHmac, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto'
@@ -1158,6 +1161,46 @@ async function saveReview(review: ArtworkReview) {
   await rename(temporary, reviewsPath)
 }
 
+const rotatingClouds = createFakeRenderStore(path.join(rootDirectory, '.local/fake-render'))
+const rotatingJobs = new Set<string>()
+async function serveRotatingCloud(request, response, match: RegExpMatchArray) {
+  if (request.method !== 'POST' || !applicationRequestIsAllowed(request)) {
+    sendError(response, 403, 'Application POST required.')
+    return
+  }
+  const tile = { zoom: 18, x: Number(match[1]), y: Number(match[2]) }
+  if (!isFakeRenderTile(tile) || !isFogPatternSelected(tile)) { sendError(response, 400, 'Not a rotating cloud.'); return }
+  const body = await readRequestBody(request)
+  if (typeof body.requestId !== 'string' || !/^[a-f0-9-]{36}$/.test(body.requestId)) { sendError(response, 400, 'Invalid request ID.'); return }
+  const source = parseImageDataUrl(body.sourceImage)
+  if (source.contentType !== 'image/png') { sendError(response, 400, 'PNG required.'); return }
+  const { eligibilities } = await localEligibilityForPositions([tile])
+  if (!eligibilities[0]?.isTargetable) { sendError(response, 403, 'This tile cannot be rendered.'); return }
+  const cached = await findCachedTile(tile)
+  const seed = fakeRenderSeed(tile) ?? (cached ? cachedTilePayload(cached) : null)
+  const id = `${tile.x}/${tile.y}`
+  const result = rotatingClouds.claim(id, seed, body.requestId, body.sourceImage)
+  const state = rotatingClouds.read(id)
+  if (state?.attempts >= 3 && !result) { sendError(response, 503, 'Replacement failed. Please choose another cloud.'); return }
+  sendJson(response, result ? 200 : 202, result ?? { pending: true }, { 'cache-control': 'no-store' })
+  if (!state?.job || rotatingJobs.has(id)) return
+  rotatingJobs.add(id)
+  try {
+    const generated = await generateTile({ ...tile, scene: state.scene, hasSea: false }, state.sourceImage,
+      undefined, undefined, undefined, null, 'discovery-rotating')
+    const latest = rotatingClouds.read(id)
+    latest.ready = cachedTilePayload({ ...generated, version: generated.generationVersion })
+    latest.job = null
+    latest.sourceImage = ''
+    rotatingClouds.save(id, latest)
+  } catch (error) {
+    const latest = rotatingClouds.read(id)
+    latest.attempts++
+    rotatingClouds.save(id, latest)
+    console.error('Rotating cloud replacement failed', id, error)
+  } finally { rotatingJobs.delete(id) }
+}
+
 const server = createServer(async (request, response) => {
   try {
     const pathname = new URL(request.url, 'http://localhost').pathname
@@ -1188,6 +1231,8 @@ const server = createServer(async (request, response) => {
       if (localPath !== pathname) request.url = localPath + new URL(request.url, 'http://localhost').search
     }
 
+    const rotating = pathname.match(/^\/api\/fake-render\/18\/(\d+)\/(\d+)$/)
+    if (rotating) { await serveRotatingCloud(request, response, rotating); return }
     if (!isProduction && request.method === 'GET' && pathname.startsWith(liveJobPath)) {
       const job = liveJobs.get(pathname.slice(liveJobPath.length))
       if (!job) return sendError(response, 404, 'This generation job has expired.')

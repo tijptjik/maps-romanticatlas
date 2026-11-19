@@ -25,14 +25,16 @@ async function generator(env: GeneratorEnv, path: string, options: RequestInit =
   })
 }
 
-export async function startSiGeneration(env: GeneratorEnv, tile: Job['tile'], sourceImage: string, discovery?: string) {
-  const id = crypto.randomUUID()
-  const job: Job = {
+export async function startSiGeneration(env: GeneratorEnv, tile: Job['tile'], sourceImage: string, discovery?: string, jobId?: string) {
+  const id = jobId ?? crypto.randomUUID()
+  const previous = jobId ? await env.ATLAS_BUCKET.get(jobKey(id)) : null
+  const job: Job = previous ? await previous.json<Job>() : {
     id, tile, createdAt: new Date().toISOString(), status: 'pending',
     variant: discovery ? discovery + '-' + id.slice(-12) : id,
   }
   // Persist before dispatch so even an immediate completion can publish safely.
-  await env.ATLAS_BUCKET.put(jobKey(id), JSON.stringify(job))
+  if (job.status !== 'pending') return reply({ statusUrl: '/api/discovery-jobs/' + id }, 202)
+  if (!previous) await env.ATLAS_BUCKET.put(jobKey(id), JSON.stringify(job))
   let response: Response
   try {
     response = await generator(env, '/jobs/' + id, {

@@ -1,3 +1,5 @@
+import { isFakeRenderTile } from './fake-render-state'
+import { noFakeRenderEnabled } from './runtime-modes'
 import { originalArtwork } from './artwork-sampling'
 import { installArtworkAnimations } from './fountain-glitter'
 import type { Painting } from './artwork-review'
@@ -910,6 +912,7 @@ export const createFogCanvas = (
   map,
   tileState,
   cachedTileIds,
+  fakeRenderTile = (_tile) => false,
   isFogTileRenderable,
   noNoise = false,
   isSelected = isFogged,
@@ -1037,6 +1040,7 @@ export const createFogCanvas = (
   const zoomMaskFrameInterval = 1000 / 20
   const cachedMistFrameInterval = 1000 / 15
   const loadingSequences = new Map()
+  const singleReadings = new Map<string, { done: boolean; resolve: () => void }>()
   let fogError: { id: string; text: string; startedAt: number } | undefined
   const generatingStartedAt = new Map()
   const revealStartedAt = new Map()
@@ -1479,6 +1483,7 @@ export const createFogCanvas = (
     setOverlayContextTransform(mistContext, ratio)
     let hasVisibleColourCloud = false
     cachedTileIds.forEach(id => {
+      if (fakeRenderTile(tileFromId(id))) return
       const tile = tileFromId(id)
       if (tileState.has(id) || !isSelected(tile) || !isFogTileRenderable(tile)) return
       hasVisibleColourCloud =
@@ -1545,7 +1550,12 @@ export const createFogCanvas = (
       let concept = sequence.concept
       let elapsed = time - sequence.startedAt
       let timing = getLoadingTiming(concept, size)
-      while (elapsed >= timing.cycleDuration) {
+      const reading = singleReadings.get(id)
+      if (reading && elapsed >= timing.cycleDuration) {
+        if (!reading.done) { reading.done = true; reading.resolve() }
+        elapsed = timing.cycleDuration - 1400
+      }
+      while (!reading && elapsed >= timing.cycleDuration) {
         sequence.concept = nextLoadingConcept()
         sequence.startedAt += timing.cycleDuration
         concept = sequence.concept
@@ -2064,6 +2074,11 @@ export const createFogCanvas = (
   resize()
   invalidate()
   return {
+    readOnce: (id: string) => new Promise<void>(resolve => {
+      singleReadings.set(id, { done: false, resolve })
+      loadingSequences.delete(id)
+      invalidate()
+    }),
     invalidate: () => {
       // New eligibility or artwork must enter the buffer even mid-pan.
       maskContentDirty = true
@@ -2130,6 +2145,7 @@ export const createFogCanvas = (
     cancelReveal: id => {
       revealStartedAt.delete(id)
       pokedAt.delete(id)
+      singleReadings.delete(id)
     },
     destroy: () => {
       mapEvents.forEach(eventName => {
@@ -2199,8 +2215,9 @@ export const installAtlasTileInteractions = (
   const visitKey = import.meta.env.DEV ? 'atlas-codex-discovery-visit' : 'atlas-discovery-visit'
   const discoveryVisit = artwork ? (sessionStorage.getItem(visitKey) ?? crypto.randomUUID()) : undefined
   if (discoveryVisit) sessionStorage.setItem(visitKey, discoveryVisit)
-  const discoveryQuery = discoveryVisit ? '?discovery=' + discoveryVisit : ''
-  const belongsToVisit = (url: string) => !discoveryVisit || (
+  const generationQuery = discoveryVisit ? '?discovery=' + discoveryVisit : ''
+  const discoveryQuery = noFakeRenderEnabled() ? generationQuery : ''
+  const belongsToVisit = (url: string) => !noFakeRenderEnabled() || !discoveryVisit || (
     new URL(url, location.href).searchParams.get('variant')?.startsWith('discovery-' + discoveryVisit + '-')
   )
   const spansMultipleTiles = (art: Painting) => art.rows > 1 || (art.columns ?? 1) > 1
@@ -2211,6 +2228,9 @@ export const installAtlasTileInteractions = (
   const hasFootprintOverride = artwork ? tile => multiTileCells.has(tileId(tile)) : isHkuSite
   const selected = tile => hasFootprintOverride(tile) || isFogPatternSelected(tile)
   const cachedTileIds = new Set<string>(revealed ? [] : artwork?.keys())
+  const fakeRenderTile = tile => !revealed && !noFakeRenderEnabled() &&
+    !multiTileCells.has(tileId(tile)) && isFogPatternSelected(tile) && isFakeRenderTile(tile)
+
   const indexedCachedTiles = new Map()
   const fogIndexTiles = new Map()
   const fogIndexRequests = new Map()
@@ -2410,6 +2430,7 @@ export const installAtlasTileInteractions = (
     map,
     tileState,
     cachedTileIds,
+    fakeRenderTile,
     isFogTileLand,
     noNoise,
     selected,
@@ -2889,6 +2910,51 @@ export const installAtlasTileInteractions = (
         : ''
   })
 
+  const rotatingRequests = new Map<string, string>()
+  const revealRotatingCloud = async tile => {
+    const id = tileId(tile)
+    if (tileState.has(id)) return
+    if ([...tileState.values()].filter(state => state === 'checking' || state === 'generating').length >= concurrentGenerationLimit) {
+      clearanceNotice.show('Three tile clearings are already in progress. Wait for one to finish.')
+      return
+    }
+    const budget = AbortSignal.timeout(35 * 60_000)
+    tileState.set(id, 'checking')
+    fog.clearError()
+    fog.poke(id)
+    const reading = fog.readOnce(id)
+    const keepAlive = window.setInterval(() => map.getContainer().dispatchEvent(new Event('atlas-generation-progress')), 5000)
+    fog.invalidate()
+    try {
+      await withinClickBudget(focusTileForCapture(tile), budget)
+      const captured = await withinClickBudget(captureTile(map, tile, 1024), budget)
+      const requestId = rotatingRequests.get(id) ?? crypto.randomUUID()
+      rotatingRequests.set(id, requestId)
+      let response: Response
+      do {
+        response = await fetch(`/api/fake-render/18/${tile.x}/${tile.y}`, {
+          method: 'POST', signal: budget, headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ sourceImage: captured.sourceImage, requestId }),
+        })
+        if (response.status === 202) await new Promise(resolve => setTimeout(resolve, 2000))
+      } while (response.status === 202)
+      const result = await response.json()
+      if (!response.ok) throw Error(result.error ?? 'This clearing is unavailable. Please try again.')
+      // Decode while the single reading finishes; never substitute an old local cache.
+      await Promise.all([
+        addGeneratedTile(map, tile, result.url, result.scene, titleCards, result.contentBounds, 0, budget),
+        withinClickBudget(reading, budget),
+      ])
+      revealGeneratedTile(id, result.scene)
+      rotatingRequests.delete(id)
+    } catch (error) {
+      tileState.delete(id)
+      fog.cancelReveal(id)
+      fog.showError(id, error instanceof Error ? error.message : 'Please try this cloud again.')
+      fog.invalidate()
+    } finally { window.clearInterval(keepAlive) }
+  }
+
   map.on('click', async event => {
     if (isAdminMode()) return
     if (map.getZoom() < minimumFogZoom) return
@@ -2905,6 +2971,10 @@ export const installAtlasTileInteractions = (
       !(isFogPatternSelected(tile) && isTargetableLand(tile))
       ? choices.filter(spansMultipleTiles)
       : choices
+    if (fakeRenderTile(tile) && (paintings?.length || cachedTileIds.has(id))) {
+      await revealRotatingCloud(tile)
+      return
+    }
     if (paintings?.length) {
       if (tileState.has(id)) return
       const art = paintings[Math.floor(Math.random() * paintings.length)]
@@ -3007,6 +3077,11 @@ export const installAtlasTileInteractions = (
     let rateLimited = false
     try {
       const cacheStatus = await withinClickBudget(checkCachedTile(tile), budget)
+      if (cacheStatus.cached && fakeRenderTile(tile)) {
+        tileState.delete(id)
+        await revealRotatingCloud(tile)
+        return
+      }
       if (cacheStatus.cached) {
         // The visible-tile preloader normally has started this already, but a
         // direct click can beat it. Start decoding before image setup so the
@@ -3054,7 +3129,7 @@ export const installAtlasTileInteractions = (
       let responseText: string
       try {
         response = await fetch(
-          `/api/atlas-tiles/${atlasZoom}/${tile.x}/${tile.y}/${scene}${discoveryQuery}`,
+          `/api/atlas-tiles/${atlasZoom}/${tile.x}/${tile.y}/${scene}${generationQuery}`,
           {
             method: 'POST',
             signal: budget,
