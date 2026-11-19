@@ -2,13 +2,12 @@ import { randomUUID } from 'node:crypto'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import sharp from 'sharp'
-import { atlasPrompt } from '../src/atlas-prompt.ts'
-import { type AtlasScene } from '../src/atlas-scenes.ts'
+import { atlasScenes, type AtlasScene } from '../src/atlas-scenes.ts'
 import { parseImageDataUrl } from './image-data-url.ts'
 
 // This adapter owns local execution. The map consumes the same completed tile
 // payload whether a future worker runs the job here or on another machine.
-export async function renderCodexTile(root: string, tile: { scene: AtlasScene; y: number; hasSea: boolean }, sourceImage: string) {
+export async function renderCodexTile(root: string, tile: { scene: AtlasScene; y: number }, sourceImage: string) {
   const jobId = randomUUID()
   const directory = path.join(root, 'generated-tiles/dream-atlas/live/jobs', jobId)
   const source = parseImageDataUrl(sourceImage)
@@ -17,8 +16,8 @@ export async function renderCodexTile(root: string, tile: { scene: AtlasScene; y
     throw new Error('Codex requires a square atlas PNG.')
   await mkdir(directory, { recursive: true })
   await writeFile(path.join(directory, 'source.png'), source.data)
-  const process = Bun.spawn(['python3', 'scripts/render-live-artwork.py', jobId], {
-    cwd: root, stdin: new Blob([atlasPrompt(tile.scene, tile.hasSea)]), stdout: 'ignore', stderr: 'pipe',
+  const process = Bun.spawn(['python3', 'scripts/dream-atlas.py', 'live-tile', jobId, tile.scene, String(tile.y)], {
+    cwd: root, stdin: new Blob([atlasScenes[tile.scene]]), stdout: 'ignore', stderr: 'pipe',
   })
   const [exit, diagnostic] = await Promise.all([process.exited, new Response(process.stderr).text()])
   if (exit !== 0) {
