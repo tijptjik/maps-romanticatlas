@@ -1,10 +1,11 @@
 import { neighborhoodLabelLayerId } from './map-style'
 import { installArtworkAnimations } from './fountain-glitter'
-import type { GeoJSONSource, Map as AtlasMap } from 'maplibre-gl'
+import type { GeoJSONSource, ImageSource, Map as AtlasMap } from 'maplibre-gl'
 import { atlasSceneTitle } from './atlas-title-cards'
+import { originalArtwork } from './artwork-sampling'
 import { csrfToken, fetchAdmin } from './cached-tile-admin'
 import { reviewEndpoint, type ArtworkReview, type Painting } from './artwork-review'
-import { installAtlasTileInteractions, tileId } from './atlas-tiles'
+import { focusAtlasTile, installAtlasTileInteractions, tileId } from './atlas-tiles'
 import { drawingFootprint, tileBounds, tileForPosition, tilePolygon } from './tile-geometry'
 
 type Footprint = ReturnType<typeof drawingFootprint>
@@ -301,12 +302,30 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean, n
 
   }
 
-  map.on('click', event => {
+  map.on('click', async event => {
     const choices = byCell.get(tileId(tileForPosition(event.lngLat)))
     if (!choices) return
     const layers = map.getLayersOrder()
     const current = choices.reduce((top, unit) => layers.indexOf(unit.layer) > layers.indexOf(top.layer) ? unit : top)
-    select(choices[(choices.indexOf(current) + 1) % choices.length])
+    const next = choices[(choices.indexOf(current) + 1) % choices.length]
+    select(next)
+    let image = map.getSource<ImageSource>(next.layer)?.image
+    if (!image) {
+      const selectionAtClick = sequence
+      const plate = new Image()
+      plate.src = next.art.animation?.plate ?? next.art.url
+      try {
+        await plate.decode()
+      } catch {
+        return
+      }
+      if (disposed || sequence !== selectionAtClick) return
+      image = plate
+    }
+    const { width, height } = originalArtwork(image)
+    focusAtlasTile(map, next.art, undefined, {
+      bounds: next.footprint.bounds, width, height,
+    })
   })
   map.on('move', positionLabels)
   map.once('remove', () => { disposed = true })
