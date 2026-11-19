@@ -11,6 +11,13 @@
   outline: none;
 }
 .atlas-intro[hidden] { display: none; }
+.pavilion-room img {
+  pointer-events: none;
+  user-select: none;
+}
+.pavilion-room :is(img, button, .pavilion-credit) {
+  -webkit-touch-callout: none;
+}
 .atlas-intro.is-exiting { animation: pavilion-approach 1550ms both; pointer-events: none; }
 
 .pavilion-room {

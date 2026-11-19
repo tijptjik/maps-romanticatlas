@@ -67,6 +67,10 @@ const map = new maplibregl.Map({
   canvasContextAttributes: { preserveDrawingBuffer: true },
 })
 
+map.getContainer().addEventListener('contextmenu', event => {
+  if (event.pointerType === 'touch' || event.pointerType === 'pen') event.preventDefault()
+}, { capture: true })
+
 installArtworkSampling(map)
 installNativeTileZoom(map, map.getMinZoom())
 installBasemapPreload(map)

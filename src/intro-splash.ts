@@ -55,7 +55,7 @@ const splashMarkup = `
         <span>Cartographer’s Note</span>
       </span>
     </button>
-    <a class="pavilion-credit" href="https://type.hk/" target="_blank" rel="noopener noreferrer" aria-label="By TIJPTJIK — Type.hk">
+    <a class="pavilion-credit" draggable="false" href="https://type.hk/" target="_blank" rel="noopener noreferrer" aria-label="By TIJPTJIK — Type.hk">
       <span class="pavilion-credit__petal">
         <img data-piece="bauhinia-petal" alt="" /><span>by <b>TIJPTJIK</b></span>
       </span>
@@ -97,6 +97,31 @@ export const createIntroSplash = (
   splash.setAttribute('aria-label', 'A Romantic’s Atlas of Hong Kong')
   splash.innerHTML = splashMarkup
   mapContainer.append(splash)
+  // Some browsers report a long press as a mouse event, and the opening curtain makes the pavilion inert.
+  document.addEventListener('contextmenu', event => {
+    if (splash.classList.contains('is-visible')) event.preventDefault()
+  }, { capture: true })
+  // Native image and link previews can start before the browser emits contextmenu.
+  // Handle a single tap on an illustrated control, leaving a hold unassigned.
+  let tap: { control: HTMLElement, x: number, y: number, started: number } | undefined
+  splash.addEventListener('touchstart', event => {
+    tap = undefined
+    const control = event.target instanceof Element ? event.target.closest<HTMLElement>('button, a') : null
+    if (!control || event.touches.length !== 1 || !event.cancelable) return
+    event.preventDefault()
+    const touch = event.touches[0]
+    tap = { control, x: touch.clientX, y: touch.clientY, started: event.timeStamp }
+  }, { passive: false })
+  splash.addEventListener('touchmove', event => {
+    const touch = event.touches[0]
+    if (tap && Math.hypot(touch.clientX - tap.x, touch.clientY - tap.y) > 10) tap = undefined
+  })
+  splash.addEventListener('touchcancel', () => { tap = undefined })
+  splash.addEventListener('touchend', event => {
+    const released = tap
+    tap = undefined
+    if (released && event.timeStamp - released.started < 500) released.control.click()
+  })
   const pieces = splash.querySelectorAll<HTMLImageElement>('img[data-piece]')
   const book = splash.querySelector<HTMLButtonElement>('.pavilion-book')!
   book.querySelector('img')!.addEventListener('error', () => splash.classList.add('without-illustrations'))
@@ -111,6 +136,7 @@ export const createIntroSplash = (
     if (preparing) return
     window.clearTimeout(exitTimer)
     for (const piece of pieces) {
+      piece.draggable = false
       if (!piece.hasAttribute('src')) piece.src = `/pavilion/${piece.dataset.piece}.webp`
     }
     splash.hidden = false
