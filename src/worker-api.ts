@@ -1,3 +1,4 @@
+import { startSiGeneration, siGenerationStatus } from './si-generation'
 import { parseArtworkReview, reviewEndpoint } from './artwork-review.ts'
 import type { ArtworkReview } from './artwork-review.ts'
 import { PhotonImage, SamplingFilter, resize } from '@cf-wasm/photon/workerd'
@@ -66,6 +67,8 @@ type Scene = keyof typeof atlasScenes
 type Tile = AtlasTile<Scene>
 type AtlasEnv = Env & {
   ATLAS_ADMIN_TOKEN?: string
+  ATLAS_GENERATOR_ORIGIN?: string
+  ATLAS_GENERATOR_TOKEN?: string
   ATLAS_LOCAL_DEV?: string
   OPENROUTER_API_KEY?: string
   ATLAS_SHARE_ASSET_ORIGIN?: string
@@ -917,6 +920,10 @@ const generateTile = async (
   try {
     body = await readJsonBody(request)
     const source = decodeDataUrl(body.sourceImage, 'The tile source image')
+    if (env.ATLAS_GENERATOR_ORIGIN) {
+      if (source.contentType !== 'image/png') return errorResponse(400, 'Codex requires a PNG source.')
+      return startSiGeneration(env, tile, String(body.sourceImage), discovery)
+    }
     decodeDataUrl(body.guideImage, 'The guide image')
     const mask = decodeDataUrl(body.safeMask, 'The safe-zone mask')
     const overlay = decodeDataUrl(body.lineOverlay, 'The line overlay')
@@ -1271,6 +1278,8 @@ export const handleAtlasApi = async (
   env: AtlasEnv,
 ): Promise<Response | null> => {
   const url = new URL(request.url)
+  const job = url.pathname.match(/^\/api\/discovery-jobs\/([a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12})$/)
+  if (job) return siGenerationStatus(request, env, job[1])
   if (url.pathname === reviewEndpoint) {
     const prefix = 'v2-artwork-reviews/'
     if (request.method === 'GET') {

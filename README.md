@@ -317,3 +317,24 @@ Run `bun run format:markdown:check` for a read-only check, or `bun run format:ma
 to apply Biome formatting. Biome is pinned to 2.6.5 and formats Markdown with 88-column
 prose wrapping and frontmatter support. The same commands treat `llms.txt` as Markdown.
 Review formatting changes separately from content edits.
+
+## SI production generation
+
+Production sends new tile requests to the authenticated SI gateway at
+`ATLAS_GENERATOR_ORIGIN`, using the Worker secret `ATLAS_GENERATOR_TOKEN`.
+The gateway stores jobs on disk and allows three active renders. The
+`atlas-generator-worker.service` runs `scripts/dream-atlas.py live-tile`
+with the same scene families and drawing direction as local development,
+inside the existing `codex-vpn` network namespace. Its Codex login uses
+`/var/lib/codex-vpn` and its traffic exits through Mullvad Singapore.
+
+The browser polls `/api/discovery-jobs/{id}`. SI also retries completion
+callbacks after a visitor disconnects. The Worker verifies the image receipt,
+writes the immutable PNG and metadata to R2, then updates the atlas manifest.
+The job identifier fixes the output variant so duplicate completions are safe.
+A service restart recovers a persisted Codex image or reports interruption.
+
+The service definitions and authenticated gateway are in `server/si/`.
+SI uses `/var/lib/codex-vpn/atlas` for the deployed renderer and durable jobs,
+and `/etc/atlas-generator/token` for the shared secret. The HTTPS proxy includes
+`server/si/nginx-location.conf` in the existing `home.type.hk` server.

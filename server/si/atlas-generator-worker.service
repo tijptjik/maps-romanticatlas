@@ -1,0 +1,31 @@
+[Unit]
+Description=Romantic Atlas Codex renderer through Mullvad Singapore
+BindsTo=codex-vpn-network.service
+After=codex-vpn-network.service
+Requires=codex-vpn-network.service
+
+[Service]
+User=codex-vpn
+Group=codex-vpn
+NetworkNamespacePath=/run/netns/codex-vpn
+BindReadOnlyPaths=/etc/codex-vpn/resolv.conf:/etc/resolv.conf
+BindReadOnlyPaths=/etc/codex-vpn/nsswitch.conf:/etc/nsswitch.conf
+InaccessiblePaths=-/run/nscd/socket -/run/systemd/resolve
+Environment=CODEX_HOME=/var/lib/codex-vpn
+Environment=PATH=/opt/codex-vpn/bin:/opt/atlas-generator/bin:/usr/bin:/bin
+WorkingDirectory=/var/lib/codex-vpn/atlas
+ExecStart=/usr/bin/python3 server/si/gateway.py work
+Restart=on-failure
+RestartSec=3
+TimeoutStopSec=20
+UMask=0077
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/codex-vpn
+PrivateTmp=yes
+MemoryMax=4G
+TasksMax=512
+
+[Install]
+WantedBy=multi-user.target

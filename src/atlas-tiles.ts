@@ -2869,7 +2869,7 @@ export const installAtlasTileInteractions = (
       focusRevealedTile(tile)
       return
     }
-    const revealBudget = import.meta.env.DEV && artwork ? 16 * 60_000 : clickRevealBudgetMs
+    const revealBudget = 35 * 60_000
     const budget = AbortSignal.timeout(revealBudget - generatedRevealDuration - revealedTileFocusDuration - 500)
     if (!isFullyVisible(map, tile)) {
       if (tileState.has(id)) return
@@ -2940,7 +2940,7 @@ export const installAtlasTileInteractions = (
 
       tileState.set(id, 'generating')
       fog.invalidate()
-      const capturedTile = await withinClickBudget(captureTile(map, tile, import.meta.env.DEV && artwork ? 1024 : atlasTileSize), budget)
+      const capturedTile = await withinClickBudget(captureTile(map, tile, 1024), budget)
       const capturedAt = performance.now()
       const hasSea = tileHasSea(map, tile)
       const scene = pickAtlasScene(hasSea, cacheStatus.scenes)
