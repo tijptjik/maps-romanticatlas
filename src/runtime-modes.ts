@@ -1,3 +1,8 @@
+import { disableExternalLinks } from './external-links'
+
+const noLinkOut = new URLSearchParams(location.search).get('noLinkOut')
+if (noLinkOut === '' || noLinkOut === 'true') disableExternalLinks()
+
 const modeEnabled = (name: string) =>
   new URLSearchParams(window.location.search).get(name) === 'true'
 

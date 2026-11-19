@@ -249,12 +249,12 @@
   font: italic 600 clamp(13px, 1.3cqw, 19px)/1 "Cormorant Garamond", Georgia, serif;
 }
 .pavilion-credit b { font-variant: small-caps; font-weight: 700; letter-spacing: .025em; }
-.pavilion-credit:is(:focus-visible, :active) {
+.pavilion-credit:any-link:is(:focus-visible, :active) {
   --petal-tint: .52;
   --petal-ink: #fff1ed;
 }
 @media (hover: hover) {
-  .pavilion-credit:hover {
+  .pavilion-credit:any-link:hover {
     --petal-tint: .52;
     --petal-ink: #fff1ed;
   }

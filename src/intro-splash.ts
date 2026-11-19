@@ -106,7 +106,7 @@ export const createIntroSplash = (
   let tap: { control: HTMLElement, x: number, y: number, started: number } | undefined
   splash.addEventListener('touchstart', event => {
     tap = undefined
-    const control = event.target instanceof Element ? event.target.closest<HTMLElement>('button, a') : null
+    const control = event.target instanceof Element ? event.target.closest<HTMLElement>('button, a[href]') : null
     if (!control || event.touches.length !== 1 || !event.cancelable) return
     event.preventDefault()
     const touch = event.touches[0]
@@ -205,7 +205,9 @@ export const createIntroSplash = (
   const notes = splash.querySelector<HTMLButtonElement>('.pavilion-notes')!
   const leaf = splash.querySelector<HTMLAnchorElement>('.pavilion-credit')!
   for (const [button, item] of [[book, 'orb'], [notes, 'book'], [leaf, 'leaf']] as const) {
-    button.addEventListener('click', () => playCue(item, 'activate'))
+    button.addEventListener('click', () => {
+      if (button.matches('button, a[href]')) playCue(item, 'activate')
+    })
     if (item !== 'orb') continue
     let hovered = false
     let selected = false
