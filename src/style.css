@@ -1154,6 +1154,19 @@ body {
   text-transform: uppercase;
 }
 
+.atlas-v2-admin {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.4rem 0.9rem;
+  pointer-events: auto;
+}
+
+.atlas-v2-admin a {
+  color: inherit;
+  text-underline-offset: 0.2em;
+}
+
 .atlas-admin-rendering {
   position: absolute;
   z-index: 8;

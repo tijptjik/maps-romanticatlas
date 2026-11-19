@@ -1,3 +1,5 @@
+import { revisionEndpoint, revisionImagePattern } from '../src/artwork-revision'
+import { revisionFile, revisionList } from './review-revisions'
 import { createFakeRenderStore } from './fake-render-store'
 import { isFakeRenderTile, isRotatingVariant } from '../src/fake-render-state'
 import { fakeRenderSeed } from '../src/fake-render-seed'
@@ -1250,6 +1252,16 @@ const server = createServer(async (request, response) => {
       if (!job) return sendError(response, 404, 'This generation job has expired.')
       return sendJson(response, job.status, job.body)
     }
+
+    const revisionImage = revisionImagePattern.exec(pathname)
+    if (revisionImage && request.method === 'GET') {
+      const bytes = await Bun.file(revisionFile(revisionImage[1])).bytes().catch(() => null)
+      if (!bytes) return sendError(response, 404, 'Revision image unavailable.')
+      response.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'public, max-age=31536000, immutable' })
+      return response.end(bytes)
+    }
+    if (pathname === revisionEndpoint && request.method === 'GET')
+      return sendJson(response, 200, await revisionList(), { 'cache-control': 'no-store' })
 
     if (pathname === reviewEndpoint) {
       if (request.method === 'GET') {

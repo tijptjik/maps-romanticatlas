@@ -1,6 +1,7 @@
+import { revisionEndpoint, revisionImagePattern } from './artwork-revision'
 import { isFakeRenderTile, isRotatingVariant } from './fake-render-state'
 import { fakeRenderSeed } from './fake-render-seed'
-import { startSiGeneration, siGenerationStatus } from './si-generation'
+import { generator, startSiGeneration, siGenerationStatus } from './si-generation'
 import { orphanGroup, releaseObjects, removeArchivedObjects, type ArchivedObject, type AssetBucket } from './artwork-purge'
 import { releaseCatalog, releaseMediaKeys } from './release-media'
 import { parseArtworkReview, reviewEndpoint } from './artwork-review.ts'
@@ -1383,6 +1384,19 @@ export const handleAtlasApi = async (
   if (url.pathname === '/atlas-v2/release-objects.json' && request.method === 'GET')
     return json({ version: 2, ...deployedObjects })
   if (url.pathname === '/api/artwork-purge') return purgeArtwork(request, env)
+  const revisionImage = revisionImagePattern.exec(url.pathname)
+  if (revisionImage && request.method === 'GET') {
+    const key = url.pathname.slice(1)
+    const cached = await env.ATLAS_BUCKET.get(key)
+    const headers = { 'content-type': 'image/png', 'cache-control': 'public, max-age=31536000, immutable' }
+    if (cached) return new Response(cached.body, { headers })
+    const image = await generator(env, '/revisions/' + revisionImage[1])
+    if (!image.ok) return errorResponse(image.status, 'Revision image unavailable.')
+    await env.ATLAS_BUCKET.put(key, image.body)
+    const stored = await env.ATLAS_BUCKET.get(key)
+    return new Response(stored.body, { headers })
+  }
+  if (url.pathname === revisionEndpoint && request.method === 'GET') return generator(env, '/revisions')
   if (url.pathname === reviewEndpoint) {
     const prefix = 'v2-artwork-reviews/'
     if (request.method === 'GET') {

@@ -262,7 +262,8 @@ async function startAtlas() {
   collapseAttribution()
   map.once('idle', collapseAttribution)
   map.on('load', async () => {
-    if (adminModeEnabled()) {
+    const params = new URLSearchParams(location.search)
+    if (adminMap && (params.get('view') === 'cache' || params.has('version'))) {
       await installCachedTileAdmin(map)
       const atlas = installAtlasTileInteractions(map, audio, {
         cloudDiagnostics: cloudDiagnosticsModeEnabled(),
@@ -271,7 +272,7 @@ async function startAtlas() {
       })
       resetAtlas = async () => { await atlas.resetReveals() }
     } else {
-      const reset = await installDiscoveryMap(map, diagnosticsModeEnabled(), noNoiseEnabled(),
+      const reset = await installDiscoveryMap(map, adminMap ? 'admin' : diagnosticsModeEnabled(), noNoiseEnabled(),
         sharing.setRevealCount, audio, revealedModeEnabled() && !diagnosticsModeEnabled())
       resetAtlas = async () => { await reset() }
     }

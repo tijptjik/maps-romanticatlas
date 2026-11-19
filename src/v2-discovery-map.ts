@@ -1,3 +1,4 @@
+import { revisionEndpoint, revisionImagePattern, type Revision } from './artwork-revision'
 import { neighborhoodLabelLayerId } from './map-style'
 import { installArtworkAnimations } from './fountain-glitter'
 import type { GeoJSONSource, ImageSource, Map as AtlasMap } from 'maplibre-gl'
@@ -14,16 +15,18 @@ type Label = { element: HTMLElement; title: HTMLElement; bounds: Footprint['boun
 
 type Catalog = { release: string; sheets: { accepted?: boolean; art: Painting[] }[] }
 
-export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean, noNoise: boolean,
+export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 'admin', noNoise: boolean,
   onCount: (count: number) => void, audio: Parameters<typeof installAtlasTileInteractions>[1], revealed = false) {
+  const admin = diagnostics === 'admin'
   const units = new Map<string, Unit>()
   const byCell = new Map<string, Unit[]>()
   const visibleLayers = new Set<string>()
   const labels = new Map<string, Label>()
+  const superseded = new Set<string>()
   let disposed = false
 
   function add(art: Painting) {
-    if (units.has(art.url)) return
+    if (superseded.has(art.url) || units.has(art.url)) return
     const footprint = drawingFootprint({ ...art, tileSpan: { columns: art.columns ?? 1, rows: art.rows } })
     const unit = { art, footprint, layer: 'discovery-' + units.size }
     units.set(art.url, unit)
@@ -35,10 +38,17 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean, n
     }
   }
   const status = new Map<string, ArtworkReview['status']>()
+  let revisions: Revision[] = []
+  async function readRevisions(): Promise<Revision[]> {
+    const response = await fetch(revisionEndpoint, { cache: 'no-store' })
+    if (!response.ok) throw Error('Artwork revision queue unavailable')
+    return response.json()
+  }
   try {
     const [catalogResponse, reviewResponse, discoveryResponse] = await Promise.all([
       fetch('/atlas-v2/catalog.json', { cache: 'no-cache' }),
       fetch(reviewEndpoint, { cache: 'no-store' }),
+      admin ? fetchAdmin('/api/atlas-tiles/cached?admin=true&diagnostics=true&collection=discovery', { cache: 'no-store' }) :
       diagnostics || revealed ? fetch('/api/atlas-tiles/cached?diagnostics=true&collection=discovery', { cache: 'no-store' }) : null,
     ])
     if ((!catalogResponse.ok && catalogResponse.status !== 404) || !reviewResponse.ok) throw Error('Artwork catalog or reviews unavailable')
@@ -53,18 +63,33 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean, n
       if (sheet.accepted) for (const art of sheet.art) status.set(art.url, 'accepted')
     }
     for (const review of reviews) status.set(review.url, review.status)
+    if (diagnostics || revealed) {
+      revisions = admin ? await readRevisions() : await readRevisions().catch(() => [])
+    }
+    if (admin) {
+      for (const job of revisions) {
+        if (job.state === 'ready' && job.candidate) superseded.add(job.source.url)
+      }
+    }
     for (const sheet of catalog.sheets) {
       for (const art of sheet.art) {
         const decision = status.get(art.url)
         if (diagnostics || revealed ? decision !== 'rejected' : decision === 'accepted') add(art)
       }
     }
+    for (const revision of revisions) {
+      if (revision.candidate && status.get(revision.candidate.url) !== 'rejected') add(revision.candidate)
+    }
+    for (const art of reviews) {
+      if (revisionImagePattern.test(art.url) && status.get(art.url) === 'accepted') add(art)
+    }
     if (discoveryResponse) {
       if (!discoveryResponse.ok) throw Error('Generated artwork unavailable')
-      const { tiles } = await discoveryResponse.json()
+      const { tiles, adminMode } = await discoveryResponse.json()
+      if (admin && adminMode !== true) throw Error('Admin access required')
       for (const tile of tiles) {
         if (tile.variant.startsWith('discovery-') && status.get(tile.url) !== 'rejected') {
-          add({ x: tile.x, y: tile.y, rows: 1, title: atlasSceneTitle(tile.scene), url: tile.url })
+          add({ x: tile.x, y: tile.y, rows: 1, title: tile.title || atlasSceneTitle(tile.scene), url: tile.url })
         }
       }
     } else {
@@ -76,7 +101,7 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean, n
     console.warn('Atlas artwork reviews unavailable', error)
     const retry = document.createElement('button')
     retry.className = 'atlas-review-retry'
-    retry.textContent = 'Artwork reviews unavailable · Retry'
+    retry.textContent = admin ? 'Admin artwork unavailable · Retry' : 'Artwork reviews unavailable · Retry'
     retry.onclick = () => location.reload()
     map.getContainer().append(retry)
     return () => {}
@@ -101,6 +126,28 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean, n
       rejectedUrls: new Set([...status].filter(([, decision]) => decision === 'rejected').map(([url]) => url)),
     })
     return atlas.resetReveals
+  }
+
+  let inventoryCount: HTMLOutputElement | undefined
+  if (admin) {
+    const container = map.getContainer()
+    container.classList.add('atlas-admin-mode')
+    const toolbar = document.createElement('nav')
+    toolbar.className = 'atlas-admin-status atlas-v2-admin'
+    toolbar.setAttribute('aria-label', 'Atlas V2 admin')
+    const heading = document.createElement('strong')
+    heading.textContent = 'Atlas V2 admin'
+    inventoryCount = document.createElement('output')
+    const queueLink = document.createElement('a')
+    queueLink.href = '/?review'
+    queueLink.textContent = 'Artwork review'
+    const cacheLink = document.createElement('a')
+    const cacheUrl = new URL(location.href)
+    cacheUrl.searchParams.set('view', 'cache')
+    cacheLink.href = cacheUrl.href
+    cacheLink.textContent = 'Tile cache'
+    toolbar.append(heading, inventoryCount, queueLink, cacheLink)
+    container.append(toolbar)
   }
 
   const copyStatus = document.createElement('div')
@@ -223,6 +270,7 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean, n
   }
 
   function renderDiagnostics() {
+    if (inventoryCount) inventoryCount.value = units.size + (units.size === 1 ? ' painting' : ' paintings')
     const view = map.getBounds()
     const groups = new Map<string, Unit>()
     for (const unit of units.values()) {

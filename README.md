@@ -196,7 +196,7 @@ bun run deploy
 
 The bucket name must match `wrangler.jsonc`. To enable production cache administration,
 set the matching secret with `wrangler secret put ATLAS_ADMIN_TOKEN`, then open the app
-with `?admin`. The browser admin panel prompts for that token and uses a
+with `?admin&view=cache`. The browser admin panel prompts for that token and uses a
 same-origin CSRF cookie for cache changes.
 
 The map's tiles, fonts, and sprite assets are loaded from remote services, so it needs
@@ -219,8 +219,8 @@ because Cloudflare does not support remote Durable Object bindings in local deve
 Tiles generated during the session are written to remote R2 and are immediately usable;
 pre-existing remote tiles can still be fetched by their known image URL, but are not
 included in local manifest lookups until they are encountered or regenerated. Add
-`?admin` for cache administration, `?diagnostics` for tile outlines,
-`?admin` also labels only cloud-excluded tiles with their failing condition; add
+`?admin&view=cache` for cache administration, `?diagnostics` for tile outlines,
+The cache view also labels only cloud-excluded tiles with their failing condition; add
 `&cloudDiagnostics=false` to hide those labels. Use `?noNoise=true` for smooth fog
 without the animated cloud noise, `?kioskMode=true` for a clockwise camera circuit 1 km
 from Victoria Peak, completing each loop in 240 seconds, and `&version=3` to replay an
@@ -347,7 +347,7 @@ The supported environment variables are:
   `https://romanticatlas.hype.hk`.
 - `ATLAS_SHARE_ASSET_ORIGIN`: required in production for map sharing; the HTTPS public
   R2 origin that serves the `maps-romanticatlas-assets` bucket directly.
-- `?admin`: enables the cache manifest, image cycling, rerendering, and deletion UI
+- `?admin&view=cache`: enables the cache manifest, image cycling, rerendering, and deletion UI
   in either local or production mode. The admin listing includes every retained image
   version by default; add `?version=1` through `?version=6` to inspect one version.
   Unversioned legacy images are excluded. The rerender control selects a scene using the
@@ -367,9 +367,9 @@ The supported environment variables are:
   to the beginning if needed. A tile with only rejected images loses its review controls. Press `R` to return to the regular map, which draws from accepted images.
   The Bun server saves decisions in `releases/v2-reviews.json`. The Worker uses
   that optional release file plus decisions saved in its R2 bucket.
-- Press `A` on the map to open the admin interface.
+- Press `A` or open `?admin` to manage Atlas V2 paintings across their full map footprints. Select a pip to inspect an alternative and use ✓ or × to save a review. The toolbar counts distinct non-rejected paintings and links to the artwork review and tile cache.
 - Press `V` or open `?review` to browse artwork by contact card. Use `R`, `D`, or `A` to return to the regular, diagnostics, or admin view.
-- `?admin`: marks visible z18 tiles that will not render a cloud with compact
+- `?admin&view=cache`: marks visible z18 tiles that will not render a cloud with compact
   reason icons for the deterministic fog pattern, land coverage, street coverage, or
   regional map data. Tiles that would render a cloud are left unmarked. Add
   `&cloudDiagnostics=false` to hide these labels.

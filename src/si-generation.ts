@@ -16,7 +16,7 @@ const reply = (body: unknown, status = 200) => new Response(JSON.stringify(body)
   status, headers: { 'content-type': 'application/json', 'cache-control': 'no-store' },
 })
 
-async function generator(env: GeneratorEnv, path: string, options: RequestInit = {}) {
+export async function generator(env: GeneratorEnv, path: string, options: RequestInit = {}) {
   if (!env.ATLAS_GENERATOR_ORIGIN || !env.ATLAS_GENERATOR_TOKEN) throw Error('SI generation is not configured.')
   return fetch(env.ATLAS_GENERATOR_ORIGIN + path, {
     ...options,

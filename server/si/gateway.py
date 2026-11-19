@@ -4,6 +4,7 @@ import fcntl
 import hashlib
 import hmac
 import io
+import re
 import json
 import os
 from pathlib import Path
@@ -24,6 +25,9 @@ MAX_BODY = 7_000_000
 MAX_ACTIVE = 3
 GUARD = threading.Lock()
 SCENES = json.loads((ROOT / 'releases/si-scenes.json').read_text())
+
+
+revision_jobs = ROOT / 'generated-tiles/dream-atlas/review-revisions/jobs'
 
 
 def save(path, value):
@@ -62,6 +66,18 @@ class Handler(BaseHTTPRequestHandler):
         if not hmac.compare_digest(self.headers.get('Authorization', ''), 'Bearer ' + TOKEN):
             return self.reply(401, {'error': 'Authentication required.'})
         parts = self.path.strip('/').split('/')
+        if parts == ['revisions'] and self.command == 'GET':
+            return self.reply(200, [json.loads(p.read_text()) for p in sorted(revision_jobs.glob('*/revision.json'))])
+        if len(parts) == 2 and parts[0] == 'revisions' and re.fullmatch(r'[a-f0-9]{32}', parts[1]) and self.command == 'GET':
+            path = revision_jobs / parts[1] / 'candidate.png'
+            if not path.is_file():
+                return self.reply(404, {'error': 'Revision unavailable.'})
+            data = path.read_bytes()
+            self.send_response(200)
+            self.send_header('Content-Type', 'image/png')
+            self.send_header('Content-Length', str(len(data)))
+            self.end_headers()
+            return self.wfile.write(data)
         if parts == ['health'] and self.command == 'GET':
             return self.reply(200, {'ready': True, 'pending': len(pending())})
         if len(parts) not in (2, 3) or parts[0] != 'jobs' or not valid_id(parts[1]):
