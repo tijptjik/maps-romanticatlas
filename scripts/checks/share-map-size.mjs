@@ -12,8 +12,9 @@ const browser = await chromium.launch({
 })
 try {
   const page = await browser.newPage({ viewport: { width: 800, height: 900 }, hasTouch: true })
+  page.on("pageerror", error => console.error(error.message))
   // Check the frame selected by the real app before using a controlled canvas for pixel assertions.
-  await page.goto(process.env.PLAYWRIGHT_BASE_URL, { waitUntil: 'domcontentloaded' })
+  await page.goto(new URL('/?noSplash=true', process.env.PLAYWRIGHT_BASE_URL).href, { waitUntil: 'domcontentloaded' })
   const actualFrame = page.locator('.atlas-share-frame img')
   const frameUrl = await actualFrame.evaluate(async img => {
     await img.decode()
@@ -33,6 +34,8 @@ try {
   await page.evaluate(async () => {
     const { installAtlasSharing } = await import('/src/atlas-sharing.ts')
     const container = document.querySelector('#map')
+    const { installArtistStatement } = await import('/src/artist-statement.ts')
+    installArtistStatement(container)
     const { createAtlasTitleCard } = await import('/src/atlas-title-cards.ts')
     const card = createAtlasTitleCard(container, '', 'The Rain Inheritance')
     card.classList.remove('is-awaiting-focus')
@@ -58,7 +61,12 @@ try {
   const iconWidth = await page.locator('.atlas-share-button--trigger svg').evaluate(svg => svg.getBoundingClientRect().width)
   assert.ok(iconWidth <= 20, 'Share glyph crowds the enamel plate')
   await page.getByRole('button', { name: 'Share your map' }).screenshot({ animations: 'disabled', path: path.join(process.env.DEV_RUNNER_ARTIFACTS, 'share-button.png') })
+  const note = page.locator('.artist-statement-ui > .artist-statement__map-trigger')
+  await note.click()
+  assert.ok(await page.locator('.atlas-share-button--trigger').isHidden())
+  await page.locator('.artist-statement__dialog').press('Escape')
   await page.getByRole('button', { name: 'Share your map' }).click()
+  assert.ok(await note.isHidden())
   for (const detailed of [false, true]) {
     if (detailed) {
       await page.setViewportSize({ width: 390, height: 844 })
@@ -154,6 +162,7 @@ try {
   await page.touchscreen.tap(3, 3)
   assert.ok(await page.getByRole('dialog').isHidden())
   assert.ok(await page.getByRole('button', { name: 'Share your map' }).isVisible())
+  assert.ok(await note.isVisible())
 } finally {
   await browser.close()
 }

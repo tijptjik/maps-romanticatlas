@@ -392,6 +392,11 @@ body {
   visibility: hidden;
 }
 
+.artist-statement-ui:has(.artist-statement:not([hidden])) ~ .atlas-share-ui,
+#map:has(.atlas-share-frame:not([hidden])) .artist-statement-ui > .artist-statement__map-trigger {
+  display: none;
+}
+
 .atlas-share-result {
   position: fixed;
   inset: 0;
@@ -404,7 +409,7 @@ body {
   overflow: auto;
   gap: 0.75rem;
   padding: 2.8rem 2rem;
-  background: url("/pavilion/orchid-share-frame.webp") center / 100% 100% no-repeat,
+  background: url("./assets/orchid-share-frame.webp") center / 100% 100% no-repeat,
     linear-gradient(var(--share-paper), var(--share-paper)) 49% 44.5% / 86.8% 88.2% no-repeat;
   color: var(--share-iron);
   filter: drop-shadow(0 5px 10px #16372d60);

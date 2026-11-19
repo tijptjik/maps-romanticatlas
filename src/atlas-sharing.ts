@@ -1,5 +1,5 @@
-const cameraFrameUrl = '/pavilion/orchid-camera-frame.webp'
-const shareFrameUrl = '/pavilion/orchid-share-frame.webp'
+import cameraFrameUrl from './assets/orchid-camera-frame.webp?url'
+import shareFrameUrl from './assets/orchid-share-frame.webp?url'
 import QRCode from 'qrcode'
 import type { Map as MapLibreMap } from 'maplibre-gl'
 
