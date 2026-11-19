@@ -192,6 +192,10 @@ export const installArtistStatement = (container: HTMLElement, { showMapTrigger 
         {transform: 'perspective(1800px) rotateY(-90deg)', opacity: 0},
       ], timing)
       movement = [
+        statement.animate([
+          {backgroundColor: 'transparent'},
+          {backgroundColor: getComputedStyle(statement).backgroundColor},
+        ], {duration, easing: 'ease-in-out', fill: 'both'}),
         dialog.animate([
           ...(fromMap ? [{transform: lifted, offset: 0, easing: 'cubic-bezier(.55,.02,.9,.55)'}] : []),
           {transform: start, offset: tug / duration, easing: 'cubic-bezier(.25,.6,.28,1)' },
@@ -232,9 +236,6 @@ export const installArtistStatement = (container: HTMLElement, { showMapTrigger 
           ], pull),
           bookmark.plane.animate([
             {opacity: 1}, {opacity: 1, offset: .37}, {opacity: 0, offset: .55}, {opacity: 0},
-          ], pull),
-          statement.animate([
-            {backgroundColor: 'transparent'}, {backgroundColor: getComputedStyle(statement).backgroundColor, offset: .55},
           ], pull),
         )
       }
