@@ -12,6 +12,7 @@ import {
   readdir,
   rename,
   rmdir,
+  stat,
   unlink,
   writeFile,
 } from 'node:fs/promises'
@@ -535,12 +536,15 @@ const createSharedMap = async (request, response) => {
   }
 }
 
-const serveSharedMap = async (response, filename) => {
+const serveSharedMap = async (response, filename, headersOnly) => {
   try {
-    const image = await readFile(path.join(sharedMapsDirectory, filename))
+    const file = path.join(sharedMapsDirectory, filename)
+    const image = headersOnly ? undefined : await readFile(file)
+    const length = image?.length ?? (await stat(file)).size
     response.writeHead(200, {
       'cache-control': 'public, max-age=31536000, immutable',
       'content-disposition': 'inline',
+      'content-length': length,
       'content-type': 'image/png',
     })
     response.end(image)
@@ -1290,8 +1294,8 @@ const server = createServer(async (request, response) => {
     }
 
     const sharedMapMatch = pathname.match(localSharedMapPattern)
-    if (request.method === 'GET' && sharedMapMatch) {
-      await serveSharedMap(response, `${sharedMapMatch[1]}.png`)
+    if ((request.method === 'GET' || request.method === 'HEAD') && sharedMapMatch) {
+      await serveSharedMap(response, `${sharedMapMatch[1]}.png`, request.method === 'HEAD')
       return
     }
 
