@@ -11,10 +11,24 @@ export const installArtworkSampling = (map: AtlasMap) => {
   // MapLibre 6 switches rasters to a pixel-snapped projection at rest.
   // Atlas images share surveyed corners with unsnapped vector buildings.
   map.once('load', () => {
-    const transform = map._camera.transform
-    const projectTile = transform.getProjectionData.bind(transform)
-    transform.getProjectionData = params =>
-      projectTile(params.aligned ? { ...params, aligned: false } : params)
+    const painter = map.painter
+    const draws = painter.drawFunctions
+    painter.drawFunctions = {
+      ...draws,
+      raster(painter, tiles, layer, coords, frame) {
+        if (tiles.getSource().type !== 'image' || frame.data.moving) {
+          return draws.raster(painter, tiles, layer, coords, frame)
+        }
+        const project = frame.getProjectionDataForTile
+        frame.getProjectionDataForTile = (tile, options) =>
+          project.call(frame, tile, { ...options, aligned: false })
+        try {
+          draws.raster(painter, tiles, layer, coords, frame)
+        } finally {
+          frame.getProjectionDataForTile = project
+        }
+      },
+    }
   })
 
   const pyramids = new WeakMap<ArtworkImage, ImageData[]>()
