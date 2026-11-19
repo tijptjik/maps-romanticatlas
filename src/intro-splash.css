@@ -9,8 +9,14 @@
   background: #000;
   font: 500 17px/1.25 "Cormorant Garamond", Georgia, serif;
   outline: none;
+  -webkit-tap-highlight-color: transparent;
 }
 .atlas-intro[hidden] { display: none; }
+.atlas-intro :is(:focus, :active, :target),
+.artist-statement.from-pavilion :is(:focus, :active, :target) {
+  border: 0;
+  outline: none;
+}
 .pavilion-room img {
   pointer-events: none;
   user-select: none;
@@ -273,11 +279,6 @@
   .pavilion-credit { bottom: 6%; width: 100px; }
 }
 
-.pavilion-book:focus-visible, .pavilion-notes:focus-visible {
-  outline: 2px solid #fff1b6;
-  outline-offset: 3px;
-
-}
 .pavilion-orb {
   position: absolute;
   bottom: 71%;
@@ -505,11 +506,6 @@
   border: 0;
   background: transparent;
   cursor: pointer;
-}
-.pavilion-orrery:focus-visible {
-  outline: 2px solid currentColor;
-  color: var(--ink);
-  outline-offset: 3px;
 }
 
 .pavilion-room::before {
