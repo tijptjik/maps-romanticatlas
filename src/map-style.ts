@@ -1,6 +1,9 @@
 import { layers, namedFlavor } from '@protomaps/basemaps'
 import type { StyleSpecification } from 'maplibre-gl'
 
+// Protomaps uses this symbol layer for neighbourhoods and macrohoods.
+export const neighborhoodLabelLayerId = 'places_subplace'
+
 const romanticPaint = layer => {
   if (layer.id === 'background') {
     // Regional PMTiles contain land and water only inside the release footprint.

@@ -1,3 +1,4 @@
+import { neighborhoodLabelLayerId } from './map-style'
 import type { GeoJSONSource, Map as AtlasMap } from 'maplibre-gl'
 import { csrfToken, fetchAdmin } from './cached-tile-admin'
 import { reviewEndpoint, type ArtworkReview, type Painting } from './artwork-review'
@@ -93,7 +94,7 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean, n
     const {layer, art, footprint: {bounds: {west, east, north, south}}} = unit
     const coordinates: [[number, number], [number, number], [number, number], [number, number]] = [[west,north],[east,north],[east,south],[west,south]]
     map.addSource(layer, { type: 'image', url: art.url, coordinates })
-    map.addLayer({id: layer, type: 'raster', source: layer, paint: { 'raster-opacity': opacity, 'raster-fade-duration': 0 }})
+    map.addLayer({id: layer, type: 'raster', source: layer, paint: { 'raster-opacity': opacity, 'raster-fade-duration': 0 }}, edges)
   }
 
   const edges = 'discovery-tile-edges'
@@ -245,7 +246,7 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean, n
     map.addSource(edges, {type: 'geojson', data: {type: 'MultiLineString', coordinates: []}})
     map.addLayer({id: edges, source: edges, type: 'line', paint: {
       'line-color': '#382e20', 'line-width': 1.5, 'line-dasharray': [4, 2], 'line-opacity': 0.9,
-    }})
+    }}, neighborhoodLabelLayerId)
     renderDiagnostics()
     map.on('moveend', renderDiagnostics)
 
