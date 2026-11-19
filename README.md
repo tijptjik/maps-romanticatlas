@@ -289,6 +289,7 @@ The supported environment variables are:
   image to reveal its controls. Different tile coordinates can render independently,
   while a coordinate accepts only one active render at a time.
 - The regular map uses a fixed seed to select clouds with a 75% chance per eligible tile, including tiles with accepted artwork. White clouds render new scenes with the original poetry while waiting. Coloured clouds reveal accepted V2 artwork or scenes the visitor generated during this map visit. Reveals use the catalog’s viewer image and title. Review decisions override the release defaults for the exact image URL.
+- Open `?revealed` or press `W` to see the whole map already revealed. Each artwork location shows one random non-rejected painting with its regular title card. The choice stays fixed as you pan. Empty locations retain the regular cloud grid. Press `R` for the regular map.
 - Press `D` on the map (or use `?diagnostics`) to show artwork immediately.
   Dashed lines outline each covered z18 tile. A small cross and the displayed artwork’s title sit at the top. At the lower edge, the number counts
   distinct images and the ring marks the displayed image. Select a pip to show its

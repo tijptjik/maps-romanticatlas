@@ -15,7 +15,7 @@ type Label = { element: HTMLElement; title: HTMLElement; bounds: Footprint['boun
 type Catalog = { release: string; sheets: { accepted?: boolean; art: Painting[] }[] }
 
 export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean, noNoise: boolean,
-  onCount: (count: number) => void, audio: Parameters<typeof installAtlasTileInteractions>[1]) {
+  onCount: (count: number) => void, audio: Parameters<typeof installAtlasTileInteractions>[1], revealed = false) {
   const units = new Map<string, Unit>()
   const byCell = new Map<string, Unit[]>()
   const visibleLayers = new Set<string>()
@@ -39,7 +39,7 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean, n
     const [catalogResponse, reviewResponse, discoveryResponse] = await Promise.all([
       fetch('/atlas-v2/catalog.json', { cache: 'no-cache' }),
       fetch(reviewEndpoint, { cache: 'no-store' }),
-      diagnostics ? fetch('/api/atlas-tiles/cached?diagnostics=true&collection=discovery', { cache: 'no-store' }) : null,
+      diagnostics || revealed ? fetch('/api/atlas-tiles/cached?diagnostics=true&collection=discovery', { cache: 'no-store' }) : null,
     ])
     if ((!catalogResponse.ok && catalogResponse.status !== 404) || !reviewResponse.ok) throw Error('Artwork catalog or reviews unavailable')
     // Static hosts can return their HTML entry point when no catalog is installed.
@@ -56,7 +56,7 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean, n
     for (const sheet of catalog.sheets) {
       for (const art of sheet.art) {
         const decision = status.get(art.url)
-        if (diagnostics ? decision !== 'rejected' : decision === 'accepted') add(art)
+        if (diagnostics || revealed ? decision !== 'rejected' : decision === 'accepted') add(art)
       }
     }
     if (discoveryResponse) {
@@ -82,9 +82,22 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean, n
     return () => {}
   }
   if (!diagnostics) {
-    const artwork = new Map([...byCell].map(([id, choices]) => [id, choices.map(unit => unit.art)]))
+    const artwork = new Map<string, Painting[]>()
+    if (revealed) {
+      // Give cells with few alternatives first choice. Reserve the whole drawing
+      // so a neighbouring tile cannot select an overlapping painting.
+      for (const [id, choices] of [...byCell].sort((a, b) => a[1].length - b[1].length)) {
+        if (artwork.has(id)) continue
+        const available = choices.filter(unit => unit.footprint.cells.every(cell => !artwork.has(tileId(cell))))
+        if (!available.length) continue
+        const unit = available[Math.floor(Math.random() * available.length)]
+        for (const cell of unit.footprint.cells) artwork.set(tileId(cell), [unit.art])
+      }
+    } else {
+      for (const [id, choices] of byCell) artwork.set(id, choices.map(unit => unit.art))
+    }
     const atlas = installAtlasTileInteractions(map, audio, {
-      artwork, noNoise, onRevealCountChange: onCount,
+      artwork, revealed, noNoise, onRevealCountChange: onCount,
       rejectedUrls: new Set([...status].filter(([, decision]) => decision === 'rejected').map(([url]) => url)),
     })
     return atlas.resetReveals

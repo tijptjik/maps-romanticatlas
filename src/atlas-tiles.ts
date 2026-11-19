@@ -2170,12 +2170,14 @@ export const installAtlasTileInteractions = (
   },
   {
     artwork,
+    revealed = false,
     rejectedUrls = new Set<string>(),
     cloudDiagnostics = false,
     noNoise = false,
     onRevealCountChange = (_count: number) => {},
   }: {
     artwork?: Map<string, Painting[]>
+    revealed?: boolean
     rejectedUrls?: Set<string>
     cloudDiagnostics?: boolean
     noNoise?: boolean
@@ -2209,7 +2211,7 @@ export const installAtlasTileInteractions = (
   }
   const hasFootprintOverride = artwork ? tile => multiTileCells.has(tileId(tile)) : isHkuSite
   const selected = tile => hasFootprintOverride(tile) || isFogPatternSelected(tile)
-  const cachedTileIds = new Set<string>(artwork?.keys())
+  const cachedTileIds = new Set<string>(revealed ? [] : artwork?.keys())
   const indexedCachedTiles = new Map()
   const fogIndexTiles = new Map()
   const fogIndexRequests = new Map()
@@ -2313,7 +2315,7 @@ export const installAtlasTileInteractions = (
           string,
           Array<{ scene: AtlasScene; url: string; contentBounds?: unknown }>
         >()
-        ;(Array.isArray(body.cached) ? body.cached : []).forEach(entry => {
+        ;(!revealed && Array.isArray(body.cached) ? body.cached : []).forEach(entry => {
           if (artwork && (!belongsToVisit(entry.url) || rejectedUrls.has(entry.url))) return
           const id = tileId(entry)
           const variants = variantsByTile.get(id) ?? []
@@ -2802,6 +2804,73 @@ export const installAtlasTileInteractions = (
   )
   scheduleFogIndexUpdate()
   preloadVisibleCachedTiles()
+
+  if (revealed && artwork) {
+    for (const id of artwork.keys()) tileState.set(id, 'generated')
+    fog.invalidate()
+    // Keep the chosen paintings for the visit, but only mount nearby images and plaques.
+    const mounted = new Map<Painting, AbortController>()
+    const frames = new Map<Painting, ArtworkFrame>()
+    async function mount(art: Painting, signal: AbortSignal) {
+      const { bounds } = drawingFootprint({ ...art, tileSpan: { columns: art.columns ?? 1, rows: art.rows } })
+      const image = new Image()
+      image.src = art.animation?.plate ?? art.imageUrl ?? art.url
+      try {
+        await image.decode()
+        await addGeneratedTile(map, art, image.src, art.title, titleCards, undefined,
+          1, signal, { bounds, title: art.title, image })
+        if (signal.aborted) return
+        titleCards.get(tileId(art)).card.classList.remove('is-awaiting-focus')
+        frames.set(art, { bounds, width: image.naturalWidth, height: image.naturalHeight })
+        if (art.animation) {
+          animatedPaintings.add(art)
+          showAnimations(animatedPaintings)
+        }
+      } catch (error) {
+        if (!signal.aborted) console.warn('Could not load revealed painting', art.title, error)
+      }
+    }
+    function updatePaintings() {
+      const visible = new Set<Painting>()
+      for (const cell of viewportFogTiles(map, 1)) {
+        const art = artwork.get(tileId(cell))?.[0]
+        if (art) visible.add(art)
+      }
+      for (const [art, controller] of mounted) {
+        if (visible.has(art)) continue
+        controller.abort()
+        mounted.delete(art)
+        frames.delete(art)
+        const id = `atlas-tile-${art.x}-${art.y}`
+        if (map.getLayer(id)) map.removeLayer(id)
+        if (map.getSource(id)) map.removeSource(id)
+        const anchor = tileId(art)
+        titleCards.get(anchor)?.card.remove()
+        titleCards.delete(anchor)
+        if (animatedPaintings.delete(art)) showAnimations(animatedPaintings)
+      }
+      for (const art of visible) {
+        if (mounted.has(art)) continue
+        const controller = new AbortController()
+        mounted.set(art, controller)
+        void mount(art, controller.signal)
+      }
+    }
+    map.on('move', updatePaintings)
+    map.on('resize', updatePaintings)
+    map.once('remove', () => {
+      for (const controller of mounted.values()) controller.abort()
+    })
+    map.on('click', event => {
+      const art = artwork.get(tileId(tileForPosition(event.lngLat)))?.[0]
+      const frame = art && frames.get(art)
+      if (frame) focusAtlasTile(map, art, undefined, frame)
+    })
+    updatePaintings()
+    const count = new Set([...artwork.values()].map(([art]) => art)).size
+    onRevealCountChange(count)
+    return { resetReveals: async () => {}, getRevealCount: () => count }
+  }
 
   map.on('mousemove', event => {
     if (isAdminMode()) {

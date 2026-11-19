@@ -28,7 +28,7 @@ try {
       x, y, regionalLandAvailable: true, isTargetable: x !== 214166, landFraction: x === 214166 ? 0 : 1,
     })),
   } }))
-  await page.route('**' + image + '?*', route => route.fulfill({ path: 'public/romantic-paper-texture.png' }))
+  await page.route('**' + image + '?*', async route => route.fulfill({ response: await route.fetch({ url: base + image }) }))
   const requested = []
   page.on('request', request => {
     if (request.url().includes(image)) requested.push(new URL(request.url()).search)
@@ -60,6 +60,48 @@ try {
   await page.mouse.click(centerX(214168), 450)
   await page.locator('.atlas-title-card').waitFor()
   assert.deepEqual([...new Set(requested)], ['?wide'])
+
+  // Revealed artwork can sit outside the cloud grid. Empty cells still obey it.
+  const alternative = { ...wide, title: 'Another wide painting', url: image + '?alternative' }
+  const rejected = { ...wide, title: 'Rejected painting', url: image + '?rejected' }
+  await page.route('**/atlas-v2/catalog.json', route => route.fulfill({
+    json: { release: 'v2', sheets: [{ art: [wide, alternative, rejected] }] },
+  }))
+  await page.route('**/api/artwork-reviews', route => route.fulfill({ json: [{ ...rejected, status: 'rejected' }] }))
+  await page.route('**/api/atlas-tiles/cached?*', route => route.fulfill({ json: { tiles: [] } }))
+  await page.goto(base + '/?revealed&noMusic', { waitUntil: 'domcontentloaded' })
+  const title = page.locator('.atlas-title-card:visible')
+  await title.waitFor()
+  const chosen = await title.innerText()
+  assert.ok([wide.title, alternative.title].includes(chosen))
+  assert.equal(await page.locator('.atlas-image-count,.atlas-title-card.is-awaiting-focus').count(), 0)
+  const fogDeadline = Date.now() + 30000
+  while (!await alpha(214165) && Date.now() < fogDeadline) await page.waitForTimeout(100)
+  for (const [x, cloud] of [[214165,true],[214166,false],[214167,false],[214168,false],[214169,false]]) {
+    assert.equal((await alpha(x)) > 0, cloud, 'Revealed-mode cloud at ' + x)
+  }
+  await page.screenshot({ path: path.join(process.env.DEV_RUNNER_ARTIFACTS, 'revealed-cloud-grid.png') })
+  const drag = async (from, to) => {
+    await page.mouse.move(from, 400)
+    await page.mouse.down()
+    await page.mouse.move(to, 400, { steps: 16 })
+    await page.waitForTimeout(180)
+    await page.mouse.up()
+  }
+  await drag(120, 1320)
+  await title.waitFor({ state: 'hidden' })
+  await drag(1320, 120)
+  await title.waitFor()
+  assert.equal(await title.innerText(), chosen)
+  await page.keyboard.press('r')
+  await page.waitForURL(url => !url.searchParams.has('revealed'))
+  await page.locator('.atlas-fog').waitFor()
+  assert.equal(await title.count(), 0)
+
+  const live = await browser.newPage({ viewport: { width: 1280, height: 800 } })
+  await live.goto(base + '/?revealed&noMusic', { waitUntil: 'domcontentloaded' })
+  await live.locator('.atlas-title-card:visible').first().waitFor()
+  await live.screenshot({ path: path.join(process.env.DEV_RUNNER_ARTIFACTS, 'revealed-map.png') })
 } finally {
   await browser.close()
 }

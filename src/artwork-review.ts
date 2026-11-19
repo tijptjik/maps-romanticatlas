@@ -1,4 +1,4 @@
-export type Painting = { title: string; x: number; y: number; rows: number; columns?: number; url: string; animation?: {
+export type Painting = { title: string; x: number; y: number; rows: number; columns?: number; url: string; imageUrl?: string; animation?: {
   pixelsPerTile: number
   glitterOrigin?: number[]
   auditoriumOriginPixels?: number[]

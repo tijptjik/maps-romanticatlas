@@ -19,6 +19,7 @@ import { installBasemapPreload } from './basemap-preload.ts'
 import {
   mapModePath,
   reviewModeEnabled,
+  revealedModeEnabled,
   adminModeEnabled,
   diagnosticsModeEnabled,
   cloudDiagnosticsModeEnabled,
@@ -44,7 +45,7 @@ const reviewMode = reviewModeEnabled()
 const kioskMode = kioskModeEnabled()
 const restoringMap = history.state?.atlasView === 'map' ||
   (!history.state?.atlasView && Boolean(history.state?.atlasModeCamera))
-if (reviewMode || kioskMode || noSplashEnabled() || restoringMap) {
+if (reviewMode || revealedModeEnabled() || kioskMode || noSplashEnabled() || restoringMap) {
   document.documentElement.classList.remove('atlas-boot')
 }
 
@@ -85,17 +86,17 @@ installNativeTileZoom(map, map.getMinZoom())
 installBasemapPreload(map)
 
 function installModeShortcuts(mapVisible: () => boolean) {
-  const modes = { r: null, d: 'diagnostics', a: 'admin', v: 'review' } as const
+  const modes = { r: null, d: 'diagnostics', a: 'admin', v: 'review', w: 'revealed' } as const
   window.addEventListener('keydown', event => {
     if (kioskMode || !mapVisible() || event.repeat || event.isComposing ||
         event.altKey || event.ctrlKey || event.metaKey || event.shiftKey ||
         (event.target instanceof Element && event.target.closest('input, textarea, select, [contenteditable], [role="dialog"]'))) return
     const key = event.key.toLowerCase()
-    if (key !== 'r' && key !== 'd' && key !== 'a' && key !== 'v') return
+    if (key !== 'r' && key !== 'd' && key !== 'a' && key !== 'v' && key !== 'w') return
     event.preventDefault()
     const url = new URL(location.href)
     const selected = modes[key]
-    const flags = ['admin', 'diagnostics', 'review']
+    const flags = ['admin', 'diagnostics', 'review', 'revealed']
     if (flags.every(flag => modeEnabled(url.searchParams, flag) === (flag === selected))) return
     for (const flag of flags) url.searchParams.delete(flag)
     if (selected) url.searchParams.set(selected, '')
@@ -129,7 +130,7 @@ async function startAtlas() {
 
   installDeployCommit(map.getContainer())
 
-  const skipSplash = noSplashEnabled() || kioskMode
+  const skipSplash = revealedModeEnabled() || noSplashEnabled() || kioskMode
   const audio = installAtlasAudio(map.getContainer(), {
     initiallyMuted: noMusicEnabled() || kioskMode,
   })
@@ -178,7 +179,7 @@ async function startAtlas() {
   let kioskFlight: ReturnType<typeof createMapFlight> | undefined
 
   function scheduleIdleReset() {
-    if (kioskMode || !intro.element.hidden) return
+    if (kioskMode || revealedModeEnabled() || !intro.element.hidden) return
     if (idleTimer) window.clearTimeout(idleTimer)
     idleTimer = window.setTimeout(async () => {
       if (isResetting || !intro.element.hidden) return
@@ -269,7 +270,7 @@ async function startAtlas() {
       resetAtlas = async () => { await atlas.resetReveals() }
     } else {
       const reset = await installDiscoveryMap(map, diagnosticsModeEnabled(), noNoiseEnabled(),
-        sharing.setRevealCount, audio)
+        sharing.setRevealCount, audio, revealedModeEnabled() && !diagnosticsModeEnabled())
       resetAtlas = async () => { await reset() }
     }
 
