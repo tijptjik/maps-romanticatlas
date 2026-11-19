@@ -4,12 +4,12 @@ export type PavilionCue = (item: PavilionItem, movement: Movement) => void
 
 export function createPavilionSounds() {
   const recordings = {
-    book: new Audio('/pavilion/book-open.wav'),
-    pull: new Audio('/pavilion/book-shelf-pull.wav'),
-    close: new Audio('/pavilion/book-close.wav'),
-    sun: new Audio('/pavilion/gear-click.wav'),
-    release: new Audio('/pavilion/gear-release.wav'),
-    leaf: new Audio('/pavilion/petal-touch.wav'),
+    book: new Audio('/pavilion/book-open.ogg'),
+    pull: new Audio('/pavilion/book-shelf-pull.ogg'),
+    close: new Audio('/pavilion/book-close.ogg'),
+    sun: new Audio('/pavilion/gear-click.ogg'),
+    release: new Audio('/pavilion/gear-release.ogg'),
+    leaf: new Audio('/pavilion/petal-touch.ogg'),
   }
   const connected = new Set<HTMLAudioElement>()
   return (ctx: AudioContext, output: AudioNode, item: PavilionItem, movement: Movement) => {

@@ -555,7 +555,7 @@
           "y": 114426,
           "columns": 3,
           "rows": 1,
-          "url": "/atlas-v2/peak-maquette/hong-kong-in-the-clouds-scaled.png"
+          "url": "/atlas-v2/peak-maquette/hong-kong-in-the-clouds-landscape.png"
         }
       ],
       "accepted": true
@@ -2369,6 +2369,21 @@
       "accepted": true
     },
     {
+      "id": "production-anatomical-museum-02",
+      "title": "Anatomical Museum · Sheet 2",
+      "isolated": true,
+      "art": [
+        {
+          "title": "A Skeleton for Rain",
+          "x": 214213,
+          "y": 114423,
+          "rows": 1,
+          "url": "/atlas-v2/production/0316-1727a48ca57462d5.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
       "id": "production-archaeological-excavation-01",
       "title": "Archaeological Excavation · Sheet 1",
       "isolated": true,
@@ -2393,6 +2408,21 @@
           "y": 114422,
           "rows": 1,
           "url": "/atlas-v2/production/0147-8dedc38b663d2451.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-archaeological-excavation-03",
+      "title": "Archaeological Excavation · Sheet 3",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Folded Stratum",
+          "x": 214206,
+          "y": 114406,
+          "rows": 1,
+          "url": "/atlas-v2/production/0424-66a5572485506375.webp"
         }
       ],
       "accepted": true
@@ -2514,6 +2544,21 @@
       "accepted": true
     },
     {
+      "id": "production-botanical-laboratory-02",
+      "title": "Botanical Laboratory · Sheet 2",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Root Readers",
+          "x": 214206,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0271-a753548372bf3045.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
       "id": "production-circus-01",
       "title": "Circus · Sheet 1",
       "isolated": true,
@@ -2594,6 +2639,21 @@
       "accepted": true
     },
     {
+      "id": "production-cyber-deck-alley-02",
+      "title": "Cyber Deck Alley · Sheet 2",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Dream Vending Wall",
+          "x": 214203,
+          "y": 114421,
+          "rows": 1,
+          "url": "/atlas-v2/production/0257-48f880fb9d9356ed.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
       "id": "production-electrical-laboratory-01",
       "title": "Electrical Laboratory · Sheet 1",
       "isolated": true,
@@ -2630,6 +2690,21 @@
       "accepted": true
     },
     {
+      "id": "production-electrical-laboratory-02",
+      "title": "Electrical Laboratory · Sheet 2",
+      "isolated": true,
+      "art": [
+        {
+          "title": "A Battery of Pickles",
+          "x": 214200,
+          "y": 114420,
+          "rows": 1,
+          "url": "/atlas-v2/production/0237-07eab2df61661645.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
       "id": "production-ferris-wheel-01",
       "title": "Ferris Wheel · Sheet 1",
       "isolated": true,
@@ -2647,6 +2722,21 @@
           "y": 114422,
           "rows": 1,
           "url": "/atlas-v2/production/0043-9096c4ca719ef9cd.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-ferris-wheel-02",
+      "title": "Ferris Wheel · Sheet 2",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Wheel of Borrowed Rooms",
+          "x": 214213,
+          "y": 114425,
+          "rows": 1,
+          "url": "/atlas-v2/production/0315-c21e3b2e8da76e41.webp"
         }
       ],
       "accepted": true
@@ -2681,6 +2771,21 @@
       "accepted": true
     },
     {
+      "id": "production-film-backlot-02",
+      "title": "Film Backlot · Sheet 2",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Rain Falls Sideways",
+          "x": 214211,
+          "y": 114407,
+          "rows": 1,
+          "url": "/atlas-v2/production/0437-7f5374f4ebad1f76.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
       "id": "production-grand-library-01",
       "title": "Grand Library · Sheet 1",
       "isolated": true,
@@ -2698,6 +2803,21 @@
           "y": 114419,
           "rows": 1,
           "url": "/atlas-v2/production/0145-2b4e9f39db84a1ba.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-grand-library-02",
+      "title": "Grand Library · Sheet 2",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Book That Takes a Village",
+          "x": 214213,
+          "y": 114409,
+          "rows": 1,
+          "url": "/atlas-v2/production/0440-c59ad0280ce893dc.webp"
         }
       ],
       "accepted": true
@@ -3314,6 +3434,21 @@
       "accepted": true
     },
     {
+      "id": "production-theme-park-02",
+      "title": "Theme Park · Sheet 2",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Park on a Hinge",
+          "x": 214214,
+          "y": 114407,
+          "rows": 1,
+          "url": "/atlas-v2/production/0442-cf5e3a25e044529f.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
       "id": "production-thrifting-paradise-01",
       "title": "Thrifting Paradise · Sheet 1",
       "isolated": true,
@@ -3324,6 +3459,21 @@
           "y": 114421,
           "rows": 1,
           "url": "/atlas-v2/production/0148-809be17a107e5fee.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-thrifting-paradise-02",
+      "title": "Thrifting Paradise · Sheet 2",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Lost Button Arcade",
+          "x": 214207,
+          "y": 114412,
+          "rows": 1,
+          "url": "/atlas-v2/production/0426-0db78f915b3b98b3.webp"
         }
       ],
       "accepted": true
@@ -3436,6 +3586,48 @@
         }
       ],
       "accepted": true
+    },
+    {
+      "id": "accepted-discoveries",
+      "title": "Accepted discoveries",
+      "accepted": true,
+      "art": [
+        {
+          "title": "Tropical Aquarium",
+          "x": 214183,
+          "y": 114433,
+          "rows": 1,
+          "url": "/generated-tiles/18/214183/114433/tropical-aquarium?version=6&variant=discovery-2243a5da-28ba-4bb0-89ff-1b75dcc98607-f745b7a24386"
+        },
+        {
+          "title": "The Graft Supper",
+          "x": 214174,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/0155-dc4e442c48389ccb.webp"
+        },
+        {
+          "title": "Printworks",
+          "x": 214185,
+          "y": 114434,
+          "rows": 1,
+          "url": "/generated-tiles/18/214185/114434/printworks?version=6&variant=discovery-2243a5da-28ba-4bb0-89ff-1b75dcc98607-b8177e69fbd5"
+        },
+        {
+          "title": "Steampunk City",
+          "x": 214185,
+          "y": 114421,
+          "rows": 1,
+          "url": "/generated-tiles/18/214185/114421/steampunk-city?version=6&variant=discovery-2243a5da-28ba-4bb0-89ff-1b75dcc98607-7b98bbc4415f"
+        },
+        {
+          "title": "Hong Kong in the Clouds",
+          "x": 214185,
+          "y": 114426,
+          "rows": 1,
+          "url": "/atlas-v2/peak-maquette/hong-kong-in-the-clouds-scaled.png"
+        }
+      ]
     }
   ]
 }

@@ -214,7 +214,7 @@ export const installAtlasAudio = (
     if (!context) return Promise.resolve(undefined)
 
     const decodingContext = context
-    themeAudioRequest = fetch(new URL('/atlas-audio/harbour-light-legato.flac', window.location.origin))
+    themeAudioRequest = fetch(new URL('/atlas-audio/harbour-light-legato.ogg', window.location.origin))
       .then(async response => {
         if (!response.ok) throw new Error('Could not load the atlas theme.')
         return decodingContext.decodeAudioData(await response.arrayBuffer())

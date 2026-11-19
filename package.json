@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "bun server/index.ts",
     "build": "vite build",
-    "deploy": "VITE_DEPLOY_COMMIT=$(git rev-parse --verify HEAD) bun run build && wrangler deploy",
+    "release": "mkdir -p .local && flock .local/release.lock bun scripts/release.ts",
+    "purge": "mkdir -p .local && flock .local/release.lock bun scripts/purge.ts",
+    "deploy": "bun run release",
     "preview": "NODE_ENV=production bun server/index.ts",
     "dev:remote": "bun run build && wrangler dev --port 8787 --var ATLAS_ALLOWED_ORIGIN:http://localhost:8787 --var ATLAS_LOCAL_DEV:true",
     "sync:tiles": "bun scripts/sync-generated-tiles.ts",
@@ -26,19 +28,19 @@
     "@cf-wasm/photon": "0.4.0",
     "@mapbox/vector-tile": "^3.0.0",
     "@protomaps/basemaps": "^5.7.2",
-    "maplibre-gl": "^6.18.0",
-    "pbf": "^5.1.2",
+    "maplibre-gl": "^6.19.0",
+    "pbf": "^5.2.0",
     "qrcode": "^1.5.4",
     "sharp": "^0.35.5"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.6.5",
+    "@biomejs/biome": "2.6.8",
     "@types/bun": "^1.4.4",
     "@types/node": "^26.6.6",
     "@types/qrcode": "^1.5.6",
-    "playwright": "1.62.1",
+    "playwright": "1.65.1",
     "typescript": "6",
     "vite": "^8.3.8",
-    "wrangler": "^4.162.0"
+    "wrangler": "^4.165.0"
   }
 }

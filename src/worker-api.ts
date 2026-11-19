@@ -1,3 +1,6 @@
+import { startSiGeneration, siGenerationStatus } from './si-generation'
+import { orphanGroup, releaseObjects, removeArchivedObjects, type ArchivedObject, type AssetBucket } from './artwork-purge'
+import { releaseCatalog, releaseMediaKeys } from './release-media'
 import { parseArtworkReview, reviewEndpoint } from './artwork-review.ts'
 import type { ArtworkReview } from './artwork-review.ts'
 import { PhotonImage, SamplingFilter, resize } from '@cf-wasm/photon/workerd'
@@ -66,6 +69,8 @@ type Scene = keyof typeof atlasScenes
 type Tile = AtlasTile<Scene>
 type AtlasEnv = Env & {
   ATLAS_ADMIN_TOKEN?: string
+  ATLAS_GENERATOR_ORIGIN?: string
+  ATLAS_GENERATOR_TOKEN?: string
   ATLAS_LOCAL_DEV?: string
   OPENROUTER_API_KEY?: string
   ATLAS_SHARE_ASSET_ORIGIN?: string
@@ -917,6 +922,10 @@ const generateTile = async (
   try {
     body = await readJsonBody(request)
     const source = decodeDataUrl(body.sourceImage, 'The tile source image')
+    if (env.ATLAS_GENERATOR_ORIGIN) {
+      if (source.contentType !== 'image/png') return errorResponse(400, 'Codex requires a PNG source.')
+      return startSiGeneration(env, tile, String(body.sourceImage), discovery)
+    }
     decodeDataUrl(body.guideImage, 'The guide image')
     const mask = decodeDataUrl(body.safeMask, 'The safe-zone mask')
     const overlay = decodeDataUrl(body.lineOverlay, 'The line overlay')
@@ -1266,25 +1275,90 @@ const manifestBackfillIsAllowed = async (request: Request, env: AtlasEnv) =>
     applicationRequestAllowed: applicationRequestIsAllowed(request, env, true),
   })
 
+const reviewIndexKey = 'indexes/artwork-review-overrides-v1.json'
+
+async function invalidateReviewIndex(env: AtlasEnv) {
+  // A unique generation also fences rebuilds that started before this mutation.
+  await env.ATLAS_BUCKET.put(reviewIndexKey, crypto.randomUUID())
+}
+
+async function allArtworkReviews(env: AtlasEnv, useIndex = false) {
+  const bucket = env.ATLAS_BUCKET
+  const index = useIndex ? await bucket.get(reviewIndexKey) : null
+  if (index?.customMetadata?.ready && Date.now() - index.uploaded.getTime() < 300_000)
+    return [...releaseReviews, ...await index.json<ArtworkReview[]>()]
+  await index?.body.cancel()
+  const reviews: ArtworkReview[] = []
+  let cursor: string | undefined
+  do {
+    const page = await env.ATLAS_BUCKET.list({ prefix: 'v2-artwork-reviews/', cursor, include: ['customMetadata'] })
+    for (const object of page.objects) {
+      const record = object.customMetadata?.review
+      if (record) reviews.push(JSON.parse(decodeURIComponent(record)))
+    }
+    cursor = page.truncated ? page.cursor : undefined
+  } while (cursor)
+  if (useIndex) {
+    await bucket.put(reviewIndexKey, JSON.stringify(reviews), {
+      customMetadata: { ready: '1' },
+      onlyIf: index ? { etagMatches: index.etag } : { etagDoesNotMatch: '*' },
+    })
+  }
+  return [...releaseReviews, ...reviews]
+}
+
+const deployedObjects = releaseObjects(releaseMediaKeys.values(), releaseCatalog.sheets.flatMap(sheet => sheet.art.map(art => art.url)))
+const deployedKeys = { media: new Set(deployedObjects.media), tiles: new Set(deployedObjects.tiles) }
+
+async function purgeArtwork(request: Request, env: AtlasEnv) {
+  if (!env.ATLAS_ADMIN_TOKEN || !await manifestBackfillIsAllowed(request, env))
+    return errorResponse(403, 'Production administrator required.')
+  if (request.method === 'GET') {
+    const csrf = await csrfToken(env.ATLAS_ADMIN_TOKEN)
+    return json({ version: 2, ...deployedObjects }, 200, {
+      'set-cookie': `${csrfCookieName}=${csrf}; Path=/; SameSite=Strict; Secure`,
+    })
+  }
+  if (request.method !== 'POST') return errorResponse(405, 'Unsupported method.')
+  const denied = await adminMutationIsAllowed(request, env)
+  if (denied) return errorResponse(denied.status, denied.error)
+  const body = await readJsonBody(request).catch(() => null) as { bucket: AssetBucket; objects: ArchivedObject[] } | null
+  if (!body || !['tiles', 'media'].includes(body.bucket) || !Array.isArray(body.objects) ||
+      !body.objects.length || body.objects.length > 2 || body.objects.some(obj =>
+        !obj || typeof obj.key !== 'string' || !(obj.sha256 === null || (typeof obj.sha256 === 'string' && /^[a-f0-9]{64}$/.test(obj.sha256)))))
+    return errorResponse(400, 'Invalid archive receipt.')
+  const keys = orphanGroup(body.bucket, body.objects[0].key, deployedKeys[body.bucket])
+  if (!keys || keys.length !== body.objects.length || !keys.every((key, i) => key === body.objects[i].key))
+    return errorResponse(409, 'Object group is referenced, incomplete or outside the release namespaces.')
+  const bucket = body.bucket === 'tiles' ? env.ATLAS_BUCKET : env.maps_romanticatlas_assets
+  if (!await removeArchivedObjects(bucket, body.objects, body.bucket === 'media'))
+    return errorResponse(409, 'Remote bytes differ from the verified archive.')
+  return json({ deleted: keys })
+}
+
 export const handleAtlasApi = async (
   request: Request,
   env: AtlasEnv,
 ): Promise<Response | null> => {
   const url = new URL(request.url)
+  const job = url.pathname.match(/^\/api\/discovery-jobs\/([a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12})$/)
+  if (job) {
+    try {
+      return await siGenerationStatus(request, env, job[1])
+    } catch (error) {
+      console.error('[atlas] SI job status unavailable', job[1], error)
+      return request.method === 'GET'
+        ? json({ pending: true }, 202)
+        : errorResponse(503, 'Please retry the completion callback.')
+    }
+  }
+  if (url.pathname === '/atlas-v2/release-objects.json' && request.method === 'GET')
+    return json({ version: 2, ...deployedObjects })
+  if (url.pathname === '/api/artwork-purge') return purgeArtwork(request, env)
   if (url.pathname === reviewEndpoint) {
     const prefix = 'v2-artwork-reviews/'
     if (request.method === 'GET') {
-      const reviews = [...releaseReviews]
-      let cursor: string | undefined
-      do {
-        const page = await env.ATLAS_BUCKET.list({ prefix, cursor, include: ['customMetadata'] })
-        for (const object of page.objects) {
-          const record = object.customMetadata?.review
-          if (record) reviews.push(JSON.parse(decodeURIComponent(record)))
-        }
-        cursor = page.truncated ? page.cursor : undefined
-      } while (cursor)
-      return json(reviews)
+      return json(await allArtworkReviews(env, !adminModeEnabled(request)))
     }
     if (request.method !== 'PUT') return errorResponse(405, 'Unsupported review method.')
     const error = await adminMutationIsAllowed(request, env)
@@ -1294,6 +1368,7 @@ export const handleAtlasApi = async (
     await env.ATLAS_BUCKET.put(prefix + encodeURIComponent(review.url), '', {
       customMetadata: { review: encodeURIComponent(JSON.stringify(review)) },
     })
+    await invalidateReviewIndex(env)
     return json(review)
   }
   if (request.method === 'POST' && url.pathname === '/api/share-maps') {

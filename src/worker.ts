@@ -3,7 +3,7 @@ import { handleAtlasApi } from './worker-api.ts'
 export { AtlasManifest } from './atlas-manifest.ts'
 export { FogEligibilityIndexCache } from './fog-eligibility-index-cache.ts'
 
-import { releaseCatalog, releaseMediaKeys } from './release-media.ts'
+import { releaseCatalog, mediaCacheControl, releaseObjectKey } from './release-media.ts'
 
 const tileOrigin = 'https://tiles.saanseoi.hk'
 const tileProxyPrefix = '/map-assets/saanseoi'
@@ -62,7 +62,9 @@ export default {
             headers: { 'content-type': 'application/json', 'cache-control': 'no-cache' },
           })
         }
-        const key = releaseMediaKeys.get(url.pathname)
+        const key = releaseObjectKey(url.pathname)
+        if (!key && url.pathname.startsWith('/release-assets/'))
+          return new Response(null, { status: 404, headers: { 'cache-control': 'no-store' } })
         if (key) {
           const headers = new Headers()
           for (const name of ['range', 'if-range', 'if-none-match', 'if-modified-since']) {
@@ -71,7 +73,7 @@ export default {
           }
           const media = await fetch(new URL(key, env.ATLAS_SHARE_ASSET_ORIGIN), { method: request.method, headers })
           const response = new Response(media.body, media)
-          response.headers.set('cache-control', 'no-cache')
+          response.headers.set('cache-control', mediaCacheControl(url.pathname, key, media.status))
           return response
         }
       }

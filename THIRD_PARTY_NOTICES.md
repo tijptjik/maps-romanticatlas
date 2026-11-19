@@ -10,7 +10,7 @@ are clipped and transcoded versions of the linked source recordings.
 
 | Local track                        | Source                                                 | Creator   | Licence |
 | ---------------------------------- | ------------------------------------------------------ | --------- | ------- |
-| `public/atlas-audio/harbour-light-legato.flac` | [Salamander Grand Piano](https://tonejs.github.io/audio/salamander/) | Alexander Holm | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) |
+| `public/atlas-audio/harbour-light-legato.ogg` | [Salamander Grand Piano](https://tonejs.github.io/audio/salamander/) | Alexander Holm | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) |
 
 | Local cue                                          | Source recording                                                                                                      | Creator              | Licence              |
 | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | -------------------- | -------------------- |

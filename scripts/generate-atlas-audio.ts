@@ -622,7 +622,7 @@ const clipRecordedScene = (
 const recordedSceneNames = atlasSceneNames.filter(scene => recordedScenes[scene])
 
 const thirdPartyNotices = () => {
-  const backgroundTrack = '`public/atlas-audio/harbour-light-legato.flac`'
+  const backgroundTrack = '`public/atlas-audio/harbour-light-legato.ogg`'
   const rows = recordedSceneNames.map(scene => {
     const source = sourceRecordings[recordedScenes[scene]]
     return `| \`public/atlas-audio/${scene}.ogg\` | [${source.title}](${source.sourcePage}) | ${source.creator} | ${source.license ?? 'CC0 1.0'} |`
