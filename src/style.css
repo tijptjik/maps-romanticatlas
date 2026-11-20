@@ -28,7 +28,7 @@ body {
 }
 
 #map {
-  min-height: 100vh;
+  height: 100dvh;
   -webkit-touch-callout: none;
   position: relative;
   isolation: isolate;
@@ -577,6 +577,8 @@ body {
   pointer-events: none;
   user-select: none;
 }
+
+.atlas-intro, .artist-statement-ui { color-scheme: only light; }
 
 .artist-statement-ui {
   position: absolute;
@@ -1482,8 +1484,45 @@ body {
 .note-leaf h2 { font: 500 clamp(2rem, 4vw, 3.4rem)/.98 "Cormorant Garamond", Georgia, serif; text-shadow: none; color: #2d483a; }
 .note-leaf h2 > span { font-size: .7em; }
 .note-leaf h2 em { color: inherit; font-style: italic; }
-.artist-statement__close { z-index: 1; }
+.note-page-controls {
+  position: sticky;
+  top: 0;
+  height: 0;
+  z-index: 1;
+}
+.artist-statement__close {
+  z-index: 1;
+  border-radius: 50%;
+  background: #f7ecd0;
+}
+@media (max-width: 700px), (pointer: coarse) {
+  html:has(.artist-statement:not([hidden])) {
+    overflow: hidden;
+    overscroll-behavior-y: none;
+  }
+  .artist-statement {
+    overflow: clip;
+  }
+  .note-pages {
+    overscroll-behavior-y: none;
+  }
+}
 @media (max-width: 700px) {
+  .artist-statement {
+    --book-gap: 1rem;
+    padding-top: max(var(--book-gap), env(safe-area-inset-top));
+    padding-bottom: max(var(--book-gap), env(safe-area-inset-bottom));
+    grid-template-rows: minmax(0, 1fr);
+  }
+  .artist-statement .artist-statement__dialog, .note-pages { max-height: 100%; }
+  .artist-statement .artist-statement__dialog { display: grid; grid-template-rows: minmax(0, 1fr); }
+  .artist-statement__map-trigger {
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+  }
+  .artist-statement__map-trigger > .artist-statement__map-trigger-label { display: none; }
   .note-spread { display: block; }
   .note-leaf, .note-leaf + .note-leaf { padding: 2.6rem 1.4rem 1rem; background: linear-gradient(90deg,#c8b58f66,#fff4dccc 8%,#f6ebd1cc), url("/romantic-paper-texture.webp") center / 32rem; }
   .note-leaf + .note-leaf { padding-top: 0; }

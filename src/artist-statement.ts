@@ -1,12 +1,14 @@
 const artistStatementMarkup = `
-  <button class="artist-statement__map-trigger" type="button" aria-controls="artist-statement" aria-expanded="false">
+  <button class="artist-statement__map-trigger" type="button" aria-label="Cartographer's Note" aria-controls="artist-statement" aria-expanded="false">
     <span class="artist-statement__map-trigger-compass" aria-hidden="true"></span>
-    <span>Cartographer's Note</span>
+    <span class="artist-statement__map-trigger-label">Cartographer's Note</span>
   </button>
   <section class="artist-statement" id="artist-statement" hidden>
     <div class="artist-statement__dialog" role="dialog" aria-modal="true" aria-labelledby="artist-statement-title">
       <div class="note-pages">
-      <button class="artist-statement__close" type="button" aria-label="Close the artist statement">×</button>
+        <div class="note-page-controls">
+          <button class="artist-statement__close" type="button" aria-label="Close the artist statement">×</button>
+        </div>
       <div class="note-spread">
         <article class="note-leaf">
           <p class="artist-statement__kicker">The cartographers' note</p>
@@ -152,10 +154,16 @@ export const installArtistStatement = (container: HTMLElement, { showMapTrigger 
       // The painted spine is centred at row 172 of the 215px desk image.
       // Its transparent bottom margin must sit outside the paper hinge.
       const spineRow = 172 / 215
-      const scale = desk.width / page.height
-      const dx = desk.left + desk.width / 2 - (page.left + page.width / 2)
-      const dy = desk.top + desk.height * spineRow - (page.top + page.height / 2)
-      const boardWidth = desk.height / scale
+      const angle = fromMap || !trigger ? 0 : parseFloat(getComputedStyle(trigger).rotate) || 0
+      // Measure the flat cover, then rotate its hinge around the cover centre.
+      const coverWidth = angle ? cover.offsetWidth : desk.width
+      const coverHeight = angle ? cover.offsetHeight : desk.height
+      const hingeOffset = coverHeight * (spineRow - .5)
+      const radians = angle * Math.PI / 180
+      const scale = coverWidth / page.height
+      const dx = desk.left + desk.width / 2 - hingeOffset * Math.sin(radians) - (page.left + page.width / 2)
+      const dy = desk.top + desk.height / 2 + hingeOffset * Math.cos(radians) - (page.top + page.height / 2)
+      const boardWidth = coverHeight / scale
       board.style.width = `${boardWidth}px`
       board.style.setProperty('--spine-inset', `${boardWidth * (1 - spineRow)}px`)
       board.append(cover)
@@ -183,7 +191,7 @@ export const installArtistStatement = (container: HTMLElement, { showMapTrigger 
       const timing: KeyframeAnimationOptions = { duration: 1500, delay: tug, fill: 'both' }
       const edge = .54
       const land = .98
-      const lifted = `translate(${dx}px,${dy}px) rotate(-90deg) scale(${scale})`
+      const lifted = `translate(${dx}px,${dy}px) rotate(${angle - 90}deg) scale(${scale})`
       const start = fromMap ? `translate(${dx - 50}px,${dy + 4}px) rotate(-90deg) scale(${scale})` : lifted
       coverTurn = board.animate([
         {transform: 'perspective(1800px) rotateY(0deg)', opacity: 1},
