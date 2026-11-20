@@ -149,7 +149,7 @@ export function startAtlas(pavilion: Pavilion) {
     window.clearTimeout(idleTimer)
     sharing.reset()
   }
-  const idleDelay = 120_000
+  const idleDelay = 60_000
   const kioskIdleDelay = 30_000
   let idleTimer: number | undefined
   let kioskTimer: number | undefined
