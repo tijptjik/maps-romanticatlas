@@ -6383,5 +6383,113 @@
     "scene": "tourist-disappearance-trap",
     "url": "/artwork-revisions/08bea8ac8042442189f479bbe3a5ca89.png",
     "status": "accepted"
+  },
+  {
+    "title": "Maze Garden",
+    "x": 214178,
+    "y": 114421,
+    "rows": 1,
+    "scene": "maze-garden",
+    "url": "/generated-tiles/18/214178/114421/maze-garden?version=6&variant=discovery-rotating-2424a7cd44b2",
+    "status": "rejected"
+  },
+  {
+    "title": "Civic Centre",
+    "x": 214185,
+    "y": 114420,
+    "rows": 1,
+    "scene": "civic-centre",
+    "url": "/generated-tiles/18/214185/114420/civic-centre?version=6&variant=discovery-rotating-70454f94aeb0",
+    "status": "rejected"
+  },
+  {
+    "title": "Civic Centre",
+    "x": 214185,
+    "y": 114420,
+    "rows": 1,
+    "scene": "civic-centre",
+    "url": "/generated-tiles/18/214185/114420/civic-centre?version=6&variant=discovery-rotating-da8d841e3e19",
+    "status": "rejected"
+  },
+  {
+    "title": "Rice Sculpture Festival",
+    "x": 214189,
+    "y": 114419,
+    "rows": 1,
+    "scene": "rice-sculpture-festival",
+    "url": "/generated-tiles/18/214189/114419/rice-sculpture-festival?version=6&variant=discovery-rotating-a3b49525a6cf",
+    "status": "accepted"
+  },
+  {
+    "title": "Ironworks",
+    "x": 214187,
+    "y": 114418,
+    "rows": 1,
+    "scene": "ironworks",
+    "url": "/generated-tiles/18/214187/114418/ironworks?version=6&variant=discovery-rotating-5566cf694e4c",
+    "status": "accepted"
+  },
+  {
+    "title": "Ironworks",
+    "x": 214187,
+    "y": 114418,
+    "rows": 1,
+    "scene": "ironworks",
+    "url": "/generated-tiles/18/214187/114418/ironworks?version=6&variant=discovery-rotating-c89fb8333394",
+    "status": "accepted"
+  },
+  {
+    "title": "Mesmerist Salon",
+    "x": 214194,
+    "y": 114375,
+    "rows": 1,
+    "scene": "mesmerist-salon",
+    "url": "/generated-tiles/18/214194/114375/mesmerist-salon?version=6&variant=discovery-358dcd83-813b-4904-89d1-0019b1f15a39-06fcde2aca9a",
+    "status": "accepted"
+  },
+  {
+    "title": "Civic Centre",
+    "x": 214190,
+    "y": 114375,
+    "rows": 1,
+    "scene": "civic-centre",
+    "url": "/generated-tiles/18/214190/114375/civic-centre?version=6&variant=discovery-358dcd83-813b-4904-89d1-0019b1f15a39-f3150530e20e",
+    "status": "accepted"
+  },
+  {
+    "title": "Cyber Deck Alley",
+    "x": 214180,
+    "y": 114426,
+    "rows": 1,
+    "scene": "cyber-deck-alley",
+    "url": "/artwork-revisions/27338eb32fc8408f9078dc202fff2519.png",
+    "status": "accepted"
+  },
+  {
+    "title": "The Tofu Crossing",
+    "x": 214202,
+    "y": 114422,
+    "rows": 1,
+    "scene": "floating-market",
+    "url": "/artwork-revisions/848566b04c9f4751aafa09112f54ec28.png",
+    "status": "accepted"
+  },
+  {
+    "title": "Printworks",
+    "x": 214176,
+    "y": 114421,
+    "rows": 1,
+    "scene": "printworks",
+    "url": "/artwork-revisions/5ccbd01535b5454f979fc8c1833f414d.png",
+    "status": "accepted"
+  },
+  {
+    "title": "Maze Garden",
+    "x": 214181,
+    "y": 114421,
+    "rows": 1,
+    "scene": "maze-garden",
+    "url": "/artwork-revisions/ef578815658d4cb997a5dfe30fe5725a.png",
+    "status": "accepted"
   }
 ]
