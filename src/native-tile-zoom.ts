@@ -2,7 +2,9 @@ import { originalArtwork } from './artwork-sampling.ts'
 import type { ImageSource, Map as AtlasMap } from 'maplibre-gl'
 import { atlasTileSize, atlasZoom } from './atlas-protocol.ts'
 
-// At the grid zoom a tile spans 512 CSS pixels. At the ceiling each artwork pixel spans one CSS pixel.
+export const artworkZoomScale = (viewportWidth: number) => viewportWidth <= 700 ? 1.75 : 1
+
+// At the grid zoom a tile spans 512 CSS pixels.
 export const nativeTileZoom = (imageWidth: number) =>
   atlasZoom + Math.log2(imageWidth / 512)
 
@@ -36,7 +38,7 @@ export const installNativeTileZoom = (map: AtlasMap, minimumZoom: number) => {
       }
     }
 
-    const limit = Math.max(minimumZoom, artworkZoom)
+    const limit = Math.max(minimumZoom, artworkZoom + Math.log2(artworkZoomScale(width)))
     if (Math.abs(limit - map.getMaxZoom()) > 1e-6) map.setMaxZoom(limit)
   }
   const schedule = () => { frame ||= requestAnimationFrame(sync) }

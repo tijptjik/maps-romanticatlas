@@ -3,6 +3,7 @@ import { decodeArtworkImage as decodeTileImage, forgetArtworkImage, loadArtworkI
 import { waitForAtlasGeneration } from './wait-for-atlas-generation'
 import { isFakeRenderTile, type RevealImage, type rotationSnapshot } from './fake-render-state'
 import { noFakeRenderEnabled } from './runtime-modes'
+import { artworkZoomScale } from './native-tile-zoom'
 import { originalArtwork } from './artwork-sampling'
 import { installArtworkAnimations } from './fountain-glitter'
 import type { Painting } from './artwork-review'
@@ -888,7 +889,7 @@ export const focusAtlasTile = (map, tile, onApproach?: () => void, frame?: Artwo
     (frame?.width ?? image?.width ?? atlasTileSize) / width,
     (frame?.height ?? image?.height ?? atlasTileSize) / height,
   )
-  const zoom = map.getZoom() + Math.log2(scale)
+  const zoom = map.getZoom() + Math.log2(scale * artworkZoomScale(canvas.clientWidth))
   // The previous artwork may have set a smaller native-resolution ceiling.
   if (zoom > map.getMaxZoom()) map.setMaxZoom(zoom)
   map.easeTo({

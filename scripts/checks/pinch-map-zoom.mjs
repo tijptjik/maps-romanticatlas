@@ -37,6 +37,7 @@ try {
     pitch: window.testAtlasMap.getPitch(), pageScale: visualViewport.scale,
   }))
   const initial = await camera()
+  assert.ok(Math.abs(2 ** (initial.zoom - 17) - 1.75) < 1e-6)
   await gesture(100, 45)
   const inward = await camera()
   await gesture(45, 100)

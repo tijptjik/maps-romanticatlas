@@ -14,7 +14,7 @@ import { installAtlasSharing } from './atlas-sharing.ts'
 import { createMapFlight } from './map-flight.ts'
 import { hongKongStyle } from './map-style.ts'
 import { atlasTileSize, modeEnabled } from './atlas-protocol.ts'
-import { installNativeTileZoom, nativeTileZoom } from './native-tile-zoom.ts'
+import { artworkZoomScale, installNativeTileZoom, nativeTileZoom } from './native-tile-zoom.ts'
 import { installBasemapPreload } from './basemap-preload.ts'
 import {
   mapModePath,
@@ -33,7 +33,7 @@ maplibregl.setWorkerUrl(workerUrl)
 
 const initialView = {
   center: [114.13765, 22.28364] as [number, number],
-  zoom: 17,
+  zoom: 17 + Math.log2(artworkZoomScale(document.documentElement.clientWidth)),
   bearing: 0,
   pitch: 0,
 }

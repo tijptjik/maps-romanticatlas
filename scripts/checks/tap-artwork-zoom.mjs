@@ -32,8 +32,9 @@ try {
         image.naturalHeight/(b.y-a.y)]
       return {scale:Math.min(...limits),limits,center:[(a.x+b.x)/2,(a.y+b.y)/2]}
     })
+    const expectedScale = width <= 700 ? 1 / 1.75 : 1
     const result = await measure()
-    assert.ok(Math.abs(result.scale-1)<.005,JSON.stringify(result))
+    assert.ok(Math.abs(result.scale-expectedScale)<.005,JSON.stringify(result))
     assert.ok(Math.abs(result.center[0]-width/2)<1 && Math.abs(result.center[1]-height/2)<1)
     await page.evaluate(() => window.testAtlasMap.jumpTo({zoom:16}))
     const tap = await page.evaluate(() => {
@@ -51,7 +52,7 @@ try {
     await page.touchscreen.tap(tap.x, tap.y)
     await page.waitForFunction(() => window.testAtlasMap.getZoom() > 16 && !window.testAtlasMap.isMoving())
     const refocused = await measure()
-    assert.ok(Math.abs(refocused.scale-1)<.005, JSON.stringify(refocused))
+    assert.ok(Math.abs(refocused.scale-expectedScale)<.005, JSON.stringify(refocused))
     await page.screenshot({path:path.join(process.env.DEV_RUNNER_ARTIFACTS,'tap-'+width+'.png')})
     console.log(width,height,dpr,result)
     await page.close()

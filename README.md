@@ -341,7 +341,7 @@ returns to the framing view and creates a fresh image and QR code.
 ## On-demand romantic atlas tiles
 
 The regular map stops zooming out at level 16 and diagnostics at level 15. Admin mode uses MapLibre’s world extent and default zoom-out limit.
-At maximum zoom, one artwork pixel spans one CSS pixel, or three device pixels across on a 3× display. Within that range, a drifting fog descends over a
+On maps up to 700 CSS pixels wide, selecting an artwork zooms to 1.75× its fitted size and keeps its centre in view. At maximum zoom, one artwork pixel spans 1.75 CSS pixels on these screens and one CSS pixel on larger screens. Within that range, a drifting fog descends over a
 set of all visible z18 tiles that are at least 75% land and retain
 a connected usable plot covering at least 25% of the tile after road cleanup. Coastal tiles need at least 10% land and a connected road-free plot covering at least 50% of the tile. Their illustrations target 50% coverage, including shore-connected
 piers and floating structures, selected from sixteen water-dependent scenes. Open-water
