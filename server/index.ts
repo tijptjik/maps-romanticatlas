@@ -1,4 +1,5 @@
 import { overlapsPeakMaquette } from '../src/artwork-reservation'
+import { generationEndpoint, generationJob, generationPosition, reservedArt } from '../src/generation-targets'
 import { revisionEndpoint, revisionId, revisionImagePattern, revisionRequest } from '../src/artwork-revision'
 import { resumeRevisions, revisionFile, revisionList, changeRevision } from './review-revisions'
 import { createFakeRenderStore } from './fake-render-store'
@@ -1226,6 +1227,28 @@ const server = createServer(async (request, response) => {
       if (!bytes) return sendError(response, 404, 'Revision image unavailable.')
       response.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'public, max-age=31536000, immutable' })
       return response.end(bytes)
+    }
+    if (pathname === generationEndpoint) {
+      if (request.method !== 'POST') return sendError(response, 405, 'POST required.')
+      if (rejectAdminAccess(request, response, { requireOrigin: true, requireCsrf: true })) return
+      const payload = await readRequestBody(request).catch(() => null)
+      const tile = generationPosition(payload)
+      if (!tile) return sendError(response, 400, 'Invalid generation target or reference.')
+      const radius = atlasSceneGridRadius
+      const localCatalog = Bun.file(path.join(rootDirectory, 'public/atlas-v2/catalog.json'))
+      const [land, catalog, cached, reviews, jobs] = await Promise.all([
+        localEligibilityForPositions([tile]),
+        !isProduction && await localCatalog.exists() ? localCatalog.json() : releaseCatalog,
+        listCachedTiles(null, { minimumX: tile.x-radius, maximumX: tile.x+radius, minimumY: tile.y-radius, maximumY: tile.y+radius }),
+        readReviews(), revisionList(),
+      ])
+      const job = generationJob(payload, land.eligibilities[0], [
+        ...catalog.sheets.flatMap(sheet => sheet.art), ...cached, ...reviews, ...reservedArt(jobs),
+      ])
+      if (!job) return sendError(response, 409, 'This tile or scene family is no longer available.')
+      const record = await changeRevision('submit', job)
+      if (record.conflict) return sendError(response, 409, record.conflict)
+      return sendJson(response, 202, record)
     }
     if (pathname === revisionEndpoint) {
       if (request.method === 'GET') return sendJson(response, 200, await revisionList(), { 'cache-control': 'no-store' })

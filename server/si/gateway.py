@@ -86,7 +86,10 @@ class Handler(BaseHTTPRequestHandler):
             body = json.loads(self.rfile.read(length))
             if self.command == 'DELETE':
                 return self.reply(200, revisions.withdraw(body['id']))
-            return self.reply(202, revisions.submit(body))
+            record = revisions.submit(body)
+            if 'conflict' in record:
+                return self.reply(409, {'error': record['conflict']})
+            return self.reply(202, record)
         if len(parts) == 2 and parts[0] == 'revisions' and re.fullmatch(r'[a-f0-9]{32}', parts[1]) and self.command == 'GET':
             path = revisions.JOBS / parts[1] / 'candidate.png'
             if not path.is_file():
