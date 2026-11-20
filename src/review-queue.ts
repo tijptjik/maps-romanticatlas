@@ -9,7 +9,7 @@ type Unit = { art: Painting; footprint: ReturnType<typeof drawingFootprint>; lay
 export function installReviewQueue(map: AtlasMap, units: Unit[],
   write: (review: ArtworkReview, method: 'PUT' | 'DELETE') => Promise<ArtworkReview>,
   select: (unit?: Unit, previous?: Painting) => void,
-  revise: (art: Painting, mode: RevisionMode) => Promise<void>,
+  revise: (art: Painting, mode: RevisionMode) => Promise<() => Promise<void>>,
   remainingUnits: () => Unit[], renderingCount: () => number, failedRevision: () => Revision | undefined,
   previousVersion: (art: Painting) => Painting | undefined) {
   function ordered(items: Unit[]) {
@@ -52,7 +52,8 @@ export function installReviewQueue(map: AtlasMap, units: Unit[],
   retry.hidden = true
   retry.onclick = () => location.reload()
   map.getContainer().append(retry)
-  const decisions: ArtworkReview[] = []
+  const history: { unit?: Unit; undo: () => Promise<void> }[] = []
+  let reviewed = 0
   let current: Unit | undefined
   let busy = false
   let removed = false
@@ -89,8 +90,8 @@ export function installReviewQueue(map: AtlasMap, units: Unit[],
       retryRevision.onclick = () => void act(failed.mode, failed.source)
     }
     const rendering = renderingCount()
-    const total = units.length + rendering
-    const position = decisions.length + (current ? 1 : 0)
+    const total = reviewed + units.length + rendering
+    const position = reviewed + (current ? 1 : 0)
     const count = position + ' / ' + total
     output.value = rendering ? count + ' · ' + rendering + ' rendering' : count
     output.setAttribute('aria-label', current ? 'Image ' + output.value : output.value + ' reviewed')
@@ -117,7 +118,7 @@ export function installReviewQueue(map: AtlasMap, units: Unit[],
     displayVersion()
   }
   function show() {
-    current = units[decisions.length]
+    current = units[0]
     focus()
     previous = current && previousVersion(current.art)
     showingPrevious = false
@@ -132,31 +133,36 @@ export function installReviewQueue(map: AtlasMap, units: Unit[],
   function reconcile() {
     if (busy) return
     const pending = remainingUnits()
-    const remaining = units.slice(decisions.length).filter(unit => pending.includes(unit))
+    const remaining = units.filter(unit => pending.includes(unit))
     const known = new Set(remaining)
     remaining.push(...ordered(pending.filter(unit => !known.has(unit))))
-    units.splice(decisions.length, Infinity, ...remaining)
-    if (units[decisions.length] !== current) show()
+    units.splice(0, Infinity, ...remaining)
+    if (units[0] !== current) show()
     else progress()
   }
   async function act(action: 'accepted' | 'rejected' | 'undo' | RevisionMode, retrySource?: Painting) {
     const reversing = action === 'undo'
-    if (busy || (reversing ? !decisions.length : !retrySource && !ready())) return
+    if (busy || (reversing ? !history.length : !retrySource && !ready())) return
     busy = true
     updateLoading()
     try {
       if (action === 'adjust' || action === 'spread') {
         output.value = 'Queuing revision…'
-        await revise(retrySource ?? current!.art, action)
-        return
-      }
-      if (reversing) {
-        await write(decisions.at(-1)!, 'DELETE')
-        decisions.pop()
+        const undo = await revise(retrySource ?? current!.art, action)
+        history.push({ unit: retrySource ? undefined : current, undo })
+      } else if (reversing) {
+        const last = history.at(-1)!
+        await last.undo()
+        history.pop()
+        if (last.unit) units.unshift(last.unit)
       } else {
-        decisions.push(await write({ ...current!.art, status: action }, 'PUT'))
+        const record = await write({ ...current!.art, status: action }, 'PUT')
+        reviewed++
+        history.push({ unit: current, undo: async () => {
+          await write(record, 'DELETE')
+          reviewed--
+        } })
       }
-      if (!removed) show()
     } catch (error) {
       window.alert('Could not save the artwork review. ' + error.message)
     } finally {

@@ -4,10 +4,15 @@ export const revisionEndpoint = '/api/artwork-revisions'
 export const revisionImagePattern = /^\/artwork-revisions\/([0-9a-f]{32})\.png$/
 export type RevisionMode = 'adjust' | 'spread'
 export type Revision = {
+  id: string
   source: Painting
   mode: RevisionMode
   state: 'pending' | 'ready' | 'failed'
   candidate?: Painting
+}
+
+export function revisionId(body: any): string | undefined {
+  if (typeof body?.id === 'string' && /^[0-9a-f]{32}$/.test(body.id)) return body.id
 }
 
 export function revisionRequest(body: any) {

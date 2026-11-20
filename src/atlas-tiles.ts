@@ -247,7 +247,6 @@ const createClearanceNotice = map => {
   notice.hidden = true
 
   const title = document.createElement('strong')
-  title.textContent = 'The fog is moving'
   const message = document.createElement('span')
   notice.append(title, message)
   map.getContainer().append(notice)
@@ -262,8 +261,9 @@ const createClearanceNotice = map => {
   }
 
   return {
-    show: text => {
+    show: (text = 'Discovery is not for speedrunners', heading = 'Hold up') => {
       if (hideTimer) window.clearTimeout(hideTimer)
+      title.textContent = heading
       message.textContent = text
       notice.hidden = false
       requestAnimationFrame(() => notice.classList.add('is-visible'))
@@ -1534,7 +1534,7 @@ export const createFogCanvas = (
     setOverlayContextTransform(mistContext, ratio)
     let hasVisibleColourCloud = false
     cachedTileIds.forEach(id => {
-      if (fakeRenderTile(tileFromId(id))) return
+      if (singleReadings.has(id) || fakeRenderTile(tileFromId(id))) return
       const tile = tileFromId(id)
       const state = tileState.get(id)
       if ((state && state !== 'checking' && state !== 'revealing') || !isSelected(tile) || !isFogTileRenderable(tile)) return
@@ -3054,15 +3054,12 @@ export const installAtlasTileInteractions = (
     tileState.set(id, 'checking')
     fog.clearError()
     fog.poke(id)
-    let reading = claim ? fog.readOnce(id) : undefined
+    const reading = claim ? fog.readOnce(id) : undefined
     const keepAlive = window.setInterval(() => map.getContainer().dispatchEvent(new Event('atlas-generation-progress')), 5000)
     fog.invalidate()
     try {
       let result: RevealImage | undefined
       if (claim) {
-        if ([...tileState.values()].filter(state => state === 'checking' || state === 'generating').length > concurrentGenerationLimit) {
-          throw Error('Three tile clearings are already in progress. Wait for one to finish.')
-        }
         await withinClickBudget(focusTileForCapture(tile), budget)
         const captured = await withinClickBudget(captureTile(map, tile, 1024), budget)
         const requestId = rotatingRequests.get(id) ?? crypto.randomUUID()
@@ -3071,16 +3068,14 @@ export const installAtlasTileInteractions = (
           method: 'POST', signal: budget, headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ sourceImage: captured.sourceImage, requestId }),
         })
-        if (response.status === 202) {
-          // Another visitor took the slot. Their claim is already in the Rainbow pool.
+        const body = response.status === 202 ? null : await response.json()
+        if (response.status === 202 || (response.status === 400 && body?.error === 'Not a rotating cloud.')) {
+          // A busy or non-rotating cloud can still reveal released artwork.
           rotatingRequests.delete(id)
           setCloudReady(tile, false)
-          fog.cancelReveal(id)
-          reading = undefined
           fog.invalidate()
         } else {
-          const body = await response.json()
-          if (!response.ok) throw Error(body.error ?? 'This clearing is unavailable.')
+          if (!response.ok) throw Error(body?.error ?? 'This clearing is unavailable.')
           result = body
         }
       }
@@ -3102,18 +3097,19 @@ export const installAtlasTileInteractions = (
         const url = urls[Math.floor(Math.random() * urls.length)]
         const painting = catalog.get(url)
         if (painting) {
+          if (reading) await withinClickBudget(reading, budget)
           tileState.delete(id)
           await revealPainting(id, painting)
           return
         }
         result = choices.get(url)!
       }
-      const image = await withinClickBudget(decodeTileImage(result.url), budget)
-      await Promise.all([
-        addGeneratedTile(map, tile, result.url, result.scene, titleCards, result.contentBounds, 0, budget,
-          result.title ? { bounds: tileBounds(tile), title: result.title, image } : undefined),
+      const [image] = await Promise.all([
+        withinClickBudget(decodeTileImage(result.url), budget),
         reading && withinClickBudget(reading, budget),
       ])
+      await addGeneratedTile(map, tile, result.url, result.scene, titleCards, result.contentBounds, 0, budget,
+        result.title ? { bounds: tileBounds(tile), title: result.title, image } : undefined)
       revealGeneratedTile(id, result.scene as AtlasScene)
       rotatingRequests.delete(id)
     } catch (error) {
@@ -3252,9 +3248,7 @@ export const installAtlasTileInteractions = (
         tileState.delete(id)
         fog.cancelReveal(id)
         fog.invalidate()
-        clearanceNotice.show(
-          'Three tile clearings are already in progress.\nWait for one to finish before clearing more fog.',
-        )
+        clearanceNotice.show()
         return
       }
 
@@ -3328,12 +3322,14 @@ export const installAtlasTileInteractions = (
       if (!response.ok) {
         if (response.status === 429) {
           rateLimited = true
-          clearanceNotice.show(
-            response.headers.get('x-atlas-limit-reason') === 'concurrent-generations'
-              ? (body?.error ??
-                  'Three tile clearings are already in progress.\nWait for one to finish before clearing more fog.')
-              : 'This clearing is temporarily unavailable.\nPlease wait a moment, then try another patch of fog.',
-          )
+          if (response.headers.get('x-atlas-limit-reason') === 'concurrent-generations') {
+            clearanceNotice.show()
+          } else {
+            clearanceNotice.show(
+              'This clearing is temporarily unavailable.\nPlease wait a moment, then try another patch of fog.',
+              'The fog is moving',
+            )
+          }
         }
       }
       if (!response.ok)

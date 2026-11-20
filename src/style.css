@@ -81,7 +81,7 @@ body {
 
 .atlas-fog-loading {
   position: absolute;
-  z-index: 4;
+  z-index: 7;
   inset: 0;
   width: 100%;
   height: 100%;
@@ -519,7 +519,6 @@ body {
     system-ui,
     sans-serif;
   letter-spacing: 0.14em;
-  text-transform: uppercase;
 }
 
 .atlas-clearance-notice span {

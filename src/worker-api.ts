@@ -1,4 +1,4 @@
-import { revisionEndpoint, revisionImagePattern, revisionRequest } from './artwork-revision'
+import { revisionEndpoint, revisionId, revisionImagePattern, revisionRequest } from './artwork-revision'
 import { isFakeRenderTile, isRotatingVariant } from './fake-render-state'
 import { fakeRenderSeed } from './fake-render-seed'
 import { generator, startSiGeneration, siGenerationStatus } from './si-generation'
@@ -1109,10 +1109,16 @@ export const handleAtlasApi = async (
   }
   if (url.pathname === revisionEndpoint) {
     if (request.method === 'GET') return generator(env, '/revisions')
-    if (request.method !== 'POST') return errorResponse(405, 'Unsupported revision method.')
+    if (request.method !== 'POST' && request.method !== 'DELETE') return errorResponse(405, 'Unsupported revision method.')
     const denied = await adminMutationIsAllowed(request, env)
     if (denied) return errorResponse(denied.status, denied.error)
-    const body = revisionRequest(await readJsonBody(request).catch(() => null))
+    const payload = await readJsonBody(request).catch(() => null)
+    if (request.method === 'DELETE') {
+      const id = revisionId(payload)
+      if (!id) return errorResponse(400, 'Invalid revision id.')
+      return generator(env, '/revisions', { method: 'DELETE', body: JSON.stringify({ id }) })
+    }
+    const body = revisionRequest(payload)
     if (!body) return errorResponse(400, 'Invalid artwork revision.')
     return generator(env, '/revisions', { method: 'POST', body: JSON.stringify(body) })
   }

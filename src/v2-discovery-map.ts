@@ -285,7 +285,7 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
     const view = map.getBounds()
     const candidates: Unit[] = []
     for (const unit of units.values()) {
-      if (status.get(unit.art.url) === 'rejected') continue
+      if (superseded.has(unit.art.url) || status.get(unit.art.url) === 'rejected') continue
       const {west,east,north,south} = unit.footprint.bounds
       if (!view.intersects([[west,south],[east,north]])) continue
       candidates.push(unit)
@@ -391,13 +391,23 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
       map.on('moveend', renderDiagnostics)
       function remaining() {
         const submitted = new Set(revisions.map(item => item.source.url))
-        return [...units.values()].filter(unit => !status.has(unit.art.url) && !submitted.has(unit.art.url))
+        return [...units.values()].filter(unit => !superseded.has(unit.art.url) && !status.has(unit.art.url) && !submitted.has(unit.art.url))
       }
+      let revisionChanges = 0
       async function revise(art: Painting, mode: RevisionMode) {
         const references = await revisionReferences(units.get(art.url)?.art ?? art)
         const job: Revision = await mutation(revisionEndpoint, { source: art, mode, ...references }, 'POST')
+        revisionChanges++
         revisions = [...revisions.filter(item => item.source.url !== job.source.url || item.state === 'failed'), job]
         if (job.candidate) add(job.candidate)
+        return async () => {
+          await mutation(revisionEndpoint, { id: job.id }, 'DELETE')
+          revisionChanges++
+          const candidate = revisions.find(item => item.id === job.id)?.candidate
+          if (candidate) superseded.add(candidate.url)
+          revisions = revisions.filter(item => item.id !== job.id)
+          gridSize = -1
+        }
       }
       function failedRevision() {
         const active = new Set(revisions.filter(job => job.state !== 'failed').map(job => job.source.url))
@@ -422,12 +432,11 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
       const timer = window.setInterval(async () => {
         if (refreshing || !revisions.some(item => item.state === 'pending')) return
         refreshing = true
-        const before = revisions.slice()
+        const before = revisionChanges
         try {
           const updated = await readRevisions()
-          if (disposed) return
-          // Preserve submissions that completed after this read started.
-          revisions = [...updated, ...revisions.filter(job => !before.includes(job) && !updated.some(item => item.source.url === job.source.url))]
+          if (disposed || before !== revisionChanges) return
+          revisions = updated
           for (const job of revisions) if (job.candidate && !status.has(job.candidate.url)) add(job.candidate)
           sync()
         } catch (error) {

@@ -82,6 +82,7 @@ function installModeShortcuts(mapVisible: () => boolean) {
         event.altKey || event.ctrlKey || event.metaKey || event.shiftKey ||
         (event.target instanceof Element && event.target.closest('input, textarea, select, [contenteditable], [role="dialog"]'))) return
     const key = event.key.toLowerCase()
+    if (reviewMode && key === 'd') return
     if (reviewQueueEnabled() && key === 'a') return
     if (key !== 'r' && key !== 'd' && key !== 'a' && key !== 'v' && key !== 'w') return
     event.preventDefault()
