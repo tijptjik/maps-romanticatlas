@@ -13,8 +13,16 @@ const historicalTitles: Record<string, string> = recoveredTitles
 export const discoveryTitle = (url: string, scene: string, title?: string) =>
   title && title !== atlasSceneTitle(scene) ? title : historicalTitles[url] ?? title
 
-export const createAtlasTitleCard = (container, scene, displayTitle?: string) => {
-  const card = document.createElement('aside')
+export const createAtlasTitleCard = (container, scene, displayTitle?: string, onCopy?: () => void) => {
+  const card = document.createElement(onCopy ? 'button' : 'aside')
+  if (card instanceof HTMLButtonElement && onCopy) {
+    card.type = 'button'
+    card.setAttribute('aria-description', 'Copy tile link')
+    card.onclick = event => {
+      event.stopPropagation()
+      onCopy()
+    }
+  }
   card.className = 'atlas-title-card is-awaiting-focus'
   card.setAttribute('aria-label', displayTitle ?? `${atlasSceneTitle(scene)}: ${atlasScenes[scene]}`)
 

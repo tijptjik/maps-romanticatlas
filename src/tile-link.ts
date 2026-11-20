@@ -10,22 +10,26 @@ export function linkedTile() {
   return { ...tile, center: [(west + east) / 2, (south + north) / 2] as [number, number], art: params.get('art') }
 }
 
-export function createTileLink(id: string, art: string) {
-  const link = document.createElement('a')
-  link.className = 'atlas-tile-link'
-  link.href = '/?tile=' + id + '&art=' + encodeURIComponent(art)
-  link.textContent = 'Copy tile link'
-  link.onclick = async event => {
-    if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return
-    event.preventDefault()
-    event.stopPropagation()
+export async function copyTileLink(id: string, art: string) {
+  const url = new URL('/?tile=' + id + '&art=' + encodeURIComponent(art), location.origin)
+  if (navigator.clipboard?.writeText) {
     try {
-      await navigator.clipboard.writeText(link.href)
-      link.textContent = 'Link copied'
-      window.setTimeout(() => { link.textContent = 'Copy tile link' }, 2000)
+      await navigator.clipboard.writeText(url.href)
+      return
     } catch {
-      window.prompt('Copy tile link', link.href)
+      // Some embedded browsers only support the selection-based clipboard API.
     }
   }
-  return link
+  const field = document.createElement('textarea')
+  field.value = url.href
+  field.style.cssText = 'position:fixed;left:-9999px;top:0'
+  const focused = document.activeElement
+  document.body.append(field)
+  try {
+    field.select()
+    document.execCommand('copy')
+  } finally {
+    field.remove()
+    if (focused instanceof HTMLElement) focused.focus({ preventScroll: true })
+  }
 }

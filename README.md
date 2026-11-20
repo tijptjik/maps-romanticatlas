@@ -48,7 +48,7 @@ bun run dev
 
 Open the local URL printed by the server (use `http://localhost:5173`).
 
-Use **Copy tile link** on a revealed painting’s plaque to share it. The link opens the atlas at that painting and lifts its fog. A coordinate-only URL such as `/?tile=18/214184/114420` opens available artwork for that cell.
+Tap a revealed painting’s title card to copy its link. The link opens the atlas at that painting and lifts its fog. A coordinate-only URL such as `/?tile=18/214184/114420` opens available artwork for that cell.
 
 ## Commands
 

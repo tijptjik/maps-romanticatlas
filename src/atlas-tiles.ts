@@ -1,4 +1,4 @@
-import { createTileLink, linkedTile } from './tile-link'
+import { copyTileLink, linkedTile } from './tile-link'
 import { waitForAtlasGeneration } from './wait-for-atlas-generation'
 import { isFakeRenderTile, type RevealImage, type rotationSnapshot } from './fake-render-state'
 import { noFakeRenderEnabled } from './runtime-modes'
@@ -754,10 +754,9 @@ export const addGeneratedTile = async (
     firstLabelLayerId(map),
   )
   if (scene && titleCards) {
-    const card = createAtlasTitleCard(map.getContainer(), scene, discoveryTitle(url, scene, placement?.title))
-    if (!map.getContainer().classList.contains('atlas-admin-mode')) {
-      card.append(createTileLink(tileId(tile), tile.url ?? url))
-    }
+    const container = map.getContainer()
+    const copy = container.classList.contains('atlas-admin-mode') ? undefined : () => copyTileLink(tileId(tile), tile.url ?? url)
+    const card = createAtlasTitleCard(container, scene, discoveryTitle(url, scene, placement?.title), copy)
     titleCards.set(tileId(tile), { card, tile, contentBounds, bounds, alpha })
     positionAtlasTitleCard(map, card, tile, contentBounds, bounds, alpha)
   }
