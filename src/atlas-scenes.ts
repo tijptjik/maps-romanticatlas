@@ -73,7 +73,7 @@ export const atlasScenes = {
   'grand-exhibition': 'a vast Victorian world exhibition with pavilions, boulevards, and glass halls',
   'market-quarter': 'a dense covered market quarter with arcades, stalls, alleys, and surrounding tenements',
   'steampunk-city': 'a dense steampunk city with factories, elevated railways, pipes, towers, and crowded streets',
-  'civic-centre': 'a monumental civic centre with a town hall, courthouse, museum, library, and formal squares',
+  'civic-centre': 'a near-future Hong Kong civic centre where residents shape public services together, with sun-tracking canopies, step-free public rooms and planted courts open to the street',
   'worlds-fair': 'a sprawling international exposition with themed districts, pavilions, gardens, and promenades',
   'floating-city': 'a sprawling floating city of platforms, canals, markets, docks, and interconnected buildings',
   arcology: 'a colossal arcology complex with layered streets, plazas, gardens, transit hubs, and vertical districts',
