@@ -71,6 +71,10 @@ const map = new maplibregl.Map({
   // while generation still requires a complete z18 tile in the viewport.
   ...(adminMap ? {} : { minZoom: minimumZoom, maxBounds: [113.8, 22.1, 114.5, 22.6] as [number, number, number, number] }),
   maxZoom: reviewQueueEnabled() ? 22 : initialMaxZoom,
+  // Artwork changes maxZoom to match its native resolution. MapLibre's default
+  // tile splitting uses that ceiling, replacing warm basemap geometry whenever
+  // a larger painting appears. Keep overscaling the original z15 tiles instead.
+  zoomLevelsToOverscale: undefined,
   attributionControl: false,
   canvasContextAttributes: { preserveDrawingBuffer: true },
 })

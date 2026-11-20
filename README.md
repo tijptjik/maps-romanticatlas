@@ -145,6 +145,12 @@ panning, plus desktop, zoom and mobile screenshots in the runner artifacts.
 The test uses visible Google Chrome on Li. Compare runs on the same machine and
 viewport; server memory pressure, network and cache warmth affect loading times.
 
+Run `dev-remote --port 4173 chrome bun run test:artwork-pan` against the development
+server (substitute its actual port) to check that revealing high-resolution artwork,
+focusing it, panning and zooming out retain the original basemap tile grid. Add
+`--mobile` for a narrow viewport. Screenshots and tile-level evidence are saved in
+the runner artifacts.
+
 ## Production build and deployment
 
 ```sh
