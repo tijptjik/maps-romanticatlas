@@ -4654,6 +4654,14 @@
           "y": 114388,
           "rows": 1,
           "url": "/atlas-v2/production/0415-80a6ee83516794da.webp"
+        },
+        {
+          "title": "The Firefly Night Shift",
+          "scene": "cloud-launcher",
+          "x": 214209,
+          "y": 114388,
+          "rows": 1,
+          "url": "/atlas-v2/production/0480-ed7f8447db8a4413.webp"
         }
       ],
       "accepted": true
@@ -5734,6 +5742,22 @@
           "y": 114416,
           "rows": 1,
           "url": "/atlas-v2/production/0182-1e4ef700fdc9b0b5.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cloud-launcher-01",
+      "title": "Cloud Launcher · Sheet 1",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Firefly Night Shift",
+          "scene": "cloud-launcher",
+          "x": 214209,
+          "y": 114388,
+          "rows": 1,
+          "url": "/atlas-v2/production/0480-ed7f8447db8a4413.webp"
         }
       ],
       "accepted": true
@@ -7635,6 +7659,21 @@
       "accepted": true
     },
     {
+      "id": "west-kowloon-airship-mooring",
+      "title": "West Kowloon Airship Mooring",
+      "isolated": true,
+      "art": [
+        {
+          "title": "West Kowloon Airship Mooring",
+          "x": 214198,
+          "y": 114407,
+          "rows": 2,
+          "url": "/west-kowloon-airship-mooring/grand-airship-pylon.webp?v=ac64beb0d64333d9"
+        }
+      ],
+      "accepted": true
+    },
+    {
       "id": "accepted-discoveries",
       "title": "Accepted discoveries",
       "accepted": true,
@@ -9254,6 +9293,78 @@
           "rows": 1,
           "scene": "aquarium",
           "url": "/artwork-revisions/8f3d9e4ac3f24c2da8553c906aa26c40.png"
+        },
+        {
+          "title": "The House That Mends Itself",
+          "x": 214205,
+          "y": 114422,
+          "rows": 1,
+          "scene": "arcology",
+          "url": "/artwork-revisions/45ca4ba75eea4a1d9ab1a303b4edf1c4.png"
+        },
+        {
+          "title": "The Laundry Regatta",
+          "x": 214198,
+          "y": 114422,
+          "rows": 1,
+          "scene": "floating-city",
+          "url": "/artwork-revisions/68c16147b0c84006b32dd52a444a178b.png"
+        },
+        {
+          "title": "The Robot Tailor",
+          "x": 214188,
+          "y": 114421,
+          "rows": 1,
+          "scene": "robot-factory",
+          "url": "/artwork-revisions/99ea30af585c4d4bbc7f68ee6e2ad0a1.png"
+        },
+        {
+          "title": "Eau de Cumulus",
+          "x": 214192,
+          "y": 114421,
+          "rows": 1,
+          "scene": "cloud-launcher",
+          "url": "/artwork-revisions/b5af4354d8ef4d93ac0510ae32b9826e.png"
+        },
+        {
+          "title": "The Timber Velodrome Garage",
+          "x": 214205,
+          "y": 114421,
+          "rows": 1,
+          "scene": "race-circuit",
+          "url": "/artwork-revisions/6e32694c70904efa8398889bf7b78e6a.png"
+        },
+        {
+          "title": "A Choir of Steins",
+          "x": 214194,
+          "y": 114420,
+          "rows": 1,
+          "scene": "beer-garden",
+          "url": "/artwork-revisions/420c658c7d574016a8c8d6da7964a1dc.png"
+        },
+        {
+          "title": "Maze Garden",
+          "x": 214210,
+          "y": 114419,
+          "rows": 1,
+          "scene": "maze-garden",
+          "url": "/artwork-revisions/3b2a466afb964bdcaee8eeb91a1c9317.png"
+        },
+        {
+          "title": "The Travelling Fountain",
+          "x": 214189,
+          "y": 114418,
+          "rows": 1,
+          "scene": "worlds-fair",
+          "url": "/artwork-revisions/4d1515415ad348f88380cd9eeb1a8d19.png"
+        },
+        {
+          "title": "The Ray Window",
+          "x": 214197,
+          "y": 114418,
+          "rows": 1,
+          "scene": "aquarium",
+          "url": "/artwork-revisions/a5322fe822ee4db58ab3018cf7df22c8.png"
         }
       ]
     }
