@@ -277,7 +277,7 @@
   }
   .pavilion-credit__art { grid-template: minmax(0, 1fr) / minmax(0, 1fr); }
   .pavilion-credit img { height: 100%; }
-  .pavilion-credit:any-link:is(:hover, :focus-visible) .pavilion-credit__petal {
+  .pavilion-credit:is(:hover, :focus-visible) .pavilion-credit__petal {
     width: 137.5%;
     height: 137.5%;
     transform: none;
@@ -289,18 +289,22 @@
 }
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
   .pavilion-credit__petal { transition: width 300ms ease-out, height 300ms ease-out, transform 300ms ease-out; }
-  .pavilion-credit:any-link:is(:hover, :focus-visible) .pavilion-credit__petal {
-    offset-path: path("M 0 0 Q -4 -24 -13 -10 Q -30 -65 0 0");
+  .pavilion-credit:is(:hover, :focus-visible) .pavilion-credit__petal {
+    offset-path: path("M 0 0 C 0 -5 4 -6 3 -10 S -8 -15 -9 -20 S -5 -26 -7 -29 S -16 -31 -17 -26 S -9 -7 0 0");
     offset-position: normal;
     offset-anchor: 0 0;
     offset-rotate: 0deg;
-    animation: pavilion-petal-flight 1180ms;
+    animation: pavilion-petal-flight 1180ms ease-in-out;
   }
 }
 /* Resize the painted image at each point in the gust, including the foreshortened edge-on poses. */
 @keyframes pavilion-petal-flight {
-  0% { offset-distance: 0%; width: 72%; height: 38%; transform: rotate(-4deg) skewX(-5deg); animation-timing-function: cubic-bezier(.18,.62,.36,1); }
-  32% { offset-distance: 28%; width: 81%; height: 52%; transform: rotate(-13deg) skewX(5deg); animation-timing-function: cubic-bezier(.56,0,.27,1); }
+  0% { offset-distance: 0%; width: 72%; height: 38%; transform: rotate(-4deg) skewX(-5deg); }
+  19% { transform: rotate(4deg) skewX(-2deg); }
+  41% { transform: rotate(-8deg) skewX(4deg); }
+  63% { transform: rotate(5deg) skewX(-3deg); }
+  80% { transform: rotate(-3deg) skewX(2deg); }
+  91% { transform: rotate(1deg); }
   100% { offset-distance: 100%; width: 137.5%; height: 137.5%; transform: none; }
 }
 
