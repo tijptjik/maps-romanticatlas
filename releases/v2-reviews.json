@@ -4891,5 +4891,21 @@
     "rows": 1,
     "url": "/artwork-revisions/018a024ce2264eb9865855fd7745c7f3.png",
     "status": "accepted"
+  },
+  {
+    "title": "Archaeological Excavation",
+    "x": 214183,
+    "y": 114422,
+    "rows": 1,
+    "url": "/artwork-revisions/f3125556f06247d8a599040df5966b55.png",
+    "status": "accepted"
+  },
+  {
+    "title": "Photography Studio",
+    "x": 214184,
+    "y": 114422,
+    "rows": 1,
+    "url": "/artwork-revisions/53bb6b5517ae4da89b6888bf11502bb3.png",
+    "status": "accepted"
   }
 ]
