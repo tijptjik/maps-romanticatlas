@@ -34,7 +34,7 @@ const revealedTileFocusDuration = 1500
 const titleCardFocusLeadTime = 500
 const fogPokeDuration = 900
 const fogPokeExpansion = 0.16
-const concurrentGenerationLimit = 3
+const concurrentGenerationLimit = import.meta.env.DEV ? 6 : 5
 // A Worker may finish writing an image after the browser connection has been
 // interrupted by an edge or mobile-network timeout. Give that completed work a
 // short window to appear in the cache before treating the clearing as failed.
@@ -3240,10 +3240,7 @@ export const installAtlasTileInteractions = (
         return
       }
 
-      // Cache checks may run together, but only three cache misses may reach
-      // the paid image request at once. This is deliberately checked directly
-      // before marking the tile as generating so rapid clicks cannot start a
-      // fourth request while the first three are still in flight.
+      // Claim a slot synchronously after the cache check so rapid clicks respect the limit.
       if (activeGenerationCount() >= concurrentGenerationLimit) {
         tileState.delete(id)
         fog.cancelReveal(id)

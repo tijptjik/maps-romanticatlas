@@ -35,14 +35,14 @@ try {
   const original = crypto.getRandomValues.bind(crypto)
   crypto.getRandomValues = array => array instanceof Uint32Array && array.length === 1 ? array.fill(visit) : original(array)
  }, visit)
- // Start with all three generation slots occupied so the click exercises the limit.
+ // Start with all six local generation slots occupied so the click exercises the limit.
  await page.route('**/src/atlas-tiles.ts*', async route => {
   const response = await route.fetch()
   const source = await response.text()
   const initialState = /const tileState = (?:\/\*[^*]*\*\/ )?new Map\(\)/
   assert.match(source, initialState)
   await route.fulfill({response, body: source.replace(initialState,
-   "const tileState = new Map([['18/1/1','generating'],['18/1/2','generating'],['18/1/3','generating']])")})
+   "const tileState = new Map(Array.from({length: 6}, (_, i) => ['18/1/' + i, 'generating']))")})
  })
  let busy=false
  let lostClaim=false

@@ -23,7 +23,7 @@ JOBS = ROOT / 'generated-tiles/dream-atlas/live/jobs'
 TOKEN = '' if sys.argv[1:] == ['work'] else Path(os.environ.get('ATLAS_GENERATOR_TOKEN_FILE', '/etc/atlas-generator/token')).read_text().strip()
 ORIGIN = os.environ.get('ATLAS_PRODUCTION_ORIGIN', 'https://romanticatlas.hype.hk')
 MAX_BODY = 7_000_000
-MAX_ACTIVE = 3
+MAX_ACTIVE = 5
 GUARD = threading.Lock()
 SCENES = json.loads((ROOT / 'releases/si-scenes.json').read_text())
 
@@ -221,7 +221,7 @@ def publish():
 if __name__ == '__main__':
     JOBS.mkdir(parents=True, exist_ok=True)
     if sys.argv[1:] == ['work']:
-        workers = [threading.Thread(target=work) for _ in range(3)]
+        workers = [threading.Thread(target=work) for _ in range(MAX_ACTIVE)]
         workers.append(threading.Thread(target=revision_worker))
         for worker in workers:
             worker.start()

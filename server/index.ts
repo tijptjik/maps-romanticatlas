@@ -73,7 +73,7 @@ const rootDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)),
 const cacheDirectory = path.join(rootDirectory, 'generated-tiles')
 const sharedMapsDirectory = path.join(rootDirectory, 'shared-maps')
 const productionDirectory = path.join(rootDirectory, 'dist')
-const concurrentGenerationsPerClient = 3
+const concurrentGenerationsPerClient = 6
 const maximumCacheStatusBatchSize = 64
 const isProduction = process.env.NODE_ENV === 'production'
 const adminToken = process.env.ATLAS_ADMIN_TOKEN?.trim() || null
@@ -149,7 +149,7 @@ const reserveGeneration = clientKey => {
       allowed: false,
       retryAfterMs: 1,
       reason:
-        'Three tile clearings already in progress.\n' +
+        `${concurrentGenerationsPerClient} tile clearings already in progress.\n` +
         'Enjoy poetry for 30s before clearing more fog.',
     }
   }

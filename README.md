@@ -355,14 +355,14 @@ treatment while it runs. The fog carries one of 24 short provocations about imag
 discovery, possibility, and Romanticism, each paired with a quotation from a Romantic
 author. The text clears once the generated image is ready.
 
-On the local development server, each client may have up to three tile generations
+On the local development server, each client may have up to six tile generations
 active at a time. Requests for the same tile are coalesced while a generation is in
 flight. The production Worker does not currently apply an equivalent cross-request limit
 or coalescing.
 
 Generated images and metadata are stored separately. In production, the manifest is
 published only after both R2 objects have been stored, so normal manifest-based lookups
-do not expose an incomplete cache entry. When three local clearings are active, the map
+do not expose an incomplete cache entry. When six local clearings are active, the map
 asks the visitor to wait for one to finish.
 
 Generated event images are cached in local `generated-tiles/` during development and in
@@ -440,7 +440,7 @@ Review formatting changes separately from content edits.
 
 Production sends new tile requests to the authenticated SI gateway at
 `ATLAS_GENERATOR_ORIGIN`, using the Worker secret `ATLAS_GENERATOR_TOKEN`.
-The gateway stores jobs on disk and allows three active renders. The
+The gateway stores jobs on disk and allows five active tile renders across all visitors. The
 `atlas-generator-worker.service` runs `scripts/dream-atlas.py live-tile`
 with the same scene families and drawing direction as local development,
 inside the existing `codex-vpn` network namespace. Its Codex login uses
