@@ -178,7 +178,7 @@ export async function release(
   root: string,
   dryRun: boolean,
   openStore: () => Promise<Store> = productionStore,
-  deploy = deployWorker,
+  deploy = deployProduction,
   audit = false,
   readProduction = productionArtwork,
   pullOnly = false,
@@ -259,7 +259,7 @@ export async function release(
   await deploy(root)
 }
 
-async function deployWorker(root: string) {
+async function deployProduction(root: string) {
   const revision = Bun.spawnSync(['git', 'rev-parse', '--verify', 'HEAD'], {
     cwd: root,
   })
@@ -267,6 +267,7 @@ async function deployWorker(root: string) {
   const env = { ...process.env, VITE_DEPLOY_COMMIT: revision.stdout.toString().trim() }
   for (const cmd of [
     ['bun', 'run', 'build'],
+    ['bash', 'scripts/deploy/si.sh'],
     [wrangler, 'deploy'],
   ]) {
     const child = Bun.spawn(cmd, {
@@ -283,5 +284,5 @@ if (import.meta.main) {
   const args = process.argv.slice(2)
   if (args.length && !(args.length === 1 && ['--dry-run', '--audit', '--pull-only'].includes(args[0])))
     throw new Error('Usage: bun release [--dry-run | --audit | --pull-only]')
-  await release(resolve(import.meta.dir, '..'), args.includes('--dry-run'), productionStore, deployWorker, args.includes('--audit'), productionArtwork, args.includes('--pull-only'))
+  await release(resolve(import.meta.dir, '..'), args.includes('--dry-run'), productionStore, deployProduction, args.includes('--audit'), productionArtwork, args.includes('--pull-only'))
 }

@@ -56,7 +56,7 @@ Open the local URL printed by the server (use `http://localhost:5173`).
 | `bun run dev:remote`            | Run the Worker locally with the configured remote R2 buckets.                                                |
 | `bun run build`                 | Build the browser bundle into `dist/`.                                                                       |
 | `bun run preview`               | Serve the existing `dist/` build through the production-mode Node server. Run `bun run build` first.         |
-| `bun release`                   | Publish accepted artwork and deploy the production app.                                                      |
+| `bun release`                   | Publish accepted artwork and deploy Si and the production Worker.                                                      |
 | `bun release --pull-only`       | Pull production tiles and review decisions, then stage the reconciled catalog locally.                      |
 | `bun release --dry-run`         | Compile the local release plan into `.local/release/` for inspection.                                        |
 | `bun purge`                     | Compare both R2 buckets with the deployed release and write `.local/rejected/plan.json`.                                        |
@@ -189,7 +189,7 @@ check exact-key R2 metadata for verified objects. A changed ETag or a 30-day-old
 verification triggers a full read. Use `bun release --audit` to force full reads
 during a production release. A missing object needs local source bytes. A conflicting object stops the
 release. Once verification succeeds, the command writes `releases/assets.json` and
-`releases/catalog.json`, builds the browser bundle, and deploys the Worker. Rerunning
+`releases/catalog.json`, builds the browser bundle, updates the Si generator, and deploys the Worker after Si passes its authenticated readiness check. Rerunning
 after an interrupted upload reuses verified objects. Commit the resulting manifests and
 review decisions to retain the release recipe in Git.
 
@@ -469,6 +469,14 @@ The service definitions and authenticated gateway are in `server/si/`.
 SI uses `/var/lib/codex-vpn/atlas` for the deployed renderer and durable jobs,
 and `/etc/atlas-generator/token` for the shared secret. The HTTPS proxy includes
 `server/si/nginx-location.conf` in the existing `home.type.hk` server.
+
+A production `bun release` (including `--audit`) uses `mullvad-exclude ssh` to reach
+Si at `m@100.85.220.100` with the pinned `ssh.type.hk` host key and noninteractive
+sudo. It synchronizes the renderer, prompt sources, scene families and systemd units.
+When an update is needed, the release closes intake and checks for unfinished renders.
+If either queue has work, it reopens intake and exits. Rerun the release after the
+renders finish. A healthy, current Si deployment continues serving throughout the check.
+The dry-run and pull-only modes skip Si.
 
 ### Rotating clouds
 
