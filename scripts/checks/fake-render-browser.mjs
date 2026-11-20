@@ -35,14 +35,14 @@ try {
   const original = crypto.getRandomValues.bind(crypto)
   crypto.getRandomValues = array => array instanceof Uint32Array && array.length === 1 ? array.fill(visit) : original(array)
  }, visit)
- // Start with all six local generation slots occupied so the click exercises the limit.
+ // Start with all three visitor generation slots occupied so the click exercises the limit.
  await page.route('**/src/atlas-tiles.ts*', async route => {
   const response = await route.fetch()
   const source = await response.text()
   const initialState = /const tileState = (?:\/\*[^*]*\*\/ )?new Map\(\)/
   assert.match(source, initialState)
   await route.fulfill({response, body: source.replace(initialState,
-   "const tileState = new Map(Array.from({length: 6}, (_, i) => ['18/1/' + i, 'generating']))")})
+   "const tileState = new Map(Array.from({length: 3}, (_, i) => ['18/1/' + i, 'generating']))")})
  })
  let busy=false
  let lostClaim=false
@@ -95,6 +95,32 @@ try {
  await page.mouse.click(720,500)
  await page.locator('.atlas-title-card:not(.is-awaiting-focus)').first().waitFor({state:'visible',timeout:15000})
  assert.equal(claims,2,'Override makes no rotating claim')
+ await page.route('**/atlas-v2/catalog.json', route => route.fulfill({json: {release: 'v2', sheets: []}}))
+ await page.route('**/api/atlas-tiles/cache-status*', route => route.fulfill({json: {
+  statuses: route.request().postDataJSON().tiles.map(() => ({cached: false, scenes: []})),
+ }}))
+ let generationRequests = 0
+ await page.route('**/api/atlas-tiles/18/**', route => {
+  if (route.request().method() === 'POST') generationRequests++
+  return route.fulfill({status: 503, json: {}})
+ })
+ const eligibilityLoaded = page.waitForResponse(response => response.url().includes('/api/fog-index/'))
+ await page.goto(origin+'/?noSplash=true&noMusic=true',{waitUntil:'domcontentloaded'})
+ await eligibilityLoaded
+ await page.locator('.atlas-fog').waitFor()
+ const canvas = page.locator('.maplibregl-canvas')
+ for (let attempt = 0; attempt < 50; attempt++) {
+  await page.mouse.move(720 + attempt % 2,500)
+  if (await canvas.evaluate(el => el.style.cursor === 'pointer')) break
+  await page.waitForTimeout(100)
+ }
+ await page.mouse.click(720,500)
+ const notice = page.locator('.atlas-clearance-notice.is-visible')
+ await notice.waitFor()
+ assert.equal(await notice.locator('strong').textContent(), 'Hold up')
+ assert.equal(await notice.locator('span').textContent(), 'Discovery is not for speedrunners')
+ assert.equal(generationRequests, 0, 'Fourth discovery is stopped before requesting a render')
+ await page.screenshot({path:path.join(process.env.DEV_RUNNER_ARTIFACTS,'fourth-discovery.png')})
  assert.deepEqual(errors,[])
  console.log('Override preserves immediate cached reveal')
 }finally{await browser.close()}

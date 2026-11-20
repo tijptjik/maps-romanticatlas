@@ -148,6 +148,14 @@ if production.is_file():
     known = {sheet['id'] for sheet in sheets}
     sheets.extend(sheet for sheet in read(production)['sheets'] if sheet['id'] not in known)
 
+sanctuary = read(root / 'releases/sources/cat-street-sanctuary.json')
+cell_id = f"production-cell-18-{sanctuary['x']}-{sanctuary['y']}"
+cell = next((sheet for sheet in sheets if sheet['id'] == cell_id), None)
+if cell is None:
+    cell = dict(id=cell_id, title='Cat Street · Sheung Wan', isolated=True, art=[])
+    sheets.append(cell)
+cell['art'].append(sanctuary)
+
 # Legacy HKU sheets predate the scene field. Their titles are the authored
 # concept names from the family books. Other one-off studies have their own subjects.
 concept_families = {concept['name']: path.stem

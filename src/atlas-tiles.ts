@@ -34,7 +34,7 @@ const revealedTileFocusDuration = 1500
 const titleCardFocusLeadTime = 500
 const fogPokeDuration = 900
 const fogPokeExpansion = 0.16
-const concurrentGenerationLimit = import.meta.env.DEV ? 6 : 5
+const concurrentGenerationLimit = 3
 // A Worker may finish writing an image after the browser connection has been
 // interrupted by an edge or mobile-network timeout. Give that completed work a
 // short window to appear in the cache before treating the clearing as failed.

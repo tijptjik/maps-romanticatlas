@@ -355,15 +355,17 @@ treatment while it runs. The fog carries one of 24 short provocations about imag
 discovery, possibility, and Romanticism, each paired with a quotation from a Romantic
 author. The text clears once the generated image is ready.
 
-On the local development server, each client may have up to six tile generations
-active at a time. Requests for the same tile are coalesced while a generation is in
+In the regular map UI, a visitor can start up to three new tile generations at once.
+A fourth attempt shows “Hold up” and “Discovery is not for speedrunners”. Cached
+reveals remain available while all three are running.
+
+The local development server accepts up to six concurrent generations per client. Requests for the same tile are coalesced while a generation is in
 flight. The production Worker does not currently apply an equivalent cross-request limit
 or coalescing.
 
 Generated images and metadata are stored separately. In production, the manifest is
 published only after both R2 objects have been stored, so normal manifest-based lookups
-do not expose an incomplete cache entry. When six local clearings are active, the map
-asks the visitor to wait for one to finish.
+do not expose an incomplete cache entry.
 
 Generated event images are cached in local `generated-tiles/` during development and in
 the configured R2 bucket in production. Current generations use immutable variant keys
