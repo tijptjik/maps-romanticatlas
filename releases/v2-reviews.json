@@ -6888,5 +6888,24 @@
     "scene": "rice-sculpture-festival",
     "url": "/generated-tiles/18/214189/114419/rice-sculpture-festival?version=6&variant=discovery-rotating-877ef3e51f4f",
     "status": "accepted"
+  },
+  {
+    "title": "The Waglan Pneumatic Works",
+    "x": 214307,
+    "y": 114501,
+    "rows": 1,
+    "scene": "pneumatic-wave-works",
+    "columns": 2,
+    "url": "/waglan-pneumatic-works/waglan-pneumatic-works-9697ea2a6b581133.webp?v=9697ea2a6b581133",
+    "status": "accepted"
+  },
+  {
+    "title": "The Pollen Weighhouse",
+    "x": 214187,
+    "y": 114425,
+    "rows": 1,
+    "scene": "botanical-laboratory",
+    "url": "/generated-tiles/18/214187/114425/botanical-laboratory?version=6&variant=discovery-713fd1b2-4cc6-4124-8081-68a7399f9e34-128c475e214c",
+    "status": "accepted"
   }
 ]
