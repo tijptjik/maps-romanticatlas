@@ -9413,6 +9413,166 @@
           "rows": 1,
           "scene": "worlds-fair",
           "url": "/artwork-revisions/d0abfab5c2ed4991af5e5ecfd298fd77.png"
+        },
+        {
+          "title": "A Wall With Rooms",
+          "x": 214194,
+          "y": 114421,
+          "rows": 1,
+          "scene": "medieval-castle",
+          "url": "/artwork-revisions/98adebf923e841679f6ade7dd2b52d40.png"
+        },
+        {
+          "title": "Eau de Cumulus",
+          "x": 214211,
+          "y": 114407,
+          "rows": 1,
+          "scene": "cloud-launcher",
+          "url": "/artwork-revisions/bccb62ae20c04876921e116931137f1a.png"
+        },
+        {
+          "title": "Eau de Cumulus",
+          "x": 214211,
+          "y": 114393,
+          "rows": 1,
+          "scene": "cloud-launcher",
+          "url": "/artwork-revisions/a44e0da9808749c1a7fcc3fb74600a52.png"
+        },
+        {
+          "title": "The Lullaby Updraft",
+          "x": 214211,
+          "y": 114391,
+          "rows": 1,
+          "scene": "cloud-launcher",
+          "url": "/artwork-revisions/845ac291f6ba48a5937575095da60da1.png"
+        },
+        {
+          "title": "The Cats-and-Dogs Forecast",
+          "x": 214205,
+          "y": 114391,
+          "rows": 1,
+          "scene": "cloud-launcher",
+          "url": "/artwork-revisions/8666784e4a0a4086b1145c4f2b386032.png"
+        },
+        {
+          "title": "The Great Pump Court",
+          "x": 214191,
+          "y": 114419,
+          "rows": 1,
+          "scene": "grand-exhibition",
+          "url": "/artwork-revisions/6e417332304346dea18eba3065c33936.png"
+        },
+        {
+          "title": "Ferris Wheel",
+          "x": 214189,
+          "y": 114426,
+          "rows": 1,
+          "scene": "ferris-wheel",
+          "url": "/generated-tiles/18/214189/114426/ferris-wheel?version=6&variant=discovery-358dcd83-813b-4904-89d1-0019b1f15a39-7c6d459aa6be"
+        },
+        {
+          "title": "Utopian Garden",
+          "x": 214184,
+          "y": 114424,
+          "rows": 1,
+          "scene": "utopian-garden",
+          "url": "/generated-tiles/18/214184/114424/utopian-garden?version=6&variant=discovery-rotating-98cb252caf8d"
+        },
+        {
+          "title": "Medieval Castle",
+          "x": 214189,
+          "y": 114423,
+          "rows": 1,
+          "scene": "medieval-castle",
+          "url": "/generated-tiles/18/214189/114423/medieval-castle?version=6&variant=discovery-358dcd83-813b-4904-89d1-0019b1f15a39-091a3b36db26"
+        },
+        {
+          "title": "Steam Railway",
+          "x": 214178,
+          "y": 114422,
+          "rows": 1,
+          "scene": "steam-railway",
+          "url": "/generated-tiles/18/214178/114422/steam-railway?version=6&variant=discovery-rotating-080989b2235a"
+        },
+        {
+          "title": "Tourist Disappearance Trap",
+          "x": 214177,
+          "y": 114422,
+          "rows": 1,
+          "scene": "tourist-disappearance-trap",
+          "url": "/artwork-revisions/08bea8ac8042442189f479bbe3a5ca89.png"
+        },
+        {
+          "title": "Rice Sculpture Festival",
+          "x": 214189,
+          "y": 114419,
+          "rows": 1,
+          "scene": "rice-sculpture-festival",
+          "url": "/generated-tiles/18/214189/114419/rice-sculpture-festival?version=6&variant=discovery-rotating-a3b49525a6cf"
+        },
+        {
+          "title": "Ironworks",
+          "x": 214187,
+          "y": 114418,
+          "rows": 1,
+          "scene": "ironworks",
+          "url": "/generated-tiles/18/214187/114418/ironworks?version=6&variant=discovery-rotating-5566cf694e4c"
+        },
+        {
+          "title": "Ironworks",
+          "x": 214187,
+          "y": 114418,
+          "rows": 1,
+          "scene": "ironworks",
+          "url": "/generated-tiles/18/214187/114418/ironworks?version=6&variant=discovery-rotating-c89fb8333394"
+        },
+        {
+          "title": "Mesmerist Salon",
+          "x": 214194,
+          "y": 114375,
+          "rows": 1,
+          "scene": "mesmerist-salon",
+          "url": "/generated-tiles/18/214194/114375/mesmerist-salon?version=6&variant=discovery-358dcd83-813b-4904-89d1-0019b1f15a39-06fcde2aca9a"
+        },
+        {
+          "title": "Civic Centre",
+          "x": 214190,
+          "y": 114375,
+          "rows": 1,
+          "scene": "civic-centre",
+          "url": "/generated-tiles/18/214190/114375/civic-centre?version=6&variant=discovery-358dcd83-813b-4904-89d1-0019b1f15a39-f3150530e20e"
+        },
+        {
+          "title": "Cyber Deck Alley",
+          "x": 214180,
+          "y": 114426,
+          "rows": 1,
+          "scene": "cyber-deck-alley",
+          "url": "/artwork-revisions/27338eb32fc8408f9078dc202fff2519.png"
+        },
+        {
+          "title": "The Tofu Crossing",
+          "x": 214202,
+          "y": 114422,
+          "rows": 1,
+          "scene": "floating-market",
+          "url": "/artwork-revisions/848566b04c9f4751aafa09112f54ec28.png"
+        },
+        {
+          "title": "Printworks",
+          "x": 214176,
+          "y": 114421,
+          "rows": 1,
+          "scene": "printworks",
+          "url": "/artwork-revisions/5ccbd01535b5454f979fc8c1833f414d.png"
+        },
+        {
+          "title": "Maze Garden",
+          "x": 214181,
+          "y": 114421,
+          "rows": 1,
+          "scene": "maze-garden",
+          "url": "/artwork-revisions/ef578815658d4cb997a5dfe30fe5725a.png"
         }
       ]
     }

@@ -2572,14 +2572,6 @@
     "status": "accepted"
   },
   {
-    "title": "The Sea in a Drawer",
-    "x": 214216,
-    "y": 114426,
-    "rows": 1,
-    "url": "/atlas-v2/production/0339-1b1bb3769b9c6643.webp",
-    "status": "accepted"
-  },
-  {
     "title": "The Missing Middle",
     "x": 214215,
     "y": 114426,
@@ -6491,5 +6483,382 @@
     "scene": "maze-garden",
     "url": "/artwork-revisions/ef578815658d4cb997a5dfe30fe5725a.png",
     "status": "accepted"
+  },
+  {
+    "title": "Analytical Engine",
+    "x": 214176,
+    "y": 114491,
+    "rows": 1,
+    "scene": "analytical-engine",
+    "url": "/generated-tiles/18/214176/114491/analytical-engine?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-9b9db983c2bf",
+    "status": "accepted"
+  },
+  {
+    "title": "Pirate Harbour",
+    "x": 214165,
+    "y": 114465,
+    "rows": 1,
+    "scene": "pirate-harbour",
+    "url": "/generated-tiles/18/214165/114465/pirate-harbour?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-aed1fe03227e",
+    "status": "accepted"
+  },
+  {
+    "title": "Water Park",
+    "x": 214176,
+    "y": 114434,
+    "rows": 1,
+    "scene": "water-park",
+    "url": "/generated-tiles/18/214176/114434/water-park?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-cd5172fe13b9",
+    "status": "accepted"
+  },
+  {
+    "title": "Analytical Engine",
+    "x": 214180,
+    "y": 114424,
+    "rows": 1,
+    "scene": "analytical-engine",
+    "url": "/generated-tiles/18/214180/114424/analytical-engine?version=6&variant=discovery-rotating-215c8a0007b5",
+    "status": "accepted"
+  },
+  {
+    "title": "Film Backlot",
+    "x": 214180,
+    "y": 114423,
+    "rows": 1,
+    "scene": "film-backlot",
+    "url": "/generated-tiles/18/214180/114423/film-backlot?version=6&variant=discovery-rotating-501ecbf2cd71",
+    "status": "accepted"
+  },
+  {
+    "title": "Civic Centre",
+    "x": 214207,
+    "y": 114422,
+    "rows": 1,
+    "scene": "civic-centre",
+    "url": "/generated-tiles/18/214207/114422/civic-centre?version=6&variant=discovery-rotating-293d07b88331",
+    "status": "accepted"
+  },
+  {
+    "title": "Robot Factory",
+    "x": 214201,
+    "y": 114422,
+    "rows": 1,
+    "scene": "robot-factory",
+    "url": "/generated-tiles/18/214201/114422/robot-factory?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-81e5cccd4edf",
+    "status": "accepted"
+  },
+  {
+    "title": "Orrery Hall",
+    "x": 214174,
+    "y": 114421,
+    "rows": 1,
+    "scene": "orrery-hall",
+    "url": "/generated-tiles/18/214174/114421/orrery-hall?version=6&variant=discovery-rotating-5937e5f9ac7f",
+    "status": "accepted"
+  },
+  {
+    "title": "Maze Garden",
+    "x": 214181,
+    "y": 114421,
+    "rows": 1,
+    "scene": "maze-garden",
+    "url": "/generated-tiles/18/214181/114421/maze-garden?version=6&variant=discovery-rotating-dac07e640145",
+    "status": "accepted"
+  },
+  {
+    "title": "Bottled Post",
+    "x": 214212,
+    "y": 114420,
+    "rows": 1,
+    "scene": "bottled-post",
+    "url": "/generated-tiles/18/214212/114420/bottled-post?version=6&variant=discovery-rotating-1b2739849f47",
+    "status": "accepted"
+  },
+  {
+    "title": "A Queue That Plays Music",
+    "x": 214200,
+    "y": 114420,
+    "rows": 1,
+    "scene": "giant-fairground",
+    "url": "/artwork-revisions/6eead0bb84464d7eb1361c323d0be298.png",
+    "status": "accepted"
+  },
+  {
+    "title": "Solar Farm",
+    "x": 214187,
+    "y": 114420,
+    "rows": 1,
+    "scene": "solar-farm",
+    "url": "/artwork-revisions/7b7c7d0f6e8f4ca28b1a0ac1830fc8d9.png",
+    "status": "accepted"
+  },
+  {
+    "title": "Steam Railway",
+    "x": 214182,
+    "y": 114420,
+    "rows": 1,
+    "scene": "steam-railway",
+    "url": "/artwork-revisions/37f751a0e48c4b52b7695db6eb801fbb.png",
+    "status": "accepted"
+  },
+  {
+    "title": "Japanese Garden",
+    "x": 214181,
+    "y": 114419,
+    "rows": 1,
+    "scene": "japanese-garden",
+    "url": "/generated-tiles/18/214181/114419/japanese-garden?version=6&variant=discovery-rotating-e260f35ef455",
+    "status": "accepted"
+  },
+  {
+    "title": "Thrifting Paradise",
+    "x": 214193,
+    "y": 114419,
+    "rows": 1,
+    "scene": "thrifting-paradise",
+    "url": "/generated-tiles/18/214193/114419/thrifting-paradise?version=6&variant=discovery-rotating-0d12dcc95e3a",
+    "status": "accepted"
+  },
+  {
+    "title": "Civic Centre",
+    "x": 214199,
+    "y": 114419,
+    "rows": 1,
+    "scene": "civic-centre",
+    "url": "/generated-tiles/18/214199/114419/civic-centre?version=6&variant=discovery-rotating-42964eaeee9b",
+    "status": "accepted"
+  },
+  {
+    "title": "Telegraph Office",
+    "x": 214224,
+    "y": 114418,
+    "rows": 1,
+    "scene": "telegraph-office",
+    "url": "/generated-tiles/18/214224/114418/telegraph-office?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-d0af143d3f81",
+    "status": "rejected"
+  },
+  {
+    "title": "Textile Mill",
+    "x": 214223,
+    "y": 114418,
+    "rows": 1,
+    "scene": "textile-mill",
+    "url": "/generated-tiles/18/214223/114418/textile-mill?version=6&variant=discovery-rotating-2cbe0cdd6951",
+    "status": "accepted"
+  },
+  {
+    "title": "Electrical Laboratory",
+    "x": 214191,
+    "y": 114418,
+    "rows": 1,
+    "scene": "electrical-laboratory",
+    "url": "/generated-tiles/18/214191/114418/electrical-laboratory?version=6&variant=discovery-rotating-0e6ad9abe2a4",
+    "status": "rejected"
+  },
+  {
+    "title": "Rice Sculpture Festival",
+    "x": 214183,
+    "y": 114418,
+    "rows": 1,
+    "scene": "rice-sculpture-festival",
+    "url": "/generated-tiles/18/214183/114418/rice-sculpture-festival?version=6&variant=discovery-rotating-0e1f2b4654d7",
+    "status": "accepted"
+  },
+  {
+    "title": "Botanical Laboratory",
+    "x": 214181,
+    "y": 114418,
+    "rows": 1,
+    "scene": "botanical-laboratory",
+    "url": "/generated-tiles/18/214181/114418/botanical-laboratory?version=6&variant=discovery-rotating-ffab235ed824",
+    "status": "accepted"
+  },
+  {
+    "title": "Analytical Engine",
+    "x": 214187,
+    "y": 114417,
+    "rows": 1,
+    "scene": "analytical-engine",
+    "url": "/generated-tiles/18/214187/114417/analytical-engine?version=6&variant=discovery-rotating-20b4c15bf455",
+    "status": "rejected"
+  },
+  {
+    "title": "Arcology",
+    "x": 214225,
+    "y": 114417,
+    "rows": 1,
+    "scene": "arcology",
+    "url": "/generated-tiles/18/214225/114417/arcology?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-b41dc76af14e",
+    "status": "accepted"
+  },
+  {
+    "title": "Suspension Bridge",
+    "x": 214186,
+    "y": 114416,
+    "rows": 1,
+    "scene": "suspension-bridge",
+    "url": "/generated-tiles/18/214186/114416/suspension-bridge?version=6&variant=discovery-rotating-2e2f3245097f",
+    "status": "accepted"
+  },
+  {
+    "title": "Suspension Bridge",
+    "x": 214186,
+    "y": 114416,
+    "rows": 1,
+    "scene": "suspension-bridge",
+    "url": "/generated-tiles/18/214186/114416/suspension-bridge?version=6&variant=discovery-rotating-629b13022ffc",
+    "status": "accepted"
+  },
+  {
+    "title": "Civic Centre",
+    "x": 214226,
+    "y": 114417,
+    "rows": 1,
+    "scene": "civic-centre",
+    "url": "/artwork-revisions/e78a90b0d159441b95800e2008d25519.png",
+    "status": "accepted"
+  },
+  {
+    "title": "The Timber Velodrome Garage",
+    "x": 214231,
+    "y": 114413,
+    "rows": 1,
+    "scene": "race-circuit",
+    "url": "/generated-tiles/18/214231/114413/race-circuit?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-cd63a98f51be",
+    "status": "accepted"
+  },
+  {
+    "title": "The Parachute Loft",
+    "x": 214230,
+    "y": 114413,
+    "rows": 1,
+    "scene": "rocket-launch",
+    "url": "/generated-tiles/18/214230/114413/rocket-launch?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-cf7d545332b8",
+    "status": "accepted"
+  },
+  {
+    "title": "The Drawbridge Mill",
+    "x": 214201,
+    "y": 114406,
+    "rows": 1,
+    "scene": "medieval-castle",
+    "url": "/generated-tiles/18/214201/114406/medieval-castle?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-f8a60eff0bee",
+    "status": "rejected"
+  },
+  {
+    "title": "Shipwright Dock",
+    "x": 214241,
+    "y": 114403,
+    "rows": 1,
+    "scene": "shipwright-dock",
+    "url": "/generated-tiles/18/214241/114403/shipwright-dock?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-adf714906eaf",
+    "status": "accepted"
+  },
+  {
+    "title": "The Folding Rotor",
+    "x": 214207,
+    "y": 114402,
+    "rows": 1,
+    "scene": "wind-farm",
+    "url": "/generated-tiles/18/214207/114402/wind-farm?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-4ddb078a439e",
+    "status": "accepted"
+  },
+  {
+    "title": "The Bell That Transmits Light",
+    "x": 214207,
+    "y": 114391,
+    "rows": 1,
+    "scene": "electrical-laboratory",
+    "url": "/generated-tiles/18/214207/114391/electrical-laboratory?version=6&variant=discovery-rotating-3f69d1b8dd6f",
+    "status": "rejected"
+  },
+  {
+    "title": "Pillows by Post",
+    "x": 214210,
+    "y": 114390,
+    "rows": 1,
+    "url": "/artwork-revisions/cddcb092f5b746d0962692025f1b3ac1.png",
+    "status": "rejected"
+  },
+  {
+    "title": "The Blossom Shower",
+    "x": 214207,
+    "y": 114390,
+    "rows": 1,
+    "scene": "cloud-launcher",
+    "url": "/artwork-revisions/01d6adf20c394df9bd905d6874749327.png",
+    "status": "accepted"
+  },
+  {
+    "title": "Rain on the Hairpin",
+    "x": 214185,
+    "y": 114390,
+    "rows": 1,
+    "scene": "race-circuit",
+    "url": "/generated-tiles/18/214185/114390/race-circuit?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-e848d8643b9a",
+    "status": "accepted"
+  },
+  {
+    "title": "A Ball of Mirror Fragments",
+    "x": 214205,
+    "y": 114388,
+    "rows": 1,
+    "scene": "raver-arena",
+    "url": "/generated-tiles/18/214205/114388/raver-arena?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-559be4710dee",
+    "status": "accepted"
+  },
+  {
+    "title": "The Theatre on a Spool",
+    "x": 214229,
+    "y": 114387,
+    "rows": 1,
+    "scene": "mechanical-theatre",
+    "url": "/generated-tiles/18/214229/114387/mechanical-theatre?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-df86c0d7df03",
+    "status": "accepted"
+  },
+  {
+    "title": "A Maze of Low Tides",
+    "x": 214229,
+    "y": 114386,
+    "rows": 1,
+    "scene": "maze-garden",
+    "url": "/generated-tiles/18/214229/114386/maze-garden?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-b4ab322df15c",
+    "status": "accepted"
+  },
+  {
+    "title": "The Shoe Tide",
+    "x": 214213,
+    "y": 114385,
+    "rows": 1,
+    "scene": "thrifting-paradise",
+    "url": "/generated-tiles/18/214213/114385/thrifting-paradise?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-d2054a7dded4",
+    "status": "accepted"
+  },
+  {
+    "title": "A River Across the Ceiling",
+    "x": 214167,
+    "y": 114227,
+    "rows": 1,
+    "scene": "tropical-aquarium",
+    "url": "/generated-tiles/18/214167/114227/tropical-aquarium?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-8f7fe94d9cca",
+    "status": "accepted"
+  },
+  {
+    "title": "Night Mail for Unwritten Books",
+    "x": 214208,
+    "y": 114399,
+    "rows": 1,
+    "scene": "grand-library",
+    "url": "/artwork-revisions/f7fca6b473bf4eec8dd316c80669c398.png",
+    "status": "rejected"
+  },
+  {
+    "title": "The Sea in a Drawer",
+    "x": 214216,
+    "y": 114426,
+    "rows": 1,
+    "scene": "film-backlot",
+    "url": "/atlas-v2/production/0339-1b1bb3769b9c6643.webp",
+    "status": "rejected"
   }
 ]
