@@ -609,6 +609,8 @@ def main():
             raise ValueError('Invalid scene family')
         if not family.exists():
             family = family.parent / 'backfill' / family.name
+        if not family.exists():
+            family = SOURCE / 'families' / 'editorial' / family.name
         brief = sys.stdin.read(10000).strip()
         if family.exists():
             brief = random.choice(load(family))['prompt']

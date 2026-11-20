@@ -156,6 +156,7 @@ if cell is None:
     cell = dict(id=cell_id, title='Cat Street · Sheung Wan', isolated=True, art=[])
     sheets.append(cell)
 cell['art'].append(sanctuary)
+sheets.append(read(root / "releases/sources/tourist-disappearance-trap.json"))
 
 # Legacy HKU sheets predate the scene field. Their titles are the authored
 # concept names from the family books. Other one-off studies have their own subjects.
