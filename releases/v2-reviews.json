@@ -6870,5 +6870,23 @@
     "columns": 2,
     "url": "/waglan-pneumatic-works/waglan-pneumatic-works-28fe6ea0034470b1.webp?v=28fe6ea0034470b1",
     "status": "accepted"
+  },
+  {
+    "title": "School at the Bend",
+    "x": 214216,
+    "y": 114426,
+    "rows": 1,
+    "scene": "aquarium",
+    "url": "/artwork-revisions/4040f9a1cefa414fa74bbc65a1b1d780.png",
+    "status": "accepted"
+  },
+  {
+    "title": "Rice Sculpture Festival",
+    "x": 214189,
+    "y": 114419,
+    "rows": 1,
+    "scene": "rice-sculpture-festival",
+    "url": "/generated-tiles/18/214189/114419/rice-sculpture-festival?version=6&variant=discovery-rotating-877ef3e51f4f",
+    "status": "accepted"
   }
 ]
