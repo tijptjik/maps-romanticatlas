@@ -6258,5 +6258,31 @@
     "scene": "volcano-observatory",
     "url": "/artwork-revisions/a27b12c65b2c4a97bee92fc1991f56bb.png",
     "status": "accepted"
+  },
+  {
+    "title": "Paper Roofs After Rain",
+    "x": 214204,
+    "y": 114421,
+    "rows": 1,
+    "scene": "festival-city",
+    "url": "/artwork-revisions/cfc02bb3bece494ca6763eb5a9aebf7f.png",
+    "status": "accepted"
+  },
+  {
+    "title": "The Steam Laundry Express",
+    "x": 214196,
+    "y": 114386,
+    "rows": 1,
+    "url": "/artwork-revisions/05d642fa3b9b41ad8f09fd89870d8fcf.png",
+    "status": "accepted"
+  },
+  {
+    "title": "The Table of Many Ovens",
+    "x": 214178,
+    "y": 114422,
+    "rows": 1,
+    "scene": "worlds-fair",
+    "url": "/artwork-revisions/d0abfab5c2ed4991af5e5ecfd298fd77.png",
+    "status": "accepted"
   }
 ]
