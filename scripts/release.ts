@@ -1,10 +1,11 @@
+import { productionArtwork, pullProduction, type PullStore } from './pull-production-artwork'
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { digest, planRelease, type Asset } from './release-plan'
 
 type RemoteObject = { bytes: Uint8Array; etag: string | null }
 type Receipt = { sha256: string; etag: string; verifiedAt: number }
-type Store = {
+type Store = Pick<PullStore, 'list'> & {
   read(asset: Asset, etag?: string): Promise<RemoteObject | null | 'unchanged'>
   put(asset: Asset, bytes: Uint8Array): Promise<void>
 }
@@ -179,8 +180,13 @@ export async function release(
   openStore: () => Promise<Store> = productionStore,
   deploy = deployWorker,
   audit = false,
+  readProduction = productionArtwork,
+  pullOnly = false,
 ) {
-  const plan = planRelease(root)
+  const store = dryRun ? undefined : await openStore()
+  const snapshot = store && await readProduction(root)
+  if (store && snapshot) await pullProduction(root, store, snapshot)
+  const plan = planRelease(root, snapshot)
   const directory = join(root, '.local/release')
   await mkdir(directory, { recursive: true })
   const files = ['assets.json', 'catalog.json']
@@ -197,9 +203,7 @@ export async function release(
     'R2 objects. Planned manifests:',
     directory,
   )
-  if (dryRun) return
-
-  const store = await openStore()
+  if (!store || pullOnly) return
   const receiptPath = join(directory, 'verified-objects.json')
   let receipts: Record<string, Receipt> = {}
   try {
@@ -230,7 +234,10 @@ export async function release(
   await writeFile(receiptPath + '.tmp', json(verified))
   await rename(receiptPath + '.tmp', receiptPath)
   // Reviews or exports can change while a large batch is uploading.
-  const latest = planRelease(root)
+  const currentProduction = await readProduction(root)
+  if (json(currentProduction) !== json(snapshot))
+    throw new Error('Production artwork changed during upload. Run bun release again.')
+  const latest = planRelease(root, currentProduction)
   if (
     json(latest.catalog) !== staged[1] ||
     json(latest.assets) !== staged[0] ||
@@ -274,7 +281,7 @@ async function deployWorker(root: string) {
 
 if (import.meta.main) {
   const args = process.argv.slice(2)
-  if (args.length && !(args.length === 1 && ['--dry-run', '--audit'].includes(args[0])))
-    throw new Error('Usage: bun release [--dry-run | --audit]')
-  await release(resolve(import.meta.dir, '..'), args.includes('--dry-run'), productionStore, deployWorker, args.includes('--audit'))
+  if (args.length && !(args.length === 1 && ['--dry-run', '--audit', '--pull-only'].includes(args[0])))
+    throw new Error('Usage: bun release [--dry-run | --audit | --pull-only]')
+  await release(resolve(import.meta.dir, '..'), args.includes('--dry-run'), productionStore, deployWorker, args.includes('--audit'), productionArtwork, args.includes('--pull-only'))
 }

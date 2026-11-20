@@ -57,6 +57,7 @@ Open the local URL printed by the server (use `http://localhost:5173`).
 | `bun run build`                 | Build the browser bundle into `dist/`.                                                                       |
 | `bun run preview`               | Serve the existing `dist/` build through the production-mode Node server. Run `bun run build` first.         |
 | `bun release`                   | Publish accepted artwork and deploy the production app.                                                      |
+| `bun release --pull-only`       | Pull production tiles and review decisions, then stage the reconciled catalog locally.                      |
 | `bun release --dry-run`         | Compile the local release plan into `.local/release/` for inspection.                                        |
 | `bun purge`                     | Compare both R2 buckets with the deployed release and write `.local/rejected/plan.json`.                                        |
 | `bun purge --apply`             | Archive and remove eligible objects after rechecking the deployed release.                         |
@@ -157,12 +158,22 @@ Run the production release from the checkout containing the reviewed artwork:
 bun release
 ```
 
+Before planning an upload, the release reads the deployed catalog and current production
+review decisions and enumerates the production tile bucket. It copies missing image
+and metadata pairs into `generated-tiles/18/` and checks existing bytes. An incomplete
+pair or a conflicting local file stops the release. Unreviewed discoveries remain in
+the dev cache until accepted. Run `bun release --pull-only` for the same pull and
+local preview. The snapshot lives in `.local/release/production-artwork.json`.
+The offline dry run uses the most recent local snapshot when available.
+
 The release reads `public/atlas-v2/catalog.json` (or the checked-in release catalog on a
 clean checkout) and applies `releases/v2-reviews.json` by exact artwork URL. An
 individual decision overrides an accepted sheet. Accepted discoveries and other
 individually accepted paintings retain their coordinates even when the working catalog
 has no sheet for them. Production admin review overrides stored in R2 continue to apply
-at runtime. The local release command uses the checkout’s review decisions.
+at runtime. The planner carries forward deployed paintings and production decisions, then applies
+the checkout’s explicit decisions by exact URL. It rechecks the deployed catalog and
+reviews before installing manifests.
 
 The command publishes paintings, animation plates and sprites to the media bucket under
 `release-assets/<sha256>.<extension>`. It also verifies the existing interface media

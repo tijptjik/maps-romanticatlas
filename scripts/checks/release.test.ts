@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { artworkPresentation, publishedArtworkUrl } from '../../src/artwork-presentation'
 import { release } from '../release'
+import { pullProduction, type ProductionArtwork } from '../pull-production-artwork'
 import { acceptedCatalog, digest, type Asset, type Catalog } from '../release-plan'
 
 const art = { title: 'A', x: 2, y: 3, rows: 1, url: '/study/a.webp?v=42' }
@@ -85,6 +86,7 @@ test('release validates and uploads dependencies before installing manifests and
     let downloads = 0
     let uploads = 0
     const store = {
+      async *list() {},
       read: async (asset: Asset, validator?: string) => {
         const bytes = remote.get(`${asset.bucket}/${asset.key}`)
         if (!bytes) return null
@@ -98,6 +100,8 @@ test('release validates and uploads dependencies before installing manifests and
         uploads++
       },
     }
+    const snapshot: ProductionArtwork = { catalog: { release: 'v2', sheets: [] }, reviews: [], media: {} }
+    const publish = (audit = false) => release(root, false, async () => store, deploy, audit, async () => snapshot)
     let deployed = 0
     const deploy = async () => {
       const compiled: Catalog = JSON.parse(
@@ -124,7 +128,7 @@ test('release validates and uploads dependencies before installing manifests and
       },
       deploy,
     )
-    await expect(release(root, false, async () => store, deploy)).rejects.toThrow(
+    await expect(publish()).rejects.toThrow(
       'Missing locally and in R2',
     )
     expect(deployed).toBe(0)
@@ -132,24 +136,29 @@ test('release validates and uploads dependencies before installing manifests and
       JSON.parse(await readFile(join(root, 'releases/catalog.json'), 'utf8')).sheets,
     ).toHaveLength(0)
     remote.set(`media/${key}`, frame)
-    await release(root, false, async () => store, deploy)
+    await publish()
     await rm(job, { recursive: true })
     const firstDownloads = downloads
     const firstUploads = uploads
-    await release(root, false, async () => store, deploy)
+    await publish()
     expect(downloads).toBe(firstDownloads)
     const receiptsFile = '.local/release/verified-objects.json'
     const receipts = JSON.parse(await readFile(join(root, receiptsFile), 'utf8'))
     receipts['media/' + key].verifiedAt = 0
     await save(receiptsFile, receipts)
-    await release(root, false, async () => store, deploy)
+    await publish()
     expect(downloads).toBe(firstDownloads + 1)
-    await release(root, false, async () => store, deploy, true)
+    await publish(true)
     expect(downloads).toBe(firstDownloads + 1 + remote.size)
     expect(uploads).toBe(firstUploads)
     expect(deployed).toBe(4)
+    let reads = 0
+    await expect(release(root, false, async () => store, deploy, false, async () =>
+      ++reads === 1 ? snapshot : { ...snapshot, reviews: [{ ...art, status: 'accepted' }] },
+    )).rejects.toThrow('Production artwork changed')
+    expect(deployed).toBe(4)
     remote.set(`media/${key}`, new Uint8Array([16]))
-    await expect(release(root, false, async () => store, deploy)).rejects.toThrow(
+    await expect(publish()).rejects.toThrow(
       'R2 content differs',
     )
     expect(deployed).toBe(4)
@@ -166,6 +175,55 @@ test('shared immutable bytes retain per-painting map presentation', () => {
   expect(publishedArtworkUrl(path, '/study/other.png')).toBe(path)
   release.hash = ''
   expect(artworkPresentation(release)).toBeUndefined()
+})
+
+test('pull mirrors production variants and carries reviewed and released artwork into the plan', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'atlas-pull-test-'))
+  const prefix = 'atlas/18/2/3/maze-garden.v6.discovery-remote'
+  const url = '/generated-tiles/18/2/3/maze-garden?version=6&variant=discovery-remote'
+  const bytes = Buffer.from('image')
+  const entries = new Map([
+    [prefix + '.image', bytes],
+    [prefix + '.json', Buffer.from(JSON.stringify({ sha256: digest(bytes) }))],
+  ])
+  const store = {
+    async *list() { for (const [key, value] of entries) yield { key, size: value.length } },
+    async read(a: Asset) { return { bytes: a.bucket === 'media' ? bytes : entries.get(a.key)!, etag: null } },
+    async put() { throw Error('Unexpected upload') },
+  }
+  const snapshot: ProductionArtwork = {
+    catalog, media: { '/study/a.webp': 'release-assets/' + digest(bytes) + '.webp' },
+    reviews: [{ ...art, url, status: 'accepted' }],
+  }
+  try {
+    await mkdir(join(root,'releases'))
+    await writeFile(join(root,'wrangler.jsonc'), JSON.stringify({r2_buckets: [
+      { binding: 'ATLAS_BUCKET', bucket_name: 'tiles' },
+      { binding: 'maps_romanticatlas_assets', bucket_name: 'media' },
+    ]}))
+    for (const [file, value] of Object.entries({ 'assets.json': {}, 'catalog.json': {release:'v2',sheets:[]}, 'v2-reviews.json': [] }))
+      await writeFile(join(root,'releases',file),JSON.stringify(value))
+    await mkdir(join(root, 'public/study'), { recursive: true })
+    await writeFile(join(root, 'public/study/a.webp'), 'unreleased edition')
+    const pull = () => release(root,false,async()=>store,async()=>{throw Error('Unexpected deploy')},false,async()=>snapshot,true)
+    await pull()
+    const planned = async (): Promise<Catalog> => JSON.parse(await readFile(join(root,'.local/release/catalog.json'),'utf8'))
+    expect((await planned()).sheets.flatMap(s=>s.art.map(a=>a.url))).toEqual([art.url,url])
+    const assets = JSON.parse(await readFile(join(root, '.local/release/assets.json'), 'utf8'))
+    expect(assets['/study/a.webp']).toBe(snapshot.media['/study/a.webp'])
+    const image = join(root,'generated-tiles',prefix.slice(6)+'.image')
+    expect(await readFile(image)).toEqual(bytes)
+    await writeFile(join(root,'releases/v2-reviews.json'), JSON.stringify([{...art,url,status:'rejected'}]))
+    await pull()
+    expect((await planned()).sheets.flatMap(s=>s.art.map(a=>a.url))).toEqual([art.url])
+    await writeFile(image,'different')
+    await expect(pull()).rejects.toThrow('bytes differ')
+    expect(await readFile(image,'utf8')).toBe('different')
+    entries.delete(prefix+'.json')
+    await expect(pullProduction(root,store,snapshot)).rejects.toThrow('Incomplete production tile pair')
+  } finally {
+    await rm(root,{recursive:true,force:true})
+  }
 })
 
 

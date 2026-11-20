@@ -1,4 +1,6 @@
 import { allowsArtwork } from '../src/artwork-reservation'
+import { releaseFileKey } from '../src/artwork-purge'
+import type { ProductionArtwork } from './pull-production-artwork'
 import { createHash } from 'node:crypto'
 import { existsSync, readFileSync } from 'node:fs'
 import { extname, join } from 'node:path'
@@ -73,7 +75,7 @@ function mediaPath(url: string) {
   return pathname
 }
 
-export function planRelease(root: string) {
+export function planRelease(root: string, production?: ProductionArtwork) {
   const config = Bun.JSONC.parse(
     readFileSync(join(root, 'wrangler.jsonc'), 'utf8'),
   ) as {
@@ -85,13 +87,24 @@ export function planRelease(root: string) {
     return name
   }
   const file = (name: string) => join(root, name)
-  const previous: Record<string, string> = readJson(file('releases/assets.json'))
+  const snapshot = file('.local/release/production-artwork.json')
+  production ??= existsSync(snapshot) ? readJson(snapshot) : undefined
+  const previous: Record<string, string> = { ...production?.media, ...readJson(file('releases/assets.json')) }
   const working = file('public/atlas-v2/catalog.json')
   const source = existsSync(working) ? working : file('releases/catalog.json')
   const workingCatalog: Catalog = readJson(source)
   const priorCatalog: Catalog = readJson(file('releases/catalog.json'))
   const reviews: ArtworkReview[] = readJson(file('releases/v2-reviews.json'))
-  const catalog = acceptedCatalog(workingCatalog, reviews)
+  // Carry forward released URLs even when the working contact sheets have moved on.
+  const accepted = new Map<string, ArtworkReview>()
+  for (const sheet of production?.catalog.sheets ?? [])
+    for (const art of sheet.art) accepted.set(art.url, { ...art, status: 'accepted' })
+  for (const review of production?.reviews ?? []) {
+    const released = accepted.get(review.url)
+    accepted.set(review.url, { ...released, ...review })
+  }
+  for (const review of reviews) accepted.set(review.url, { ...accepted.get(review.url), ...review })
+  const catalog = acceptedCatalog(workingCatalog, [...accepted.values()])
   // Older review records kept only the image identity. Resolve revisions through
   // their recorded source, even when the parent has since been rejected.
   const scenes = new Map<string, string>()
@@ -112,6 +125,20 @@ export function planRelease(root: string) {
     for (const art of sheet.art) {
       const scene = sceneForArt(art)
       if (scene) art.scene = scene
+    }
+  }
+  const importedMedia = file('.local/release/pulled-media/identities.json')
+  const identities: Record<string, string> = existsSync(importedMedia) ? readJson(importedMedia) : {}
+  const localUrls = new Set(workingCatalog.sheets.flatMap(sheet => sheet.art.map(art => art.url)))
+  const imported = new Map<string, string>()
+  const hasWorkingCatalog = existsSync(working)
+  for (const sheet of catalog.sheets) {
+    for (const art of sheet.art) {
+      if ((hasWorkingCatalog && localUrls.has(art.url)) || !identities[art.url]) continue
+      const path = mediaPath(art.url)
+      if (imported.has(path) && imported.get(path) !== identities[art.url])
+        throw new Error('Conflicting imported editions for ' + path)
+      imported.set(path, identities[art.url])
     }
   }
   const assets: Record<string, string> = {}
@@ -137,11 +164,26 @@ export function planRelease(root: string) {
   for (const urlPath of [...paths].sort()) {
     let path = mediaPath(urlPath)
     // Preserve the map's PNG review identity while serving its optimised WebP edition.
+    const pulled = imported.get(path)
+    if (pulled) {
+      const hash = releaseFileKey.exec(pulled)?.[1]
+      if (!hash) throw new Error('Invalid pulled media: ' + pulled)
+      const filename = file('.local/release/pulled-media/' + pulled)
+      if (digest(readFileSync(filename)) !== hash) throw new Error('Pulled media changed: ' + pulled)
+      assets[path] = pulled
+      objects.set(pulled, { bucket: bucket('maps_romanticatlas_assets'), key: pulled,
+        file: filename, digest: hash, mime: Bun.file(filename).type })
+      continue
+    }
     const webp = path.replace(/\.png$/, '.webp')
     if (webp !== path && (previous[webp] || existsSync(file(`public${webp}`))))
       path = webp
     const revision = revisionImagePattern.exec(path)
-    const local = revision ? revisionFile(revision[1], root) : file(`public${path}`)
+    let local = file(`public${path}`)
+    if (revision) {
+      local = revisionFile(revision[1], root)
+      if (!existsSync(local)) local = file('.local/release/pulled-revisions/' + revision[1] + '.png')
+    }
     const exists = existsSync(local)
     const sha = exists ? digest(readFileSync(local)) : undefined
     const key = sha ? `release-assets/${sha}${extname(path)}` : previous[path]
