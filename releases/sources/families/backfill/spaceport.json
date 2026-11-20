@@ -1,0 +1,22 @@
+[
+  {
+    "name": "The Baggage Moon",
+    "prompt": "Build a passenger spaceport around a circular baggage carousel. A returning capsule opens into a low customs hall while luggage pods roll to the waiting concourse."
+  },
+  {
+    "name": "The Orbital Post Office",
+    "prompt": "Arrange a small space mail terminal with pneumatic sorting tubes and capsule cradles. Porters load bright mailbags into a courier shuttle through a side hatch."
+  },
+  {
+    "name": "Two Gravities at Arrivals",
+    "prompt": "Split a spaceport arrivals hall between a rotating acclimatisation drum and a still platform. Returning travellers step from the drum into waiting soft chairs."
+  },
+  {
+    "name": "The Docking Collar Market",
+    "prompt": "Surround a spacecraft service apron with racks of differently sized docking collars. A crew rolls a ring against the nose of an incoming craft to test the fit."
+  },
+  {
+    "name": "A Port for Gliders",
+    "prompt": "Place a winged orbital ferry on a compact tow apron. Ground tractors draw it under a ribbed terminal canopy while passengers descend a broad folding stair."
+  }
+]

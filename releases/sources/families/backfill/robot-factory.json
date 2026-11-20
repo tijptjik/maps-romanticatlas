@@ -1,0 +1,22 @@
+[
+  {
+    "name": "The Hand Assembly Line",
+    "prompt": "Lay out robot hands in successive stages on an open factory floor. A pinch gripper lifts a pin, a finished hand threads a needle and an apprentice adjusts a thumb joint."
+  },
+  {
+    "name": "The Walking Crane Nursery",
+    "prompt": "Assemble little walking cranes under a high gantry. One balances on a test rail while a finished pair carry their own spare legs toward the packing shed."
+  },
+  {
+    "name": "A Factory for Gentle Work",
+    "prompt": "Build a robot works around test benches of fragile objects. Mechanical fingers lift eggs, fold lace and stack porcelain cups as inspectors adjust the spring tension."
+  },
+  {
+    "name": "The Robot Tailor",
+    "prompt": "Send unfinished robots through a fitting hall. A gantry lowers work aprons and tool harnesses onto differently shaped bodies while mechanics hem a canvas sleeve beside the line."
+  },
+  {
+    "name": "The Returned Parts Orchard",
+    "prompt": "Disassemble worn robots in a salvage court, grading brass eyes and elbow gears into open bins. New compact machines emerge at the opposite end carrying the emptied trays back."
+  }
+]
