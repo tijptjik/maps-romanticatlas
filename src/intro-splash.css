@@ -27,6 +27,8 @@
 .atlas-intro.is-returning { animation-direction: reverse; }
 
 .pavilion-room {
+  /* From 8:5 to 4:5, each step grows from zero to 1% of the room height. */
+  --portrait-step: clamp(0px, 2cqh - 1.25cqw, 1cqh);
   --orrery-width: min(15cqw, 22cqh);
   --atlas-width: min(53cqw, 75cqh);
   /* Center each side object in the space beside the open atlas. */
@@ -64,7 +66,7 @@
   top: 40%; height: min(7cqw, 9cqh); opacity: .63;
 }
 @media (max-aspect-ratio: 9/10) {
-  .pavilion-sky canvas.pavilion-sky__far { top: 50%; height: 11cqw; }
+  .pavilion-sky canvas.pavilion-sky__far { top: 54%; height: min(10cqw, 6cqh); }
 }
 .pavilion-water {
   position: absolute;
@@ -75,7 +77,7 @@
 }
 @media (max-aspect-ratio: 9/10) {
   .pavilion-sky { mask-image: linear-gradient(to right, transparent 15%, black 24% 76%, transparent 85%); }
-  .pavilion-sky canvas { top: 41%; height: 24cqw; }
+  .pavilion-sky canvas { top: 47.5%; height: min(18cqw, 8cqh); opacity: .72; }
   .pavilion-water { top: 64.3548%; height: 6.2903%; }
 }
 .pavilion-piers { background: url("/pavilion/glasshouse-piers.webp") center / 100% 100%; }
@@ -94,8 +96,16 @@
   from { transform: skewX(-.65deg) rotate(-.42deg); }
   to { transform: skewX(.85deg) rotate(.55deg); }
 }
-.pavilion-aerostat--west { width: clamp(18px, 2.6cqw, 42px); left: 27%; top: 37%; }
-.pavilion-aerostat--east { width: clamp(15px, 2.2cqw, 32px); right: 26%; top: 42%; }
+.pavilion-aerostat--west {
+  width: min(42px, max(18px, 2.6cqw) + 1.4 * var(--portrait-step));
+  left: max(18.5%, 27% - 16 * var(--portrait-step));
+  top: calc(37% - 14 * var(--portrait-step));
+}
+.pavilion-aerostat--east {
+  width: min(32px, max(15px, 2.2cqw) + .85 * var(--portrait-step));
+  right: max(18.5%, 26% - 16 * var(--portrait-step));
+  top: calc(42% - 15 * var(--portrait-step));
+}
 .pavilion-aerostat img { display: block; width: 100%; }
 .pavilion-aerostat canvas { position: absolute; inset: -50%; width: 200%; height: 200%; }
 .pavilion-aerostat.has-sky-paint img { visibility: hidden; }
@@ -105,12 +115,10 @@
   .pavilion-plant--raceme { top: 0; width: 45%; right: -2%; }
   .pavilion-plant--palm { width: 39%; left: -9%; bottom: 25%; }
   .pavilion-plant--orchid { width: 37%; right: -8%; bottom: 25%; }
-  .pavilion-aerostat--west { top: 47%; left: 22%; }
-  .pavilion-aerostat--east { top: 46%; right: 21%; }
 }
 .pavilion-title {
   position: absolute;
-  top: 20%;
+  top: calc(20% + 12.5 * var(--portrait-step));
   inset-inline: 3%;
   text-align: center;
   pointer-events: none;
@@ -131,7 +139,7 @@
 }
 .pavilion-title h1 {
   margin: .07em 0 0;
-  font-size: clamp(36px, min(6cqw, 7.3cqh), 130px);
+  font-size: min(8.8cqw, clamp(36px, min(6cqw, 7.3cqh) + 4 * var(--portrait-step), 130px));
   font-weight: 500;
   line-height: .99;
   letter-spacing: -.045em;
@@ -245,14 +253,18 @@
   pointer-events: none;
   mask: url("./assets/tijptjik-petal.webp") center / 100% 100% no-repeat;
 }
+@media (max-aspect-ratio: 9/10), (max-width: 700px), (pointer: coarse) and (max-height: 540px) {
+  .pavilion-notes, .pavilion-orrery { display: none; }
+}
 @media (max-aspect-ratio: 9/10) {
   .pavilion-room { background-image: url("/pavilion/glasshouse-portrait.webp"); }
-  .pavilion-orrery { translate: none; }
-  .pavilion-title { top: 30%; }
-  .pavilion-title h1 { margin: .18em auto 0; font-size: 10cqw; }
-  .pavilion-book { width: min(91cqw, 75cqh); bottom: 16%; }
-  .pavilion-orrery { right: 7%; bottom: 18.5%; width: 17cqw; z-index: 3; }
-  .pavilion-credit { bottom: 13%; right: 3%; width: 90px; }
+  .pavilion-title { color: #000; text-shadow: none; }
+  .pavilion-title p {
+    font-size: clamp(8px, 2.25cqw, 12px);
+    letter-spacing: .16em;
+  }
+  .pavilion-title h1 { margin-top: .16em; }
+  .pavilion-book { width: min(88cqw, 50cqh); bottom: 21.5%; }
 }
 @media (max-height: 560px) and (min-aspect-ratio: 9/10) {
   .pavilion-room { min-height: 320px; }
@@ -283,9 +295,20 @@
     transform: none;
   }
 }
-@media (max-aspect-ratio: 9/10) and (hover: hover) and (pointer: fine) {
-  /* In the stacked pavilion the atlas extends behind the orrery. */
-  .pavilion-credit { --petal-center: 33%; }
+@media (max-aspect-ratio: 9/10) {
+  /* Place the petal on the right cabinet panel. */
+  .pavilion-credit {
+    top: 94%;
+    left: 70%;
+    right: auto;
+    bottom: auto;
+    width: min(23cqw, max(90px, 18cqw));
+    margin-bottom: 0;
+    translate: -50% -50%;
+  }
+}
+@media (max-aspect-ratio: 9/10) and (hover: none) {
+  .pavilion-credit__petal { transform: none; }
 }
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
   .pavilion-credit__petal { transition: width 300ms ease-out, height 300ms ease-out, transform 300ms ease-out; }
@@ -515,11 +538,8 @@
 @keyframes pavilion-glint { 0%, 64%, 84%, 100% { opacity: 0; transform: scale(.3); } 74% { opacity: .95; transform: scale(1); } }
 
 @media (max-aspect-ratio: 9/10) {
-  .pavilion-orb { width: min(27cqw, 15cqh); }
+  .pavilion-orb { width: min(23cqw, 12cqh); }
   .pavilion-orb { bottom: 65%; }
-  .pavilion-notes { left: 3%; bottom: 13.7%; width: clamp(150px, 43cqw, 235px); }
-  .pavilion-notes { translate: none; }
-  .pavilion-book { bottom: 22%; }
 }
 @media (prefers-reduced-motion: reduce) {
   .atlas-intro *, .atlas-intro *::after, .atlas-intro:is(.is-exiting, .is-returning), .artist-statement.from-pavilion:not([hidden]) {
@@ -625,7 +645,7 @@
 
 @media (max-aspect-ratio: 9/10) {
   /* Leave the illuminated shoreline visible above the open pages. */
-  .is-night .pavilion-book { width: min(69cqw, 55cqh); bottom: 19.5%; }
+  .is-night .pavilion-book { width: min(73cqw, 48cqh); bottom: 21%; }
 }
 
 /* Keep the entrance usable on installations without the pavilion illustration pack. */
