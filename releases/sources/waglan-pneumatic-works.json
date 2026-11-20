@@ -1,0 +1,41 @@
+{
+  "id": "waglan-pneumatic-works",
+  "title": "The Waglan Pneumatic Works",
+  "isolated": true,
+  "art": [
+    {
+      "title": "The Waglan Pneumatic Works",
+      "scene": "pneumatic-wave-works",
+      "x": 214307,
+      "y": 114501,
+      "rows": 1,
+      "columns": 2,
+      "url": "/waglan-pneumatic-works/waglan-pneumatic-works-9697ea2a6b581133.webp?v=9697ea2a6b581133",
+      "animation": {
+        "loopUrl": "/waglan-pneumatic-works/swells-e7a9cb801c9781ea.webp",
+        "pixelsPerTile": 512
+      }
+    },
+    {
+      "title": "The Waglan Pneumatic Works",
+      "scene": "pneumatic-wave-works",
+      "x": 214307,
+      "y": 114501,
+      "rows": 1,
+      "columns": 2,
+      "url": "/waglan-pneumatic-works/waglan-pneumatic-works-28fe6ea0034470b1.webp?v=28fe6ea0034470b1",
+      "animation": {
+        "loopUrl": "/waglan-pneumatic-works/swells-c719e2d59b847153.webp",
+        "pixelsPerTile": 512
+      }
+    }
+  ],
+  "prompt": "Paint The Waglan Pneumatic Works across two east–west sea tiles as a 1930s Hong Kong hydrographic atlas miniature. In the quiet sea east of Waglan, two staggered, fully submerged Bombora mWave machines face a train of oblique swells. Give each a single long, low 75-metre gravity bed with four broad, dark indigo rubber pillows clamped in brass rims. Let a crest press one pillow visibly flat, while the next swells taut. Peel back one patinated copper air duct to reveal check valves and a small enclosed turbine connected to a generator. Fine ribs and rivets catch the light. A short armoured cable lies on the seabed. A tiny ochre survey launch and its two crew above give the depth and scale away. Use broken aquamarine wave crests and fine engraved refraction lines just where water crosses metal. North-up parallel oblique, hand-tinted sepia ink, readable at thumbnail scale. Isolate both machines and the launch on pure #ff00ff, including gaps. Omit lettering, surrounding sea fill, shore, frames, and external propellers.",
+  "previousEdition": "/waglan-pneumatic-works/waglan-pneumatic-works-37cb81c519850c48.webp?v=37cb81c519850c48",
+  "revisionPrompt": "Draw a separate WAVES-ONLY printing plate for the registered landscape in the middle half of the square reference. A restrained 1930s hydrographic engraving of the surface of a calm open sea. Use a solid jet-black field. In silver-white ink and subtle gray wash draw long, gently bending wavefronts from lower left toward upper right, broadly horizontal in shallow sweeping arcs. About seven irregularly spaced swells: a sinuous luminous ridge and a soft thin companion stroke, longer and shorter interrupted arcs, just a few glints and fine refraction marks. Low broad swells, not breakers. Stagger terminations into a flowing lens-shaped patch. Cross BOTH registered machines with multiple continuous swell strokes and the intervening water. Extend well beyond them into empty water above, below and beside them. Let the outermost strokes dissolve one by one at different distances. The entire wave drawing fits inside x=5..95%, y=27..73% of the SQUARE; the rest is pure black. No straight edge or rectangular water slab. This is a separations workflow. Output ONLY the highlights and pale grey wash on black: no trace or outline of the machines, no boat, no island, no typography, no map or guides. The original machinery will be printed under this layer afterward. Make the strongest white strokes beautifully legible at thumbnail scale.",
+  "cushionRevision": {
+    "source": "/waglan-pneumatic-works/waglan-pneumatic-works-28fe6ea0034470b1.webp?v=28fe6ea0034470b1",
+    "candidate": "/waglan-pneumatic-works/waglan-pneumatic-works-9697ea2a6b581133.webp?v=9697ea2a6b581133",
+    "prompt": "Retouch this square two-panel contact sheet in exact registration. Two close-ups of the same mechanical device: in EACH half a broad sagging blue-green rubber diaphragm between brass end clamps has a white breaking surf crest glued to its rear lip. Erase that entire white, mint and turquoise breaking wave, stray spray, wavelets, foam, AND watery ridged texture from BOTH flattened membranes. Reconstruct each exposed diaphragm as smooth taut dark indigo rubber with a shallow concave profile, a soft muted diffuse highlight and fine worn rubber grain. Use the adjacent indigo domed cushion as the material reference; the flattened cushion should stay LOW and depressed. Only the low smooth rubber edge and clean magenta negative space behind it. Preserve all brass, angles and pencil marks elsewhere, exactly the same camera, cropping, size and geometry. Uniform pure magenta key background everywhere. No waves, spume, water reflections, lettering or new objects. Preserve the two panels separately in these exact positions."
+  }
+}

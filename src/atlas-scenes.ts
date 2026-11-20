@@ -8,6 +8,7 @@ export const atlasScenes = {
   'car-boat-works': 'a shore workshop that converts customers’ own cars into boats. Follow one distinctive red motorcar design through three bays: road wheels on arrival, a suspended curved hull being fitted underneath the chassis in a cutaway workshop, and the finished red car afloat leaving a slipway with the same bonnet, steering wheel and headlamps still visible',
   'flying-fish-burgers': 'a flying-fish burger restaurant where the kitchen gives each customer two bun halves and they catch their own filling. A long open counter hugs a narrow seawater race. Make the central action unmistakable: silver flying fish with outspread fins leap in arcs above the water; diners lean over the rail holding a bun half in each hand, and one fish is visibly between two halves. Show baskets of buns, striped awnings and a waterside dining terrace',
   'bottled-post': 'a tidal post office where letters arrive inside floating glass bottles. A forked boom guides bottles into waist-high sorting channels beside an open sorting gallery. Clerks uncork them and hang wet letters on lines, while a postmistress dispatches sealed green bottles down a separate outgoing chute on the ebb tide. Broad copper roof and red postal fittings',
+  'pneumatic-wave-works': 'a submerged wave power station with long seabed frames carrying four flexible rubber air cells apiece. An overhead swell flattens one cell and the next refills. In a cutaway duct, check valves feed a small enclosed turbine and generator. A survey launch gives scale to the machinery below',
   'wave-organ': 'a wave-powered public pipe organ built into a breakwater. Draw a cutaway row of sea chambers with waves squeezing air up a graduated rank of tall copper organ pipes. A seated organist works the stops in an open-sided music room, while listeners line curved stone steps on the sheltered side. The sea-facing mouths, bellows and pipe ranks should make the mechanism readable',
   'moon-jelly-lanterns': 'a lending library for living moon-jelly lanterns. A marine librarian lifts a round glass seawater lantern, enclosing one pale peach jellyfish, from a rack beside the quay into the hands of a night ferryman. Filled lanterns are checked out onto small boats; returned jellies drift back into sheltered nursery pools. Show a broad glazed reading room, ranks of distinct round vessels, and a return flume. Daylight atlas colours with pearly lilac jellyfish',
   'pleasure-pier': 'a Victorian pleasure pier with an iron pavilion, carousel and promenade on timber piles connected to shore',
@@ -99,6 +100,7 @@ export const atlasSeaScenes = new Set<keyof typeof atlasScenes>([
   'car-boat-works',
   'flying-fish-burgers',
   'bottled-post',
+  'pneumatic-wave-works',
   'wave-organ',
   'moon-jelly-lanterns',
 ])

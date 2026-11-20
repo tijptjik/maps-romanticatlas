@@ -159,6 +159,8 @@ cell['art'].append(sanctuary)
 sheets.append(read(root / "releases/sources/tourist-disappearance-trap.json"))
 sheets.append(read(root / 'releases/sources/space-elevator.json'))
 sheets.append(read(root / 'releases/sources/west-kowloon-airship-mooring.json'))
+waglan = read(root / 'releases/sources/waglan-pneumatic-works.json')
+sheets.append({key: waglan[key] for key in ('id', 'title', 'isolated', 'art')})
 
 # Legacy HKU sheets predate the scene field. Their titles are the authored
 # concept names from the family books. Other one-off studies have their own subjects.

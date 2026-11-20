@@ -6860,5 +6860,15 @@
     "scene": "film-backlot",
     "url": "/atlas-v2/production/0339-1b1bb3769b9c6643.webp",
     "status": "rejected"
+  },
+  {
+    "title": "The Waglan Pneumatic Works",
+    "x": 214307,
+    "y": 114501,
+    "rows": 1,
+    "scene": "pneumatic-wave-works",
+    "columns": 2,
+    "url": "/waglan-pneumatic-works/waglan-pneumatic-works-28fe6ea0034470b1.webp?v=28fe6ea0034470b1",
+    "status": "accepted"
   }
 ]
