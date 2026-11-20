@@ -2414,6 +2414,14 @@
           "y": 114422,
           "rows": 1,
           "url": "/atlas-v2/production/0150-c71a14781fca4a1d.webp"
+        },
+        {
+          "title": "The Bucket Orchestra",
+          "scene": "water-park",
+          "x": 214172,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/cw-214172-114422-36381c822d76ce25.webp"
         }
       ],
       "accepted": true
@@ -7608,13 +7616,6 @@
           "scene": "steampunk-city"
         },
         {
-          "title": "Fragrant Harbour in the Clouds",
-          "x": 214185,
-          "y": 114426,
-          "rows": 1,
-          "url": "/atlas-v2/peak-maquette/hong-kong-in-the-clouds-scaled.png"
-        },
-        {
           "title": "A School of Windows",
           "x": 214216,
           "y": 114423,
@@ -9021,6 +9022,38 @@
           "rows": 1,
           "scene": "wind-farm",
           "url": "/artwork-revisions/a3f4ee95eca7478bbe129395b7f207b1.png"
+        },
+        {
+          "title": "Giant Fairground",
+          "x": 214179,
+          "y": 114426,
+          "rows": 1,
+          "scene": "giant-fairground",
+          "url": "/generated-tiles/18/214179/114426/giant-fairground?version=6&variant=discovery-58d7ceea-7991-46fa-8e34-75fb40be4a52-17349337887d"
+        },
+        {
+          "title": "A Fair in the Looking Glass",
+          "x": 214171,
+          "y": 114422,
+          "rows": 1,
+          "scene": "giant-fairground",
+          "url": "/artwork-revisions/925d18554dc641989fe3911c437c73e6.png"
+        },
+        {
+          "title": "Maze Garden",
+          "x": 214172,
+          "y": 114422,
+          "rows": 1,
+          "scene": "maze-garden",
+          "url": "/generated-tiles/18/214172/114422/maze-garden?version=6&variant=discovery-rotating-fa7ac333e11a"
+        },
+        {
+          "title": "Pneumatic Post Hour",
+          "x": 214198,
+          "y": 114423,
+          "rows": 1,
+          "scene": "steampunk-city",
+          "url": "/artwork-revisions/dc2018a7c1e4474ba0c8bde529cad12a.png"
         }
       ]
     }
