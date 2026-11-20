@@ -1,3 +1,4 @@
+import { linkedTile } from './tile-link'
 import peakWoodlandTile from './peak-woodland.mvt?url'
 import { artworkRequest, installArtworkEdgeFade } from './artwork-edge-fade.ts'
 import { installArtworkSampling } from './artwork-sampling.ts'
@@ -46,6 +47,7 @@ const minimumZoom = reviewMode ? 10 : diagnosticsModeEnabled() ? minimumFogZoom 
 const nativeMaxZoom = nativeTileZoom(atlasTileSize)
 const initialMaxZoom = adminMap ? nativeMaxZoom : Math.max(minimumZoom, nativeMaxZoom)
 
+const entry = !reviewMode && !adminMap && linkedTile()
 installArtworkEdgeFade()
 const map = new maplibregl.Map({
   transformRequest(url, type) {
@@ -61,6 +63,7 @@ const map = new maplibregl.Map({
   style: hongKongStyle,
   ...initialView,
   ...(history.state?.atlasModeCamera ?? {}),
+  ...(entry ? { center: entry.center, zoom: initialView.zoom } : {}),
   maxPitch: 0,
   dragRotate: false,
   keyboard: false,

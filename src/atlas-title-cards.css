@@ -81,3 +81,14 @@
 .atlas-title-card[hidden] {
   display: none;
 }
+
+.atlas-tile-link {
+  align-self: center;
+  color: inherit;
+  font: 12px / 1.4 Georgia, serif;
+  pointer-events: auto;
+}
+
+.atlas-title-card.is-awaiting-focus .atlas-tile-link {
+  visibility: hidden;
+}

@@ -1,3 +1,4 @@
+import { linkedTile } from './tile-link'
 import { createIntroSplash } from './intro-splash'
 import { installArtistStatement } from './artist-statement'
 import { installAtlasAudio } from './atlas-audio'
@@ -17,7 +18,7 @@ const reviewMode = reviewModeEnabled()
 const kioskMode = kioskModeEnabled()
 const restoringMap = history.state?.atlasView === 'map' ||
   (!history.state?.atlasView && Boolean(history.state?.atlasModeCamera))
-const directEntry = revealedModeEnabled() || reviewMode || kioskMode || noSplashEnabled() || restoringMap
+const directEntry = Boolean(linkedTile()) || revealedModeEnabled() || reviewMode || kioskMode || noSplashEnabled() || restoringMap
 
 if (directEntry) document.documentElement.classList.remove('atlas-boot')
 if (reviewMode) {

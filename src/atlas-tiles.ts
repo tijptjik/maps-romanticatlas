@@ -1,3 +1,4 @@
+import { createTileLink, linkedTile } from './tile-link'
 import { waitForAtlasGeneration } from './wait-for-atlas-generation'
 import { isFakeRenderTile, type RevealImage, type rotationSnapshot } from './fake-render-state'
 import { noFakeRenderEnabled } from './runtime-modes'
@@ -754,6 +755,9 @@ export const addGeneratedTile = async (
   )
   if (scene && titleCards) {
     const card = createAtlasTitleCard(map.getContainer(), scene, discoveryTitle(url, scene, placement?.title))
+    if (!map.getContainer().classList.contains('atlas-admin-mode')) {
+      card.append(createTileLink(tileId(tile), tile.url ?? url))
+    }
     titleCards.set(tileId(tile), { card, tile, contentBounds, bounds, alpha })
     positionAtlasTitleCard(map, card, tile, contentBounds, bounds, alpha)
   }
@@ -3124,6 +3128,37 @@ export const installAtlasTileInteractions = (
       fog.invalidate()
     } finally { window.clearInterval(keepAlive) }
   }
+
+  async function openLinkedTile(tile: NonNullable<ReturnType<typeof linkedTile>>) {
+    const id = tileId(tile)
+    const matches = (url: string) => !rejectedUrls.has(url) && (!tile.art || tile.art === url)
+    const painting = artwork?.get(id)?.find(art => matches(art.url))
+    if (painting) return revealPainting(id, painting)
+
+    const budget = AbortSignal.timeout(15000)
+    if (tileState.has(id)) return
+    tileState.set(id, 'checking')
+    try {
+      const released = await readRotation(tile, true, budget)
+      let image = released.find(item => matches(item.url))
+      if (!image) {
+        const cached = await withinClickBudget(checkCachedTile({ x: tile.x, y: tile.y }), budget)
+        if (cached.cached && matches(cached.url)) image = cached as RevealImage
+      }
+      if (tileState.get(id) !== 'checking') return
+      if (!image) throw Error('This linked artwork is unavailable.')
+      await addGeneratedTile(map, tile, image.url, image.scene, titleCards, image.contentBounds, 0, budget, { title: image.title })
+      revealGeneratedTile(id, image.scene as AtlasScene)
+    } catch {
+      tileState.delete(id)
+      const message = 'This linked artwork is unavailable.'
+      fog.showError(id, message)
+      fogErrorAnnouncer.announce(message)
+      fog.invalidate()
+    }
+  }
+  const entry = artwork && linkedTile()
+  if (entry) void openLinkedTile(entry)
 
   map.on('click', async event => {
     if (isAdminMode()) return
