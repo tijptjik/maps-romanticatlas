@@ -708,16 +708,16 @@
     },
     {
       "id": "peak-maquette",
-      "title": "Hong Kong in the Clouds · The Peak",
+      "title": "Fragrant Harbour in the Clouds · The Peak",
       "isolated": true,
       "art": [
         {
-          "title": "Hong Kong in the Clouds",
+          "title": "Fragrant Harbour in the Clouds",
           "x": 214185,
           "y": 114426,
           "columns": 3,
           "rows": 1,
-          "url": "/atlas-v2/peak-maquette/hong-kong-in-the-clouds-landscape.png"
+          "url": "/atlas-v2/peak-maquette/fragrant-harbour-in-the-clouds-architectural.png"
         }
       ],
       "accepted": true
@@ -870,22 +870,6 @@
           "title": "The Steam Laundry Express",
           "scene": "steam-railway",
           "url": "/atlas-v2/hku-ring-editorial-114418/0055-8fc89eaa5c606fab.webp"
-        }
-      ],
-      "accepted": true
-    },
-    {
-      "id": "production-retained-18-214183-114434",
-      "title": "Wind Farm · 18/214183/114434",
-      "isolated": true,
-      "art": [
-        {
-          "title": "Wind Farm",
-          "x": 214183,
-          "y": 114434,
-          "rows": 1,
-          "scene": "wind-farm",
-          "url": "/generated-tiles/18/214183/114434/wind-farm?version=6&variant=discovery-2d6298a1-e9e0-414b-a643-4da5cdfe8554-164a5662b2de"
         }
       ],
       "accepted": true
@@ -7472,14 +7456,6 @@
       "accepted": true,
       "art": [
         {
-          "title": "Tropical Aquarium",
-          "x": 214183,
-          "y": 114433,
-          "rows": 1,
-          "scene": "tropical-aquarium",
-          "url": "/generated-tiles/18/214183/114433/tropical-aquarium?version=6&variant=discovery-2243a5da-28ba-4bb0-89ff-1b75dcc98607-f745b7a24386"
-        },
-        {
           "title": "The Graft Supper",
           "x": 214174,
           "y": 114422,
@@ -7494,14 +7470,6 @@
           "rows": 1,
           "scene": "mesmerist-salon",
           "url": "/atlas-v2/production/0080-04d3505e5950fdbc.webp"
-        },
-        {
-          "title": "Printworks",
-          "x": 214185,
-          "y": 114434,
-          "rows": 1,
-          "scene": "printworks",
-          "url": "/generated-tiles/18/214185/114434/printworks?version=6&variant=discovery-2243a5da-28ba-4bb0-89ff-1b75dcc98607-b8177e69fbd5"
         },
         {
           "title": "A Solar System in the Wash",
@@ -7552,7 +7520,7 @@
           "url": "/generated-tiles/18/214185/114421/steampunk-city?version=6&variant=discovery-2243a5da-28ba-4bb0-89ff-1b75dcc98607-7b98bbc4415f"
         },
         {
-          "title": "Hong Kong in the Clouds",
+          "title": "Fragrant Harbour in the Clouds",
           "x": 214185,
           "y": 114426,
           "rows": 1,
@@ -7839,14 +7807,6 @@
           "url": "/generated-tiles/18/214193/114417/volcano-observatory?version=6&variant=discovery-126b0efb-076d-466e-ad35-4d2cb626d684-cd8d9c41f994"
         },
         {
-          "title": "Grand Library",
-          "x": 214187,
-          "y": 114417,
-          "rows": 1,
-          "scene": "grand-library",
-          "url": "/generated-tiles/18/214187/114417/grand-library?version=6&variant=discovery-7edb00b6-d116-453c-ba09-2a5a74687406-f9f4fec68efe"
-        },
-        {
           "title": "The Shade Cooperative",
           "x": 214219,
           "y": 114425,
@@ -7879,14 +7839,6 @@
           "url": "/artwork-revisions/0a2ad6a81ad147219b9ee1ba2ebc954e.png"
         },
         {
-          "title": "Aquarium",
-          "x": 214187,
-          "y": 114416,
-          "rows": 1,
-          "scene": "aquarium",
-          "url": "/generated-tiles/18/214187/114416/aquarium?version=6&variant=discovery-7edb00b6-d116-453c-ba09-2a5a74687406-ff8893b9a7cc"
-        },
-        {
           "title": "The Cabinet of Winter",
           "x": 214209,
           "y": 114422,
@@ -7909,14 +7861,6 @@
           "rows": 1,
           "scene": "tropical-aquarium",
           "url": "/generated-tiles/18/214201/114378/tropical-aquarium?version=6&variant=discovery-7edb00b6-d116-453c-ba09-2a5a74687406-9783e86689c8"
-        },
-        {
-          "title": "Festival City",
-          "x": 214201,
-          "y": 114377,
-          "rows": 1,
-          "scene": "festival-city",
-          "url": "/generated-tiles/18/214201/114377/festival-city?version=6&variant=discovery-7edb00b6-d116-453c-ba09-2a5a74687406-0d953585795f"
         },
         {
           "title": "The Town Hall at Elbow Height",

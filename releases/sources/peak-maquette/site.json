@@ -30,7 +30,7 @@
     }
   ],
   "score": 0,
-  "title": "Hong Kong in the Clouds",
+  "title": "Fragrant Harbour in the Clouds",
   "zoom": 18,
   "tileSpan": {
     "columns": 3,
@@ -46,8 +46,8 @@
     "url": "https://romanticatlas.hype.hk/map-assets/saanseoi/hongkong-latest/15/26773/14303.mvt",
     "sha256": "037a0e30bd7b41b9dbb5a2e70f53a9841d36903dcbf3f4fe88d4406f2e9bd131"
   },
-  "image": "/atlas-v2/peak-maquette/hong-kong-in-the-clouds-landscape.png",
-  "imageSha256": "1ca6466396dec69f7ff5ada64ab340f602a79cab22923a4da2d6f85f27f2c94f",
+  "image": "/atlas-v2/peak-maquette/fragrant-harbour-in-the-clouds-architectural.png",
+  "imageSha256": "a7e0d2bfeda3a7d975136bfdf41fd72d1c1fc2883190aaa930d8a80bbed4f957",
   "personHeightMetres": 1.7,
   "verticalProjection": 0.6
 }
