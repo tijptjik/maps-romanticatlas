@@ -6115,5 +6115,14 @@
     "rows": 2,
     "url": "/space-elevator/space-elevator.webp?v=0c3d2daf4b042aad",
     "status": "accepted"
+  },
+  {
+    "title": "The Kelp Elevator",
+    "x": 214188,
+    "y": 114422,
+    "rows": 1,
+    "scene": "aquarium",
+    "url": "/artwork-revisions/8f3d9e4ac3f24c2da8553c906aa26c40.png",
+    "status": "accepted"
   }
 ]

@@ -158,6 +158,7 @@ if cell is None:
 cell['art'].append(sanctuary)
 sheets.append(read(root / "releases/sources/tourist-disappearance-trap.json"))
 sheets.append(read(root / 'releases/sources/space-elevator.json'))
+sheets.append(read(root / 'releases/sources/west-kowloon-airship-mooring.json'))
 
 # Legacy HKU sheets predate the scene field. Their titles are the authored
 # concept names from the family books. Other one-off studies have their own subjects.
