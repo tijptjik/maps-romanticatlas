@@ -35,7 +35,12 @@ spec.loader.exec_module(revisions)
 
 def revision_worker():
     while True:
-        revisions.drain()
+        try:
+            revisions.drain()
+        except (OSError, ValueError) as exc:
+            print('Revision queue unavailable:', exc, file=sys.stderr, flush=True)
+            time.sleep(30)
+            continue
         time.sleep(2)
 
 
