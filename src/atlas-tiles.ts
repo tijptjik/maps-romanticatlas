@@ -3129,9 +3129,8 @@ export const installAtlasTileInteractions = (
     const tile = tileForPosition(event.lngLat)
     const id = tileId(tile)
     if (artwork && !tileState.has(id) && (!selected(tile) || !isFogTileLand(tile))) return
-    const frame = artworkFrames.get(id)
-    if (frame && tileState.get(id) === 'generated') {
-      focusAtlasTile(map, tile, undefined, frame)
+    if (tileState.get(id) === 'generated') {
+      focusAtlasTile(map, tile, undefined, artworkFrames.get(id))
       return
     }
     const choices = artwork?.get(id)
@@ -3174,10 +3173,6 @@ export const installAtlasTileInteractions = (
         fog.showError(id, message)
         fogErrorAnnouncer.announce(message)
       }
-      return
-    }
-    if (tileState.get(id) === 'generated') {
-      focusRevealedTile(tile)
       return
     }
     const revealBudget = 35 * 60_000
