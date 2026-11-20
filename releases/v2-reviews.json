@@ -6240,5 +6240,23 @@
     "scene": "robot-factory",
     "url": "/artwork-revisions/ef27299d76294ecab4e14413e59507e3.png",
     "status": "accepted"
+  },
+  {
+    "title": "The Hull Turns Over",
+    "x": 214180,
+    "y": 114423,
+    "rows": 1,
+    "scene": "shipyard",
+    "url": "/artwork-revisions/dbdb20a9289946d6b5f401d4f311bfdb.png",
+    "status": "accepted"
+  },
+  {
+    "title": "The Fumarole Orchestra",
+    "x": 214203,
+    "y": 114424,
+    "rows": 1,
+    "scene": "volcano-observatory",
+    "url": "/artwork-revisions/a27b12c65b2c4a97bee92fc1991f56bb.png",
+    "status": "accepted"
   }
 ]
