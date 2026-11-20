@@ -387,7 +387,7 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
   if (diagnostics) {
     map.addSource(edges, {type: 'geojson', data: {type: 'MultiLineString', coordinates: []}})
     map.addLayer({id: edges, source: edges, type: 'line', paint: {
-      'line-color': '#382e20', 'line-width': 1.5, 'line-dasharray': [4, 2], 'line-opacity': 0.9,
+      'line-color': '#382e20', 'line-width': 1.5, 'line-dasharray': [4, 2], 'line-opacity': queue ? 0.45 : 0.9,
     }}, neighborhoodLabelLayerId)
     if (queue) {
       map.on('moveend', renderDiagnostics)
