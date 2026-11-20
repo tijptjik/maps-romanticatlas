@@ -5841,5 +5841,32 @@
     "scene": "luddite-rally",
     "url": "/atlas-v2/production/cw-214200-114423-fe4c75c209929d95.webp",
     "status": "accepted"
+  },
+  {
+    "title": "Cat Street Sanctuary",
+    "x": 214193,
+    "y": 114419,
+    "rows": 1,
+    "scene": "cat-sanctuary",
+    "url": "/artwork-revisions/f4c6a94b1e2745619c96cba8277ebd40.png",
+    "status": "accepted"
+  },
+  {
+    "title": "The Basket Return",
+    "x": 214195,
+    "y": 114418,
+    "rows": 1,
+    "scene": "floating-market",
+    "url": "/artwork-revisions/a8985feca54449dab1b27b6abfdcd637.png",
+    "status": "accepted"
+  },
+  {
+    "title": "The Weather Vane School",
+    "x": 214188,
+    "y": 114417,
+    "rows": 1,
+    "scene": "wind-farm",
+    "url": "/artwork-revisions/a3f4ee95eca7478bbe129395b7f207b1.png",
+    "status": "accepted"
   }
 ]
