@@ -1,3 +1,5 @@
+import { generationEndpoint, generationJob, generationPosition, reservedArt } from './generation-targets'
+import { atlasSceneGridRadius } from './atlas-protocol'
 import { overlapsPeakMaquette } from './artwork-reservation'
 import { revisionEndpoint, revisionId, revisionImagePattern, revisionRequest } from './artwork-revision'
 import { isFakeRenderTile, isRotatingVariant } from './fake-render-state'
@@ -1108,6 +1110,27 @@ export const handleAtlasApi = async (
     await env.ATLAS_BUCKET.put(key, image.body)
     const stored = await env.ATLAS_BUCKET.get(key)
     return new Response(stored.body, { headers })
+  }
+  if (url.pathname === generationEndpoint) {
+    if (request.method !== 'POST') return errorResponse(405, 'POST required.')
+    const denied = await adminMutationIsAllowed(request, env)
+    if (denied) return errorResponse(denied.status, denied.error)
+    const payload = await readJsonBody(request).catch(() => null)
+    const tile = generationPosition(payload)
+    if (!tile) return errorResponse(400, 'Invalid generation target or reference.')
+    const radius = atlasSceneGridRadius
+    const [land, cached, reviews, jobs] = await Promise.all([
+      fogEligibilityForPositions(env, [tile]),
+      Promise.all(manifestShardNamesForGrid(tile).map(name => env.ATLAS_MANIFEST.getByName(name)
+        .entriesForTileArea(tile.zoom, tile.x-radius, tile.y-radius, tile.x+radius, tile.y+radius))),
+      allArtworkReviews(env, true), generator(env, '/revisions'),
+    ])
+    if (!jobs.ok) return errorResponse(503, 'Artwork queue unavailable.')
+    const job = generationJob(payload, land.eligibilities[0], [
+      ...releaseCatalog.sheets.flatMap(sheet => sheet.art), ...cached.flat(), ...reviews, ...reservedArt(await jobs.json()),
+    ])
+    if (!job) return errorResponse(409, 'This tile or scene family is no longer available.')
+    return generator(env, '/revisions', { method: 'POST', body: JSON.stringify(job) })
   }
   if (url.pathname === revisionEndpoint) {
     if (request.method === 'GET') return generator(env, '/revisions')

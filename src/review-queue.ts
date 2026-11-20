@@ -85,9 +85,10 @@ export function installReviewQueue(map: AtlasMap, units: Unit[],
   function progress() {
     const failed = failedRevision()
     failedActions.hidden = !failed
-    if (failed) {
+    if (failed && failed.mode !== 'generate') {
+      const mode = failed.mode
       retryRevision.textContent = 'Retry failed ' + failed.mode + ' · ' + failed.source.title
-      retryRevision.onclick = () => void act(failed.mode, failed.source)
+      retryRevision.onclick = () => void act(mode, failed.source)
     }
     const rendering = renderingCount()
     const total = reviewed + units.length + rendering

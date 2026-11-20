@@ -6,7 +6,7 @@ export type RevisionMode = 'adjust' | 'spread'
 export type Revision = {
   id: string
   source: Painting
-  mode: RevisionMode
+  mode: RevisionMode | 'generate'
   state: 'pending' | 'ready' | 'failed'
   candidate?: Painting
 }

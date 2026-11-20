@@ -1706,3 +1706,20 @@ body {
   font: 600 .85rem "Cormorant Garamond", Georgia, serif;
 }
 .atlas-revision-actions button:disabled { opacity: .55; cursor: wait; }
+
+.atlas-generation-control, .atlas-generation-dialog {
+  color: #403321;
+  background: #fff2d8;
+  border: 1px solid #826b46;
+  box-shadow: 0 2px 6px #382e2033;
+}
+.atlas-generation-control { display: flex; align-items: stretch; border-radius: 4px; overflow: hidden; }
+.atlas-generation-control button { background: transparent; border: 0; color: inherit; font-family: inherit; font-weight: 600; font-size: 11px; cursor: pointer; }
+.atlas-generation-control .atlas-mystery-box { border-left: 1px solid #b9a787; padding: 2px 4px; }
+.atlas-mystery-box svg { display: block; width: 24px; height: 24px; }
+.atlas-generation-dialog { width: min(25rem, 85vw); padding: 1.25rem; border-radius: 6px; }
+.atlas-generation-dialog::backdrop { background: #382e2055; }
+.atlas-generation-dialog h2 { margin: 0 0 1rem; }
+.atlas-generation-dialog label, .atlas-generation-dialog select { display: block; width: 100%; }
+.atlas-generation-dialog select { margin: 4px 0 12px; padding: 6px; font: inherit; }
+.atlas-generation-dialog footer { display: flex; gap: 8px; justify-content: end; }

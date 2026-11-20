@@ -29,6 +29,8 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
   const labels = new Map<string, Label>()
   const superseded = new Set<string>()
   let disposed = false
+  let targetControls: ReturnType<typeof import('./admin-generation').installAdminGeneration>
+  const placementInventory: Painting[] = []
 
   function add(art: Painting) {
     if (!allowsArtwork(art)) return
@@ -68,6 +70,7 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
     for (const sheet of catalog.sheets) {
       if (sheet.accepted) for (const art of sheet.art) status.set(art.url, 'accepted')
     }
+    if (admin) placementInventory.push(...catalog.sheets.flatMap(sheet => sheet.art), ...reviews)
     for (const review of reviews) status.set(review.url, review.status)
     if (diagnostics || revealed) {
       revisions = admin || queue ? await readRevisions() : await readRevisions().catch(() => [])
@@ -427,7 +430,7 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
         if (unit) select(unit)
         else renderDiagnostics()
       }, revise, remaining, () => revisions.filter(job => job.state === 'pending').length, failedRevision, art => {
-        const source = revisions.find(job => job.candidate?.url === art.url)?.source
+        const source = revisions.find(job => job.mode !== 'generate' && job.candidate?.url === art.url)?.source
         return source && (units.get(source.url)?.art ?? source)
       })
       let refreshing = false
@@ -451,12 +454,36 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
       return () => {}
     }
     renderDiagnostics()
+    if (admin) {
+      const { installAdminGeneration } = await import('./admin-generation')
+      targetControls = installAdminGeneration(map, () => [...placementInventory,
+        ...revisions.filter(job => job.state !== 'failed').map(job => job.candidate ?? job.source)],
+        mutation, job => { revisions.push(job) }, copyStatus)
+      let reading = false
+      const timer = window.setInterval(async () => {
+        if (reading || disposed) return
+        reading = true
+        const before = revisions.length
+        try {
+          const updated = await readRevisions()
+          if (disposed || revisions.length !== before || JSON.stringify(updated) === JSON.stringify(revisions)) return
+          revisions = updated
+          for (const job of revisions) if (job.candidate && status.get(job.candidate.url) !== 'rejected') add(job.candidate)
+          renderDiagnostics()
+          void targetControls.refresh()
+        } catch (error) { console.warn('Could not refresh the artwork queue', error) }
+        finally { reading = false }
+      }, 10000)
+      map.once('remove', () => clearInterval(timer))
+    }
     map.on('moveend', renderDiagnostics)
 
   }
 
   map.on('click', async event => {
-    const choices = byCell.get(tileId(tileForPosition(event.lngLat)))
+    const tile = tileForPosition(event.lngLat)
+    if (targetControls?.select(tile)) return
+    const choices = byCell.get(tileId(tile))
     if (!choices) return
     const currentIndex = choices.findIndex(unit => visibleLayers.has(unit.layer))
     const next = choices[(currentIndex + 1) % choices.length]

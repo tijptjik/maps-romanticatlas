@@ -5,7 +5,11 @@ import type { Painting } from './artwork-review'
 
 // Both references have the same north-up extent. Pad rectangular footprints
 // to a square for the renderer, then remove only that padding on publication.
-export async function revisionReferences(art: Painting) {
+export function revisionReferences(art: Painting) {
+  return artworkReferences(art, art.animation?.plate ?? art.imageUrl ?? art.url)
+}
+
+export async function artworkReferences(art: Pick<Painting, 'x' | 'y' | 'rows' | 'columns'>, previousUrl?: string) {
   const columns = art.columns ?? 1
   const side = Math.max(columns, art.rows)
   const width = Math.round(1024 * columns / side)
@@ -37,9 +41,9 @@ export async function revisionReferences(art: Painting) {
       map.once('idle', () => map.areTilesLoaded() ? resolve() : reject(Error('Basemap tiles are incomplete.')))
     })
     const previous = new Image()
-    previous.src = art.animation?.plate ?? art.imageUrl ?? art.url
-    await Promise.all([previous.decode(), loaded])
-    return { mapImage: png(map.getCanvas()), previousImage: png(previous) }
+    if (previousUrl) previous.src = previousUrl
+    await Promise.all([previousUrl && previous.decode(), loaded])
+    return { mapImage: png(map.getCanvas()), ...(previousUrl && { previousImage: png(previous) }) }
   } finally {
     clearTimeout(timer)
     map.remove()
