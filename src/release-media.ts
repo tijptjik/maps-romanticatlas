@@ -1,3 +1,4 @@
+import { allowsArtwork } from './artwork-reservation'
 import { publishedArtworkUrl } from './artwork-presentation'
 import assets from '../releases/assets.json'
 import type { Painting } from './artwork-review'
@@ -53,5 +54,5 @@ function publishedPainting(art: Painting) {
 
 export const releaseCatalog = {
   ...catalog,
-  sheets: catalog.sheets.map(sheet => ({ ...sheet, art: sheet.art.map(publishedPainting) })),
+  sheets: catalog.sheets.map(sheet => ({ ...sheet, art: sheet.art.filter(allowsArtwork).map(publishedPainting) })).filter(sheet => sheet.art.length),
 }

@@ -1,3 +1,4 @@
+import { overlapsPeakMaquette } from './artwork-reservation'
 import { revisionEndpoint, revisionId, revisionImagePattern, revisionRequest } from './artwork-revision'
 import { isFakeRenderTile, isRotatingVariant } from './fake-render-state'
 import { fakeRenderSeed } from './fake-render-seed'
@@ -656,6 +657,7 @@ const generateTile = async (
   tile: Tile,
   force = false,
 ) => {
+  if (overlapsPeakMaquette(tile)) return errorResponse(403, 'Reserved for Fragrant Harbour in the Clouds.')
   const discovery = discoveryVariantForRequest(new URL(request.url).searchParams)
   const existing = force ? null : await findCachedTile(env, tile, discovery)
   if (existing) {
@@ -1059,7 +1061,7 @@ export const handleAtlasApi = async (
   if (fake) {
     if (!applicationRequestIsAllowed(request, env)) return errorResponse(403, 'Application origin required.')
     const tile = { zoom: 18, x: Number(fake[1]), y: Number(fake[2]) }
-    if (!isValidAtlasPosition(tile) || !isFogPatternSelected(tile)) return errorResponse(400, 'Invalid cloud position.')
+    if (!isValidAtlasPosition(tile) || overlapsPeakMaquette(tile) || !isFogPatternSelected(tile)) return errorResponse(400, 'Invalid cloud position.')
     const cloud = env.FAKE_RENDER_CLOUD.getByName(positionId(tile))
     if (request.method === 'GET') {
       if (url.searchParams.has('availability')) return json({ ready: await cloud.hasReadyImage() })

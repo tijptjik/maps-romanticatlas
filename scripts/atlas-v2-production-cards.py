@@ -13,6 +13,7 @@ import tempfile
 
 from PIL import Image, ImageDraw, ImageFont
 
+from atlas_artwork_reservation import overlaps_peak
 from atlas_v2_grid import decisions, effective_plan
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -96,6 +97,7 @@ def publish():
     if maze.exists():
         jobs = jobs + [job for job in read(maze)['jobs']
                        if (BATCH/'jobs'/job['id']/'production.json').is_file()]
+    jobs = [job for job in jobs if not overlaps_peak(job)]
     sites_path = BATCH / 'selected-sites.json'
     sites = {cell_key(site): site for site in read(sites_path)} if sites_path.exists() else {}
     cells = defaultdict(list)

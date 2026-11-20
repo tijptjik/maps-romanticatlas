@@ -17,6 +17,10 @@ try {
     await route.fulfill({response, body})
   })
   const catalog = await (await page.request.get(base + '/atlas-v2/catalog.json')).json()
+  const overlapping = catalog.sheets.flatMap(s => s.art).filter(art =>
+    site.cells.some(cell => cell.x >= art.x && cell.x < art.x + (art.columns ?? 1) &&
+      cell.y <= art.y && cell.y > art.y - art.rows))
+  assert.deepEqual([...new Set(overlapping.map(art => art.url))], [site.image])
   const sheet = catalog.sheets.find(s => s.id === 'peak-maquette')
   assert.equal(sheet.art.length, 1)
   assert.equal(sheet.art[0].columns, 3)

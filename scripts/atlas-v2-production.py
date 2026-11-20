@@ -17,6 +17,7 @@ import time
 
 from PIL import Image
 
+from atlas_artwork_reservation import overlaps_peak
 from atlas_v2_grid import add_missing_slots, cell as grid_cell, decisions, effective_plan, stack_inventory
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -160,6 +161,8 @@ def reconcile_rejections(jobs, eligible, ready):
 
 
 def generate(j, lock, examples, direction, registration):
+    if overlaps_peak(j):
+        raise ValueError(f"Reserved Fragrant Harbour footprint: {j['id']}")
     folder = directory(j)
     folder.mkdir(parents=True, exist_ok=True)
     if valid(j):

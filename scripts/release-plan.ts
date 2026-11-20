@@ -1,3 +1,4 @@
+import { allowsArtwork } from '../src/artwork-reservation'
 import { createHash } from 'node:crypto'
 import { existsSync, readFileSync } from 'node:fs'
 import { extname, join } from 'node:path'
@@ -43,13 +44,13 @@ export function acceptedCatalog(source: Catalog, reviews: ArtworkReview[]): Cata
     .map(sheet => ({
       ...sheet,
       accepted: true,
-      art: sheet.art.filter(art => accepted.has(art.url)),
+      art: sheet.art.filter(art => accepted.has(art.url) && allowsArtwork(art)),
     }))
     .filter(sheet => sheet.art.length)
   const listed = new Set(sheets.flatMap(sheet => sheet.art.map(art => art.url)))
   const extras = []
   for (const { status, ...art } of decisions.values()) {
-    if (status === 'accepted' && !listed.has(art.url)) extras.push(art)
+    if (status === 'accepted' && !listed.has(art.url) && allowsArtwork(art)) extras.push(art)
   }
   if (extras.length) {
     const discoveries = sheets.find(sheet => sheet.id === 'accepted-discoveries')

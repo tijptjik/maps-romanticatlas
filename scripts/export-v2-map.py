@@ -7,6 +7,7 @@ from collections import defaultdict
 from pathlib import Path
 
 from PIL import Image
+from atlas_artwork_reservation import allows_artwork
 
 root = Path(__file__).resolve().parents[1]
 batch = root / 'generated-tiles/dream-atlas'
@@ -169,6 +170,10 @@ for sheet in sheets:
             scene = concept_families.get(art['title'])
         if scene:
             art['scene'] = scene
+
+for sheet in sheets:
+    sheet['art'] = [art for art in sheet['art'] if allows_artwork(art)]
+sheets = [sheet for sheet in sheets if sheet['art']]
 
 with tempfile.NamedTemporaryFile(mode='w', dir=out, delete=False) as tmp:
     json.dump(dict(release='v2', sheets=sheets), tmp, ensure_ascii=False, indent=2)

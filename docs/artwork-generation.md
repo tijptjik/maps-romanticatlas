@@ -56,6 +56,10 @@ The controller owns file installation, registration, retries and catalog updates
 
 ## Plan the requested coverage
 
+The three cells in `releases/sources/peak-maquette/site.json` are reserved exclusively
+for the registered Fragrant Harbour in the Clouds edition. Exclude overlapping
+footprints from custom generation, including jobs frozen before the reservation.
+
 Begin with the current catalog, exact-URL reviews and ready revision candidates. Expand
 each painting's footprint from its southwest tile northward and eastward. Deduplicate
 repeated catalog entries and identical image bytes. Count accepted paintings and pending

@@ -1,3 +1,4 @@
+import { allowsArtwork } from './artwork-reservation'
 import { revisionEndpoint, revisionImagePattern, type Revision, type RevisionMode } from './artwork-revision'
 import { revisionReferences } from './revision-references'
 import { installReviewQueue } from './review-queue'
@@ -30,6 +31,7 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
   let disposed = false
 
   function add(art: Painting) {
+    if (!allowsArtwork(art)) return
     if (superseded.has(art.url) || units.has(art.url)) return
     const footprint = drawingFootprint({ ...art, tileSpan: { columns: art.columns ?? 1, rows: art.rows } })
     const unit = { art, footprint, layer: 'discovery-' + units.size }

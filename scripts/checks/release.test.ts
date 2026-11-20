@@ -167,3 +167,18 @@ test('shared immutable bytes retain per-painting map presentation', () => {
   release.hash = ''
   expect(artworkPresentation(release)).toBeUndefined()
 })
+
+
+test('only the registered Peak edition can enter the release across its full footprint', () => {
+  const site = require('../../releases/sources/peak-maquette/site.json')
+  const owner = { ...art, x: site.x, y: site.y, columns: site.columns, url: site.image }
+  const displaced = [
+    ...site.cells.map(cell => ({ ...art, ...cell, url: '/generated-tiles/' + cell.x })),
+    { ...art, x: site.x - 1, y: site.y + 1, rows: 2, columns: 2 },
+    { ...owner, url: '/atlas-v2/peak-maquette/hong-kong-in-the-clouds-landscape.png' },
+  ]
+  const neighbour = { ...art, x: site.x + site.columns, y: site.y, url: '/study/neighbour.webp' }
+  const source = { ...catalog, sheets: [{ ...catalog.sheets[0], art: [owner, neighbour, ...displaced] }] }
+  expect(acceptedCatalog(source, displaced.map(a => ({ ...a, status: 'accepted' })))
+    .sheets.flatMap(s => s.art)).toEqual([owner, neighbour])
+})

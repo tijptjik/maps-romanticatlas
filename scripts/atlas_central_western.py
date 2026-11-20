@@ -9,6 +9,7 @@ from urllib.parse import urlsplit
 from shapely.geometry import Point, shape
 from shapely.prepared import prep
 
+from atlas_artwork_reservation import overlaps_peak
 from atlas_v2_scope import current_inventory
 from atlas_v2_grid import BATCH, ROOT, cell, grid, read
 
@@ -207,7 +208,7 @@ def run(production, args):
                            f"Registered landmarks: {json.dumps(job['siteContext'], ensure_ascii=False)}")
             plan['jobs'] = prepared
             production.save(manifest,plan)
-        jobs=read(manifest)['jobs']
+        jobs=[j for j in read(manifest)['jobs'] if not overlaps_peak(j)]
         direction=production.illustration_direction()
         examples=production.make_examples()
         attempts=Counter()

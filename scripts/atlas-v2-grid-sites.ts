@@ -9,6 +9,9 @@ import { atlasPrompt } from '../src/atlas-prompt.ts'
 import { west, mongKok, tst, serpentine } from './atlas-route-geometry.ts'
 import { output, reference, renderReference, siteContext, sourceTile } from './dream-atlas-reference.ts'
 
+import { overlapsPeakMaquette } from '../src/artwork-reservation'
+
+const canPlace = (site: { x: number; y: number }) => !overlapsPeakMaquette(site) && isFogPatternSelected(site)
 const request = await Bun.stdin.json()
 if (request.action === 'cloud-seed') {
   console.log(JSON.stringify(cloudSeed))
@@ -16,7 +19,7 @@ if (request.action === 'cloud-seed') {
   console.log(JSON.stringify(Object.fromEntries([...atlasSeaScenes].map(scene =>
     [scene, {brief:atlasScenes[scene], direction:atlasPrompt(scene,true)}]))))
 } else if (request.action === 'eligible') {
-  console.log(JSON.stringify(request.tiles.filter(isFogPatternSelected)))
+  console.log(JSON.stringify(request.tiles.filter(canPlace)))
 } else if (request.action === 'inspect') {
   const survey = await Bun.file(output + '/production/sites.json').json()
   const pinned = await Bun.file('releases/sources/source.json').json()
@@ -37,14 +40,14 @@ if (request.action === 'cloud-seed') {
     const eligibility = classifyFogEligibility(await sourceTile(site.x, site.y), {
       zoom: 18, x: site.x, y: site.y,
     })
-    sites.push({ ...site, ...eligibility, selected: isFogPatternSelected(site),
+    sites.push({ ...site, ...eligibility, selected: canPlace(site),
       vectorSha256: hashes.get(parent) })
   }
   console.log(JSON.stringify(sites))
 } else if (request.action === 'prepare') {
   const sites = []
   for (const s of request.tiles) {
-    if (!isFogPatternSelected(s)) throw Error('Permanently clear tile ' + JSON.stringify(s))
+    if (!canPlace(s)) throw Error('Permanently clear tile ' + JSON.stringify(s))
     const reclaimedPaths = await renderReference(s.x, s.y)
     const path = reference(s.x,s.y)
     sites.push({...s, reference:path, reclaimedPaths, siteContext:await siteContext(s.x,s.y),
@@ -77,7 +80,7 @@ if (request.action === 'cloud-seed') {
   const candidates = []
   const parents = new Map<string,string>()
   for (const group of groups) for (const s of group) {
-    if (used.has(key(s)) || !isFogPatternSelected(s)) continue
+    if (used.has(key(s)) || !canPlace(s)) continue
     used.add(key(s))
     if (s.region === northern && Math.max(Math.abs(s.x-214184),114419-s.y,s.y-114420)<=4) continue
     const parent = Math.floor(s.x/8)+'-'+Math.floor(s.y/8)
