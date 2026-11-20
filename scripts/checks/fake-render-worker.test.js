@@ -49,6 +49,7 @@ test('Rainbow lookup exposes claimed images and keeps the reserved manifest vari
   const entry = { ...position, scene: claimed.scene, version: generationVersion, contentType: 'image/png', contentBounds: null }
   const env = {
     ATLAS_ALLOWED_ORIGIN: 'https://atlas.test',
+    ATLAS_BUCKET: { head: async () => ({}) },
     FAKE_RENDER_CLOUD: { getByName(name) {
       expect(name).toBe('18/214210/114419')
       return { hasReadyImage: () => true, snapshot: () => ({ ready: true, released: [claimed] }) }
@@ -68,4 +69,28 @@ test('Rainbow lookup exposes claimed images and keeps the reserved manifest vari
   const { released } = await read('?includeCache=1')
   expect(released).toHaveLength(2)
   expect(released[1].variant).toBe('ordinary')
+})
+
+test('released clouds exclude purged images even when a claim or manifest still references them', async () => {
+  mock.module('@cf-wasm/photon/workerd', () => ({ PhotonImage: class {}, SamplingFilter: {}, resize() {} }))
+  const { handleAtlasApi } = await import('../../src/worker-api')
+  const tile = { zoom: 18, x: 214184, y: 114424, scene: 'utopian-garden' }
+  const stale = { url: '/generated-tiles/18/214184/114424/utopian-garden?version=4', scene: tile.scene }
+  const live = { ...stale, url: stale.url + '&variant=discovery-live' }
+  const receipts = [stale, live]
+  const env = {
+    ATLAS_ALLOWED_ORIGIN: 'https://atlas.test',
+    FAKE_RENDER_CLOUD: { getByName: () => ({ snapshot: async () => ({ ready: true, released: receipts }) }) },
+    ATLAS_MANIFEST: { getByName: () => ({ entriesForPosition: async () =>
+      ['default', 'discovery-live'].map(variant => ({ ...tile, version: 4, variant, contentType: 'image/png', contentBounds: null })) }) },
+    ATLAS_BUCKET: { head: async key => key.includes('discovery-live') ? {} : null },
+  }
+  for (const query of ['', '?includeCache=1']) {
+    const response = await handleAtlasApi(new Request('https://atlas.test/api/fake-render/18/214184/114424' + query), env)
+    expect(response.status).toBe(200)
+    const body = await response.json()
+    expect(body.released.length).toBeGreaterThan(0)
+    expect(body.released.every(image => image.url === live.url)).toBe(true)
+  }
+  expect(receipts).toEqual([stale, live])
 })

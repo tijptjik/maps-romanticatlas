@@ -2,7 +2,7 @@ import { generationEndpoint, generationJob, generationPosition, reservedArt } fr
 import { atlasSceneGridRadius } from './atlas-protocol'
 import { overlapsPeakMaquette } from './artwork-reservation'
 import { revisionEndpoint, revisionId, revisionImagePattern, revisionRequest } from './artwork-revision'
-import { isFakeRenderTile, isRotatingVariant } from './fake-render-state'
+import { isFakeRenderTile, isRotatingVariant, type RevealImage } from './fake-render-state'
 import { fakeRenderSeed } from './fake-render-seed'
 import { generator, startSiGeneration, siGenerationStatus } from './si-generation'
 import { orphanGroup, releaseObjects, removeArchivedObjects, type ArchivedObject, type AssetBucket } from './artwork-purge'
@@ -647,6 +647,21 @@ const serveCachedTile = async (request: Request, env: AtlasEnv, tile: Tile) => {
   })
 }
 
+// Claim receipts outlive purged image objects. Keep the receipts for idempotency,
+// but never offer an image that the generated-tile endpoint can no longer serve.
+async function availableReleasedImages(env: AtlasEnv, images: RevealImage[]) {
+  const available = await Promise.all(images.map(async image => {
+    const url = new URL(image.url, 'https://atlas.invalid')
+    if (!url.pathname.startsWith('/generated-tiles/')) return true
+    const tile = parseAtlasTilePath(url.pathname, (scene): scene is Scene => Boolean(atlasScenes[scene]))
+    if (!tile) return false
+    const cached = await cachedTileFromManifest(env, tile,
+      requestedCacheVersion(url.searchParams), requestedAtlasVariant(url.searchParams))
+    return Boolean(cached && await env.ATLAS_BUCKET.head(cached.imageKey))
+  }))
+  return images.filter((_, index) => available[index])
+}
+
 declare function require(path: string): unknown
 
 // esbuild includes local release decisions when the artwork pack is available.
@@ -1074,9 +1089,13 @@ export const handleAtlasApi = async (
     const cloud = env.FAKE_RENDER_CLOUD.getByName(positionId(tile))
     if (request.method === 'GET') {
       if (url.searchParams.has('availability')) return json({ ready: await cloud.hasReadyImage() })
-      if (!url.searchParams.has('includeCache')) return json(await cloud.snapshot())
+      if (!url.searchParams.has('includeCache')) {
+        const snapshot = await cloud.snapshot()
+        return json({ ...snapshot, released: await availableReleasedImages(env, snapshot.released) })
+      }
       const [snapshot, cached] = await Promise.all([cloud.snapshot(), manifestEntriesForPosition(env, tile)])
-      return json({ ...snapshot, released: [...snapshot.released, ...cached.filter(entry => !isRotatingVariant(entry.variant)).map(cachedTilePayload)] })
+      return json({ ...snapshot, released: await availableReleasedImages(env,
+        [...snapshot.released, ...cached.filter(entry => !isRotatingVariant(entry.variant)).map(cachedTilePayload)]) })
     }
     if (request.method !== 'POST') return errorResponse(405, 'Use POST to reveal a cloud.')
     if (!isFakeRenderTile(tile, Number(url.searchParams.get('visit')))) return errorResponse(400, 'Not a rotating cloud.')
