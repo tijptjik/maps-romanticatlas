@@ -5752,5 +5752,94 @@
     "rows": 1,
     "url": "/artwork-revisions/95261295dd034c5cbf921954e3de0094.png",
     "status": "accepted"
+  },
+  {
+    "title": "The Street Comes Apart",
+    "x": 214190,
+    "y": 114420,
+    "rows": 1,
+    "scene": "floating-city",
+    "url": "/artwork-revisions/f42880f815864ccaaf77abcf54814f26.png",
+    "status": "accepted"
+  },
+  {
+    "title": "The Festival Door",
+    "x": 214202,
+    "y": 114420,
+    "rows": 1,
+    "scene": "ancient-temple",
+    "url": "/artwork-revisions/c772d25df61b43e78e63e10ddd81d106.png",
+    "status": "accepted"
+  },
+  {
+    "title": "The Pedal Grand Prix",
+    "x": 214199,
+    "y": 114419,
+    "rows": 1,
+    "scene": "race-circuit",
+    "url": "/artwork-revisions/efa847745bb844cc970eb669bc7ce3bd.png",
+    "status": "accepted"
+  },
+  {
+    "title": "The Weather Window",
+    "x": 214176,
+    "y": 114422,
+    "rows": 1,
+    "scene": "rocket-launch",
+    "url": "/atlas-v2/production/cw-214176-114422-d4e1bd12a2a3d21a.webp",
+    "status": "accepted"
+  },
+  {
+    "title": "The Hand Assembly Line",
+    "x": 214177,
+    "y": 114423,
+    "rows": 1,
+    "scene": "robot-factory",
+    "url": "/atlas-v2/production/cw-214177-114423-8b3f872d4747a1c0.webp",
+    "status": "accepted"
+  },
+  {
+    "title": "The Barrel Ferry",
+    "x": 214188,
+    "y": 114423,
+    "rows": 1,
+    "scene": "beer-garden",
+    "url": "/atlas-v2/production/cw-214188-114423-a9b532b473eb8ca8.webp",
+    "status": "accepted"
+  },
+  {
+    "title": "The Docking Collar Market",
+    "x": 214196,
+    "y": 114419,
+    "rows": 1,
+    "scene": "spaceport",
+    "url": "/artwork-revisions/2ac030156cf640cd8e15793350011330.png",
+    "status": "accepted"
+  },
+  {
+    "title": "The Night Type Garden",
+    "x": 214192,
+    "y": 114419,
+    "rows": 1,
+    "url": "/artwork-revisions/22b2975af619467899abe17362fc7bc6.png",
+    "status": "accepted"
+  },
+  {
+    "title": "The Root Crossing",
+    "x": 214188,
+    "y": 114419,
+    "rows": 1,
+    "scene": "botanical-city",
+    "url": "/artwork-revisions/bfaf6a2b01634782bbd488b109657294.png",
+    "status": "accepted"
+  },
+  {
+    "title": "The Last Handloom",
+    "x": 214200,
+    "y": 114423,
+    "rows": 1,
+    "scene": "luddite-rally",
+    "url": "/atlas-v2/production/cw-214200-114423-fe4c75c209929d95.webp",
+    "status": "accepted"
   }
 ]
