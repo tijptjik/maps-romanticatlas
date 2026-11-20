@@ -1,3 +1,4 @@
+import recoveredTitles from '../releases/discovery-titles.json'
 import { atlasScenes } from './atlas-scenes.ts'
 import { tileBounds } from './tile-geometry.ts'
 
@@ -6,6 +7,11 @@ export const atlasSceneTitle = (value: string) =>
     .split('-')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ')
+
+const historicalTitles: Record<string, string> = recoveredTitles
+
+export const discoveryTitle = (url: string, scene: string, title?: string) =>
+  title && title !== atlasSceneTitle(scene) ? title : historicalTitles[url] ?? title
 
 export const createAtlasTitleCard = (container, scene, displayTitle?: string) => {
   const card = document.createElement('aside')

@@ -158,7 +158,7 @@ const readCachedTile = async (
   tile: Tile,
   version: number,
   variant = defaultAtlasVariant,
-) => {
+): Promise<CachedTile | null> => {
   const imageObject = await bucket.head(atlasImageKey(tile, version, variant))
   if (!imageObject) return null
   const metadataObject = await bucket.get(
@@ -167,6 +167,7 @@ const readCachedTile = async (
   if (!metadataObject) return null
   try {
     const metadata = await metadataObject.json<{
+      title?: string
       contentType?: string
       contentBounds?: unknown
     }>()
@@ -175,6 +176,7 @@ const readCachedTile = async (
       version,
       variant,
       contentType: metadata.contentType ?? 'image/png',
+      title: metadata.title,
       contentBounds: normalizeContentBounds(metadata.contentBounds),
       imageKey: atlasImageKey(tile, version, variant),
       metadataKey: atlasMetadataKey(tile, version, variant),
@@ -198,6 +200,7 @@ const toCachedTile = (entry: AtlasManifestEntry): CachedTile | null => {
     tile,
     version: entry.version,
     variant: entry.variant,
+    title: entry.title,
     contentType: entry.contentType,
     contentBounds: entry.contentBounds,
     imageKey: atlasImageKey(tile, entry.version, entry.variant),
@@ -377,6 +380,7 @@ const fogIndexForTile = async (env: AtlasEnv, x: number, y: number) => {
       url: atlasTileUrl(entry.tile, entry.version, entry.variant),
       version: entry.version,
       variant: entry.variant,
+      title: entry.title,
       contentBounds: entry.contentBounds,
     }))
   return {
@@ -485,6 +489,7 @@ const listCachedTiles = async (bucket: R2Bucket, requested: number | null = null
       version: entry.version,
       variant: entry.variant,
       url: atlasTileUrl(entry.tile, entry.version, entry.variant),
+      title: entry.title,
       contentBounds: entry.contentBounds,
     }))
 }
@@ -869,6 +874,7 @@ const manifestEntryFromMetadata = async (
   if (!metadataObject || !imageObject) return null
   try {
     const metadata = await metadataObject.json<{
+      title?: string
       contentType?: string
       contentBounds?: unknown
     }>()
@@ -881,6 +887,7 @@ const manifestEntryFromMetadata = async (
       variant,
       contentType:
         metadata.contentType ?? imageObject.httpMetadata?.contentType ?? 'image/png',
+      title: metadata.title,
       contentBounds: normalizeContentBounds(metadata.contentBounds),
     }
   } catch {

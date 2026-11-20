@@ -17,6 +17,7 @@ export type AtlasManifestEntry = {
   scene: string
   version: number
   variant: string
+  title?: string
   contentType: string
   contentBounds: ContentBounds
 }
@@ -115,6 +116,12 @@ export class AtlasManifest extends DurableObject<Env> {
           INSERT INTO atlas_manifest_schema_migrations (id) VALUES (3);
         `)
       }
+      if (current < 4) {
+        this.ctx.storage.sql.exec(`
+          ALTER TABLE atlas_manifest_variants ADD COLUMN title TEXT;
+          INSERT INTO atlas_manifest_schema_migrations (id) VALUES (4);
+        `)
+      }
     })
   }
 
@@ -122,11 +129,12 @@ export class AtlasManifest extends DurableObject<Env> {
     for (const entry of entries) {
       this.ctx.storage.sql.exec(
         `INSERT INTO atlas_manifest_variants
-          (zoom, x, y, scene, version, variant, content_type, content_bounds, published_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          (zoom, x, y, scene, version, variant, content_type, content_bounds, title, published_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON CONFLICT(zoom, x, y, scene, version, variant) DO UPDATE SET
            content_type = excluded.content_type,
            content_bounds = excluded.content_bounds,
+           title = excluded.title,
            published_at = excluded.published_at`,
         entry.zoom,
         entry.x,
@@ -136,6 +144,7 @@ export class AtlasManifest extends DurableObject<Env> {
         entry.variant,
         entry.contentType,
         entry.contentBounds ? JSON.stringify(entry.contentBounds) : null,
+        entry.title ?? null,
         publishedAt,
       )
     }
@@ -182,10 +191,11 @@ export class AtlasManifest extends DurableObject<Env> {
         scene: string
         version: number
         variant: string
+        title: string | null
         content_type: string
         content_bounds: string | null
       }>(
-        `SELECT zoom, x, y, scene, version, variant, content_type, content_bounds
+        `SELECT zoom, x, y, scene, version, variant, title, content_type, content_bounds
        FROM atlas_manifest_variants
        WHERE zoom = ? AND x = ? AND y = ?
          AND version IN (${readableCacheVersions.map(() => '?').join(', ')})`,
@@ -202,6 +212,7 @@ export class AtlasManifest extends DurableObject<Env> {
         scene: entry.scene,
         version: entry.version,
         variant: entry.variant,
+        title: entry.title ?? undefined,
         contentType: entry.content_type,
         contentBounds: entry.content_bounds
           ? (JSON.parse(entry.content_bounds) as ContentBounds)
@@ -230,10 +241,11 @@ export class AtlasManifest extends DurableObject<Env> {
         scene: string
         version: number
         variant: string
+        title: string | null
         content_type: string
         content_bounds: string | null
       }>(
-        `SELECT zoom, x, y, scene, version, variant, content_type, content_bounds
+        `SELECT zoom, x, y, scene, version, variant, title, content_type, content_bounds
          FROM atlas_manifest_variants
          WHERE zoom = ? AND x BETWEEN ? AND ? AND y BETWEEN ? AND ?
            AND version IN (${readableCacheVersions.map(() => '?').join(', ')})`,
@@ -252,6 +264,7 @@ export class AtlasManifest extends DurableObject<Env> {
         scene: entry.scene,
         version: entry.version,
         variant: entry.variant,
+        title: entry.title ?? undefined,
         contentType: entry.content_type,
         contentBounds: entry.content_bounds
           ? (JSON.parse(entry.content_bounds) as ContentBounds)

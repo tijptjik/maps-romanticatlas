@@ -11,7 +11,7 @@ import { fogShapeSeed } from './fog-pattern.js'
 import { planAtlasRoads } from './atlas-road-plan.ts'
 import { FogQuality } from './fog-quality.ts'
 import { atlasSceneNames, pickAtlasScene, type AtlasScene } from './atlas-scenes.ts'
-import { sampleArtworkAlpha, createAtlasTitleCard, positionAtlasTitleCard } from './atlas-title-cards.ts'
+import { sampleArtworkAlpha, createAtlasTitleCard, discoveryTitle, positionAtlasTitleCard } from './atlas-title-cards.ts'
 import { loadingConcepts } from './loading-concepts.ts'
 import { atlasZoom, drawingFootprint, tileBounds, tileForPosition } from './tile-geometry.ts'
 import {
@@ -718,7 +718,7 @@ export const addGeneratedTile = async (
   contentBounds,
   initialOpacity = 0,
   signal?: AbortSignal,
-  placement?: { bounds: ReturnType<typeof tileBounds>; title: string; image: HTMLImageElement },
+  placement?: { bounds?: ReturnType<typeof tileBounds>; title?: string; image?: HTMLImageElement },
 ) => {
   const id = `atlas-tile-${tile.x}-${tile.y}`
   if (map.getLayer(id)) return
@@ -753,7 +753,7 @@ export const addGeneratedTile = async (
     firstLabelLayerId(map),
   )
   if (scene && titleCards) {
-    const card = createAtlasTitleCard(map.getContainer(), scene, placement?.title)
+    const card = createAtlasTitleCard(map.getContainer(), scene, discoveryTitle(url, scene, placement?.title))
     titleCards.set(tileId(tile), { card, tile, contentBounds, bounds, alpha })
     positionAtlasTitleCard(map, card, tile, contentBounds, bounds, alpha)
   }
@@ -2757,6 +2757,7 @@ export const installAtlasTileInteractions = (
       url: body.url,
       scene: body.scene as AtlasScene,
       scenes,
+      title: body.title,
       contentBounds: body.contentBounds,
     }
   }
@@ -2824,6 +2825,7 @@ export const installAtlasTileInteractions = (
         url: indexed.url,
         scene: indexed.scene,
         scenes: [],
+        title: indexed.title,
         contentBounds: indexed.contentBounds,
       })
     }
@@ -3089,7 +3091,7 @@ export const installAtlasTileInteractions = (
         if (!catalog.size && !choices.size) {
           const status = await withinClickBudget(checkCachedTile(tile), budget)
           if (status.cached && status.url && status.scene && !rejectedUrls.has(status.url)) {
-            choices.set(status.url, { url: status.url, scene: status.scene, contentBounds: status.contentBounds })
+            choices.set(status.url, status as RevealImage)
           }
         }
         const urls = [...new Set([...catalog.keys(), ...choices.keys()])]
@@ -3227,6 +3229,7 @@ export const installAtlasTileInteractions = (
           cacheStatus.contentBounds,
           0,
           budget,
+          { title: cacheStatus.title },
         )
         revealGeneratedTile(id, cacheStatus.scene)
         console.info(
@@ -3280,6 +3283,7 @@ export const installAtlasTileInteractions = (
             recovered.contentBounds,
             0,
             budget,
+            { title: recovered.title },
           )
           revealGeneratedTile(id, recovered.scene)
           console.info(
@@ -3301,6 +3305,7 @@ export const installAtlasTileInteractions = (
         url?: string
         scene?: string
         variant?: string
+        title?: string
         contentBounds?: { x: number; y: number; width: number; height: number } | null
       } | null
       try {
@@ -3349,9 +3354,10 @@ export const installAtlasTileInteractions = (
         body.contentBounds,
         0,
         budget,
+        { title: body.title },
       )
       cachedTileIds.add(id)
-      indexedCachedTiles.set(id, { scene: generatedScene, url: body.url, contentBounds: body.contentBounds })
+      indexedCachedTiles.set(id, { scene: generatedScene, url: body.url, title: body.title, contentBounds: body.contentBounds })
       cachedTileRequests.delete(id)
       preloadedTileRequests.delete(id)
       revealGeneratedTile(id, generatedScene)

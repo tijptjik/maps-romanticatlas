@@ -33,6 +33,7 @@ export type AtlasTile<Scene extends string = string> = AtlasPosition & { scene: 
 
 export type CachedAtlasTile<Scene extends string = string> = {
   tile: AtlasTile<Scene>
+  title?: string
   version: number
   variant: string
   contentType: string
@@ -252,6 +253,7 @@ export const cacheStatusPayload = <Scene extends string>({
   scenes: Scene[]
 }) => ({
   cached: Boolean(cached),
+  ...(cached?.title && { title: cached.title }),
   url: cached ? atlasTileUrl(cached.tile, cached.version, cached.variant) : null,
   scene: cached?.tile.scene ?? null,
   scenes,
@@ -262,6 +264,7 @@ export const cachedTilePayload = <Scene extends string>(
   cached: CachedAtlasTile<Scene>,
 ) => ({
   url: atlasTileUrl(cached.tile, cached.version, cached.variant),
+  ...(cached.title && { title: cached.title }),
   scene: cached.tile.scene,
   version: cached.version,
   variant: cached.variant,

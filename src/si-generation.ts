@@ -9,6 +9,7 @@ type Job = {
   variant: string
   createdAt: string
   status: 'pending' | 'complete' | 'failed'
+  title?: string
   error?: string
 }
 const jobKey = (id: string) => 'generation-jobs/' + id + '.json'
@@ -74,7 +75,7 @@ export async function siGenerationStatus(request: Request, env: GeneratorEnv, id
   const job = await object.json<Job>()
   if (job.status === 'failed') return reply({ error: job.error, failed: true }, 502)
   const payload = () => cachedTilePayload({
-    tile: job.tile, version: generationVersion, variant: job.variant,
+    tile: job.tile, title: job.title, version: generationVersion, variant: job.variant,
     contentType: 'image/png', contentBounds: null,
   })
   if (job.status === 'complete') return reply(payload())
@@ -93,7 +94,7 @@ export async function siGenerationStatus(request: Request, env: GeneratorEnv, id
     return reply({ error: job.error, failed: true }, 502)
   }
   if (!remote.ok) return reply({ pending: true }, 202)
-  const receipt = await remote.json<{ sha256: string; width: number; height: number; source: string }>()
+  const receipt = await remote.json<{ sha256: string; width: number; height: number; source: string; title?: string }>()
   const image = await generator(env, '/jobs/' + id + '/image')
   if (!image.ok) throw Error('The SI artwork is not available yet.')
   const size = Number(image.headers.get('content-length'))
@@ -109,6 +110,7 @@ export async function siGenerationStatus(request: Request, env: GeneratorEnv, id
   const hash = [...new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))]
     .map(byte => byte.toString(16).padStart(2, '0')).join('')
   if (hash !== receipt.sha256) throw Error('SI artwork checksum mismatch.')
+  job.title = receipt.title
   const imageKey = atlasImageKey(job.tile, generationVersion, job.variant)
   const metadataKey = atlasMetadataKey(job.tile, generationVersion, job.variant)
   await env.ATLAS_BUCKET.put(imageKey, bytes, {
@@ -116,12 +118,12 @@ export async function siGenerationStatus(request: Request, env: GeneratorEnv, id
   })
   await env.ATLAS_BUCKET.put(metadataKey, JSON.stringify({
     contentType: 'image/png', contentBounds: null, generationVersion, generatedAt: job.createdAt,
-    provider: 'codex-si', jobId: id, source: receipt.source, sha256: hash,
+    provider: 'codex-si', title: job.title, jobId: id, source: receipt.source, sha256: hash,
     outputSize: { width: receipt.width, height: receipt.height },
   }))
   // Every retry publishes the same immutable variant. Publish the index last.
   await env.ATLAS_MANIFEST.getByName(manifestShardName(job.tile)).upsert([{
-    ...job.tile, version: generationVersion, variant: job.variant, contentType: 'image/png', contentBounds: null,
+    ...job.tile, title: job.title, version: generationVersion, variant: job.variant, contentType: 'image/png', contentBounds: null,
   }])
   job.status = 'complete'
   await env.ATLAS_BUCKET.put(jobKey(id), JSON.stringify(job))

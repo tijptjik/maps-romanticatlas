@@ -5,7 +5,7 @@ import { installReviewQueue } from './review-queue'
 import { neighborhoodLabelLayerId } from './map-style'
 import { installArtworkAnimations } from './fountain-glitter'
 import type { GeoJSONSource, ImageSource, Map as AtlasMap } from 'maplibre-gl'
-import { atlasSceneTitle } from './atlas-title-cards'
+import { atlasSceneTitle, discoveryTitle } from './atlas-title-cards'
 import { originalArtwork } from './artwork-sampling'
 import { csrfToken, fetchAdmin } from './cached-tile-admin'
 import { reviewEndpoint, type ArtworkReview, type Painting } from './artwork-review'
@@ -34,6 +34,7 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
 
   function add(art: Painting) {
     if (!allowsArtwork(art)) return
+    if (art.scene) art = { ...art, title: discoveryTitle(art.url, art.scene, art.title) ?? art.title }
     if (superseded.has(art.url) || units.has(art.url)) return
     const footprint = drawingFootprint({ ...art, tileSpan: { columns: art.columns ?? 1, rows: art.rows } })
     const unit = { art, footprint, layer: 'discovery-' + units.size }

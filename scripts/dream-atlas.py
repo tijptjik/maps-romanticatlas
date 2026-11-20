@@ -222,6 +222,8 @@ def accept(job, asset, origin):
                 shutil.copyfile(asset, tmp)
     record = dict(id=job['id'], source=origin, sha256=digest, referenceSha256=file_hash(source),
                   width=width, height=width)
+    if job.get('title'):
+        record['title'] = job['title']
     if not receipt.exists():
         save(receipt, record)
     return record
@@ -612,12 +614,15 @@ def main():
         if not family.exists():
             family = SOURCE / 'families' / 'editorial' / family.name
         brief = sys.stdin.read(10000).strip()
-        if family.exists():
-            brief = random.choice(load(family))['prompt']
+        selection = random.choice(load(family)) if family.exists() else None
+        if selection:
+            brief = selection['prompt']
         width = 40075016.6856 / (2**18 * math.cosh(math.pi * (1 - 2*(args.y+.5)/2**18)))
         job = dict(id=job_id, reference=str((directory / 'source.png').relative_to(ROOT)),
                    drawing=load(SOURCE / 'drawing-direction.json'), prompt=brief,
                    context=f'This north-up Hong Kong tile spans {width:.1f} metres.')
+        if selection:
+            job['title'] = selection['name']
         save(directory / 'job.json', job)
         with (directory / 'worker.lock').open('a') as lock:
             result = child(job, lock, args.timeout)

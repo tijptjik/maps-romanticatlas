@@ -1,6 +1,6 @@
 import { waitForAtlasGeneration } from './wait-for-atlas-generation'
 import * as maplibregl from 'maplibre-gl'
-import { createAtlasTitleCard, positionAtlasTitleCard } from './atlas-title-cards.ts'
+import { createAtlasTitleCard, discoveryTitle, positionAtlasTitleCard } from './atlas-title-cards.ts'
 import { captureTile, tileHasSea } from './atlas-tiles.ts'
 import { atlasSceneNames, pickAtlasScene, type AtlasScene } from './atlas-scenes.ts'
 import { atlasZoom, tileBounds, tileForPosition, tilePolygon } from './tile-geometry.ts'
@@ -234,7 +234,7 @@ export const installCachedTileAdmin = async map => {
 
     const titleCards = new Map()
     tiles.forEach(tile => {
-      const card = createAtlasTitleCard(map.getContainer(), tile.scene)
+      const card = createAtlasTitleCard(map.getContainer(), tile.scene, discoveryTitle(tile.url, tile.scene, tile.title))
       const positionKey = tilePositionKey(tile)
       card.hidden = activeTilesByPosition.get(positionKey) !== tile
       titleCards.set(tileKey(tile), { card, tile })
@@ -713,7 +713,7 @@ export const installCachedTileAdmin = async map => {
       }
 
       tilesByPosition.set(positionKey, candidates)
-      const card = createAtlasTitleCard(container, tile.scene)
+      const card = createAtlasTitleCard(container, tile.scene, discoveryTitle(tile.url, tile.scene, tile.title))
       titleCards.set(tileKey(tile), { card, tile })
       activeTilesByPosition.set(positionKey, tile)
       // A render recenters the map for capture, but the operator may then pan
@@ -831,6 +831,7 @@ export const installCachedTileAdmin = async map => {
           x: tile.x,
           y: tile.y,
           scene: body.scene as AtlasScene,
+          title: body.title,
           version: Number.isInteger(body.version) ? body.version : tile.version,
           variant: typeof body.variant === 'string' ? body.variant : 'default',
           url: body.url,

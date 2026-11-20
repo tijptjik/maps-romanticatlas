@@ -26,6 +26,6 @@ export async function renderCodexTile(root: string, tile: { scene: AtlasScene; y
   }
   const receipt = JSON.parse(await readFile(path.join(directory, 'result.json'), 'utf8'))
   return { data: await readFile(path.join(directory, 'image.png')), contentType: 'image/png',
-    provider: 'codex', jobId, source: receipt.source, sha256: receipt.sha256,
+    provider: 'codex', jobId, title: receipt.title, source: receipt.source, sha256: receipt.sha256,
     outputSize: { width: receipt.width, height: receipt.height } }
 }

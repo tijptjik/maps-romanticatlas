@@ -719,6 +719,7 @@ const listCachedTiles = async (
         cachedTiles.add(
           JSON.stringify({
             ...tile,
+            title: cached.title,
             url: atlasTileUrl(tile, tile.version, tile.variant),
             contentBounds: cached.contentBounds ?? null,
           }),
