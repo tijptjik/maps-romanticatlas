@@ -34,7 +34,7 @@ const splashMarkup = `
     <div class="pavilion-sun" aria-hidden="true"><i></i><i></i><i></i></div>
     <header class="pavilion-title">
       <p>The Cartographic Pavilion</p>
-      <h1>A Romantic’s <em>Atlas</em><small>of Hong Kong</small></h1>
+      <h1>A Romantic’s Atlas<small>of Hong Kong</small></h1>
     </header>
     <button class="pavilion-orrery" type="button" aria-label="Night mode" aria-pressed="false" title="Switch to night">
       <img data-piece="orrery" alt="" />
