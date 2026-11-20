@@ -185,8 +185,13 @@ def check_png(path, reference=False):
         image.verify()
     with Image.open(path) as image:
         image.load()
-        if all(low == high for low, high in image.convert('RGB').getextrema()):
-            raise ValueError(f'Blank image in {path}')
+        colors = image.convert('RGB').getextrema()
+        if all(low == high for low, high in colors):
+            # A whole live tile can fall inside the basemap's park or landcover fill.
+            landcover = colors == ((167, 167), (174, 174), (124, 124))
+            if not (reference and OUT.name == 'live' and landcover
+                    and image.convert('RGBA').getchannel('A').getextrema() == (255, 255)):
+                raise ValueError(f'Blank image in {path}')
         return image.width
 
 
