@@ -2910,6 +2910,14 @@
           "y": 114415,
           "rows": 1,
           "url": "/atlas-v2/production/0183-593277d533ed5adf.webp"
+        },
+        {
+          "title": "Bread for the Meeting",
+          "scene": "luddite-rally",
+          "x": 214189,
+          "y": 114415,
+          "rows": 1,
+          "url": "/atlas-v2/production/cw-214189-114415-39b8313ca7ac4e16.webp"
         }
       ],
       "accepted": true
@@ -3350,6 +3358,22 @@
           "y": 114423,
           "rows": 1,
           "url": "/atlas-v2/production/0240-3b7e68a54d6baba6.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214201-114418",
+      "title": "中環碼頭連接大樓 Central Terminal Building · North Hong Kong Island · 18/214201/114418",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Umbrella Rain Room",
+          "scene": "water-park",
+          "x": 214201,
+          "y": 114418,
+          "rows": 1,
+          "url": "/atlas-v2/production/cw-214201-114418-8f554471c017ac44.webp"
         }
       ],
       "accepted": true
@@ -5227,6 +5251,22 @@
       "accepted": true
     },
     {
+      "id": "production-cell-18-214194-114422",
+      "title": "Central and Western District · 18/214194/114422",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Rooftop Wind Choir",
+          "scene": "wind-farm",
+          "x": 214194,
+          "y": 114422,
+          "rows": 1,
+          "url": "/atlas-v2/production/cw-214194-114422-ba28f85d9558f1ef.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
       "id": "production-cell-18-214177-114423",
       "title": "Central and Western District · 18/214177/114423",
       "isolated": true,
@@ -5238,6 +5278,22 @@
           "y": 114423,
           "rows": 1,
           "url": "/atlas-v2/production/cw-214177-114423-8b3f872d4747a1c0.webp"
+        }
+      ],
+      "accepted": true
+    },
+    {
+      "id": "production-cell-18-214177-114424",
+      "title": "Central and Western District · 18/214177/114424",
+      "isolated": true,
+      "art": [
+        {
+          "title": "The Tail Gate",
+          "scene": "dinosaur-park",
+          "x": 214177,
+          "y": 114424,
+          "rows": 1,
+          "url": "/atlas-v2/production/cw-214177-114424-df1decc7d667189a.webp"
         }
       ],
       "accepted": true
@@ -7547,6 +7603,23 @@
       "accepted": true
     },
     {
+      "id": "tourist-disappearance-trap",
+      "title": "Tourist Disappearance Trap",
+      "isolated": true,
+      "art": [
+        {
+          "title": "Tourist Disappearance Trap",
+          "scene": "tourist-disappearance-trap",
+          "site": "Golden Bauhinia Square, Wan Chai",
+          "x": 214210,
+          "y": 114419,
+          "rows": 1,
+          "url": "/tourist-disappearance-trap/golden-bauhinia-footprint-v2.webp?v=6b2201a0c7d67846"
+        }
+      ],
+      "accepted": true
+    },
+    {
       "id": "accepted-discoveries",
       "title": "Accepted discoveries",
       "accepted": true,
@@ -9054,6 +9127,110 @@
           "rows": 1,
           "scene": "steampunk-city",
           "url": "/artwork-revisions/dc2018a7c1e4474ba0c8bde529cad12a.png"
+        },
+        {
+          "title": "The Seed Bank District",
+          "x": 214180,
+          "y": 114424,
+          "rows": 1,
+          "scene": "botanical-city",
+          "url": "/artwork-revisions/1835b89a803d4486b06710d7c0ef7f4a.png"
+        },
+        {
+          "title": "The Baggage Moon",
+          "x": 214202,
+          "y": 114424,
+          "rows": 1,
+          "scene": "spaceport",
+          "url": "/artwork-revisions/d5239b0554cf45ac96c8b35153f96861.png"
+        },
+        {
+          "title": "Maze Garden",
+          "x": 214174,
+          "y": 114421,
+          "rows": 1,
+          "scene": "maze-garden",
+          "url": "/generated-tiles/18/214174/114421/maze-garden?version=6&variant=discovery-rotating-f14fbbc00e08"
+        },
+        {
+          "title": "The Ice Pavilion",
+          "x": 214201,
+          "y": 114421,
+          "rows": 1,
+          "scene": "grand-exhibition",
+          "url": "/artwork-revisions/d79d9ba642b14f109f4b0100f8ec84e8.png"
+        },
+        {
+          "title": "A Crater in Miniature",
+          "x": 214201,
+          "y": 114419,
+          "rows": 1,
+          "scene": "volcano-observatory",
+          "url": "/artwork-revisions/d7c618148b2844ea961b72b52d538606.png"
+        },
+        {
+          "title": "Rocket Launch",
+          "x": 214191,
+          "y": 114418,
+          "rows": 1,
+          "scene": "rocket-launch",
+          "url": "/generated-tiles/18/214191/114418/rocket-launch?version=6&variant=discovery-f96862cf-4cf2-45b3-b776-de0b86176b39-1d0ff750a8c1"
+        },
+        {
+          "title": "Night Mail for Unwritten Books",
+          "x": 214192,
+          "y": 114416,
+          "rows": 1,
+          "url": "/artwork-revisions/ca15e0b6a567413090463683d72a979f.png",
+          "scene": "grand-library"
+        },
+        {
+          "title": "The Bone Duet",
+          "x": 214189,
+          "y": 114416,
+          "rows": 1,
+          "scene": "dinosaur-park",
+          "url": "/artwork-revisions/04375d399c6f4afc9ab5b5bd2a6268df.png"
+        },
+        {
+          "title": "The Drawbridge Mill",
+          "x": 214188,
+          "y": 114415,
+          "rows": 1,
+          "scene": "medieval-castle",
+          "url": "/artwork-revisions/a391c714217045879d10f3f9c82fe248.png"
+        },
+        {
+          "title": "Canal Lock",
+          "x": 214197,
+          "y": 114404,
+          "rows": 1,
+          "scene": "canal-lock",
+          "url": "/generated-tiles/18/214197/114404/canal-lock?version=6&variant=discovery-358dcd83-813b-4904-89d1-0019b1f15a39-16f180078529"
+        },
+        {
+          "title": "A Battery of Pickles",
+          "x": 214207,
+          "y": 114391,
+          "rows": 1,
+          "url": "/artwork-revisions/47f78972673e4f95ba408943051bdf1a.png",
+          "scene": "electrical-laboratory"
+        },
+        {
+          "title": "The Unfinished Question",
+          "x": 214210,
+          "y": 114389,
+          "rows": 1,
+          "url": "/artwork-revisions/6ec32b78e5074110b85f6a5c21d504aa.png",
+          "scene": "maze-garden"
+        },
+        {
+          "title": "The Suspended Weighhouse",
+          "x": 214188,
+          "y": 114380,
+          "rows": 1,
+          "url": "/artwork-revisions/0997d6a9c57b4024b076828e616f02d6.png",
+          "scene": "market-quarter"
         }
       ]
     }
