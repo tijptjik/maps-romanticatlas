@@ -20,19 +20,27 @@ export const revisionFile = (id: string, projectRoot = root) =>
 
 let running = false
 let requested = false
+let wakeup: ReturnType<typeof setTimeout> | undefined
 export async function resumeRevisions() {
   requested = true
   if (running) return
+  clearTimeout(wakeup)
   running = true
   try {
     while (requested) {
       requested = false
       if (!(await revisionList()).some(record => record.state === 'pending')) continue
-      const worker = Bun.spawn(['python3', script, 'work'], { cwd: root, stdout: 'ignore', stderr: 'inherit' })
-      if (await worker.exited) throw Error('Revision worker exited early')
+      const worker = Bun.spawn(['python3', script, 'work'], { cwd: root, stdout: 'pipe', stderr: 'inherit' })
+      const [code, output] = await Promise.all([worker.exited, new Response(worker.stdout).text()])
+      if (code) throw Error('Revision worker exited early')
+      const retryAt = JSON.parse(output)
+      if (!requested && typeof retryAt === 'number') {
+        wakeup = setTimeout(() => void resumeRevisions(), Math.max(0, retryAt * 1000 - Date.now()))
+      }
     }
   } catch (error) {
     console.error('[atlas] revision worker', error)
+    wakeup = setTimeout(() => void resumeRevisions(), 30_000)
   } finally {
     running = false
   }

@@ -95,6 +95,12 @@ def submit(body):
             folder.rename(JOBS/job_id)
         return record
 
+# Delays are in seconds. Keep a bounded budget per revision across worker restarts.
+RETRY_DELAYS = {'rate': (60, 120, 240), 'network': (15, 30, 60), 'timeout': (30, 60, 120)}
+
+class GenerationError(Exception):
+    pass
+
 def finish(folder, record):
     spec = importlib.util.spec_from_file_location('renderer', ROOT/'scripts/dream-atlas.py')
     renderer = importlib.util.module_from_spec(spec)
@@ -117,7 +123,7 @@ def finish(folder, record):
         if not renderer.recover(job):
             result = renderer.child(job, lock, 900)
             if result != 'saved':
-                raise ValueError('Codex image generation: ' + result)
+                raise GenerationError(result)
     with Image.open(folder/'image.png') as raw:
         im = raw.convert('RGBA')
         cols, rows = source.get('columns', 1), source['rows']
@@ -139,6 +145,12 @@ def drain():
     STORE.mkdir(parents=True, exist_ok=True)
     with (STORE/'render.lock').open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
+        cooldown = STORE / 'rate-limit.json'
+        if cooldown.exists():
+            resume_at = json.loads(cooldown.read_text())
+            if resume_at > time.time():
+                return resume_at
+        next_retry = None
         for record in sorted(records(), key=lambda r: r['created']):
             if record['state'] != 'pending':
                 continue
@@ -146,15 +158,43 @@ def drain():
             path = folder/'revision.json'
             if json.loads(path.read_text())['state'] != 'pending':
                 continue
+            retry_at = record.get('retryAt', 0)
+            if retry_at > time.time():
+                next_retry = min(next_retry or retry_at, retry_at)
+                continue
+            record.pop('retryAt', None)
+            pause_until = None
             try:
                 finish(folder, record)
+                record.pop('lastError', None)
+            except GenerationError as exc:
+                reason = str(exc)
+                failures = record.get('failedAttempts', 0) + 1
+                record.update(lastError=reason, failedAttempts=failures)
+                delays = RETRY_DELAYS.get(reason, ())
+                now = time.time()
+                if reason == 'rate':
+                    pause_until = now + delays[min(failures, len(delays)) - 1]
+                    atomic(cooldown, pause_until)
+                if failures <= len(delays):
+                    retry_at = now + delays[failures - 1]
+                    record['retryAt'] = retry_at
+                    next_retry = min(next_retry or retry_at, retry_at)
+                    print(f"Revision {record['id']}: {reason}, retry in {delays[failures - 1]}s "
+                          f"(attempt {failures + 1} of {len(delays) + 1})", file=sys.stderr)
+                else:
+                    record['state'] = 'failed'
+                    print(f"Revision {record['id']} failed after {failures} attempt(s): {reason}", file=sys.stderr)
             except Exception as exc:
                 print('Revision failed:', record['id'], exc, file=sys.stderr)
-                record.update(state='failed')
+                record.update(state='failed', lastError='revision-processing')
             with (STORE / 'submit.lock').open('a') as submit_lock:
                 fcntl.flock(submit_lock, fcntl.LOCK_EX)
                 if json.loads(path.read_text())['state'] == 'pending':
                     atomic(path, record)
+            if pause_until:
+                return pause_until
+        return next_retry
 
 if __name__ == '__main__':
     command = sys.argv[1]
@@ -165,8 +205,9 @@ if __name__ == '__main__':
     elif command == 'work':
         signal.signal(signal.SIGTERM, signal.default_int_handler)
         try:
-            drain()
+            print(json.dumps(drain()))
         except KeyboardInterrupt:
-            print('Revision worker stopped. Pending work will resume on startup.', file=sys.stderr)
+            print(json.dumps(time.time() + 2))
+            print('Revision worker stopped. Pending work was preserved.', file=sys.stderr)
     elif command == 'list':
         print(json.dumps(records()))

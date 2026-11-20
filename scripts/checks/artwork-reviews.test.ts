@@ -9,7 +9,7 @@ import sharp from 'sharp'
 import { PbfWriter } from 'pbf'
 import { isFogPatternSelected } from '../../src/fog-pattern.js'
 
-test('Bun server persists authenticated artwork decisions by image', async () => {
+test('Bun server persists authenticated artwork decisions by image', { timeout: 115000 }, async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'atlas-reviews-'))
   const release = path.join(root, 'releases/v2-reviews.json')
   const token = crypto.randomUUID()
@@ -30,6 +30,10 @@ args = sys.argv[1:]
 prompt = sys.stdin.read()
 if args.count('--image') == 1:
     assert 'The Procession of Feet' in prompt and 'striped wooden shoes' in prompt
+    if not (folder/'rate-limited').exists():
+        (folder/'rate-limited').touch()
+        print('HTTP 429')
+        sys.exit(1)
 else:
     assert args.count('--image') == 2
     assert 'road intersection' in prompt or 'roughly 20% less density' in prompt
@@ -167,12 +171,16 @@ globalThis.fetch = (url, options) => String(url).endsWith('hongkong-latest.json'
       const simultaneous = await Promise.all([generate(true), generate(true)])
       assert.deepEqual(simultaneous.map(response => response.status).sort(), [202, 409])
       const job = await simultaneous.find(response => response.status === 202)!.json()
-      const deadline = Date.now() + 15000
+      let sawCooldown = false
+      const deadline = Date.now() + 80000
       let result = job
       while (result.state === 'pending' && Date.now() < deadline) {
-        await Bun.sleep(100)
+        await Bun.sleep(250)
         result = (await (await fetch(revisionUrl)).json()).find(record => record.id === job.id)
+        if (result.lastError === 'rate' && result.retryAt > Date.now() / 1000) sawCooldown = true
       }
+      assert.ok(sawCooldown)
+      assert.equal(result.failedAttempts, 1)
       assert.equal(result.state, 'ready')
       assert.equal(result.candidate.scene, 'circus')
       assert.equal(result.candidate.title, 'The Procession of Feet')

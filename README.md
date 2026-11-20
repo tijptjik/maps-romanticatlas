@@ -520,3 +520,13 @@ replacement in either view. Press Ctrl+Z or Cmd+Z to undo the most recent
 review action in this session, including a revision request. A failed job has a retry button that survives a refresh. Local revision requests live in
 `generated-tiles/dream-atlas/review-revisions/jobs/<id>/revision.json`. The local Bun server runs the Codex renderer, and the Worker uses
 the SI generator gateway and worker with `scripts/review-revisions.py`.
+
+Both revision workers retry rate limits, network interruptions and 15-minute
+render timeouts up to three times using the original job ID and references.
+Rate limits pause the whole editorial queue for 60, 120, then 240 seconds.
+Network and timeout retries delay only the affected job. The job stays pending
+with its latest error, failure count and next retry time (Unix seconds) on disk.
+After restart the worker honors that deadline and checks for a saved image before
+requesting another render. A terminal failure or exhausted retry budget requires
+a manual retry. For failed new scenes, use **Choose scene** on the original tile
+to recheck eligibility. Existing failed records are kept as history.
