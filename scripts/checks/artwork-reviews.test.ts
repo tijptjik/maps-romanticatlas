@@ -6,6 +6,8 @@ import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { test } from 'node:test'
 import sharp from 'sharp'
+import { PbfWriter } from 'pbf'
+import { isFogPatternSelected } from '../../src/fog-pattern.js'
 
 test('Bun server persists authenticated artwork decisions by image', async () => {
   const root = await mkdtemp(path.join(tmpdir(), 'atlas-reviews-'))
@@ -25,10 +27,13 @@ import json, os, shutil, signal, sys, uuid
 from pathlib import Path
 folder = Path(os.environ['ATLAS_TEST_ROOT'])
 args = sys.argv[1:]
-assert args.count('--image') == 2
 prompt = sys.stdin.read()
-assert 'road intersection' in prompt or 'roughly 20% less density' in prompt
-assert 'fixture concept' in prompt
+if args.count('--image') == 1:
+    assert 'The Procession of Feet' in prompt and 'striped wooden shoes' in prompt
+else:
+    assert args.count('--image') == 2
+    assert 'road intersection' in prompt or 'roughly 20% less density' in prompt
+    assert 'fixture concept' in prompt
 if 'roughly 20% less density' in prompt and not (folder/'interrupted').exists():
     (folder/'interrupted').touch()
     os.kill(os.getppid(), signal.SIGINT)
@@ -43,7 +48,25 @@ print(json.dumps({'type':'thread.started','thread_id':thread}))
       .composite([{ input: await sharp({ create: { width: 200, height: 220, channels: 3, background: 'green' } }).png().toBuffer() }])
       .png().toBuffer()
     await writeFile(path.join(root, 'generated.png'), generated)
-    const server = spawn('bun', ['server/index.ts'], {
+    // A surveyed all-land parent lets the real eligibility classifier run offline.
+    const vector = new PbfWriter()
+    vector.writeMessage(3, (_, layer) => {
+      layer.writeVarintField(15, 2)
+      layer.writeStringField(1, 'earth')
+      layer.writeStringField(3, 'saanseoi:base')
+      layer.writeMessage(4, (_, value) => value.writeBooleanField(7, true), null)
+      layer.writeMessage(2, (_, feature) => {
+        feature.writePackedVarint(2, [0, 0])
+        feature.writeVarintField(3, 3)
+        feature.writePackedVarint(4, [9, 0, 0, 26, 8192, 0, 0, 8192, 8191, 0, 15])
+      }, null)
+    }, null)
+    await writeFile(path.join(root, 'land.mvt'), vector.finish())
+    await writeFile(path.join(root, 'map-fixture.ts'), `const upstream = globalThis.fetch
+globalThis.fetch = (url, options) => String(url).endsWith('hongkong-latest.json')
+  ? Response.json({tiles:['https://fixture.test/{z}/{x}/{y}.mvt']})
+  : String(url).startsWith('https://fixture.test/') ? new Response(Bun.file('land.mvt')) : upstream(url, options)`)
+    const server = spawn('bun', ['--preload', './map-fixture.ts', 'server/index.ts'], {
       cwd: root, env: { ...process.env, PORT: '0', NODE_ENV: 'production', ATLAS_ADMIN_TOKEN: token,
         ATLAS_ALLOWED_ORIGIN: 'http://localhost', ATLAS_TEST_ROOT: root, CODEX_HOME: path.join(root, 'isolated'),
         PATH: root + ':' + process.env.PATH }, stdio: ['ignore', 'pipe', 'inherit'],
@@ -133,6 +156,27 @@ print(json.dumps({'type':'thread.started','thread_id':thread}))
         assert.deepEqual(await (await fetch(revisionUrl)).json(), [])
         assert.deepEqual(await (await fetch(endpoint)).json(), [])
       }
+      const target = {x: 100, y: 100}
+      while (!isFogPatternSelected(target)) target.x++
+      const generate = (auth: boolean) => fetch(address + '/api/artwork-generation?admin', {
+        method: 'POST', headers: { ...headers, 'content-type': 'application/json',
+          ...(auth && {cookie, 'x-atlas-csrf-token': cookie.split('=')[1]}) },
+        body: JSON.stringify({...target, family: 'circus', scene: 'The Procession of Feet', mapImage}),
+      })
+      assert.equal((await generate(false)).status, 403)
+      const simultaneous = await Promise.all([generate(true), generate(true)])
+      assert.deepEqual(simultaneous.map(response => response.status).sort(), [202, 409])
+      const job = await simultaneous.find(response => response.status === 202)!.json()
+      const deadline = Date.now() + 15000
+      let result = job
+      while (result.state === 'pending' && Date.now() < deadline) {
+        await Bun.sleep(100)
+        result = (await (await fetch(revisionUrl)).json()).find(record => record.id === job.id)
+      }
+      assert.equal(result.state, 'ready')
+      assert.equal(result.candidate.scene, 'circus')
+      assert.equal(result.candidate.title, 'The Procession of Feet')
+      assert.equal((await fetch(address + result.candidate.url)).status, 200)
     } finally {
       const stopped = once(server, 'exit')
       server.kill()

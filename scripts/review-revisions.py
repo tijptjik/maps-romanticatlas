@@ -61,17 +61,27 @@ def submit(body):
     JOBS.mkdir(parents=True, exist_ok=True)
     with (STORE / 'submit.lock').open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
-        for record in records():
-            if record['source']['url'] == body['source']['url'] and record['state'] != 'failed':
-                return record
         mode = body['mode']
-        if mode not in DIRECTION:
+        source = body['source']
+        for record in records():
+            if mode == 'generate':
+                other = record.get('candidate') or record['source']
+                if (record['state'] != 'failed' and other.get('scene') == source['scene']
+                        and other['x'] - 4 <= source['x'] <= other['x'] + other.get('columns', 1) - 1 + 4
+                        and other['y'] - other.get('rows', 1) + 1 - 4 <= source['y'] <= other['y'] + 4):
+                    return {'conflict': 'This family is already reserved within the 9×9 neighbourhood.'}
+            elif record['source']['url'] == body['source']['url'] and record['state'] != 'failed':
+                return record
+        if mode != 'generate' and mode not in DIRECTION:
             raise ValueError('Unknown revision action')
         job_id = uuid.uuid4().hex
         with tempfile.TemporaryDirectory(dir=STORE) as staging:
             folder = Path(staging) / job_id
             folder.mkdir()
-            for field, name in [('mapImage', 'source.png'), ('previousImage', 'previous.png')]:
+            references = [('mapImage', 'source.png')]
+            if mode != 'generate':
+                references.append(('previousImage', 'previous.png'))
+            for field, name in references:
                 data = base64.b64decode(body[field].removeprefix('data:image/png;base64,'), validate=True)
                 with Image.open(io.BytesIO(data)) as im:
                     if im.format != 'PNG' or im.size != (1024, 1024):
@@ -79,6 +89,8 @@ def submit(body):
                     im.verify()
                 (folder / name).write_bytes(data)
             record = dict(id=job_id, state='pending', mode=mode, source=body['source'], created=time.time())
+            if mode == 'generate':
+                record['prompt'] = body['prompt']
             atomic(folder/'revision.json', record)
             folder.rename(JOBS/job_id)
         return record
@@ -90,10 +102,14 @@ def finish(folder, record):
     renderer.OUT = STORE
     source = record['source']
     job = dict(id=folder.name, reference=str((folder/'source.png').relative_to(ROOT)),
-               footprintReference=str((folder/'previous.png').relative_to(ROOT)),
-               guideInstruction='Attachment 2 is the previous edition for this site.',
-               drawing=DIRECTION[record['mode']], context='All placement decisions must come from the fresh basemap.',
-               prompt=source['title'], workerInstruction=INSTRUCTION)
+               context='All placement decisions must come from the fresh basemap.', prompt=source['title'])
+    if record['mode'] == 'generate':
+        job.update(prompt=record['prompt'], drawing='Draw ' + source['title'] + ' in the ' + source['scene'] + ' family.',
+                   workerInstruction='Use the built-in image generation tool once. Paint an isometric vintage Hong Kong atlas intervention registered to the supplied north-up map. Preserve roads and coastline. Paint the artwork alone on uniform electric magenta #ff00ff, including gaps. Do not reproduce the basemap, labels or borders. {} End with a short text receipt.')
+    else:
+        job.update(footprintReference=str((folder/'previous.png').relative_to(ROOT)),
+                   guideInstruction='Attachment 2 is the previous edition for this site.',
+                   drawing=DIRECTION[record['mode']], workerInstruction=INSTRUCTION)
     with (folder/'worker.lock').open('a') as lock:
         # The renderer inherits this lock. After a parent exits, wait for its
         # child to finish before recovering the image or starting another attempt.
