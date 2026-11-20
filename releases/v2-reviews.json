@@ -6284,5 +6284,59 @@
     "scene": "worlds-fair",
     "url": "/artwork-revisions/d0abfab5c2ed4991af5e5ecfd298fd77.png",
     "status": "accepted"
+  },
+  {
+    "title": "A Wall With Rooms",
+    "x": 214194,
+    "y": 114421,
+    "rows": 1,
+    "scene": "medieval-castle",
+    "url": "/artwork-revisions/98adebf923e841679f6ade7dd2b52d40.png",
+    "status": "accepted"
+  },
+  {
+    "title": "Eau de Cumulus",
+    "x": 214211,
+    "y": 114407,
+    "rows": 1,
+    "scene": "cloud-launcher",
+    "url": "/artwork-revisions/bccb62ae20c04876921e116931137f1a.png",
+    "status": "accepted"
+  },
+  {
+    "title": "Eau de Cumulus",
+    "x": 214211,
+    "y": 114393,
+    "rows": 1,
+    "scene": "cloud-launcher",
+    "url": "/artwork-revisions/a44e0da9808749c1a7fcc3fb74600a52.png",
+    "status": "accepted"
+  },
+  {
+    "title": "The Lullaby Updraft",
+    "x": 214211,
+    "y": 114391,
+    "rows": 1,
+    "scene": "cloud-launcher",
+    "url": "/artwork-revisions/845ac291f6ba48a5937575095da60da1.png",
+    "status": "accepted"
+  },
+  {
+    "title": "The Cats-and-Dogs Forecast",
+    "x": 214205,
+    "y": 114391,
+    "rows": 1,
+    "scene": "cloud-launcher",
+    "url": "/artwork-revisions/8666784e4a0a4086b1145c4f2b386032.png",
+    "status": "accepted"
+  },
+  {
+    "title": "The Great Pump Court",
+    "x": 214191,
+    "y": 114419,
+    "rows": 1,
+    "scene": "grand-exhibition",
+    "url": "/artwork-revisions/6e417332304346dea18eba3065c33936.png",
+    "status": "accepted"
   }
 ]
