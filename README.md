@@ -37,14 +37,12 @@ possibility, and imagination.
 
 ## Run locally
 
-The development server is a Bun-powered Node server with Vite middleware. New image
-generation and cache management require this server; browsing the base map does not
-require an OpenRouter key.
+The development server is a Bun-powered Node server with Vite middleware. New tile generation uses the local authenticated Codex CLI with image generation enabled.
 
 ```sh
 bun install
 cp .env.example .env
-# edit .env and add the server-side OpenRouter key
+# sign in to the Codex CLI for local tile generation
 bun run dev
 ```
 
@@ -242,17 +240,15 @@ Worker environment (for example, `wrangler secret put ATLAS_SHARE_ASSET_ORIGIN`)
 deploying the sharing feature.
 
 `bun run deploy` deploys `src/worker.ts` and the `dist/` directory to Cloudflare. The
-Worker serves the browser assets and the production atlas API. On-demand image
-generation calls OpenRouter from the Worker, composes the result with the safe-zone and
-line masks using the Worker-compatible Photon runtime, and stores versioned images and
-metadata in the configured R2 bucket.
+Worker serves the browser assets and the production atlas API. On-demand image generation runs on Si.
+The Worker dispatches the captured map tile to the authenticated gateway and stores
+the completed image and receipt metadata in R2.
 
-Create the R2 bucket once, then add the OpenRouter key as a Worker secret before the
-first deployment:
+Configure the R2 bucket and the Worker secret shared with the Si gateway before deployment.
 
 ```sh
 wrangler r2 bucket create maps-romanticatlas-atlas
-wrangler secret put OPENROUTER_API_KEY
+wrangler secret put ATLAS_GENERATOR_TOKEN
 bun run deploy
 ```
 
@@ -269,15 +265,13 @@ git-ignored `.dev.vars` file with the local Worker secrets, then run
 `bun run dev:remote`:
 
 ```sh
-OPENROUTER_API_KEY=your-openrouter-api-key
+ATLAS_GENERATOR_TOKEN=replace-with-the-si-gateway-token
 ATLAS_ADMIN_TOKEN=replace-with-a-long-random-admin-token
 ATLAS_SHARE_ASSET_ORIGIN=https://romanticassets.hype.hk
 ```
 
-This executes the atlas API locally and sends only R2 operations to the remote bucket;
-it does not proxy image generation through the deployed Worker, so long OpenRouter edits
-do not hit the remote service-binding timeout. The Durable Object manifest remains local
-because Cloudflare does not support remote Durable Object bindings in local development.
+The local Worker dispatches jobs to Si and uses the remote R2 bucket. Its Durable
+Object manifest stays local. The browser polls the local Worker for completion.
 Tiles generated during the session are written to remote R2 and are immediately usable;
 pre-existing remote tiles can still be fetched by their known image URL, but are not
 included in local manifest lookups until they are encountered or regenerated. Add
@@ -375,10 +369,8 @@ Generated event images are cached in local `generated-tiles/` during development
 the configured R2 bucket in production. Current generations use immutable variant keys
 such as `atlas/18/x/y/type.v6.<variant>.image` and matching metadata. Normal cache
 lookup draws randomly from retained v1–v8 variants; new generation writes a new v6
-variant rather than overwriting an existing asset. The OpenRouter renderer sends the model a
-full-tile source and a vector-derived guide. Green marks land parcels, amber marks
-where upper storeys can project over a street behind a building, and blue marks
-nearshore water for vessels. Waterfront artwork can cover roads and shorelines beneath bridges, decks and buildings, with a blend into the basemap at the tile edge. Other scenes restore locked linework around their permitted areas. Ground-level eligibility uses the original map.
+variant rather than overwriting an existing asset. Codex uses the captured PNG as its map reference.
+The versioned metadata records the provider, job ID, Codex source and image checksum.
 
 Production also maintains a sharded Durable Object manifest for these entries. It is the
 source for cache-status and nearby-scene lookups, avoiding per-request R2 probing. The
@@ -389,16 +381,9 @@ assets. Set `ATLAS_MANIFEST_ORIGIN` if your local `.env` points at a development
 
 ## OpenRouter image client
 
-The local server-only OpenRouter wrapper is at `server/openrouter-client.ts`; the
-production equivalent runs in `src/worker-api.ts`. Copy `.env.example` to `.env` and set
-`OPENROUTER_API_KEY` in the local server environment for admin rerenders and the paper
-texture. Regular development cloud clicks use the authenticated Codex CLI. For production, use `wrangler secret put OPENROUTER_API_KEY`. Never expose the
-key through a `VITE_*` variable or import the server wrapper from browser code.
-
-The default model is `openai/gpt-5.4-image-2`. Generation requests use OpenRouter's
-Images API, with the full rendered tile and zoning guide supplied as image references.
-The response is requested as a square PNG for reliable tile composition. Set
-`OPENROUTER_MODEL` to another compatible image-editing model to compare outputs.
+The paper texture generator uses the server-only wrapper at `server/openrouter-client.ts`.
+Set `OPENROUTER_API_KEY` when running that script. Development map renders use
+local Codex and Cloudflare map renders use Codex on Si.
 
 The supported environment variables are:
 

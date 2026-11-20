@@ -1,3 +1,4 @@
+import { waitForAtlasGeneration } from './wait-for-atlas-generation'
 import { isFakeRenderTile, type RevealImage, type rotationSnapshot } from './fake-render-state'
 import { noFakeRenderEnabled } from './runtime-modes'
 import { originalArtwork } from './artwork-sampling'
@@ -2847,24 +2848,26 @@ export const installAtlasTileInteractions = (
     return request
   }
 
-  const recoverGeneratedTile = async (tile, signal: AbortSignal) => {
-    const id = tileId(tile)
+  const recoverGeneratedTile = async (tile, scene: AtlasScene, signal: AbortSignal) => {
+    if (!discoveryVisit) return null
     for (let attempt = 0; attempt < generatedTileRecoveryAttempts; attempt += 1) {
-      await new Promise(resolve =>
-        window.setTimeout(resolve, generatedTileRecoveryInterval),
-      )
+      await new Promise(resolve => window.setTimeout(resolve, generatedTileRecoveryInterval))
       signal.throwIfAborted()
-      // A cache miss is intentionally memoized during ordinary panning. It
-      // must be discarded here because this specific tile may have completed
-      // while its long-running render response was in transit.
-      cachedTileRequests.delete(id)
-      preloadedTileRequests.delete(id)
       try {
-        const status = await checkCachedTile(tile)
-        if (status.cached) return status
+        // An interrupted render can only recover artwork from this visit.
+        // General cache lookups include legacy plates and rotating reserves.
+        const response = await fetch('/api/atlas-tiles/cache-status' + generationQuery, {
+          method: 'POST', signal, headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ tiles: [{ ...tile, zoom: atlasZoom }] }),
+        })
+        if (!response.ok) continue
+        const { statuses } = await response.json()
+        const status = cacheStatusFromResponse(statuses?.[0])
+        if (status.cached && status.scene === scene &&
+            new URL(status.url, location.href).searchParams.get('variant')?.startsWith('discovery-' + discoveryVisit + '-'))
+          return status
       } catch {
-        // Keep polling: a transient cache-status failure should not discard a
-        // render that has already reached R2 and the manifest.
+        signal.throwIfAborted()
       }
     }
     return null
@@ -3274,20 +3277,12 @@ export const installAtlasTileInteractions = (
             body: JSON.stringify({ ...capturedTile, hasSea }),
           },
         )
-        if (response.status === 202) {
-          const { statusUrl } = await response.json()
-          if (typeof statusUrl !== 'string' || !/^\/api\/discovery-jobs\/[a-f0-9-]{36}$/.test(statusUrl))
-            throw new Error('The generator returned an invalid job location.')
-          do {
-            await new Promise(resolve => window.setTimeout(resolve, 1500))
-            response = await fetch(statusUrl, { signal: budget, cache: 'no-store' })
-            map.getContainer().dispatchEvent(new Event('atlas-generation-progress'))
-          } while (response.status === 202)
-        }
+        response = await waitForAtlasGeneration(response, budget, () =>
+          map.getContainer().dispatchEvent(new Event('atlas-generation-progress')))
         responseText = await response.text()
       } catch (error) {
         budget.throwIfAborted()
-        const recovered = await withinClickBudget(recoverGeneratedTile(tile, budget), budget)
+        const recovered = await withinClickBudget(recoverGeneratedTile(tile, scene, budget), budget)
         if (recovered?.cached) {
           audio?.preloadScene(recovered.scene)
           await addGeneratedTile(

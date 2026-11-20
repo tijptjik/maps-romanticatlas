@@ -1,3 +1,4 @@
+import { waitForAtlasGeneration } from './wait-for-atlas-generation'
 import * as maplibregl from 'maplibre-gl'
 import { createAtlasTitleCard, positionAtlasTitleCard } from './atlas-title-cards.ts'
 import { captureTile, tileHasSea } from './atlas-tiles.ts'
@@ -797,7 +798,7 @@ export const installCachedTileAdmin = async map => {
         )
         showRenderingFeedback(renderingScene)
         const generationPath = `/api/atlas-tiles/${tile.zoom}/${tile.x}/${tile.y}/${scene}`
-        const response = renderingNewTile
+        const submission = renderingNewTile
           ? await fetch(generationPath, {
               method: 'POST',
               headers: { 'content-type': 'application/json' },
@@ -811,6 +812,7 @@ export const installCachedTileAdmin = async map => {
               },
               body: JSON.stringify({ ...capturedTile, hasSea: tileHasSea(map, tile) }),
             })
+        const response = await waitForAtlasGeneration(submission, AbortSignal.timeout(35 * 60_000))
         const body = await response.json().catch(() => null)
         if (!response.ok) {
           throw new Error(body?.error ?? `Rerender failed with HTTP ${response.status}`)

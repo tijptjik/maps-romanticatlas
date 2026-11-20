@@ -4,7 +4,7 @@ import { writeFile } from 'node:fs/promises'
 import { chromium } from 'playwright'
 import { isFogPatternSelected } from '../../src/fog-pattern.js'
 
-const origin='https://romanticatlas.hype.hk'
+const origin=process.env.ATLAS_LIVE_TEST_ORIGIN ?? process.env.PLAYWRIGHT_BASE_URL ?? 'https://romanticatlas.hype.hk'
 const browser=await chromium.launch({channel:'chrome',headless:false,args:['--ozone-platform=x11','--class='+process.env.DEV_RUNNER_CHROME_CLASS]})
 try {
  const page=await browser.newPage({viewport:{width:1440,height:1000},reducedMotion:'reduce'})
@@ -16,7 +16,11 @@ try {
   for(let x=art.x;x<art.x+(art.columns??1);x++)for(let y=art.y-art.rows+1;y<=art.y;y++)occupied.add(x+'/'+y)
  }
  const {eligibility}=await (await page.request.get(origin+'/api/fog-index/15/26773/14302?eligibilityOnly=true')).json()
- const tile=eligibility.filter(t=>t.isTargetable && isFogPatternSelected(t) && !occupied.has(t.x+'/'+t.y))[1]
+ const candidates=eligibility.filter(t=>t.isTargetable && isFogPatternSelected(t) && !occupied.has(t.x+'/'+t.y))
+ const {statuses}=await (await page.request.post(origin+'/api/atlas-tiles/cache-status',{
+  data:{tiles:candidates.map(({x,y})=>({zoom:18,x,y}))},
+ })).json()
+ const tile=candidates.find((_,index)=>statuses[index]?.cached===false)
  assert.ok(tile,'An eligible white cloud is required')
  console.log('Target',tile.x,tile.y)
  await page.addInitScript(({x,y})=>{
@@ -30,12 +34,6 @@ try {
  await page.waitForTimeout(1000)
  await page.screenshot({path:path.join(process.env.DEV_RUNNER_ARTIFACTS,'si-before.png')})
  const submitted=page.waitForResponse(r=>r.request().method()==='POST' && r.url().includes('/api/atlas-tiles/18/'),{timeout:90_000})
- let submittedAt=Date.now()
- await page.route('**/api/discovery-jobs/*', async route=>{
-  if(Date.now()-submittedAt<240_000) return route.fulfill({status:202,json:{pending:true}})
-  return route.continue()
- })
- submittedAt=Date.now()
  await page.mouse.click(720,500)
  const response=await submitted
  const body=await response.json()

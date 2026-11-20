@@ -6,7 +6,6 @@ import { orphanGroup, releaseObjects, removeArchivedObjects, type ArchivedObject
 import { releaseCatalog, releaseMediaKeys } from './release-media'
 import { parseArtworkReview, reviewEndpoint } from './artwork-review.ts'
 import type { ArtworkReview } from './artwork-review.ts'
-import { PhotonImage, SamplingFilter, resize } from '@cf-wasm/photon/workerd'
 import { VectorTile } from '@mapbox/vector-tile'
 import { PbfReader } from 'pbf'
 import {
@@ -23,16 +22,13 @@ import {
   manifestShardNamesForGrid,
   type AtlasManifestEntry,
 } from './atlas-manifest.ts'
-import { composeWaterfrontPixels } from './waterfront-composition.ts'
-import { atlasScenes, atlasSeaScenes } from './atlas-scenes.ts'
-import { atlasPrompt } from './atlas-prompt.ts'
+import { atlasScenes } from './atlas-scenes.ts'
 import {
   adminAccessError,
   atlasErrorPayload,
   atlasImageKey,
   atlasMetadataKey,
   atlasTileCount,
-  atlasTileSize,
   atlasTileUrl,
   atlasZoom,
   bearerToken,
@@ -44,7 +40,6 @@ import {
   defaultAtlasVariant,
   discoveryVariantForRequest,
   generationVersion,
-  liveProviderBudgetMs,
   isAllowedApplicationRequest,
   isReadableCacheVersion,
   isSupportedCacheVersion,
@@ -62,9 +57,7 @@ import {
 const maximumRequestBytes = 12_000_000
 const maximumCacheStatusBatchSize = 64
 const maximumImageBytes = 4_000_000
-const maximumGeneratedImageBytes = 8_000_000
 const maximumShareImageBytes = 8_000_000
-const openrouterImagesApiUrl = 'https://openrouter.ai/api/v1/images'
 const tileOrigin = 'https://tiles.saanseoi.hk'
 const fogIndexZoom = 15
 const fogIndexTileSpan = fogEligibilityChildSpan
@@ -75,7 +68,6 @@ type AtlasEnv = Env & {
   ATLAS_GENERATOR_ORIGIN?: string
   ATLAS_GENERATOR_TOKEN?: string
   ATLAS_LOCAL_DEV?: string
-  OPENROUTER_API_KEY?: string
   ATLAS_SHARE_ASSET_ORIGIN?: string
 }
 type CachedTile = CachedAtlasTile<Scene> & {
@@ -440,20 +432,6 @@ const cachedTileFromManifest = async (
   return readCachedTile(env.ATLAS_BUCKET, tile, expectedVersion, variant)
 }
 
-const publishManifestEntry = async (env: AtlasEnv, cached: CachedTile) => {
-  const entry: AtlasManifestEntry = {
-    zoom: cached.tile.zoom,
-    x: cached.tile.x,
-    y: cached.tile.y,
-    scene: cached.tile.scene,
-    version: cached.version,
-    variant: cached.variant,
-    contentType: cached.contentType,
-    contentBounds: cached.contentBounds,
-  }
-  await env.ATLAS_MANIFEST.getByName(manifestShardName(entry)).upsert([entry])
-}
-
 const listCachedTiles = async (bucket: R2Bucket, requested: number | null = null, discoveryOnly = false) => {
   const cachedVariants = new Map<
     string,
@@ -522,213 +500,6 @@ const decodeDataUrl = (
   if (binary.length > maximumBytes) throw new Error(`${label} is too large.`)
   const bytes = Uint8Array.from(binary, character => character.charCodeAt(0))
   return { bytes, contentType: match[1] }
-}
-
-const decodeGeneratedImage = (value: unknown, mediaType: unknown) => {
-  if (mediaType && mediaType !== 'image/png') {
-    throw new Error(`OpenRouter returned an unsupported image format (${mediaType}).`)
-  }
-  if (typeof value !== 'string' || !/^[A-Za-z0-9+/]+={0,2}$/.test(value)) {
-    throw new Error('OpenRouter returned invalid image data.')
-  }
-  try {
-    return decodeDataUrl(
-      `data:image/png;base64,${value}`,
-      'OpenRouter returned invalid image data.',
-      maximumGeneratedImageBytes,
-    )
-  } catch {
-    throw new Error('OpenRouter returned invalid image data.')
-  }
-}
-
-const resizeToTile = (bytes: Uint8Array, label: string) => {
-  const source = PhotonImage.new_from_byteslice(bytes)
-  if (source.get_width() === atlasTileSize && source.get_height() === atlasTileSize) {
-    return source
-  }
-  const resized = resize(source, atlasTileSize, atlasTileSize, SamplingFilter.Lanczos3)
-  source.free()
-  if (resized.get_width() !== atlasTileSize || resized.get_height() !== atlasTileSize) {
-    resized.free()
-    throw new Error(`${label} could not be resized to a 512px tile.`)
-  }
-  return resized
-}
-
-const blurMask = (input: Uint8Array) => {
-  const radius = 5
-  const size = atlasTileSize
-  const horizontal = new Uint16Array(input.length)
-  const output = new Uint8Array(input.length)
-
-  for (let y = 0; y < size; y += 1) {
-    let sum = 0
-    for (let x = -radius; x <= radius; x += 1) {
-      sum += input[y * size + Math.max(0, Math.min(size - 1, x))]
-    }
-    for (let x = 0; x < size; x += 1) {
-      horizontal[y * size + x] = Math.round(sum / (radius * 2 + 1))
-      const leaving = Math.max(0, x - radius)
-      const entering = Math.min(size - 1, x + radius + 1)
-      sum += input[y * size + entering] - input[y * size + leaving]
-    }
-  }
-
-  for (let x = 0; x < size; x += 1) {
-    let sum = 0
-    for (let y = -radius; y <= radius; y += 1) {
-      sum += horizontal[Math.max(0, Math.min(size - 1, y)) * size + x]
-    }
-    for (let y = 0; y < size; y += 1) {
-      output[y * size + x] = Math.round(sum / (radius * 2 + 1))
-      const leaving = Math.max(0, y - radius)
-      const entering = Math.min(size - 1, y + radius + 1)
-      sum += horizontal[entering * size + x] - horizontal[leaving * size + x]
-    }
-  }
-  return output
-}
-
-const composeTileImage = (
-  sourceBytes: Uint8Array,
-  generatedBytes: Uint8Array,
-  safeMaskBytes: Uint8Array,
-  lineOverlayBytes: Uint8Array,
-  waterfront: boolean,
-) => {
-  const source = resizeToTile(sourceBytes, 'The source image')
-  const generated = resizeToTile(generatedBytes, 'The generated image')
-  if (waterfront) {
-    try {
-      const pixels = composeWaterfrontPixels(source.get_raw_pixels(), generated.get_raw_pixels(), atlasTileSize)
-      const result = new PhotonImage(pixels, atlasTileSize, atlasTileSize)
-      try {
-        return result.get_bytes()
-      } finally {
-        result.free()
-      }
-    } finally {
-      source.free()
-      generated.free()
-    }
-  }
-  const mask = resizeToTile(safeMaskBytes, 'The safe-zone mask')
-  const overlay = resizeToTile(lineOverlayBytes, 'The line overlay')
-
-  try {
-    const sourcePixels = source.get_raw_pixels()
-    const generatedPixels = generated.get_raw_pixels()
-    const maskPixels = mask.get_raw_pixels()
-    const overlayPixels = overlay.get_raw_pixels()
-    const safeAlpha = new Uint8Array(atlasTileSize * atlasTileSize)
-    const lineAlpha = new Uint8Array(atlasTileSize * atlasTileSize)
-
-    for (let pixel = 0, offset = 0; pixel < safeAlpha.length; pixel += 1, offset += 4) {
-      safeAlpha[pixel] = Math.round((maskPixels[offset] * maskPixels[offset + 3]) / 255)
-      lineAlpha[pixel] = overlayPixels[offset + 3]
-    }
-
-    const blurredAlpha = blurMask(safeAlpha)
-    const outputPixels = new Uint8Array(sourcePixels.length)
-    for (
-      let pixel = 0, offset = 0;
-      pixel < blurredAlpha.length;
-      pixel += 1, offset += 4
-    ) {
-      const generatedOpacity =
-        (blurredAlpha[pixel] * generatedPixels[offset + 3]) / 65_025
-      const sourceOpacity = 1 - generatedOpacity
-      let red =
-        sourcePixels[offset] * sourceOpacity +
-        generatedPixels[offset] * generatedOpacity
-      let green =
-        sourcePixels[offset + 1] * sourceOpacity +
-        generatedPixels[offset + 1] * generatedOpacity
-      let blue =
-        sourcePixels[offset + 2] * sourceOpacity +
-        generatedPixels[offset + 2] * generatedOpacity
-      const lineOpacity = lineAlpha[pixel] / 255
-      red = red * (1 - lineOpacity) + overlayPixels[offset] * lineOpacity
-      green = green * (1 - lineOpacity) + overlayPixels[offset + 1] * lineOpacity
-      blue = blue * (1 - lineOpacity) + overlayPixels[offset + 2] * lineOpacity
-      outputPixels[offset] = Math.round(red)
-      outputPixels[offset + 1] = Math.round(green)
-      outputPixels[offset + 2] = Math.round(blue)
-      outputPixels[offset + 3] = 255
-    }
-
-    const result = new PhotonImage(outputPixels, atlasTileSize, atlasTileSize)
-    const bytes = result.get_bytes()
-    result.free()
-    return bytes
-  } finally {
-    source.free()
-    generated.free()
-    mask.free()
-    overlay.free()
-  }
-}
-
-const openrouterImage = async (
-  env: AtlasEnv,
-  prompt: string,
-  sourceImage: string,
-  guideImage: string,
-) => {
-  if (!env.OPENROUTER_API_KEY) {
-    throw new Error('OpenRouter is not configured for this deployment.')
-  }
-  const signal = AbortSignal.timeout(liveProviderBudgetMs)
-  const requestImage = () =>
-    fetch(openrouterImagesApiUrl, {
-      signal,
-      method: 'POST',
-      headers: {
-        authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
-        'content-type': 'application/json',
-        'http-referer': env.ATLAS_ALLOWED_ORIGIN,
-        'x-title': 'Visionary Machines Map',
-      },
-      body: JSON.stringify({
-        model: env.OPENROUTER_MODEL ?? 'openai/gpt-5.4-image-2',
-        prompt,
-        quality: 'low',
-        input_references: [
-          { type: 'image_url', image_url: { url: sourceImage } },
-          { type: 'image_url', image_url: { url: guideImage } },
-        ],
-        aspect_ratio: '1:1',
-        n: 1,
-        output_format: 'png',
-      }),
-    })
-
-  let response: Response
-  try {
-    response = await requestImage()
-  } catch {
-    signal.throwIfAborted()
-    try {
-      // A request can occasionally fail before it reaches the provider. Retry
-      // once: no image has been accepted or charged until OpenRouter responds.
-      response = await requestImage()
-    } catch {
-      throw new Error(
-        'The image-generation service could not be reached. Please try clearing this tile again shortly.',
-      )
-    }
-  }
-  if (!response.ok) {
-    throw new Error(`OpenRouter image generation failed (${response.status}).`)
-  }
-  const result = (await response.json()) as {
-    data?: Array<{ b64_json?: unknown; media_type?: unknown }>
-  }
-  const image = result.data?.find(item => item.b64_json)
-  if (!image) throw new Error('OpenRouter returned no image for the requested prompt.')
-  const parsed = decodeGeneratedImage(image.b64_json, image.media_type)
-  return parsed.bytes
 }
 
 const readJsonBody = async (request: Request) => {
@@ -925,68 +696,8 @@ const generateTile = async (
   try {
     body = await readJsonBody(request)
     const source = decodeDataUrl(body.sourceImage, 'The tile source image')
-    if (env.ATLAS_GENERATOR_ORIGIN) {
-      if (source.contentType !== 'image/png') return errorResponse(400, 'Codex requires a PNG source.')
-      return startSiGeneration(env, tile, String(body.sourceImage), discovery)
-    }
-    decodeDataUrl(body.guideImage, 'The guide image')
-    const mask = decodeDataUrl(body.safeMask, 'The safe-zone mask')
-    const overlay = decodeDataUrl(body.lineOverlay, 'The line overlay')
-    const hasSea = body.hasSea === true
-    const contentBounds = normalizeContentBounds(body.contentBounds)
-    const generated = await openrouterImage(
-      env,
-      atlasPrompt(tile.scene, hasSea),
-      String(body.sourceImage),
-      String(body.guideImage),
-    )
-    const waterfront = hasSea && atlasSeaScenes.has(tile.scene)
-    const composed = composeTileImage(
-      source.bytes,
-      generated,
-      mask.bytes,
-      overlay.bytes,
-      waterfront,
-    )
-    const entry = {
-      contentType: 'image/png',
-      generationVersion,
-      generatedAt: new Date().toISOString(),
-      contentBounds,
-      mask: waterfront ? 'waterfront-edge' : 'vector-safe-zones',
-      outputSize: { width: atlasTileSize, height: atlasTileSize },
-    }
-    const variantId = crypto.randomUUID()
-    const variant = discovery ? discovery + '-' + variantId.slice(-12) : variantId
-    const versionedImageKey = atlasImageKey(tile, generationVersion, variant)
-    const versionedMetadataKey = atlasMetadataKey(tile, generationVersion, variant)
-    await env.ATLAS_BUCKET.put(versionedImageKey, composed, {
-      httpMetadata: {
-        contentType: 'image/png',
-        cacheControl: 'public, max-age=31536000, immutable',
-      },
-    })
-    await env.ATLAS_BUCKET.put(versionedMetadataKey, JSON.stringify(entry), {
-      httpMetadata: { contentType: 'application/json; charset=utf-8' },
-    })
-    await publishManifestEntry(env, {
-      tile,
-      version: generationVersion,
-      variant,
-      contentType: entry.contentType,
-      contentBounds,
-      imageKey: versionedImageKey,
-      metadataKey: versionedMetadataKey,
-    })
-    return json(
-      cachedTilePayload({
-        tile,
-        version: generationVersion,
-        variant,
-        contentType: entry.contentType,
-        contentBounds,
-      }),
-    )
+    if (source.contentType !== 'image/png') return errorResponse(400, 'Codex requires a PNG source.')
+    return startSiGeneration(env, tile, String(body.sourceImage), discovery)
   } catch (error) {
     return errorResponse(
       400,

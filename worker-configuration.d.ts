@@ -5,7 +5,6 @@ interface __BaseEnv_Env {
 	ATLAS_BUCKET: R2Bucket;
 	maps_romanticatlas_assets: R2Bucket;
 	ASSETS: Fetcher;
-	OPENROUTER_MODEL: "openai/gpt-5.4-image-2";
 	ATLAS_ALLOWED_ORIGIN: string;
 	ATLAS_ADMIN_TOKEN: string;
 	ATLAS_SHARE_ASSET_ORIGIN: string;

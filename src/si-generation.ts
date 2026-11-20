@@ -26,6 +26,8 @@ export async function generator(env: GeneratorEnv, path: string, options: Reques
 }
 
 export async function startSiGeneration(env: GeneratorEnv, tile: Job['tile'], sourceImage: string, discovery?: string, jobId?: string) {
+  if (!env.ATLAS_GENERATOR_ORIGIN || !env.ATLAS_GENERATOR_TOKEN)
+    return reply({ error: 'Si image generation is not configured.' }, 503)
   const id = jobId ?? crypto.randomUUID()
   const previous = jobId ? await env.ATLAS_BUCKET.get(jobKey(id)) : null
   const job: Job = previous ? await previous.json<Job>() : {

@@ -4,6 +4,14 @@ const { startSiGeneration, siGenerationStatus } = await import('../../src/si-gen
 const actualFetch = globalThis.fetch
 const tile = { zoom: 18, x: 214170, y: 114410, scene: 'circus' }
 
+test('missing Si credentials fail before creating a pending job', async () => {
+  for (const env of [{ ATLAS_GENERATOR_ORIGIN: 'https://generator.test' }, { ATLAS_GENERATOR_TOKEN: 'secret' }]) {
+    const response = await startSiGeneration(env, tile, 'data:image/png;base64,abc')
+    expect(response.status).toBe(503)
+    expect(await response.json()).toEqual({ error: 'Si image generation is not configured.' })
+  }
+})
+
 test('SI completion publishes both objects before the manifest and tolerates duplicate callbacks', async () => {
   const store = new Map()
   const writes = []
