@@ -1,3 +1,4 @@
+import peakWoodlandTile from './peak-woodland.mvt?url'
 import { artworkRequest, installArtworkEdgeFade } from './artwork-edge-fade.ts'
 import { installArtworkSampling } from './artwork-sampling.ts'
 import * as maplibregl from 'maplibre-gl'
@@ -47,7 +48,15 @@ const initialMaxZoom = adminMap ? nativeMaxZoom : Math.max(minimumZoom, nativeMa
 
 installArtworkEdgeFade()
 const map = new maplibregl.Map({
-  transformRequest: artworkRequest,
+  transformRequest(url, type) {
+    if (type === 'Tile') {
+      const tile = new URL(url, document.baseURI)
+      if (tile.origin === location.origin && tile.pathname === '/map-assets/saanseoi/hongkong-latest/15/26773/14303.mvt') {
+        return { url: new URL(peakWoodlandTile, document.baseURI).href }
+      }
+    }
+    return artworkRequest(url, type)
+  },
   container: 'map',
   style: hongKongStyle,
   ...initialView,
