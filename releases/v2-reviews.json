@@ -5868,5 +5868,68 @@
     "scene": "wind-farm",
     "url": "/artwork-revisions/a3f4ee95eca7478bbe129395b7f207b1.png",
     "status": "accepted"
+  },
+  {
+    "title": "Hong Kong in the Clouds",
+    "x": 214185,
+    "y": 114426,
+    "columns": 3,
+    "rows": 1,
+    "url": "/atlas-v2/peak-maquette/hong-kong-in-the-clouds-landscape.png",
+    "status": "accepted"
+  },
+  {
+    "title": "Giant Fairground",
+    "x": 214179,
+    "y": 114426,
+    "rows": 1,
+    "scene": "giant-fairground",
+    "url": "/generated-tiles/18/214179/114426/giant-fairground?version=6&variant=discovery-58d7ceea-7991-46fa-8e34-75fb40be4a52-17349337887d",
+    "status": "accepted"
+  },
+  {
+    "title": "The Listening Cistern",
+    "x": 214185,
+    "y": 114426,
+    "rows": 1,
+    "scene": "ancient-temple",
+    "url": "/atlas-v2/production/cw-214185-114426-4180053fecdeab0b.webp",
+    "status": "rejected"
+  },
+  {
+    "title": "The Sample Library",
+    "x": 214187,
+    "y": 114426,
+    "rows": 1,
+    "scene": "lunar-outpost",
+    "url": "/atlas-v2/production/cw-214187-114426-931ee8330f14b45f.webp",
+    "status": "rejected"
+  },
+  {
+    "title": "A Fair in the Looking Glass",
+    "x": 214171,
+    "y": 114422,
+    "rows": 1,
+    "scene": "giant-fairground",
+    "url": "/artwork-revisions/925d18554dc641989fe3911c437c73e6.png",
+    "status": "accepted"
+  },
+  {
+    "title": "The Bucket Orchestra",
+    "x": 214172,
+    "y": 114422,
+    "rows": 1,
+    "scene": "water-park",
+    "url": "/atlas-v2/production/cw-214172-114422-36381c822d76ce25.webp",
+    "status": "accepted"
+  },
+  {
+    "title": "Maze Garden",
+    "x": 214172,
+    "y": 114422,
+    "rows": 1,
+    "scene": "maze-garden",
+    "url": "/generated-tiles/18/214172/114422/maze-garden?version=6&variant=discovery-rotating-fa7ac333e11a",
+    "status": "accepted"
   }
 ]

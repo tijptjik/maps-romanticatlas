@@ -1,0 +1,25 @@
+{
+  "id": "tourist-disappearance-trap",
+  "title": "Tourist Disappearance Trap",
+  "isolated": true,
+  "art": [
+    {
+      "title": "Tourist Disappearance Trap",
+      "scene": "tourist-disappearance-trap",
+      "site": "Forbes Street MTR entrance, Kennedy Town",
+      "x": 214177,
+      "y": 114422,
+      "rows": 1,
+      "url": "/tourist-disappearance-trap/kennedy-town.webp?v=36d3b8027468018a"
+    },
+    {
+      "title": "Tourist Disappearance Trap",
+      "scene": "tourist-disappearance-trap",
+      "site": "Golden Bauhinia Square, Wan Chai",
+      "x": 214210,
+      "y": 114419,
+      "rows": 1,
+      "url": "/tourist-disappearance-trap/golden-bauhinia.webp?v=605818888b5181e4"
+    }
+  ]
+}
