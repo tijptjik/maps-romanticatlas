@@ -21,7 +21,7 @@ test('Bun server persists authenticated artwork decisions by image', async () =>
     // Exercise the actual queue, prompt assembly, thread recovery and PNG extraction
     // with an isolated image-tool receipt instead of spending a generation.
     await writeFile(path.join(root, 'codex'), `#!/usr/bin/env python3
-import json, os, shutil, sys, uuid
+import json, os, shutil, signal, sys, uuid
 from pathlib import Path
 folder = Path(os.environ['ATLAS_TEST_ROOT'])
 args = sys.argv[1:]
@@ -29,6 +29,10 @@ assert args.count('--image') == 2
 prompt = sys.stdin.read()
 assert 'road intersection' in prompt or 'roughly 20% less density' in prompt
 assert 'fixture concept' in prompt
+if 'roughly 20% less density' in prompt and not (folder/'interrupted').exists():
+    (folder/'interrupted').touch()
+    os.kill(os.getppid(), signal.SIGINT)
+    sys.exit(0)
 thread = str(uuid.uuid4())
 target = Path(os.environ['CODEX_HOME'])/'generated_images'/thread
 target.mkdir(parents=True)
@@ -97,6 +101,14 @@ print(json.dumps({'type':'thread.started','thread_id':thread}))
         const response = await submit(true)
         assert.equal(response.status, 202)
         const job = await response.json()
+        if (mode === 'spread') {
+          const marker = Bun.file(path.join(root, 'interrupted'))
+          const deadline = Date.now() + 10000
+          while (!await marker.exists() && Date.now() < deadline) await Bun.sleep(50)
+          assert.ok(await marker.exists())
+          // Older workers left this sentinel behind when stopped mid-render.
+          await writeFile(path.join(root, 'generated-tiles/dream-atlas/review-revisions/jobs', job.id, 'started'), '')
+        }
         assert.equal((await (await submit(true)).json()).id, job.id)
         let result = job
         const deadline = Date.now() + 15000

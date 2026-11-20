@@ -6,6 +6,7 @@ import io
 import json
 import os
 import re
+import signal
 from pathlib import Path
 import sys
 import tempfile
@@ -94,10 +95,10 @@ def finish(folder, record):
                drawing=DIRECTION[record['mode']], context='All placement decisions must come from the fresh basemap.',
                prompt=source['title'], workerInstruction=INSTRUCTION)
     with (folder/'worker.lock').open('a') as lock:
+        # The renderer inherits this lock. After a parent exits, wait for its
+        # child to finish before recovering the image or starting another attempt.
+        fcntl.flock(lock, fcntl.LOCK_EX)
         if not renderer.recover(job):
-            if (folder/'started').exists():
-                raise ValueError('The previous generation was interrupted.')
-            (folder/'started').touch()
             result = renderer.child(job, lock, 900)
             if result != 'saved':
                 raise ValueError('Codex image generation: ' + result)
@@ -146,6 +147,10 @@ if __name__ == '__main__':
     elif command == 'withdraw':
         print(json.dumps(withdraw(json.load(sys.stdin)['id'])))
     elif command == 'work':
-        drain()
+        signal.signal(signal.SIGTERM, signal.default_int_handler)
+        try:
+            drain()
+        except KeyboardInterrupt:
+            print('Revision worker stopped. Pending work will resume on startup.', file=sys.stderr)
     elif command == 'list':
         print(json.dumps(records()))
