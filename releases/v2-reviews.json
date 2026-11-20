@@ -6338,5 +6338,50 @@
     "scene": "grand-exhibition",
     "url": "/artwork-revisions/6e417332304346dea18eba3065c33936.png",
     "status": "accepted"
+  },
+  {
+    "title": "Ferris Wheel",
+    "x": 214189,
+    "y": 114426,
+    "rows": 1,
+    "scene": "ferris-wheel",
+    "url": "/generated-tiles/18/214189/114426/ferris-wheel?version=6&variant=discovery-358dcd83-813b-4904-89d1-0019b1f15a39-7c6d459aa6be",
+    "status": "accepted"
+  },
+  {
+    "title": "Utopian Garden",
+    "x": 214184,
+    "y": 114424,
+    "rows": 1,
+    "scene": "utopian-garden",
+    "url": "/generated-tiles/18/214184/114424/utopian-garden?version=6&variant=discovery-rotating-98cb252caf8d",
+    "status": "accepted"
+  },
+  {
+    "title": "Medieval Castle",
+    "x": 214189,
+    "y": 114423,
+    "rows": 1,
+    "scene": "medieval-castle",
+    "url": "/generated-tiles/18/214189/114423/medieval-castle?version=6&variant=discovery-358dcd83-813b-4904-89d1-0019b1f15a39-091a3b36db26",
+    "status": "accepted"
+  },
+  {
+    "title": "Steam Railway",
+    "x": 214178,
+    "y": 114422,
+    "rows": 1,
+    "scene": "steam-railway",
+    "url": "/generated-tiles/18/214178/114422/steam-railway?version=6&variant=discovery-rotating-080989b2235a",
+    "status": "accepted"
+  },
+  {
+    "title": "Tourist Disappearance Trap",
+    "x": 214177,
+    "y": 114422,
+    "rows": 1,
+    "scene": "tourist-disappearance-trap",
+    "url": "/artwork-revisions/08bea8ac8042442189f479bbe3a5ca89.png",
+    "status": "accepted"
   }
 ]
