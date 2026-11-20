@@ -41,6 +41,7 @@
   "/artwork-revisions/37f751a0e48c4b52b7695db6eb801fbb.png": "release-assets/361a4e28fb4f24f7b10be1f23703f497c942c0f2b38e98232b6b4d7b203b1f3f.png",
   "/artwork-revisions/395a1a70f4944565ab9d1edb1006dd46.png": "release-assets/3d75d0c97844a794d8571ca1a77a6dc7c2485385f2676ce92c5ae65b9a8ec66e.png",
   "/artwork-revisions/3b2a466afb964bdcaee8eeb91a1c9317.png": "release-assets/f62633419b6c54f35edc52abf3504321c17b5d6dc0e97bbfc68cc54caaf52b11.png",
+  "/artwork-revisions/4040f9a1cefa414fa74bbc65a1b1d780.png": "release-assets/d0d1967b4976a4de15d2e7494a55cbca529265a6206b903112a5f2721a3defe9.png",
   "/artwork-revisions/40e887b1672a467aa7a7212851390a9e.png": "release-assets/3c439c017c8c9aac0c6e5d34668ec8aacb1b35bcb6f38f05e0c129a4d8d3b91a.png",
   "/artwork-revisions/41103f0cdea34c70999f61daafb11af0.png": "release-assets/70989fffa974946fba49576d756dce608fec4cc9991e9b6c4f5369daaf219c92.png",
   "/artwork-revisions/420c658c7d574016a8c8d6da7964a1dc.png": "release-assets/3b5e8cd8066092ae7b726f11310fe3ebb8d21cb6dfe342bb5564718be7565880.png",
@@ -697,7 +698,7 @@
   "/pavilion/whole-cloud-banks.webp": "release-assets/58d71fd467cbe4032bbd2288ad2ecc597ea766d0e5117d927f170ddc16881012.webp",
   "/pavilion/wisteria.webp": "release-assets/4246955ae7459bd8b45cc93f2289d870518fe5222c5d7c5aad397041ab8678d7.webp",
   "/romantic-paper-texture.webp": "release-assets/e09a292a9c9d0bb51de809799b633e3bfb12fce5f77041c1eb07b1947225094e.webp",
-  "/social-preview.webp": "release-assets/7113cdd887a8713cf34de14d75280c87be6199edb3efd091dfc9a0d326fe6840.webp",
+  "/social-preview.webp": "release-assets/0246d7f1b35f04ca67349b5d943ad7c171ead912e40b38b4169f78174beaa573.webp",
   "/south-island-shore/214183-114447.webp": "release-assets/cd06d1b23e0129f10105c28a3c2677b9c8b09cfb2aa8e1c0bd535e44a0542514.webp",
   "/south-island-shore/214195-114448.webp": "release-assets/4210446bf286c633ff534d5c03bcb155972de66ac3ea3d1e61303c4b3de9effd.webp",
   "/south-island-shore/214204-114453.webp": "release-assets/7f033d1f0260a899b4a9d42aa13da338501c064dff95c19dc2056f93a12065cc.webp",
@@ -716,6 +717,8 @@
   "/south-island-shore/214272-114478.webp": "release-assets/14341ef2b5e4f5dd4bdfc96c9a3e9cade86268ed855a865fa346b7f3c9699de3.webp",
   "/space-elevator/space-elevator.webp": "release-assets/0c3d2daf4b042aada7f303b2319603560e0362b2d1d98fb502fa039bbd922d8e.webp",
   "/tourist-disappearance-trap/golden-bauhinia-footprint-v2.webp": "release-assets/6b2201a0c7d67846aac8da10efbad5e2f85b599ce9daaaef6d7d9bc438fb5971.webp",
+  "/waglan-pneumatic-works/swells-c719e2d59b847153.webp": "release-assets/c719e2d59b8471536f54a7946108c490cfbd0702d5e73cbe09b28939f30f26d5.webp",
+  "/waglan-pneumatic-works/waglan-pneumatic-works-28fe6ea0034470b1.webp": "release-assets/28fe6ea0034470b1b633e1a2d361b1d33907175c4bc37e6b6966e623cde77446.webp",
   "/west-kowloon-airship-mooring/grand-airship-pylon.webp": "release-assets/ac64beb0d64333d9258b0ac612ef82dae49054365a8b316f69d21de1baad2f27.webp",
   "/western-district-towers/214185-114417.webp": "release-assets/b6528bd1cbeb0ce13fc8b391254722b999ad1df180850fdd9c8b6a9782c7ccad.webp"
 }
