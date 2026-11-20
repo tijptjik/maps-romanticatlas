@@ -28,7 +28,7 @@ export function installV2ReviewMap(map: AtlasMap, onCount = (_count: number) => 
   const loaded = new Map<string,string>()
   let sites = new Map<string,Painting>()
 
-  const showAnimations = installArtworkAnimations(map)
+  const showAnimations = installArtworkAnimations(map, site)
   function render() {
     const displayed: Painting[] = []
     const view = map.getBounds()

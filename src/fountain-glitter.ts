@@ -1,4 +1,6 @@
 import './fountain-glitter.css'
+import { installAnimatedPainting } from './animated-painting'
+import type { ImageSource } from 'maplibre-gl'
 import type { Painting } from './artwork-review'
 import { LngLatBounds, type Map as AtlasMap } from 'maplibre-gl'
 import { drawingFootprint, tileBounds } from './tile-geometry.ts'
@@ -165,7 +167,7 @@ function anchorArtwork(map: AtlasMap, element: HTMLElement, tile: Parameters<typ
 
 // A painting can occur in several catalog sheets. Keep one overlay per artwork
 // and let its existing map anchor handle zoom, pan and document visibility.
-export function installArtworkAnimations(map: AtlasMap) {
+export function installArtworkAnimations(map: AtlasMap, sourceId: (art: Painting) => string | undefined) {
   const overlays = new Map<string, (visible: boolean) => void>()
   return (displayed: Iterable<Painting>) => {
     const visible = new Set<string>()
@@ -175,7 +177,12 @@ export function installArtworkAnimations(map: AtlasMap) {
       visible.add(art.url)
       if (overlays.has(art.url)) continue
       const tile = { ...art, scene: 'skyscraper', illustration: { pixelsPerTile: animation.pixelsPerTile } }
-      if (animation.glitterOrigin) {
+      if (animation.loopUrl) {
+        overlays.set(art.url, installAnimatedPainting(map, art, animation.loopUrl, () => {
+          const id = sourceId(art)
+          return id ? map.getSource<ImageSource>(id) : undefined
+        }))
+      } else if (animation.glitterOrigin) {
         overlays.set(art.url, installFountainGlitter(map, { ...tile, glitterOrigin: animation.glitterOrigin }))
       } else if (animation.auditoriumOriginPixels) {
         overlays.set(art.url, installTheatreSpotlights(map, tile, animation.auditoriumOriginPixels))

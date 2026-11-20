@@ -11,7 +11,8 @@ try {
   const catalog = await (await page.request.get(base + '/atlas-v2/catalog.json')).json()
   const reviews = await (await page.request.get(base + '/api/artwork-reviews')).json()
   const decisions = new Map(reviews.map(review => [review.url, review.status]))
-  const art = catalog.sheets.flatMap(sheet => sheet.art.filter(painting => painting.animation &&
+  const art = catalog.sheets.flatMap(sheet => sheet.art.filter(painting =>
+    (painting.animation?.motion || painting.animation?.glitterOrigin || painting.animation?.auditoriumOriginPixels) &&
     (decisions.get(painting.url) ?? (sheet.accepted && 'accepted')) === 'accepted'))
   assert.ok(art.length, 'Expected an accepted animated skyscraper')
   for (const painting of art) {

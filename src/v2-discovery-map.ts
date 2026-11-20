@@ -200,7 +200,9 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
     }
   }
 
-  const showAnimations = installArtworkAnimations(map)
+  const showAnimations = installArtworkAnimations(map, art => {
+    for (const [id, visible] of visibleLayers) if (visible.url === art.url) return id
+  })
 
   function draw(unit: Unit, art: Painting, opacity: number) {
     const {layer, footprint: {bounds: {west, east, north, south}}} = unit

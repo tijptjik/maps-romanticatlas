@@ -2246,7 +2246,7 @@ export const installAtlasTileInteractions = (
   const revealedTileIds = new Set()
   const artworkFrames = new Map<string, ArtworkFrame>()
   const animatedPaintings = new Set<Painting>()
-  const showAnimations = installArtworkAnimations(map)
+  const showAnimations = installArtworkAnimations(map, art => `atlas-tile-${art.x}-${art.y}`)
   const titleCards = new Map()
   const clearanceNotice = createClearanceNotice(map)
   const fogErrorAnnouncer = createFogErrorAnnouncer(map)

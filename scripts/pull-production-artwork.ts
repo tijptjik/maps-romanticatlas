@@ -99,6 +99,7 @@ export async function productionArtwork(root: string): Promise<ProductionArtwork
       mapMedia(art.url, art.imageUrl)
       delete art.imageUrl
       const animation = art.animation
+      if (animation?.loopUrl) mapMedia(animation.loopUrl, animation.loopUrl)
       if (animation?.plate) mapMedia(animation.plate, animation.plate)
       if (animation?.spriteUrl) {
         mapMedia(

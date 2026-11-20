@@ -44,6 +44,7 @@ function publishedPainting(art: Painting) {
     imageUrl: publishedUrl(art.url),
     ...(animation && { animation: {
       ...animation,
+      ...(animation.loopUrl && { loopUrl: publishedUrl(animation.loopUrl) }),
       ...(animation.plate && { plate: publishedUrl(animation.plate) }),
       ...(animation.motion && animation.folder && {
         spriteUrl: publishedUrl('/' + animation.folder + '/' + animation.motion.sprite + '.webp'),

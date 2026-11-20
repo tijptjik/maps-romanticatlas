@@ -155,6 +155,7 @@ export function planRelease(root: string, production?: ProductionArtwork) {
       if (art.url.startsWith('/generated-tiles/')) generated.add(art.url)
       else paths.add(mediaPath(art.url))
       const animation = art.animation
+      if (animation?.loopUrl) paths.add(mediaPath(animation.loopUrl))
       if (animation?.plate) paths.add(mediaPath(animation.plate))
       if (animation?.motion && animation.folder)
         paths.add(mediaPath(`/${animation.folder}/${animation.motion.sprite}.webp`))

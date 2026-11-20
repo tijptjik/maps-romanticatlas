@@ -1,6 +1,7 @@
 import { isAtlasScene } from './atlas-scenes'
 
 export type Painting = { scene?: string; title: string; x: number; y: number; rows: number; columns?: number; url: string; imageUrl?: string; animation?: {
+  loopUrl?: string
   pixelsPerTile: number
   glitterOrigin?: number[]
   auditoriumOriginPixels?: number[]
