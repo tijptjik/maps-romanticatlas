@@ -9365,6 +9365,54 @@
           "rows": 1,
           "scene": "aquarium",
           "url": "/artwork-revisions/a5322fe822ee4db58ab3018cf7df22c8.png"
+        },
+        {
+          "title": "The Returned Parts Orchard",
+          "x": 214197,
+          "y": 114420,
+          "rows": 1,
+          "scene": "robot-factory",
+          "url": "/artwork-revisions/ef27299d76294ecab4e14413e59507e3.png"
+        },
+        {
+          "title": "The Hull Turns Over",
+          "x": 214180,
+          "y": 114423,
+          "rows": 1,
+          "scene": "shipyard",
+          "url": "/artwork-revisions/dbdb20a9289946d6b5f401d4f311bfdb.png"
+        },
+        {
+          "title": "The Fumarole Orchestra",
+          "x": 214203,
+          "y": 114424,
+          "rows": 1,
+          "scene": "volcano-observatory",
+          "url": "/artwork-revisions/a27b12c65b2c4a97bee92fc1991f56bb.png"
+        },
+        {
+          "title": "Paper Roofs After Rain",
+          "x": 214204,
+          "y": 114421,
+          "rows": 1,
+          "scene": "festival-city",
+          "url": "/artwork-revisions/cfc02bb3bece494ca6763eb5a9aebf7f.png"
+        },
+        {
+          "title": "The Steam Laundry Express",
+          "x": 214196,
+          "y": 114386,
+          "rows": 1,
+          "url": "/artwork-revisions/05d642fa3b9b41ad8f09fd89870d8fcf.png",
+          "scene": "steam-railway"
+        },
+        {
+          "title": "The Table of Many Ovens",
+          "x": 214178,
+          "y": 114422,
+          "rows": 1,
+          "scene": "worlds-fair",
+          "url": "/artwork-revisions/d0abfab5c2ed4991af5e5ecfd298fd77.png"
         }
       ]
     }
