@@ -1,4 +1,6 @@
-export type Painting = { title: string; x: number; y: number; rows: number; columns?: number; url: string; imageUrl?: string; animation?: {
+import { isAtlasScene } from './atlas-scenes'
+
+export type Painting = { scene?: string; title: string; x: number; y: number; rows: number; columns?: number; url: string; imageUrl?: string; animation?: {
   pixelsPerTile: number
   glitterOrigin?: number[]
   auditoriumOriginPixels?: number[]
@@ -12,8 +14,8 @@ export const reviewEndpoint = '/api/artwork-reviews'
 
 export function parseArtworkReview(value: unknown): ArtworkReview | null {
   if (!value || typeof value !== 'object') return null
-  const { title, x, y, rows, columns, url, status } = value as ArtworkReview
-  if (typeof title !== 'string' || !title || title.length > 200 ||
+  const { title, x, y, rows, columns, url, scene, status } = value as ArtworkReview
+  if ((scene !== undefined && !isAtlasScene(scene)) || typeof title !== 'string' || !title || title.length > 200 ||
       !Number.isInteger(x) || x < 0 || x >= 2 ** 18 ||
       !Number.isInteger(y) || y < 0 || y >= 2 ** 18 ||
       (rows !== 1 && rows !== 2) || y < rows - 1 ||
@@ -21,5 +23,5 @@ export function parseArtworkReview(value: unknown): ArtworkReview | null {
       typeof url !== 'string' || url.length > 500 ||
       !/^\/(?:[a-z0-9_-]+\/)+[a-z0-9_.-]+(?:\?[a-z0-9_=&%-]+)?$/i.test(url) ||
       url.includes('/../') || (status !== 'accepted' && status !== 'rejected')) return null
-  return { title, x, y, rows, ...(columns === undefined ? {} : { columns }), url, status }
+  return { title, x, y, rows, ...(scene && { scene }), ...(columns === undefined ? {} : { columns }), url, status }
 }

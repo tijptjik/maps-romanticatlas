@@ -118,7 +118,10 @@ def publish():
         path = ROOT / entry['source']
         if digest(path) != entry['sha256']:
             raise ValueError(f'retained artwork changed: {path}')
-        return dict(art={k: entry[k] for k in ('title', 'x', 'y', 'rows', 'url')},
+        art = {k: entry[k] for k in ('title', 'x', 'y', 'rows', 'url', 'columns') if k in entry}
+        if entry.get('family'):
+            art['scene'] = entry['family']
+        return dict(art=art,
                     family=entry.get('family') or 'Atlas V2', image=path, z=entry['z'],
                     reference=reference, referenceStat=signature(ROOT / reference))
 
@@ -178,7 +181,7 @@ def publish():
             if url in rejected:
                 continue
             ready.append(job_id)
-            item = dict(art=dict(title=job['name'], x=x, y=y, rows=1, url=url),
+            item = dict(art=dict(title=job['name'], scene=job['family'], x=x, y=y, rows=1, url=url),
                         family=job['family'], image=target, z=z, reference=job['reference'],
                         referenceStat=signature(ROOT / job['reference']))
             row.append(item)

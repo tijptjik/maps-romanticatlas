@@ -58,7 +58,10 @@ for group in release['collections']:
                     base.paste(painting.resize((frame[2]-frame[0],frame[3]-frame[1]),Image.Resampling.LANCZOS),frame[:2])
                     export(base, filename)
             url = '/atlas-v2/' + filename
-        entries.append(dict(title=art['title'], x=x, y=y, rows=len(cells), url=url))
+        entry = dict(title=art['title'], x=x, y=y, rows=len(cells), url=url)
+        if 'scene' in art:
+            entry['scene'] = art['scene']
+        entries.append(entry)
     for i, card in enumerate(group['galleryCards']):
         sheets.append(dict(id=Path(card).stem, title=group['title'], accepted=True, art=entries[i*5:i*5+5], **({'isolated': True} if group.get('isolated') else {})))
 
@@ -117,7 +120,7 @@ for family, jobs in families.items():
                 assert hashlib.sha256(src.read_bytes()).hexdigest() == digest
                 with Image.open(src) as painting:
                     export(painting, filename)
-            entries.append(dict(title=job['name'], x=job['x'], y=job['y'], rows=1, url='/atlas-v2/'+filename))
+            entries.append(dict(title=job['name'], scene=family, x=job['x'], y=job['y'], rows=1, url='/atlas-v2/'+filename))
         sheets.append(dict(id=key, title=family.replace('-',' ').title(), art=entries))
 
 sheets.append(read(root / 'releases/sources/airport.json'))
@@ -144,6 +147,20 @@ if production.is_file():
     sheets = [sheet for sheet in sheets if any(art['url'] not in rejected for art in sheet['art'])]
     known = {sheet['id'] for sheet in sheets}
     sheets.extend(sheet for sheet in read(production)['sheets'] if sheet['id'] not in known)
+
+# Legacy HKU sheets predate the scene field. Their titles are the authored
+# concept names from the family books. Other one-off studies have their own subjects.
+concept_families = {concept['name']: path.stem
+                    for path in (root / 'releases/sources/families').glob('*.json')
+                    for concept in read(path)}
+scenes = {art['url']: art['scene'] for sheet in sheets for art in sheet['art'] if art.get('scene')}
+for sheet in sheets:
+    for art in sheet['art']:
+        scene = scenes.get(art['url'])
+        if not scene and art['url'].startswith('/atlas-v2/hku-'):
+            scene = concept_families.get(art['title'])
+        if scene:
+            art['scene'] = scene
 
 with tempfile.NamedTemporaryFile(mode='w', dir=out, delete=False) as tmp:
     json.dump(dict(release='v2', sheets=sheets), tmp, ensure_ascii=False, indent=2)

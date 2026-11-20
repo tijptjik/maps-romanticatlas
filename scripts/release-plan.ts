@@ -11,7 +11,7 @@ import {
   requestedAtlasVariant,
   requestedCacheVersion,
 } from '../src/atlas-protocol'
-import { atlasScenes } from '../src/atlas-scenes'
+import { atlasScenes, isAtlasScene } from '../src/atlas-scenes'
 
 type Sheet = { id: string; title: string; accepted?: boolean; art: Painting[] }
 export type Catalog = { release: string; sheets: Sheet[] }
@@ -87,10 +87,32 @@ export function planRelease(root: string) {
   const previous: Record<string, string> = readJson(file('releases/assets.json'))
   const working = file('public/atlas-v2/catalog.json')
   const source = existsSync(working) ? working : file('releases/catalog.json')
-  const catalog = acceptedCatalog(
-    readJson(source),
-    readJson(file('releases/v2-reviews.json')),
-  )
+  const workingCatalog: Catalog = readJson(source)
+  const priorCatalog: Catalog = readJson(file('releases/catalog.json'))
+  const reviews: ArtworkReview[] = readJson(file('releases/v2-reviews.json'))
+  const catalog = acceptedCatalog(workingCatalog, reviews)
+  // Older review records kept only the image identity. Resolve revisions through
+  // their recorded source, even when the parent has since been rejected.
+  const scenes = new Map<string, string>()
+  for (const sheet of [...priorCatalog.sheets, ...workingCatalog.sheets]) {
+    for (const art of sheet.art) if (isAtlasScene(art.scene)) scenes.set(art.url, art.scene)
+  }
+  function sceneForArt(art: Painting, seen = new Set<string>()): string | undefined {
+    if (isAtlasScene(art.scene)) return art.scene
+    const scene = scenes.get(art.url) ?? parseAtlasTilePath(art.url.split('?')[0], isAtlasScene)?.scene
+    if (scene) return scene
+    const revision = revisionImagePattern.exec(art.url)
+    if (!revision || seen.has(art.url)) return
+    seen.add(art.url)
+    const record = join(revisionFile(revision[1], root), '..', 'revision.json')
+    if (existsSync(record)) return sceneForArt(readJson(record).source, seen)
+  }
+  for (const sheet of catalog.sheets) {
+    for (const art of sheet.art) {
+      const scene = sceneForArt(art)
+      if (scene) art.scene = scene
+    }
+  }
   const assets: Record<string, string> = {}
   const objects = new Map<string, Asset>()
   const generated = new Set<string>()

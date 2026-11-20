@@ -66,14 +66,14 @@ def inventory(families):
             url = a['url']
             status = reviews.get(url, {}).get('status', 'accepted' if sheet.get('accepted') else 'pending')
             if status == 'rejected':
-                rejected.append(dict(a, family=names.get(a['title'])))
+                rejected.append(dict(a, family=a.get('scene') or names.get(a['title'])))
                 continue
             source = Path('public' + urlsplit(url).path)
             sha = digest(source)
             version = parse_qs(urlsplit(url).query).get('v', [''])[0]
             if version and not sha.startswith(version):
                 raise ValueError(f'{url} changed since review')
-            kept[url] = dict(a, z=18, status=status, family=names.get(a['title']),
+            kept[url] = dict(a, z=18, status=status, family=a.get('scene') or names.get(a['title']),
                              source=str(source), sha256=sha, sheet=sheet['id'])
     for url, a in reviews.items():
         if not url.startswith('/generated-tiles/'):
@@ -93,7 +93,7 @@ def inventory(families):
     rejected_by_url = {a['url']: a for a in rejected}
     for url, a in reviews.items():
         if a['status'] == 'rejected' and url not in rejected_by_url:
-            rejected_by_url[url] = dict(a, family=names.get(a['title']))
+            rejected_by_url[url] = dict(a, family=a.get('scene') or names.get(a['title']))
     # The public viewer can expose one image through a contact sheet and again
     # through an accepted review alias. Count that image only once.
     unique = {}

@@ -104,6 +104,9 @@ export const atlasSceneNames = Object.keys(atlasScenes) as Array<keyof typeof at
 
 export type AtlasScene = keyof typeof atlasScenes
 
+export const isAtlasScene = (value: unknown): value is AtlasScene =>
+  typeof value === 'string' && Object.hasOwn(atlasScenes, value)
+
 export const pickAtlasScene = (
   hasSea: boolean,
   excluded: Iterable<AtlasScene> = [],

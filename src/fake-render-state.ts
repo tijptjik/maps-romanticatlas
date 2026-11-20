@@ -12,6 +12,7 @@ export type FakeRenderState = {
   job: string | null
   sourceImage: string
   scene: string
+  seedSceneVerified?: boolean
   attempts: number
 }
 
@@ -23,7 +24,6 @@ export function claimImage(state: FakeRenderState, requestId: string, sourceImag
   state.claims[requestId] = image
   state.ready = null
   state.sourceImage = sourceImage
-  state.scene = image.scene
   state.job = crypto.randomUUID()
   state.attempts = 0
   return image

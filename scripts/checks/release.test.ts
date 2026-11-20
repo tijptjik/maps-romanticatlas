@@ -48,6 +48,7 @@ test('release validates and uploads dependencies before installing manifests and
     await mkdir(job, { recursive: true })
     const candidate = new Uint8Array([19])
     await writeFile(join(job, 'candidate.png'), candidate)
+    await writeFile(join(job, 'revision.json'), JSON.stringify({ source: { ...art, scene: 'circus' } }))
     const revisionKey = `release-assets/${digest(candidate)}.png`
     await save('releases/v2-reviews.json', [
       { ...art, url: revisionUrl, status: 'accepted' },
@@ -103,6 +104,9 @@ test('release validates and uploads dependencies before installing manifests and
         await readFile(join(root, 'releases/catalog.json'), 'utf8'),
       )
       expect(compiled.sheets.flatMap(s => s.art)).toHaveLength(3)
+      const released = compiled.sheets.flatMap(sheet => sheet.art)
+      expect(released.find(item => item.url === revisionUrl)?.scene).toBe('circus')
+      expect(released.find(item => item.url.startsWith('/generated-tiles/'))?.scene).toBe('wind-farm')
       expect(remote.has('tiles/atlas/18/2/3/wind-farm.v6.discovery-test.json')).toBe(
         true,
       )

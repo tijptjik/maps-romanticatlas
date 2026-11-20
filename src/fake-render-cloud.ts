@@ -1,3 +1,4 @@
+import { restoreSeedScene } from './fake-render-seed'
 import { DurableObject } from 'cloudflare:workers'
 import { claimImage, rotationSnapshot, type FakeRenderState, type RevealImage } from './fake-render-state'
 import { startSiGeneration, siGenerationStatus } from './si-generation'
@@ -18,7 +19,7 @@ export class FakeRenderCloud extends DurableObject<Env> {
       let startAfter: string | undefined
       for (;;) {
         const page = await txn.list<RevealImage>({ prefix: 'claim:', startAfter, limit: 256 })
-        images.push(...page.values())
+        images.push(...Array.from(page.values(), restoreSeedScene))
         if (page.size < 256) break
         startAfter = [...page.keys()].at(-1)
       }
@@ -28,7 +29,7 @@ export class FakeRenderCloud extends DurableObject<Env> {
 
   async claim(position: Position, seed: RevealImage | null, requestId: string, sourceImage: string) {
     const priorClaim = await this.ctx.storage.get<RevealImage>('claim:' + requestId)
-    if (priorClaim) return priorClaim
+    if (priorClaim) return restoreSeedScene(priorClaim)
     const sourceKey = `fake-render-sources/${position.zoom}/${position.x}/${position.y}/${requestId}.txt`
     const previous = await this.ctx.storage.get<FakeRenderState>('state')
     if (previous && !previous.ready) return null
@@ -36,12 +37,25 @@ export class FakeRenderCloud extends DurableObject<Env> {
     // The storage transaction serializes claims, including across Worker instances.
     const result = await this.ctx.storage.transaction(async txn => {
       const prior = await txn.get<RevealImage>('claim:' + requestId)
-      if (prior) return prior
+      if (prior) return restoreSeedScene(prior)
       let state = await txn.get<FakeRenderState>('state')
       if (!state) {
         if (!seed) return null
-        state = { ready: seed, claims: {}, job: null, sourceImage: '', scene: seed.scene, attempts: 0 }
+        state = { ready: seed, claims: {}, job: null, sourceImage: '', scene: seed.scene, seedSceneVerified: true, attempts: 0 }
       }
+      if (!state.seedSceneVerified && state.scene === 'maze-garden') {
+        let startAfter: string | undefined
+        for (;;) {
+          const page = await txn.list<RevealImage>({ prefix: 'claim:', startAfter, limit: 256 })
+          for (const image of page.values()) {
+            const restored = restoreSeedScene(image)
+            if (restored !== image) state.scene = restored.scene
+          }
+          if (state.scene !== 'maze-garden' || page.size < 256) break
+          startAfter = [...page.keys()].at(-1)
+        }
+      }
+      state.seedSceneVerified = true
       const image = claimImage(state, requestId, sourceKey)
       if (image) await txn.put('claim:' + requestId, image)
       state.claims = {}

@@ -1,3 +1,4 @@
+import { restoreSeedScene } from '../src/fake-render-seed'
 import { Database } from 'bun:sqlite'
 import { mkdirSync } from 'node:fs'
 import { claimImage, rotationSnapshot, type FakeRenderState, type RevealImage } from '../src/fake-render-state'
@@ -8,7 +9,19 @@ export function createFakeRenderStore(directory: string) {
   db.exec('PRAGMA journal_mode=WAL; CREATE TABLE IF NOT EXISTS clouds (id TEXT PRIMARY KEY, state TEXT NOT NULL)')
   const read = (id: string) => {
     const row = db.query('SELECT state FROM clouds WHERE id = ?').get(id) as { state: string } | null
-    return row ? JSON.parse(row.state) as FakeRenderState : null
+    if (!row) return null
+    const state = JSON.parse(row.state) as FakeRenderState
+    if (!state.seedSceneVerified && state.scene === 'maze-garden') {
+      for (const [request, image] of Object.entries(state.claims)) {
+        const restored = restoreSeedScene(image)
+        if (restored !== image) {
+          state.claims[request] = restored
+          state.scene = restored.scene
+        }
+      }
+    }
+    state.seedSceneVerified = true
+    return state
   }
   const save = (id: string, state: FakeRenderState) => db.query('INSERT OR REPLACE INTO clouds VALUES (?, ?)').run(id, JSON.stringify(state))
   return {
@@ -18,7 +31,7 @@ export function createFakeRenderStore(directory: string) {
       return rotationSnapshot(state, Object.values(state?.claims ?? {}))
     },
     claim: db.transaction((id: string, seed: RevealImage | null, requestId: string, source: string) => {
-      const state = read(id) ?? (seed ? { ready: seed, claims: {}, job: null, sourceImage: '', scene: seed.scene, attempts: 0 } : null)
+      const state = read(id) ?? (seed ? { ready: seed, claims: {}, job: null, sourceImage: '', scene: seed.scene, seedSceneVerified: true, attempts: 0 } : null)
       if (!state) return null
       const result = claimImage(state, requestId, source)
       save(id, state)

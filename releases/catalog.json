@@ -53,6 +53,7 @@
           "x": 214205,
           "y": 114420,
           "rows": 1,
+          "scene": "mermaid-station",
           "url": "/harbour-curiosities/214205-114420.webp?v=82de5196697b9152"
         },
         {
@@ -60,6 +61,7 @@
           "x": 214209,
           "y": 114419,
           "rows": 1,
+          "scene": "walking-yacht-club",
           "url": "/harbour-curiosities/214209-114419.webp?v=9bfa9a33a83001ed"
         },
         {
@@ -67,6 +69,7 @@
           "x": 214210,
           "y": 114419,
           "rows": 1,
+          "scene": "staircase-foundation",
           "url": "/harbour-curiosities/214210-114419.webp?v=35872eb7dceab0fb"
         },
         {
@@ -74,6 +77,7 @@
           "x": 214211,
           "y": 114419,
           "rows": 1,
+          "scene": "car-boat-works",
           "url": "/harbour-curiosities/214211-114419.webp?v=aa68798ced4a84f1"
         },
         {
@@ -81,6 +85,7 @@
           "x": 214211,
           "y": 114420,
           "rows": 1,
+          "scene": "flying-fish-burgers",
           "url": "/harbour-curiosities/214211-114420.webp?v=2bf3a5e8a5969ba4"
         }
       ]
@@ -95,6 +100,7 @@
           "x": 214212,
           "y": 114420,
           "rows": 1,
+          "scene": "bottled-post",
           "url": "/harbour-curiosities/214212-114420.webp?v=3ca61892b9e9b0df"
         },
         {
@@ -102,6 +108,7 @@
           "x": 214213,
           "y": 114420,
           "rows": 1,
+          "scene": "wave-organ",
           "url": "/harbour-curiosities/214213-114420.webp?v=554f9f1394b2cc4f"
         },
         {
@@ -109,6 +116,7 @@
           "x": 214214,
           "y": 114420,
           "rows": 1,
+          "scene": "moon-jelly-lanterns",
           "url": "/harbour-curiosities/214214-114420.webp?v=eeb01a62e7f5f476"
         }
       ]
@@ -123,6 +131,7 @@
           "x": 214272,
           "y": 114478,
           "rows": 1,
+          "scene": "lighthouse",
           "url": "/south-island-shore/214272-114478.webp?v=14341ef2b5e4f5dd"
         },
         {
@@ -130,6 +139,7 @@
           "x": 214268,
           "y": 114463,
           "rows": 1,
+          "scene": "pirate-harbour",
           "url": "/south-island-shore/214268-114463.webp?v=aec572f2863158f1"
         },
         {
@@ -137,6 +147,7 @@
           "x": 214195,
           "y": 114448,
           "rows": 1,
+          "scene": "canal-lock",
           "url": "/south-island-shore/214195-114448.webp?v=4210446bf286c633"
         },
         {
@@ -144,6 +155,7 @@
           "x": 214227,
           "y": 114457,
           "rows": 1,
+          "scene": "pleasure-pier",
           "url": "/south-island-shore/214227-114457.webp?v=314e5617885bd27a"
         },
         {
@@ -151,6 +163,7 @@
           "x": 214228,
           "y": 114469,
           "rows": 1,
+          "scene": "tidal-bathhouse",
           "url": "/south-island-shore/214228-114469.webp?v=26b56dee80247463"
         }
       ]
@@ -165,6 +178,7 @@
           "x": 214236,
           "y": 114472,
           "rows": 1,
+          "scene": "floating-opera",
           "url": "/south-island-shore/214236-114472.webp?v=5d0342fecb0118aa"
         },
         {
@@ -172,6 +186,7 @@
           "x": 214204,
           "y": 114453,
           "rows": 1,
+          "scene": "shipwright-dock",
           "url": "/south-island-shore/214204-114453.webp?v=7f033d1f0260a899"
         },
         {
@@ -179,6 +194,7 @@
           "x": 214227,
           "y": 114477,
           "rows": 1,
+          "scene": "kelp-conservatory",
           "url": "/south-island-shore/214227-114477.webp?v=bb09a642080f2b34"
         },
         {
@@ -186,6 +202,7 @@
           "x": 214216,
           "y": 114450,
           "rows": 1,
+          "scene": "mermaid-station",
           "url": "/south-island-shore/214216-114450.webp?v=c5a5147dbef74c12"
         },
         {
@@ -193,6 +210,7 @@
           "x": 214221,
           "y": 114456,
           "rows": 1,
+          "scene": "walking-yacht-club",
           "url": "/south-island-shore/214221-114456.webp?v=58fc7a18ec1bfbde"
         }
       ]
@@ -207,6 +225,7 @@
           "x": 214238,
           "y": 114489,
           "rows": 1,
+          "scene": "staircase-foundation",
           "url": "/south-island-shore/214238-114489.webp?v=73c6222d7116ea21"
         },
         {
@@ -214,6 +233,7 @@
           "x": 214183,
           "y": 114447,
           "rows": 1,
+          "scene": "car-boat-works",
           "url": "/south-island-shore/214183-114447.webp?v=cd06d1b23e0129f1"
         },
         {
@@ -221,6 +241,7 @@
           "x": 214238,
           "y": 114478,
           "rows": 1,
+          "scene": "flying-fish-burgers",
           "url": "/south-island-shore/214238-114478.webp?v=abd68e3241198616"
         },
         {
@@ -228,6 +249,7 @@
           "x": 214247,
           "y": 114460,
           "rows": 1,
+          "scene": "bottled-post",
           "url": "/south-island-shore/214247-114460.webp?v=1541f19109f0ec30"
         },
         {
@@ -235,6 +257,7 @@
           "x": 214208,
           "y": 114462,
           "rows": 1,
+          "scene": "wave-organ",
           "url": "/south-island-shore/214208-114462.webp?v=5a023e88b212ee97"
         }
       ]
@@ -249,6 +272,7 @@
           "x": 214228,
           "y": 114462,
           "rows": 1,
+          "scene": "moon-jelly-lanterns",
           "url": "/south-island-shore/214228-114462.webp?v=c24d21b9206cc892"
         }
       ]
@@ -263,6 +287,7 @@
           "x": 214185,
           "y": 114420,
           "rows": 1,
+          "scene": "civic-centre",
           "url": "/atlas-v2/hku-ring-214185-114420/office-of-unwanted-gifts.webp?v=1aec592aab4c6238"
         },
         {
@@ -270,6 +295,7 @@
           "x": 214185,
           "y": 114420,
           "rows": 1,
+          "scene": "suspension-bridge",
           "url": "/atlas-v2/hku-ring-214185-114420/2.webp?v=d44489a4729d7f0b"
         },
         {
@@ -277,6 +303,7 @@
           "x": 214185,
           "y": 114420,
           "rows": 1,
+          "scene": "thrifting-paradise",
           "url": "/atlas-v2/hku-ring-214185-114420/3.webp?v=9df7b8fe6834ec4f"
         },
         {
@@ -284,6 +311,7 @@
           "x": 214185,
           "y": 114420,
           "rows": 1,
+          "scene": "steam-railway",
           "url": "/atlas-v2/hku-ring-214185-114420/4.webp?v=a3e1ea55b450783c"
         }
       ],
@@ -299,6 +327,7 @@
           "x": 214184,
           "y": 114421,
           "rows": 1,
+          "scene": "photography-studio",
           "url": "/atlas-v2/hku-ring-214184-114421/1.webp?v=2ba0f4f8f8f1494e"
         },
         {
@@ -306,6 +335,7 @@
           "x": 214184,
           "y": 114421,
           "rows": 1,
+          "scene": "cyber-deck-alley",
           "url": "/atlas-v2/hku-ring-214184-114421/2.webp?v=2c7fc6b127329451"
         },
         {
@@ -313,6 +343,7 @@
           "x": 214184,
           "y": 114421,
           "rows": 1,
+          "scene": "rice-sculpture-festival",
           "url": "/atlas-v2/hku-ring-214184-114421/3.webp?v=fd4410385e409f5d"
         },
         {
@@ -320,6 +351,7 @@
           "x": 214184,
           "y": 114421,
           "rows": 1,
+          "scene": "film-backlot",
           "url": "/atlas-v2/hku-ring-214184-114421/4.webp?v=2399c8a96a3a4c71"
         }
       ],
@@ -335,6 +367,7 @@
           "x": 214184,
           "y": 114418,
           "rows": 1,
+          "scene": "grand-library",
           "url": "/atlas-v2/hku-ring-214184-114418/1.webp?v=05f5e3da0959746f"
         },
         {
@@ -342,6 +375,7 @@
           "x": 214184,
           "y": 114418,
           "rows": 1,
+          "scene": "automata",
           "url": "/atlas-v2/hku-ring-214184-114418/2.webp?v=ef46f481956b5796"
         },
         {
@@ -349,6 +383,7 @@
           "x": 214184,
           "y": 114418,
           "rows": 1,
+          "scene": "mechanical-theatre",
           "url": "/atlas-v2/hku-ring-214184-114418/3.webp?v=db0ee094c767fa7f"
         },
         {
@@ -356,6 +391,7 @@
           "x": 214184,
           "y": 114418,
           "rows": 1,
+          "scene": "market-quarter",
           "url": "/atlas-v2/hku-ring-214184-114418/4.webp?v=70ca41590f4acb80"
         }
       ],
@@ -371,6 +407,7 @@
           "x": 214179,
           "y": 114419,
           "rows": 1,
+          "scene": "ancient-temple",
           "url": "/atlas-v2/ancient-temple.png?v=08c1b579d864a084"
         }
       ]
@@ -385,6 +422,7 @@
           "x": 214183,
           "y": 114419,
           "rows": 1,
+          "scene": "observatory",
           "url": "/atlas-v2/hku-ring-214183-114419/1.webp?v=1c28e6b651dff9b7"
         },
         {
@@ -392,6 +430,7 @@
           "x": 214183,
           "y": 114419,
           "rows": 1,
+          "scene": "solar-farm",
           "url": "/atlas-v2/hku-ring-214183-114419/2.webp?v=4b595a2dd7e8081a"
         },
         {
@@ -399,6 +438,7 @@
           "x": 214183,
           "y": 114419,
           "rows": 1,
+          "scene": "botanical-laboratory",
           "url": "/atlas-v2/hku-ring-214183-114419/3.webp?v=b83ca561dc4dbc82"
         },
         {
@@ -406,6 +446,7 @@
           "x": 214183,
           "y": 114419,
           "rows": 1,
+          "scene": "textile-mill",
           "url": "/atlas-v2/hku-ring-214183-114419/4.webp?v=24656997768945f5"
         }
       ],
@@ -691,6 +732,7 @@
           "x": 214183,
           "y": 114420,
           "rows": 1,
+          "scene": "zoo",
           "url": "/atlas-v2/hku-cell-pilot/2.webp?v=c697e94b5b89"
         },
         {
@@ -698,6 +740,7 @@
           "x": 214183,
           "y": 114420,
           "rows": 1,
+          "scene": "theme-park",
           "url": "/atlas-v2/hku-cell-pilot/3.webp?v=7d7e9c8f8202"
         }
       ],
@@ -713,6 +756,7 @@
           "x": 214185,
           "y": 114419,
           "rows": 1,
+          "scene": "japanese-garden",
           "url": "/atlas-v2/hku-ring-214185-114419/1.webp?v=5c924b3d00ba"
         },
         {
@@ -720,6 +764,7 @@
           "x": 214185,
           "y": 114419,
           "rows": 1,
+          "scene": "automata",
           "url": "/atlas-v2/hku-ring-214185-114419/2.webp?v=f9141b17c7ce"
         },
         {
@@ -727,6 +772,7 @@
           "x": 214185,
           "y": 114419,
           "rows": 1,
+          "scene": "market-quarter",
           "url": "/atlas-v2/hku-ring-214185-114419/3.webp?v=62ccf72fc6ea"
         },
         {
@@ -734,6 +780,7 @@
           "x": 214185,
           "y": 114419,
           "rows": 1,
+          "scene": "civic-centre",
           "url": "/atlas-v2/hku-ring-214185-114419/4.webp?v=9e811e6bbfa5"
         }
       ],
@@ -749,6 +796,7 @@
           "x": 214185,
           "y": 114421,
           "rows": 1,
+          "scene": "automata",
           "url": "/atlas-v2/hku-ring-214185-114421/the-sleepwalking-wardrobe-campus-274291590d96.webp"
         },
         {
@@ -756,6 +804,7 @@
           "x": 214185,
           "y": 114421,
           "rows": 1,
+          "scene": "thrifting-paradise",
           "url": "/atlas-v2/hku-ring-214185-114421/the-sleeve-exchange-campus-d1b65fe53e4b.webp"
         },
         {
@@ -763,6 +812,7 @@
           "x": 214185,
           "y": 114421,
           "rows": 1,
+          "scene": "ironworks",
           "url": "/atlas-v2/hku-ring-214185-114421/a-street-cast-overnight-campus-78397df7a1b0.webp"
         },
         {
@@ -770,6 +820,7 @@
           "x": 214185,
           "y": 114421,
           "rows": 1,
+          "scene": "orrery-hall",
           "url": "/atlas-v2/hku-ring-214185-114421/the-astronomers-mobile-campus-436ac602bc1b.webp"
         },
         {
@@ -777,6 +828,7 @@
           "x": 214185,
           "y": 114421,
           "rows": 1,
+          "scene": "botanical-laboratory",
           "url": "/atlas-v2/hku-ring-214185-114421/the-root-readers-campus-869a51d1b63d.webp"
         },
         {
@@ -784,6 +836,7 @@
           "x": 214185,
           "y": 114421,
           "rows": 1,
+          "scene": "printworks",
           "url": "/atlas-v2/hku-ring-214185-114421/the-city-in-carbon-paper-campus-e795c277112b.webp"
         }
       ],
@@ -799,6 +852,7 @@
           "y": 114420,
           "rows": 1,
           "title": "The Silver Bath",
+          "scene": "photography-studio",
           "url": "/atlas-v2/hku-ring-editorial-114418/0060-985b0742b6464122.webp"
         },
         {
@@ -806,6 +860,7 @@
           "y": 114418,
           "rows": 1,
           "title": "The Walk Through a Breath",
+          "scene": "anatomical-museum",
           "url": "/atlas-v2/hku-ring-editorial-114418/0056-a4b9b19a957576bb.webp"
         },
         {
@@ -813,6 +868,7 @@
           "y": 114418,
           "rows": 1,
           "title": "The Steam Laundry Express",
+          "scene": "steam-railway",
           "url": "/atlas-v2/hku-ring-editorial-114418/0055-8fc89eaa5c606fab.webp"
         }
       ],
@@ -828,6 +884,7 @@
           "x": 214183,
           "y": 114434,
           "rows": 1,
+          "scene": "wind-farm",
           "url": "/generated-tiles/18/214183/114434/wind-farm?version=6&variant=discovery-2d6298a1-e9e0-414b-a643-4da5cdfe8554-164a5662b2de"
         }
       ],
@@ -843,6 +900,7 @@
           "x": 214183,
           "y": 114418,
           "rows": 1,
+          "scene": "rice-sculpture-festival",
           "url": "/atlas-v2/production/0001-01acdb1d78a13bfd.webp"
         },
         {
@@ -850,6 +908,7 @@
           "x": 214183,
           "y": 114418,
           "rows": 1,
+          "scene": "tropical-aquarium",
           "url": "/atlas-v2/production/0002-4258be297352c980.webp"
         },
         {
@@ -857,6 +916,7 @@
           "x": 214183,
           "y": 114418,
           "rows": 1,
+          "scene": "anatomical-museum",
           "url": "/atlas-v2/production/0003-b24451f850507900.webp"
         },
         {
@@ -864,6 +924,7 @@
           "x": 214183,
           "y": 114418,
           "rows": 1,
+          "scene": "art-nouveau-palace",
           "url": "/atlas-v2/production/0004-775f4f3855a7e1c7.webp"
         }
       ],
@@ -879,6 +940,7 @@
           "x": 214183,
           "y": 114421,
           "rows": 1,
+          "scene": "sushi-restaurant",
           "url": "/atlas-v2/production/0005-182ad518f261a7d2.webp"
         },
         {
@@ -886,6 +948,7 @@
           "x": 214183,
           "y": 114421,
           "rows": 1,
+          "scene": "electrical-laboratory",
           "url": "/atlas-v2/production/0006-6807d11a5f24ecf9.webp"
         },
         {
@@ -893,6 +956,7 @@
           "x": 214183,
           "y": 114421,
           "rows": 1,
+          "scene": "zoo",
           "url": "/atlas-v2/production/0007-410f95aacc478091.webp"
         },
         {
@@ -900,6 +964,7 @@
           "x": 214183,
           "y": 114421,
           "rows": 1,
+          "scene": "ferris-wheel",
           "url": "/atlas-v2/production/0008-bd84c4c824385f93.webp"
         }
       ],
@@ -915,6 +980,7 @@
           "x": 214185,
           "y": 114418,
           "rows": 1,
+          "scene": "solar-farm",
           "url": "/atlas-v2/production/0009-3aac08c47f4c1284.webp"
         },
         {
@@ -922,6 +988,7 @@
           "x": 214185,
           "y": 114418,
           "rows": 1,
+          "scene": "maze-garden",
           "url": "/atlas-v2/production/0010-1ee6c61bdb797939.webp"
         },
         {
@@ -929,6 +996,7 @@
           "x": 214185,
           "y": 114418,
           "rows": 1,
+          "scene": "archaeological-excavation",
           "url": "/atlas-v2/production/0011-984e923c9af21b4f.webp"
         },
         {
@@ -936,6 +1004,7 @@
           "x": 214185,
           "y": 114418,
           "rows": 1,
+          "scene": "cyber-deck-alley",
           "url": "/atlas-v2/production/0012-158af731cec83631.webp"
         }
       ],
@@ -951,6 +1020,7 @@
           "x": 214185,
           "y": 114421,
           "rows": 1,
+          "scene": "ironworks",
           "url": "/atlas-v2/production/0015-c25f9bf4cd471389.webp"
         },
         {
@@ -958,6 +1028,7 @@
           "x": 214185,
           "y": 114421,
           "rows": 1,
+          "scene": "orrery-hall",
           "url": "/atlas-v2/production/0016-6d21bc2f7731941d.webp"
         }
       ],
@@ -973,6 +1044,7 @@
           "x": 214182,
           "y": 114417,
           "rows": 1,
+          "scene": "telegraph-office",
           "url": "/atlas-v2/production/0017-973f7b31e811f834.webp"
         },
         {
@@ -980,6 +1052,7 @@
           "x": 214182,
           "y": 114417,
           "rows": 1,
+          "scene": "japanese-garden",
           "url": "/atlas-v2/production/0018-b5d8852eac79375b.webp"
         },
         {
@@ -987,6 +1060,7 @@
           "x": 214182,
           "y": 114417,
           "rows": 1,
+          "scene": "film-backlot",
           "url": "/atlas-v2/production/0019-e065f66a7b5bd342.webp"
         }
       ],
@@ -1002,6 +1076,7 @@
           "x": 214182,
           "y": 114418,
           "rows": 1,
+          "scene": "mesmerist-salon",
           "url": "/atlas-v2/production/0020-ad2837392989af0a.webp"
         },
         {
@@ -1009,6 +1084,7 @@
           "x": 214182,
           "y": 114418,
           "rows": 1,
+          "scene": "printworks",
           "url": "/atlas-v2/production/0021-0677ee9a55b8a384.webp"
         },
         {
@@ -1016,6 +1092,7 @@
           "x": 214182,
           "y": 114418,
           "rows": 1,
+          "scene": "raver-arena",
           "url": "/atlas-v2/production/0022-01ba3d70f10b1644.webp"
         }
       ],
@@ -1031,6 +1108,7 @@
           "x": 214182,
           "y": 114419,
           "rows": 1,
+          "scene": "analytical-engine",
           "url": "/atlas-v2/production/0023-6f43d4be9b5a0c5b.webp"
         },
         {
@@ -1038,6 +1116,7 @@
           "x": 214182,
           "y": 114419,
           "rows": 1,
+          "scene": "grand-library",
           "url": "/atlas-v2/production/0024-0600c3018602f35f.webp"
         },
         {
@@ -1045,6 +1124,7 @@
           "x": 214182,
           "y": 114419,
           "rows": 1,
+          "scene": "observatory",
           "url": "/atlas-v2/production/0025-6b97e252e2e11c39.webp"
         }
       ],
@@ -1060,6 +1140,7 @@
           "x": 214182,
           "y": 114420,
           "rows": 1,
+          "scene": "steam-railway",
           "url": "/atlas-v2/production/0027-ce22e8776e082db9.webp"
         },
         {
@@ -1067,6 +1148,7 @@
           "x": 214182,
           "y": 114420,
           "rows": 1,
+          "scene": "balloon-festival",
           "url": "/atlas-v2/production/0028-f0433e1037fae6c5.webp"
         }
       ],
@@ -1082,6 +1164,7 @@
           "x": 214182,
           "y": 114421,
           "rows": 1,
+          "scene": "weather-station",
           "url": "/atlas-v2/production/0029-93126310cee915cd.webp"
         },
         {
@@ -1089,6 +1172,7 @@
           "x": 214182,
           "y": 114421,
           "rows": 1,
+          "scene": "botanical-laboratory",
           "url": "/atlas-v2/production/0030-18caf98a9a128734.webp"
         },
         {
@@ -1096,6 +1180,7 @@
           "x": 214182,
           "y": 114421,
           "rows": 1,
+          "scene": "market-quarter",
           "url": "/atlas-v2/production/0031-332f05ae36ffa46c.webp"
         }
       ],
@@ -1111,6 +1196,7 @@
           "x": 214182,
           "y": 114422,
           "rows": 1,
+          "scene": "photography-studio",
           "url": "/atlas-v2/production/0032-ded2cdafaaa99099.webp"
         },
         {
@@ -1118,6 +1204,7 @@
           "x": 214182,
           "y": 114422,
           "rows": 1,
+          "scene": "hall-of-mirrors",
           "url": "/atlas-v2/production/0034-6879ba180a7d8afa.webp"
         }
       ],
@@ -1133,6 +1220,7 @@
           "x": 214183,
           "y": 114417,
           "rows": 1,
+          "scene": "theme-park",
           "url": "/atlas-v2/production/0035-d0334a04cf190b69.webp"
         },
         {
@@ -1140,6 +1228,7 @@
           "x": 214183,
           "y": 114417,
           "rows": 1,
+          "scene": "textile-mill",
           "url": "/atlas-v2/production/0037-95238805c8769011.webp"
         }
       ],
@@ -1155,6 +1244,7 @@
           "x": 214183,
           "y": 114422,
           "rows": 1,
+          "scene": "archaeological-excavation",
           "url": "/generated-tiles/18/214183/114422/archaeological-excavation?version=6&variant=discovery-0fb5cf43-b8da-4536-a33e-6ac2d1f2adce-b1853274ce3f"
         },
         {
@@ -1162,6 +1252,7 @@
           "x": 214183,
           "y": 114422,
           "rows": 1,
+          "scene": "civic-centre",
           "url": "/atlas-v2/production/0038-4a062526415e9f6a.webp"
         },
         {
@@ -1169,6 +1260,7 @@
           "x": 214183,
           "y": 114422,
           "rows": 1,
+          "scene": "circus",
           "url": "/atlas-v2/production/0039-91f23b6e1fcb45f2.webp"
         }
       ],
@@ -1184,6 +1276,7 @@
           "x": 214184,
           "y": 114417,
           "rows": 1,
+          "scene": "mechanical-theatre",
           "url": "/atlas-v2/production/0040-a9f8736dd639eb28.webp"
         },
         {
@@ -1191,6 +1284,7 @@
           "x": 214184,
           "y": 114417,
           "rows": 1,
+          "scene": "zoo",
           "url": "/atlas-v2/production/0041-60441a393ec05d4d.webp"
         },
         {
@@ -1198,6 +1292,7 @@
           "x": 214184,
           "y": 114417,
           "rows": 1,
+          "scene": "ironworks",
           "url": "/atlas-v2/production/0042-af8c645e0cecac9b.webp"
         }
       ],
@@ -1213,6 +1308,7 @@
           "x": 214184,
           "y": 114422,
           "rows": 1,
+          "scene": "photography-studio",
           "url": "/generated-tiles/18/214184/114422/photography-studio?version=6&variant=discovery-3f9be3dc-1e5d-4420-8f3c-ca46c40db71c-a941ba95b622"
         },
         {
@@ -1220,6 +1316,7 @@
           "x": 214184,
           "y": 114422,
           "rows": 1,
+          "scene": "ferris-wheel",
           "url": "/atlas-v2/production/0043-9096c4ca719ef9cd.webp"
         },
         {
@@ -1227,6 +1324,7 @@
           "x": 214184,
           "y": 114422,
           "rows": 1,
+          "scene": "circus",
           "url": "/atlas-v2/production/0044-01a2ffb6feb0e9a6.webp"
         }
       ],
@@ -1242,6 +1340,7 @@
           "x": 214185,
           "y": 114417,
           "rows": 1,
+          "scene": "orrery-hall",
           "url": "/atlas-v2/production/0045-7b97f0226dd3ddc4.webp"
         },
         {
@@ -1249,6 +1348,7 @@
           "x": 214185,
           "y": 114417,
           "rows": 1,
+          "scene": "printworks",
           "url": "/atlas-v2/production/0047-cccd089eba0348ac.webp"
         }
       ],
@@ -1264,6 +1364,7 @@
           "x": 214185,
           "y": 114422,
           "rows": 1,
+          "scene": "automata",
           "url": "/atlas-v2/production/0048-95a19619447fb32a.webp"
         },
         {
@@ -1271,6 +1372,7 @@
           "x": 214185,
           "y": 114422,
           "rows": 1,
+          "scene": "analytical-engine",
           "url": "/atlas-v2/production/0049-fa6309c0f83b1639.webp"
         },
         {
@@ -1278,6 +1380,7 @@
           "x": 214185,
           "y": 114422,
           "rows": 1,
+          "scene": "utopian-garden",
           "url": "/atlas-v2/production/0050-057deca957e1d03e.webp"
         }
       ],
@@ -1293,6 +1396,7 @@
           "x": 214186,
           "y": 114417,
           "rows": 1,
+          "scene": "market-quarter",
           "url": "/atlas-v2/production/0051-a5532ac82f3081d8.webp"
         },
         {
@@ -1300,6 +1404,7 @@
           "x": 214186,
           "y": 114417,
           "rows": 1,
+          "scene": "electrical-laboratory",
           "url": "/atlas-v2/production/0052-c2770687f7e94400.webp"
         },
         {
@@ -1307,6 +1412,7 @@
           "x": 214186,
           "y": 114417,
           "rows": 1,
+          "scene": "cyber-deck-alley",
           "url": "/atlas-v2/production/0053-b66d77686ac15264.webp"
         }
       ],
@@ -1322,6 +1428,7 @@
           "x": 214186,
           "y": 114418,
           "rows": 1,
+          "scene": "civic-centre",
           "url": "/atlas-v2/production/0054-10d6ac662b90fb3b.webp"
         }
       ],
@@ -1337,6 +1444,7 @@
           "x": 214186,
           "y": 114419,
           "rows": 1,
+          "scene": "tropical-aquarium",
           "url": "/atlas-v2/production/0058-d5808e6d2ed76b36.webp"
         }
       ],
@@ -1352,6 +1460,7 @@
           "x": 214186,
           "y": 114420,
           "rows": 1,
+          "scene": "mechanical-theatre",
           "url": "/atlas-v2/production/0062-250c15251a532e08.webp"
         }
       ],
@@ -1367,6 +1476,7 @@
           "x": 214186,
           "y": 114421,
           "rows": 1,
+          "scene": "balloon-festival",
           "url": "/atlas-v2/production/0063-8fcf430c44cc4e88.webp"
         },
         {
@@ -1374,6 +1484,7 @@
           "x": 214186,
           "y": 114421,
           "rows": 1,
+          "scene": "marshmallow-factory",
           "url": "/atlas-v2/production/0065-b45a814c66a02aaf.webp"
         }
       ],
@@ -1389,6 +1500,7 @@
           "x": 214186,
           "y": 114422,
           "rows": 1,
+          "scene": "solar-farm",
           "url": "/atlas-v2/production/0066-9d3094560237ec93.webp"
         }
       ],
@@ -1404,6 +1516,7 @@
           "x": 214181,
           "y": 114416,
           "rows": 1,
+          "scene": "suspension-bridge",
           "url": "/atlas-v2/production/0069-0387d271a77e2142.webp"
         },
         {
@@ -1411,6 +1524,7 @@
           "x": 214181,
           "y": 114416,
           "rows": 1,
+          "scene": "textile-mill",
           "url": "/atlas-v2/production/0070-8f4d716a00856561.webp"
         }
       ],
@@ -1426,6 +1540,7 @@
           "x": 214181,
           "y": 114417,
           "rows": 1,
+          "scene": "hall-of-mirrors",
           "url": "/atlas-v2/production/0071-b550155e8d4941c7.webp"
         },
         {
@@ -1433,6 +1548,7 @@
           "x": 214181,
           "y": 114417,
           "rows": 1,
+          "scene": "archaeological-excavation",
           "url": "/atlas-v2/production/0072-1e55b7b81a157639.webp"
         }
       ],
@@ -1448,6 +1564,7 @@
           "x": 214181,
           "y": 114418,
           "rows": 1,
+          "scene": "botanical-laboratory",
           "url": "/atlas-v2/production/0073-7f22c68cfd58d999.webp"
         },
         {
@@ -1455,6 +1572,7 @@
           "x": 214181,
           "y": 114418,
           "rows": 1,
+          "scene": "thrifting-paradise",
           "url": "/atlas-v2/production/0074-c88dae7e2050a37c.webp"
         }
       ],
@@ -1470,6 +1588,7 @@
           "x": 214181,
           "y": 114419,
           "rows": 1,
+          "scene": "japanese-garden",
           "url": "/atlas-v2/production/0075-c6ec417976407636.webp"
         },
         {
@@ -1477,6 +1596,7 @@
           "x": 214181,
           "y": 114419,
           "rows": 1,
+          "scene": "rice-sculpture-festival",
           "url": "/atlas-v2/production/0076-e81b45823da9fbff.webp"
         }
       ],
@@ -1492,6 +1612,7 @@
           "x": 214181,
           "y": 114420,
           "rows": 1,
+          "scene": "telegraph-office",
           "url": "/atlas-v2/production/0077-76a7008c739ca5c5.webp"
         },
         {
@@ -1499,6 +1620,7 @@
           "x": 214181,
           "y": 114420,
           "rows": 1,
+          "scene": "theme-park",
           "url": "/atlas-v2/production/0078-03432ca3fce308ea.webp"
         }
       ],
@@ -1514,6 +1636,7 @@
           "x": 214181,
           "y": 114421,
           "rows": 1,
+          "scene": "maze-garden",
           "url": "/atlas-v2/production/0079-b0b8ae0ce662ed53.webp"
         },
         {
@@ -1521,6 +1644,7 @@
           "x": 214181,
           "y": 114421,
           "rows": 1,
+          "scene": "mesmerist-salon",
           "url": "/atlas-v2/production/0080-d4dc1bb22e79295c.webp"
         }
       ],
@@ -1536,6 +1660,7 @@
           "x": 214181,
           "y": 114422,
           "rows": 1,
+          "scene": "botanical-laboratory",
           "url": "/atlas-v2/production/0081-83e513e160230cdd.webp"
         },
         {
@@ -1543,6 +1668,7 @@
           "x": 214181,
           "y": 114422,
           "rows": 1,
+          "scene": "electrical-laboratory",
           "url": "/atlas-v2/production/0082-a4c3d87676246526.webp"
         }
       ],
@@ -1558,6 +1684,7 @@
           "x": 214181,
           "y": 114423,
           "rows": 1,
+          "scene": "anatomical-museum",
           "url": "/atlas-v2/production/0083-bd449ee3528a5e87.webp"
         },
         {
@@ -1565,6 +1692,7 @@
           "x": 214181,
           "y": 114423,
           "rows": 1,
+          "scene": "civic-centre",
           "url": "/atlas-v2/production/0084-d1a7e98bba377586.webp"
         }
       ],
@@ -1580,6 +1708,7 @@
           "x": 214182,
           "y": 114416,
           "rows": 1,
+          "scene": "orrery-hall",
           "url": "/atlas-v2/production/0085-41914b902d7c58b9.webp"
         },
         {
@@ -1587,6 +1716,7 @@
           "x": 214182,
           "y": 114416,
           "rows": 1,
+          "scene": "rice-sculpture-festival",
           "url": "/atlas-v2/production/0086-ebcef59162159c93.webp"
         }
       ],
@@ -1602,6 +1732,7 @@
           "x": 214182,
           "y": 114423,
           "rows": 1,
+          "scene": "mesmerist-salon",
           "url": "/atlas-v2/production/0087-e5f0131f02b18cfd.webp"
         },
         {
@@ -1609,6 +1740,7 @@
           "x": 214182,
           "y": 114423,
           "rows": 1,
+          "scene": "market-quarter",
           "url": "/atlas-v2/production/0088-01f16d01327b42a5.webp"
         }
       ],
@@ -1624,6 +1756,7 @@
           "x": 214183,
           "y": 114416,
           "rows": 1,
+          "scene": "japanese-garden",
           "url": "/atlas-v2/production/0090-83a7530b444f93be.webp"
         }
       ],
@@ -1639,6 +1772,7 @@
           "x": 214183,
           "y": 114423,
           "rows": 1,
+          "scene": "steam-railway",
           "url": "/atlas-v2/production/0091-ada9e34243aeab04.webp"
         },
         {
@@ -1646,6 +1780,7 @@
           "x": 214183,
           "y": 114423,
           "rows": 1,
+          "scene": "tropical-aquarium",
           "url": "/atlas-v2/production/0092-6cc2569a7a0a13dd.webp"
         }
       ],
@@ -1661,6 +1796,7 @@
           "x": 214184,
           "y": 114416,
           "rows": 1,
+          "scene": "art-nouveau-palace",
           "url": "/atlas-v2/production/0094-059194cdfe1e5846.webp"
         }
       ],
@@ -1676,6 +1812,7 @@
           "x": 214184,
           "y": 114423,
           "rows": 1,
+          "scene": "utopian-garden",
           "url": "/atlas-v2/production/0095-a31d58be44e9ed2f.webp"
         },
         {
@@ -1683,6 +1820,7 @@
           "x": 214184,
           "y": 114423,
           "rows": 1,
+          "scene": "balloon-festival",
           "url": "/atlas-v2/production/0096-be853b24c01af3bf.webp"
         }
       ],
@@ -1698,6 +1836,7 @@
           "x": 214185,
           "y": 114416,
           "rows": 1,
+          "scene": "mechanical-theatre",
           "url": "/atlas-v2/production/0097-e30457fff2c88e5c.webp"
         }
       ],
@@ -1713,6 +1852,7 @@
           "x": 214185,
           "y": 114423,
           "rows": 1,
+          "scene": "observatory",
           "url": "/atlas-v2/production/0099-d76a944a650b42d3.webp"
         },
         {
@@ -1720,6 +1860,7 @@
           "x": 214185,
           "y": 114423,
           "rows": 1,
+          "scene": "maze-garden",
           "url": "/atlas-v2/production/0100-5f1f36489db41d5e.webp"
         }
       ],
@@ -1735,6 +1876,7 @@
           "x": 214186,
           "y": 114416,
           "rows": 1,
+          "scene": "suspension-bridge",
           "url": "/atlas-v2/production/0101-7decaf9a4b2d77f2.webp"
         },
         {
@@ -1742,6 +1884,7 @@
           "x": 214186,
           "y": 114416,
           "rows": 1,
+          "scene": "photography-studio",
           "url": "/atlas-v2/production/0102-aa6fe06e763f0b5d.webp"
         }
       ],
@@ -1757,6 +1900,7 @@
           "x": 214186,
           "y": 114423,
           "rows": 1,
+          "scene": "theme-park",
           "url": "/atlas-v2/production/0103-22e2b42f9fdc24d0.webp"
         },
         {
@@ -1764,6 +1908,7 @@
           "x": 214186,
           "y": 114423,
           "rows": 1,
+          "scene": "cyber-deck-alley",
           "url": "/atlas-v2/production/0104-6cd5e4a096685aaa.webp"
         }
       ],
@@ -1779,6 +1924,7 @@
           "x": 214187,
           "y": 114416,
           "rows": 1,
+          "scene": "archaeological-excavation",
           "url": "/atlas-v2/production/0105-7fd8675065c9c706.webp"
         },
         {
@@ -1786,6 +1932,7 @@
           "x": 214187,
           "y": 114416,
           "rows": 1,
+          "scene": "hall-of-mirrors",
           "url": "/atlas-v2/production/0106-9daa50dfea58af72.webp"
         }
       ],
@@ -1801,6 +1948,7 @@
           "x": 214187,
           "y": 114417,
           "rows": 1,
+          "scene": "analytical-engine",
           "url": "/atlas-v2/production/0107-684f2623b98653f4.webp"
         }
       ],
@@ -1816,6 +1964,7 @@
           "x": 214187,
           "y": 114419,
           "rows": 1,
+          "scene": "thrifting-paradise",
           "url": "/atlas-v2/production/0111-d75276a16805929d.webp"
         },
         {
@@ -1823,6 +1972,7 @@
           "x": 214187,
           "y": 114419,
           "rows": 1,
+          "scene": "zoo",
           "url": "/atlas-v2/production/0112-bfad4069400f9ccf.webp"
         }
       ],
@@ -1838,6 +1988,7 @@
           "x": 214187,
           "y": 114420,
           "rows": 1,
+          "scene": "solar-farm",
           "url": "/atlas-v2/production/0113-89ce51894aadda9e.webp"
         },
         {
@@ -1845,6 +1996,7 @@
           "x": 214187,
           "y": 114420,
           "rows": 1,
+          "scene": "film-backlot",
           "url": "/atlas-v2/production/0114-f04a3ce625937343.webp"
         }
       ],
@@ -1860,6 +2012,7 @@
           "x": 214187,
           "y": 114422,
           "rows": 1,
+          "scene": "weather-station",
           "url": "/atlas-v2/production/0118-eeb13620b6cdcb3b.webp"
         }
       ],
@@ -1875,6 +2028,7 @@
           "x": 214180,
           "y": 114415,
           "rows": 1,
+          "scene": "market-quarter",
           "url": "/atlas-v2/production/0121-58112f2ec120bbe4.webp"
         }
       ],
@@ -1890,6 +2044,7 @@
           "x": 214180,
           "y": 114416,
           "rows": 1,
+          "scene": "photography-studio",
           "url": "/atlas-v2/production/0122-c1d20e091def90c5.webp"
         }
       ],
@@ -1905,6 +2060,7 @@
           "x": 214180,
           "y": 114417,
           "rows": 1,
+          "scene": "utopian-garden",
           "url": "/atlas-v2/production/0123-3cc49d3ae067911a.webp"
         }
       ],
@@ -1920,6 +2076,7 @@
           "x": 214180,
           "y": 114418,
           "rows": 1,
+          "scene": "telegraph-office",
           "url": "/atlas-v2/production/0124-0788da8b176dc4ab.webp"
         }
       ],
@@ -1935,6 +2092,7 @@
           "x": 214180,
           "y": 114419,
           "rows": 1,
+          "scene": "maze-garden",
           "url": "/atlas-v2/production/0125-3c13c80c9e79c487.webp"
         }
       ],
@@ -1950,6 +2108,7 @@
           "x": 214180,
           "y": 114420,
           "rows": 1,
+          "scene": "hall-of-mirrors",
           "url": "/atlas-v2/production/0126-2e152d1fcd945575.webp"
         }
       ],
@@ -1965,6 +2124,7 @@
           "x": 214180,
           "y": 114421,
           "rows": 1,
+          "scene": "ironworks",
           "url": "/atlas-v2/production/0127-71dad22ceeeda449.webp"
         }
       ],
@@ -1980,6 +2140,7 @@
           "x": 214180,
           "y": 114422,
           "rows": 1,
+          "scene": "balloon-festival",
           "url": "/atlas-v2/production/0128-d7fe64bc41de62c5.webp"
         }
       ],
@@ -1995,6 +2156,7 @@
           "x": 214180,
           "y": 114423,
           "rows": 1,
+          "scene": "film-backlot",
           "url": "/atlas-v2/production/0129-3f1df7172efcca76.webp"
         }
       ],
@@ -2010,6 +2172,7 @@
           "x": 214182,
           "y": 114415,
           "rows": 1,
+          "scene": "marshmallow-factory",
           "url": "/atlas-v2/production/0130-8ccae1057a54389d.webp"
         }
       ],
@@ -2025,6 +2188,7 @@
           "x": 214183,
           "y": 114415,
           "rows": 1,
+          "scene": "textile-mill",
           "url": "/atlas-v2/production/0131-f2592215d2fe9d43.webp"
         }
       ],
@@ -2040,6 +2204,7 @@
           "x": 214184,
           "y": 114415,
           "rows": 1,
+          "scene": "mesmerist-salon",
           "url": "/atlas-v2/production/0132-c3bfda10ec3d91f3.webp"
         }
       ],
@@ -2055,6 +2220,7 @@
           "x": 214185,
           "y": 114415,
           "rows": 1,
+          "scene": "floating-opera",
           "url": "/atlas-v2/production/sea-0133-506a0833077b83cd.webp"
         }
       ],
@@ -2070,6 +2236,7 @@
           "x": 214188,
           "y": 114415,
           "rows": 1,
+          "scene": "raver-arena",
           "url": "/atlas-v2/production/0136-605cba7e732734ef.webp"
         }
       ],
@@ -2085,6 +2252,7 @@
           "x": 214188,
           "y": 114416,
           "rows": 1,
+          "scene": "steam-railway",
           "url": "/atlas-v2/production/0137-5acbbfc135952b13.webp"
         }
       ],
@@ -2100,6 +2268,7 @@
           "x": 214188,
           "y": 114417,
           "rows": 1,
+          "scene": "theme-park",
           "url": "/atlas-v2/production/0138-f15f76bf715b9889.webp"
         }
       ],
@@ -2115,6 +2284,7 @@
           "x": 214188,
           "y": 114419,
           "rows": 1,
+          "scene": "japanese-garden",
           "url": "/atlas-v2/production/0140-8b8a1e7eb366cb87.webp"
         }
       ],
@@ -2130,6 +2300,7 @@
           "x": 214188,
           "y": 114422,
           "rows": 1,
+          "scene": "solar-farm",
           "url": "/atlas-v2/production/0143-08bce4dedc1370ee.webp"
         }
       ],
@@ -2145,6 +2316,7 @@
           "x": 214188,
           "y": 114423,
           "rows": 1,
+          "scene": "circus",
           "url": "/atlas-v2/production/0144-6b4cc92281e397b0.webp"
         }
       ],
@@ -2160,6 +2332,7 @@
           "x": 214169,
           "y": 114419,
           "rows": 1,
+          "scene": "grand-library",
           "url": "/atlas-v2/production/0145-2b4e9f39db84a1ba.webp"
         }
       ],
@@ -2175,6 +2348,7 @@
           "x": 214170,
           "y": 114422,
           "rows": 1,
+          "scene": "anatomical-museum",
           "url": "/atlas-v2/production/0146-4c8d7ac213db1e72.webp"
         }
       ],
@@ -2190,6 +2364,7 @@
           "x": 214171,
           "y": 114422,
           "rows": 1,
+          "scene": "archaeological-excavation",
           "url": "/atlas-v2/production/0147-8dedc38b663d2451.webp"
         }
       ],
@@ -2205,6 +2380,7 @@
           "x": 214171,
           "y": 114421,
           "rows": 1,
+          "scene": "thrifting-paradise",
           "url": "/atlas-v2/production/0148-809be17a107e5fee.webp"
         }
       ],
@@ -2220,6 +2396,7 @@
           "x": 214172,
           "y": 114421,
           "rows": 1,
+          "scene": "observatory",
           "url": "/atlas-v2/production/0149-2fb1a04c55628cda.webp"
         }
       ],
@@ -2235,6 +2412,7 @@
           "x": 214172,
           "y": 114422,
           "rows": 1,
+          "scene": "suspension-bridge",
           "url": "/atlas-v2/production/0150-c71a14781fca4a1d.webp"
         }
       ],
@@ -2250,6 +2428,7 @@
           "x": 214173,
           "y": 114422,
           "rows": 1,
+          "scene": "cyber-deck-alley",
           "url": "/atlas-v2/production/0151-3180219a4ee88eb0.webp"
         }
       ],
@@ -2265,6 +2444,7 @@
           "x": 214173,
           "y": 114421,
           "rows": 1,
+          "scene": "electrical-laboratory",
           "url": "/atlas-v2/production/0152-77192cf5ce9bb798.webp"
         }
       ],
@@ -2280,6 +2460,7 @@
           "x": 214174,
           "y": 114420,
           "rows": 1,
+          "scene": "rice-sculpture-festival",
           "url": "/atlas-v2/production/0153-c2f633c4174cb0da.webp"
         }
       ],
@@ -2295,6 +2476,7 @@
           "x": 214174,
           "y": 114421,
           "rows": 1,
+          "scene": "orrery-hall",
           "url": "/atlas-v2/production/0154-5850db3ba6b94cbf.webp"
         }
       ],
@@ -2310,6 +2492,7 @@
           "x": 214175,
           "y": 114422,
           "rows": 1,
+          "scene": "analytical-engine",
           "url": "/atlas-v2/production/0156-1cd46eb10046854d.webp"
         }
       ],
@@ -2325,6 +2508,7 @@
           "x": 214175,
           "y": 114421,
           "rows": 1,
+          "scene": "automata",
           "url": "/atlas-v2/production/0157-ae182a42c8631fb8.webp"
         }
       ],
@@ -2340,6 +2524,7 @@
           "x": 214175,
           "y": 114420,
           "rows": 1,
+          "scene": "sushi-restaurant",
           "url": "/atlas-v2/production/0158-5e926674fe212a55.webp"
         }
       ],
@@ -2355,6 +2540,7 @@
           "x": 214176,
           "y": 114420,
           "rows": 1,
+          "scene": "mechanical-theatre",
           "url": "/atlas-v2/production/0159-16c8259ee3ef3ee3.webp"
         }
       ],
@@ -2370,6 +2556,7 @@
           "x": 214176,
           "y": 114421,
           "rows": 1,
+          "scene": "printworks",
           "url": "/atlas-v2/production/0160-850b962367d0fb04.webp"
         }
       ],
@@ -2385,6 +2572,7 @@
           "x": 214176,
           "y": 114422,
           "rows": 1,
+          "scene": "mesmerist-salon",
           "url": "/atlas-v2/production/0161-060d318195433041.webp"
         }
       ],
@@ -2400,6 +2588,7 @@
           "x": 214177,
           "y": 114422,
           "rows": 1,
+          "scene": "analytical-engine",
           "url": "/atlas-v2/production/0162-fee55e542641b435.webp"
         }
       ],
@@ -2415,6 +2604,7 @@
           "x": 214177,
           "y": 114421,
           "rows": 1,
+          "scene": "market-quarter",
           "url": "/atlas-v2/production/0163-32efdc3eefeac9b8.webp"
         }
       ],
@@ -2430,6 +2620,7 @@
           "x": 214177,
           "y": 114420,
           "rows": 1,
+          "scene": "marshmallow-factory",
           "url": "/atlas-v2/production/0164-f3800da335751221.webp"
         }
       ],
@@ -2445,6 +2636,7 @@
           "x": 214177,
           "y": 114419,
           "rows": 1,
+          "scene": "balloon-festival",
           "url": "/atlas-v2/production/0165-8bffaf630aaeeed0.webp"
         }
       ],
@@ -2460,6 +2652,7 @@
           "x": 214178,
           "y": 114418,
           "rows": 1,
+          "scene": "mermaid-station",
           "url": "/atlas-v2/production/sea-0166-9e7f5ff41f10ddf8.webp"
         }
       ],
@@ -2475,6 +2668,7 @@
           "x": 214178,
           "y": 114421,
           "rows": 1,
+          "scene": "maze-garden",
           "url": "/atlas-v2/production/0169-adf9f589fac9a4c6.webp"
         }
       ],
@@ -2490,6 +2684,7 @@
           "x": 214178,
           "y": 114422,
           "rows": 1,
+          "scene": "steam-railway",
           "url": "/atlas-v2/production/0170-a885ebaeacb5817b.webp"
         }
       ],
@@ -2505,6 +2700,7 @@
           "x": 214179,
           "y": 114422,
           "rows": 1,
+          "scene": "automata",
           "url": "/atlas-v2/production/0171-55ad65232c3b1ef1.webp"
         }
       ],
@@ -2520,6 +2716,7 @@
           "x": 214179,
           "y": 114421,
           "rows": 1,
+          "scene": "film-backlot",
           "url": "/atlas-v2/production/0172-22ac945d957fb45b.webp"
         }
       ],
@@ -2535,6 +2732,7 @@
           "x": 214179,
           "y": 114420,
           "rows": 1,
+          "scene": "utopian-garden",
           "url": "/atlas-v2/production/0173-103b1643b3f93351.webp"
         }
       ],
@@ -2550,6 +2748,7 @@
           "x": 214179,
           "y": 114418,
           "rows": 1,
+          "scene": "staircase-foundation",
           "url": "/atlas-v2/production/sea-0174-302e3fbdbda8adaf.webp"
         }
       ],
@@ -2565,6 +2764,7 @@
           "x": 214179,
           "y": 114417,
           "rows": 1,
+          "scene": "raver-arena",
           "url": "/atlas-v2/production/0175-88539898d0fecaa1.webp"
         }
       ],
@@ -2580,6 +2780,7 @@
           "x": 214186,
           "y": 114414,
           "rows": 1,
+          "scene": "sushi-restaurant",
           "url": "/atlas-v2/production/0176-56a32c93b19c8442.webp"
         }
       ],
@@ -2595,6 +2796,7 @@
           "x": 214187,
           "y": 114414,
           "rows": 1,
+          "scene": "tropical-aquarium",
           "url": "/atlas-v2/production/0177-05340b45e09f9322.webp"
         }
       ],
@@ -2610,6 +2812,7 @@
           "x": 214188,
           "y": 114414,
           "rows": 1,
+          "scene": "lighthouse",
           "url": "/atlas-v2/production/sea-0178-39d907680f4e60c1.webp"
         }
       ],
@@ -2625,6 +2828,7 @@
           "x": 214189,
           "y": 114419,
           "rows": 1,
+          "scene": "rice-sculpture-festival",
           "url": "/atlas-v2/production/0179-737774014840f28e.webp"
         }
       ],
@@ -2640,6 +2844,7 @@
           "x": 214189,
           "y": 114418,
           "rows": 1,
+          "scene": "japanese-garden",
           "url": "/atlas-v2/production/0180-512df36b6fc2ec53.webp"
         }
       ],
@@ -2655,6 +2860,7 @@
           "x": 214189,
           "y": 114417,
           "rows": 1,
+          "scene": "art-nouveau-palace",
           "url": "/atlas-v2/production/0181-3448b3f2f939678c.webp"
         }
       ],
@@ -2670,6 +2876,7 @@
           "x": 214189,
           "y": 114416,
           "rows": 1,
+          "scene": "civic-centre",
           "url": "/atlas-v2/production/0182-1e4ef700fdc9b0b5.webp"
         }
       ],
@@ -2685,6 +2892,7 @@
           "x": 214189,
           "y": 114415,
           "rows": 1,
+          "scene": "weather-station",
           "url": "/atlas-v2/production/0183-593277d533ed5adf.webp"
         }
       ],
@@ -2700,6 +2908,7 @@
           "x": 214190,
           "y": 114417,
           "rows": 1,
+          "scene": "botanical-laboratory",
           "url": "/atlas-v2/production/0186-367709dcb15efe3a.webp"
         }
       ],
@@ -2715,6 +2924,7 @@
           "x": 214190,
           "y": 114418,
           "rows": 1,
+          "scene": "anatomical-museum",
           "url": "/atlas-v2/production/0187-7c57df852e8c80a3.webp"
         }
       ],
@@ -2730,6 +2940,7 @@
           "x": 214191,
           "y": 114419,
           "rows": 1,
+          "scene": "ferris-wheel",
           "url": "/atlas-v2/production/0189-162693ee7505ffbe.webp"
         }
       ],
@@ -2745,6 +2956,7 @@
           "x": 214191,
           "y": 114417,
           "rows": 1,
+          "scene": "archaeological-excavation",
           "url": "/atlas-v2/production/0191-f368cac518146db5.webp"
         }
       ],
@@ -2760,6 +2972,7 @@
           "x": 214191,
           "y": 114415,
           "rows": 1,
+          "scene": "solar-farm",
           "url": "/atlas-v2/production/0192-3d9a59835a547607.webp"
         }
       ],
@@ -2775,6 +2988,7 @@
           "x": 214192,
           "y": 114417,
           "rows": 1,
+          "scene": "observatory",
           "url": "/atlas-v2/production/0195-f214bc6c3611cec4.webp"
         }
       ],
@@ -2790,6 +3004,7 @@
           "x": 214193,
           "y": 114419,
           "rows": 1,
+          "scene": "thrifting-paradise",
           "url": "/atlas-v2/production/0199-6fb07c7e2d510da5.webp"
         }
       ],
@@ -2805,6 +3020,7 @@
           "x": 214193,
           "y": 114418,
           "rows": 1,
+          "scene": "zoo",
           "url": "/atlas-v2/production/0200-c265b9937abb43c4.webp"
         }
       ],
@@ -2820,6 +3036,7 @@
           "x": 214193,
           "y": 114417,
           "rows": 1,
+          "scene": "weather-station",
           "url": "/atlas-v2/production/0201-26f0b95d4f8257ad.webp"
         }
       ],
@@ -2835,6 +3052,7 @@
           "x": 214193,
           "y": 114416,
           "rows": 1,
+          "scene": "wave-organ",
           "url": "/atlas-v2/production/sea-0202-18c99501357eeb9c.webp"
         }
       ],
@@ -2850,6 +3068,7 @@
           "x": 214194,
           "y": 114417,
           "rows": 1,
+          "scene": "tropical-aquarium",
           "url": "/atlas-v2/production/0205-67818a113891347e.webp"
         }
       ],
@@ -2865,6 +3084,7 @@
           "x": 214195,
           "y": 114419,
           "rows": 1,
+          "scene": "botanical-laboratory",
           "url": "/atlas-v2/production/0210-aadf2bcbade6d7a3.webp"
         }
       ],
@@ -2880,6 +3100,7 @@
           "x": 214195,
           "y": 114418,
           "rows": 1,
+          "scene": "ferris-wheel",
           "url": "/atlas-v2/production/0211-3af64dbd301e8294.webp"
         }
       ],
@@ -2895,6 +3116,7 @@
           "x": 214195,
           "y": 114416,
           "rows": 1,
+          "scene": "walking-yacht-club",
           "url": "/atlas-v2/production/sea-0213-312c8eed930ef572.webp"
         }
       ],
@@ -2910,6 +3132,7 @@
           "x": 214196,
           "y": 114417,
           "rows": 1,
+          "scene": "flying-fish-burgers",
           "url": "/atlas-v2/production/sea-0215-3ee67dd54966b2f8.webp"
         }
       ],
@@ -2925,6 +3148,7 @@
           "x": 214196,
           "y": 114418,
           "rows": 1,
+          "scene": "theme-park",
           "url": "/atlas-v2/production/0216-57ea24be9dbb3309.webp"
         }
       ],
@@ -2940,6 +3164,7 @@
           "x": 214197,
           "y": 114421,
           "rows": 1,
+          "scene": "rice-sculpture-festival",
           "url": "/atlas-v2/production/0219-d8b5c528425c0118.webp"
         }
       ],
@@ -2955,6 +3180,7 @@
           "x": 214197,
           "y": 114418,
           "rows": 1,
+          "scene": "orrery-hall",
           "url": "/atlas-v2/production/0222-9bc727cbcec575f6.webp"
         }
       ],
@@ -2970,6 +3196,7 @@
           "x": 214197,
           "y": 114417,
           "rows": 1,
+          "scene": "photography-studio",
           "url": "/atlas-v2/production/0223-35de500c0df0a712.webp"
         }
       ],
@@ -2985,6 +3212,7 @@
           "x": 214197,
           "y": 114416,
           "rows": 1,
+          "scene": "shipwright-dock",
           "url": "/atlas-v2/production/sea-0224-8ea81daa6525e032.webp"
         }
       ],
@@ -3000,6 +3228,7 @@
           "x": 214198,
           "y": 114419,
           "rows": 1,
+          "scene": "maze-garden",
           "url": "/atlas-v2/production/0227-5338593ece386742.webp"
         }
       ],
@@ -3015,6 +3244,7 @@
           "x": 214199,
           "y": 114419,
           "rows": 1,
+          "scene": "civic-centre",
           "url": "/atlas-v2/production/0232-ea4edf1acd44ada2.webp"
         }
       ],
@@ -3030,6 +3260,7 @@
           "x": 214199,
           "y": 114418,
           "rows": 1,
+          "scene": "anatomical-museum",
           "url": "/atlas-v2/production/0233-cfcfa807c0a801ae.webp"
         }
       ],
@@ -3045,6 +3276,7 @@
           "x": 214200,
           "y": 114417,
           "rows": 1,
+          "scene": "pleasure-pier",
           "url": "/atlas-v2/production/sea-0235-3c8db84eb580a9df.webp"
         }
       ],
@@ -3060,6 +3292,7 @@
           "x": 214200,
           "y": 114420,
           "rows": 1,
+          "scene": "electrical-laboratory",
           "url": "/atlas-v2/production/0237-07eab2df61661645.webp"
         }
       ],
@@ -3075,6 +3308,7 @@
           "x": 214201,
           "y": 114423,
           "rows": 1,
+          "scene": "textile-mill",
           "url": "/atlas-v2/production/0240-3b7e68a54d6baba6.webp"
         }
       ],
@@ -3090,6 +3324,7 @@
           "x": 214202,
           "y": 114420,
           "rows": 1,
+          "scene": "marshmallow-factory",
           "url": "/atlas-v2/production/0249-0535283d2133ef26.webp"
         }
       ],
@@ -3105,6 +3340,7 @@
           "x": 214202,
           "y": 114423,
           "rows": 1,
+          "scene": "raver-arena",
           "url": "/atlas-v2/production/0252-8664963376472636.webp"
         }
       ],
@@ -3120,6 +3356,7 @@
           "x": 214203,
           "y": 114424,
           "rows": 1,
+          "scene": "printworks",
           "url": "/atlas-v2/production/0254-4027540803af524b.webp"
         }
       ],
@@ -3135,6 +3372,7 @@
           "x": 214203,
           "y": 114421,
           "rows": 1,
+          "scene": "cyber-deck-alley",
           "url": "/atlas-v2/production/0257-48f880fb9d9356ed.webp"
         }
       ],
@@ -3150,6 +3388,7 @@
           "x": 214203,
           "y": 114420,
           "rows": 1,
+          "scene": "lighthouse",
           "url": "/atlas-v2/production/sea-0258-681ed380eccf8e46.webp"
         }
       ],
@@ -3165,6 +3404,7 @@
           "x": 214205,
           "y": 114422,
           "rows": 1,
+          "scene": "observatory",
           "url": "/atlas-v2/production/0268-2416e7f8eddbf72b.webp"
         }
       ],
@@ -3180,6 +3420,7 @@
           "x": 214206,
           "y": 114420,
           "rows": 1,
+          "scene": "lighthouse",
           "url": "/atlas-v2/production/sea-0270-8d51f114b10598d2.webp"
         }
       ],
@@ -3195,6 +3436,7 @@
           "x": 214206,
           "y": 114421,
           "rows": 1,
+          "scene": "botanical-laboratory",
           "url": "/atlas-v2/production/0271-a753548372bf3045.webp"
         }
       ],
@@ -3210,6 +3452,7 @@
           "x": 214207,
           "y": 114426,
           "rows": 1,
+          "scene": "sushi-restaurant",
           "url": "/atlas-v2/production/0277-a594d2c4d9b1b4b2.webp"
         }
       ],
@@ -3225,6 +3468,7 @@
           "x": 214207,
           "y": 114421,
           "rows": 1,
+          "scene": "botanical-laboratory",
           "url": "/atlas-v2/production/0282-a9e0b170e97a6379.webp"
         }
       ],
@@ -3240,6 +3484,7 @@
           "x": 214208,
           "y": 114423,
           "rows": 1,
+          "scene": "ironworks",
           "url": "/atlas-v2/production/0284-e189fe95e4bf01d8.webp"
         }
       ],
@@ -3255,6 +3500,7 @@
           "x": 214208,
           "y": 114424,
           "rows": 1,
+          "scene": "tropical-aquarium",
           "url": "/atlas-v2/production/0285-774ac05ca65c6995.webp"
         }
       ],
@@ -3270,6 +3516,7 @@
           "x": 214208,
           "y": 114425,
           "rows": 1,
+          "scene": "maze-garden",
           "url": "/atlas-v2/production/0286-cea7e7a2a3a22972.webp"
         }
       ],
@@ -3285,6 +3532,7 @@
           "x": 214208,
           "y": 114426,
           "rows": 1,
+          "scene": "cyber-deck-alley",
           "url": "/atlas-v2/production/0287-4511b02535c308db.webp"
         }
       ],
@@ -3300,6 +3548,7 @@
           "x": 214209,
           "y": 114426,
           "rows": 1,
+          "scene": "analytical-engine",
           "url": "/atlas-v2/production/0288-27f2a041851d834e.webp"
         }
       ],
@@ -3315,6 +3564,7 @@
           "x": 214209,
           "y": 114424,
           "rows": 1,
+          "scene": "telegraph-office",
           "url": "/atlas-v2/production/0290-3f9e403e253ff910.webp"
         }
       ],
@@ -3330,6 +3580,7 @@
           "x": 214209,
           "y": 114420,
           "rows": 1,
+          "scene": "tidal-bathhouse",
           "url": "/atlas-v2/production/sea-0294-3e857acf872c72e9.webp"
         }
       ],
@@ -3345,6 +3596,7 @@
           "x": 214210,
           "y": 114422,
           "rows": 1,
+          "scene": "printworks",
           "url": "/atlas-v2/production/0297-d1184cacdf04f6f1.webp"
         }
       ],
@@ -3360,6 +3612,7 @@
           "x": 214210,
           "y": 114423,
           "rows": 1,
+          "scene": "textile-mill",
           "url": "/atlas-v2/production/0298-92c0ad4ad637e124.webp"
         }
       ],
@@ -3375,6 +3628,7 @@
           "x": 214210,
           "y": 114424,
           "rows": 1,
+          "scene": "mesmerist-salon",
           "url": "/atlas-v2/production/0299-110c2d696727fb59.webp"
         }
       ],
@@ -3390,6 +3644,7 @@
           "x": 214210,
           "y": 114425,
           "rows": 1,
+          "scene": "japanese-garden",
           "url": "/atlas-v2/production/0300-78391af198a5669f.webp"
         }
       ],
@@ -3405,6 +3660,7 @@
           "x": 214210,
           "y": 114426,
           "rows": 1,
+          "scene": "circus",
           "url": "/atlas-v2/production/0301-dd1037d29f3d0dcc.webp"
         }
       ],
@@ -3420,6 +3676,7 @@
           "x": 214211,
           "y": 114426,
           "rows": 1,
+          "scene": "marshmallow-factory",
           "url": "/atlas-v2/production/0302-1f0148ae6292efb0.webp"
         }
       ],
@@ -3435,6 +3692,7 @@
           "x": 214211,
           "y": 114424,
           "rows": 1,
+          "scene": "photography-studio",
           "url": "/atlas-v2/production/0304-545db7eebe64e77d.webp"
         }
       ],
@@ -3450,6 +3708,7 @@
           "x": 214211,
           "y": 114423,
           "rows": 1,
+          "scene": "observatory",
           "url": "/atlas-v2/production/0305-4e5f8b168f4a9e6c.webp"
         }
       ],
@@ -3465,6 +3724,7 @@
           "x": 214211,
           "y": 114422,
           "rows": 1,
+          "scene": "orrery-hall",
           "url": "/atlas-v2/production/0306-f5705d323b084bfd.webp"
         }
       ],
@@ -3480,6 +3740,7 @@
           "x": 214211,
           "y": 114421,
           "rows": 1,
+          "scene": "utopian-garden",
           "url": "/atlas-v2/production/0307-a70bddfadfe18200.webp"
         }
       ],
@@ -3495,6 +3756,7 @@
           "x": 214212,
           "y": 114422,
           "rows": 1,
+          "scene": "market-quarter",
           "url": "/atlas-v2/production/0309-63bb66412f319cca.webp"
         }
       ],
@@ -3510,6 +3772,7 @@
           "x": 214212,
           "y": 114426,
           "rows": 1,
+          "scene": "grand-library",
           "url": "/atlas-v2/production/0313-670a0b8eaa90abba.webp"
         }
       ],
@@ -3525,6 +3788,7 @@
           "x": 214213,
           "y": 114425,
           "rows": 1,
+          "scene": "ferris-wheel",
           "url": "/atlas-v2/production/0315-c21e3b2e8da76e41.webp"
         }
       ],
@@ -3540,6 +3804,7 @@
           "x": 214213,
           "y": 114423,
           "rows": 1,
+          "scene": "anatomical-museum",
           "url": "/atlas-v2/production/0316-1727a48ca57462d5.webp"
         }
       ],
@@ -3555,6 +3820,7 @@
           "x": 214213,
           "y": 114421,
           "rows": 1,
+          "scene": "sushi-restaurant",
           "url": "/atlas-v2/production/0318-f55a36e327acefa8.webp"
         }
       ],
@@ -3570,6 +3836,7 @@
           "x": 214214,
           "y": 114423,
           "rows": 1,
+          "scene": "analytical-engine",
           "url": "/atlas-v2/production/0321-e9611f3666291651.webp"
         }
       ],
@@ -3585,6 +3852,7 @@
           "x": 214214,
           "y": 114424,
           "rows": 1,
+          "scene": "printworks",
           "url": "/atlas-v2/production/0322-c02b6d6485a4cc7d.webp"
         }
       ],
@@ -3600,6 +3868,7 @@
           "x": 214214,
           "y": 114425,
           "rows": 1,
+          "scene": "ironworks",
           "url": "/atlas-v2/production/0323-0d772fc6217f23bc.webp"
         }
       ],
@@ -3615,6 +3884,7 @@
           "x": 214215,
           "y": 114426,
           "rows": 1,
+          "scene": "suspension-bridge",
           "url": "/atlas-v2/production/0325-4e3bc43d79298319.webp"
         }
       ],
@@ -3630,6 +3900,7 @@
           "x": 214215,
           "y": 114424,
           "rows": 1,
+          "scene": "solar-farm",
           "url": "/atlas-v2/production/0327-87c57b7882c10b12.webp"
         }
       ],
@@ -3645,6 +3916,7 @@
           "x": 214215,
           "y": 114420,
           "rows": 1,
+          "scene": "shipwright-dock",
           "url": "/atlas-v2/production/sea-0331-e8dd61fad8b742ff.webp"
         }
       ],
@@ -3660,6 +3932,7 @@
           "x": 214216,
           "y": 114420,
           "rows": 1,
+          "scene": "wave-organ",
           "url": "/atlas-v2/production/sea-0333-fe0064c29f89cbbd.webp"
         }
       ],
@@ -3675,6 +3948,7 @@
           "x": 214216,
           "y": 114421,
           "rows": 1,
+          "scene": "raver-arena",
           "url": "/atlas-v2/production/0334-3f3e39c6e37b8b68.webp"
         }
       ],
@@ -3690,6 +3964,7 @@
           "x": 214216,
           "y": 114423,
           "rows": 1,
+          "scene": "tropical-aquarium",
           "url": "/atlas-v2/production/0336-25a36d2a47b1ffc0.webp"
         }
       ],
@@ -3705,6 +3980,7 @@
           "x": 214216,
           "y": 114426,
           "rows": 1,
+          "scene": "film-backlot",
           "url": "/atlas-v2/production/0339-1b1bb3769b9c6643.webp"
         }
       ],
@@ -3720,6 +3996,7 @@
           "x": 214217,
           "y": 114423,
           "rows": 1,
+          "scene": "hall-of-mirrors",
           "url": "/atlas-v2/production/0342-f38c85067f93185c.webp"
         }
       ],
@@ -3735,6 +4012,7 @@
           "x": 214217,
           "y": 114421,
           "rows": 1,
+          "scene": "tidal-bathhouse",
           "url": "/atlas-v2/production/sea-0344-2d07f747d594b12a.webp"
         }
       ],
@@ -3750,6 +4028,7 @@
           "x": 214217,
           "y": 114419,
           "rows": 1,
+          "scene": "mermaid-station",
           "url": "/atlas-v2/production/sea-0345-992c4bdd3b7b9999.webp"
         }
       ],
@@ -3765,6 +4044,7 @@
           "x": 214218,
           "y": 114420,
           "rows": 1,
+          "scene": "lighthouse",
           "url": "/atlas-v2/production/sea-0346-534d5e99a2a1ad2b.webp"
         }
       ],
@@ -3780,6 +4060,7 @@
           "x": 214218,
           "y": 114421,
           "rows": 1,
+          "scene": "walking-yacht-club",
           "url": "/atlas-v2/production/sea-0347-a65858bc2524cf04.webp"
         }
       ],
@@ -3795,6 +4076,7 @@
           "x": 214218,
           "y": 114424,
           "rows": 1,
+          "scene": "mechanical-theatre",
           "url": "/atlas-v2/production/0350-fb83ac2819bfbe63.webp"
         }
       ],
@@ -3810,6 +4092,7 @@
           "x": 214218,
           "y": 114425,
           "rows": 1,
+          "scene": "rice-sculpture-festival",
           "url": "/atlas-v2/production/0351-55cf7f3fab256136.webp"
         }
       ],
@@ -3825,6 +4108,7 @@
           "x": 214219,
           "y": 114423,
           "rows": 1,
+          "scene": "archaeological-excavation",
           "url": "/atlas-v2/production/0354-ed2b978d738e4016.webp"
         }
       ],
@@ -3840,6 +4124,7 @@
           "x": 214219,
           "y": 114422,
           "rows": 1,
+          "scene": "marshmallow-factory",
           "url": "/atlas-v2/production/0355-d99c92b7a9a465cf.webp"
         }
       ],
@@ -3855,6 +4140,7 @@
           "x": 214219,
           "y": 114421,
           "rows": 1,
+          "scene": "maze-garden",
           "url": "/atlas-v2/production/0356-73c08d8217c67a14.webp"
         }
       ],
@@ -3870,6 +4156,7 @@
           "x": 214220,
           "y": 114419,
           "rows": 1,
+          "scene": "pleasure-pier",
           "url": "/atlas-v2/production/sea-0358-8bca7d7f18327ec6.webp"
         }
       ],
@@ -3885,6 +4172,7 @@
           "x": 214220,
           "y": 114420,
           "rows": 1,
+          "scene": "market-quarter",
           "url": "/atlas-v2/production/0359-a9d2979b9c333474.webp"
         }
       ],
@@ -3900,6 +4188,7 @@
           "x": 214220,
           "y": 114421,
           "rows": 1,
+          "scene": "photography-studio",
           "url": "/atlas-v2/production/0360-7a0e2d102b34e6bc.webp"
         }
       ],
@@ -3915,6 +4204,7 @@
           "x": 214220,
           "y": 114424,
           "rows": 1,
+          "scene": "balloon-festival",
           "url": "/atlas-v2/production/0363-3e15e67b6a64a134.webp"
         }
       ],
@@ -3930,6 +4220,7 @@
           "x": 214221,
           "y": 114422,
           "rows": 1,
+          "scene": "grand-library",
           "url": "/atlas-v2/production/0366-d019ba576c16ad91.webp"
         }
       ],
@@ -3945,6 +4236,7 @@
           "x": 214221,
           "y": 114421,
           "rows": 1,
+          "scene": "sushi-restaurant",
           "url": "/atlas-v2/production/0367-6808cfdc29d35252.webp"
         }
       ],
@@ -3960,6 +4252,7 @@
           "x": 214221,
           "y": 114420,
           "rows": 1,
+          "scene": "art-nouveau-palace",
           "url": "/atlas-v2/production/0368-6f73f48835bd2d3b.webp"
         }
       ],
@@ -3975,6 +4268,7 @@
           "x": 214221,
           "y": 114419,
           "rows": 1,
+          "scene": "pirate-harbour",
           "url": "/atlas-v2/production/sea-0369-da84f1cb46b7db54.webp"
         }
       ],
@@ -3990,6 +4284,7 @@
           "x": 214221,
           "y": 114417,
           "rows": 1,
+          "scene": "canal-lock",
           "url": "/atlas-v2/production/sea-0370-4d3bf09e239dda86.webp"
         }
       ],
@@ -4005,6 +4300,7 @@
           "x": 214222,
           "y": 114418,
           "rows": 1,
+          "scene": "bottled-post",
           "url": "/atlas-v2/production/sea-0372-50e83bd95c62272a.webp"
         }
       ],
@@ -4020,6 +4316,7 @@
           "x": 214222,
           "y": 114419,
           "rows": 1,
+          "scene": "tidal-bathhouse",
           "url": "/atlas-v2/production/sea-0373-b7eb9650f61db1eb.webp"
         }
       ],
@@ -4035,6 +4332,7 @@
           "x": 214222,
           "y": 114420,
           "rows": 1,
+          "scene": "circus",
           "url": "/atlas-v2/production/0374-0c647cfc0afcbe63.webp"
         }
       ],
@@ -4050,6 +4348,7 @@
           "x": 214223,
           "y": 114420,
           "rows": 1,
+          "scene": "photography-studio",
           "url": "/atlas-v2/production/0380-eecf26b600d49699.webp"
         }
       ],
@@ -4065,6 +4364,7 @@
           "x": 214223,
           "y": 114418,
           "rows": 1,
+          "scene": "textile-mill",
           "url": "/atlas-v2/production/0382-9005c60e9baff827.webp"
         }
       ],
@@ -4080,6 +4380,7 @@
           "x": 214184,
           "y": 114379,
           "rows": 1,
+          "scene": "theme-park",
           "url": "/atlas-v2/production/0384-d4ef78c296abe70d.webp"
         }
       ],
@@ -4095,6 +4396,7 @@
           "x": 214186,
           "y": 114379,
           "rows": 1,
+          "scene": "weather-station",
           "url": "/atlas-v2/production/0385-4717be33886982ed.webp"
         }
       ],
@@ -4110,6 +4412,7 @@
           "x": 214190,
           "y": 114380,
           "rows": 1,
+          "scene": "printworks",
           "url": "/atlas-v2/production/0387-6f502d45f2d133ee.webp"
         }
       ],
@@ -4125,6 +4428,7 @@
           "x": 214191,
           "y": 114378,
           "rows": 1,
+          "scene": "botanical-laboratory",
           "url": "/atlas-v2/production/0388-219efe46177260d8.webp"
         }
       ],
@@ -4140,6 +4444,7 @@
           "x": 214197,
           "y": 114397,
           "rows": 1,
+          "scene": "floating-opera",
           "url": "/atlas-v2/production/sea-0393-20ab1139ea67dfb8.webp"
         }
       ],
@@ -4155,6 +4460,7 @@
           "x": 214200,
           "y": 114397,
           "rows": 1,
+          "scene": "walking-yacht-club",
           "url": "/atlas-v2/production/sea-0398-6975ccaf847b029c.webp"
         }
       ],
@@ -4170,6 +4476,7 @@
           "x": 214205,
           "y": 114391,
           "rows": 1,
+          "scene": "suspension-bridge",
           "url": "/atlas-v2/production/0403-8caeb796213c2b5b.webp"
         }
       ],
@@ -4185,6 +4492,7 @@
           "x": 214206,
           "y": 114393,
           "rows": 1,
+          "scene": "mesmerist-salon",
           "url": "/atlas-v2/production/0404-7616f11eeb1bedbc.webp"
         }
       ],
@@ -4200,6 +4508,7 @@
           "x": 214207,
           "y": 114390,
           "rows": 1,
+          "scene": "steam-railway",
           "url": "/atlas-v2/production/0407-a99b238d663d899e.webp"
         }
       ],
@@ -4215,6 +4524,7 @@
           "x": 214208,
           "y": 114389,
           "rows": 1,
+          "scene": "observatory",
           "url": "/atlas-v2/production/0408-beba4ae561ac8d9a.webp"
         }
       ],
@@ -4230,6 +4540,7 @@
           "x": 214209,
           "y": 114395,
           "rows": 1,
+          "scene": "raver-arena",
           "url": "/atlas-v2/production/0412-1e60d5d738f9d23e.webp"
         }
       ],
@@ -4245,6 +4556,7 @@
           "x": 214209,
           "y": 114391,
           "rows": 1,
+          "scene": "hall-of-mirrors",
           "url": "/atlas-v2/production/0413-4ef6b8df2fb027ce.webp"
         }
       ],
@@ -4260,6 +4572,7 @@
           "x": 214209,
           "y": 114390,
           "rows": 1,
+          "scene": "market-quarter",
           "url": "/atlas-v2/production/0414-d809052132d353f9.webp"
         }
       ],
@@ -4275,6 +4588,7 @@
           "x": 214209,
           "y": 114388,
           "rows": 1,
+          "scene": "solar-farm",
           "url": "/atlas-v2/production/0415-80a6ee83516794da.webp"
         }
       ],
@@ -4290,6 +4604,7 @@
           "x": 214211,
           "y": 114393,
           "rows": 1,
+          "scene": "ferris-wheel",
           "url": "/atlas-v2/production/0420-c2fde42ebd3f3e10.webp"
         }
       ],
@@ -4305,6 +4620,7 @@
           "x": 214211,
           "y": 114391,
           "rows": 1,
+          "scene": "cyber-deck-alley",
           "url": "/atlas-v2/production/0421-df04af97d3e49edb.webp"
         }
       ],
@@ -4320,6 +4636,7 @@
           "x": 214211,
           "y": 114388,
           "rows": 1,
+          "scene": "rice-sculpture-festival",
           "url": "/atlas-v2/production/0423-6f261ca9973b74b7.webp"
         }
       ],
@@ -4335,6 +4652,7 @@
           "x": 214206,
           "y": 114406,
           "rows": 1,
+          "scene": "archaeological-excavation",
           "url": "/atlas-v2/production/0424-66a5572485506375.webp"
         }
       ],
@@ -4350,6 +4668,7 @@
           "x": 214206,
           "y": 114411,
           "rows": 1,
+          "scene": "photography-studio",
           "url": "/atlas-v2/production/0425-54695cfda4b3095b.webp"
         }
       ],
@@ -4365,6 +4684,7 @@
           "x": 214207,
           "y": 114412,
           "rows": 1,
+          "scene": "thrifting-paradise",
           "url": "/atlas-v2/production/0426-0db78f915b3b98b3.webp"
         }
       ],
@@ -4380,6 +4700,7 @@
           "x": 214207,
           "y": 114409,
           "rows": 1,
+          "scene": "utopian-garden",
           "url": "/atlas-v2/production/0427-57a8a7ab24c5ec5b.webp"
         }
       ],
@@ -4395,6 +4716,7 @@
           "x": 214208,
           "y": 114406,
           "rows": 1,
+          "scene": "analytical-engine",
           "url": "/atlas-v2/production/0429-3c1fda45ddca75c7.webp"
         }
       ],
@@ -4410,6 +4732,7 @@
           "x": 214209,
           "y": 114409,
           "rows": 1,
+          "scene": "japanese-garden",
           "url": "/atlas-v2/production/0432-63a46a900ed11fda.webp"
         }
       ],
@@ -4425,6 +4748,7 @@
           "x": 214209,
           "y": 114406,
           "rows": 1,
+          "scene": "zoo",
           "url": "/atlas-v2/production/0433-10011341a729f930.webp"
         }
       ],
@@ -4440,6 +4764,7 @@
           "x": 214210,
           "y": 114412,
           "rows": 1,
+          "scene": "floating-opera",
           "url": "/atlas-v2/production/sea-0435-c7f42b514a6cfa6f.webp"
         }
       ],
@@ -4455,6 +4780,7 @@
           "x": 214211,
           "y": 114407,
           "rows": 1,
+          "scene": "film-backlot",
           "url": "/atlas-v2/production/0437-7f5374f4ebad1f76.webp"
         }
       ],
@@ -4470,6 +4796,7 @@
           "x": 214213,
           "y": 114409,
           "rows": 1,
+          "scene": "grand-library",
           "url": "/atlas-v2/production/0440-c59ad0280ce893dc.webp"
         }
       ],
@@ -4485,6 +4812,7 @@
           "x": 214214,
           "y": 114407,
           "rows": 1,
+          "scene": "theme-park",
           "url": "/atlas-v2/production/0442-cf5e3a25e044529f.webp"
         }
       ],
@@ -4500,6 +4828,7 @@
           "x": 214215,
           "y": 114408,
           "rows": 1,
+          "scene": "lighthouse",
           "url": "/atlas-v2/production/sea-0443-2cf422f0e933b072.webp"
         }
       ],
@@ -4515,6 +4844,7 @@
           "x": 214183,
           "y": 114420,
           "rows": 1,
+          "scene": "zoo",
           "url": "/atlas-v2/hku-cell-pilot/2.webp?v=c697e94b5b89"
         },
         {
@@ -4522,6 +4852,7 @@
           "x": 214183,
           "y": 114420,
           "rows": 1,
+          "scene": "theme-park",
           "url": "/atlas-v2/hku-cell-pilot/3.webp?v=7d7e9c8f8202"
         }
       ],
@@ -4537,6 +4868,7 @@
           "x": 214203,
           "y": 114392,
           "rows": 1,
+          "scene": "film-backlot",
           "url": "/atlas-v2/production/0449-61f5fa0ba31fd005.webp"
         }
       ],
@@ -4552,6 +4884,7 @@
           "x": 214208,
           "y": 114392,
           "rows": 1,
+          "scene": "mesmerist-salon",
           "url": "/atlas-v2/production/0450-55d097afbc885694.webp"
         }
       ],
@@ -4567,6 +4900,7 @@
           "x": 214209,
           "y": 114394,
           "rows": 1,
+          "scene": "cyber-deck-alley",
           "url": "/atlas-v2/production/0451-5eb38d9b4a87b5aa.webp"
         }
       ],
@@ -4582,6 +4916,7 @@
           "x": 214211,
           "y": 114389,
           "rows": 1,
+          "scene": "photography-studio",
           "url": "/atlas-v2/production/0452-ecfecbd2b489532b.webp"
         }
       ],
@@ -4597,6 +4932,7 @@
           "x": 214210,
           "y": 114406,
           "rows": 1,
+          "scene": "printworks",
           "url": "/atlas-v2/production/0454-eb6f8cc732985cc5.webp"
         }
       ],
@@ -4612,6 +4948,7 @@
           "x": 214213,
           "y": 114410,
           "rows": 1,
+          "scene": "floating-opera",
           "url": "/atlas-v2/production/sea-0455-16e560ef2d0f1a4d.webp"
         }
       ],
@@ -4627,6 +4964,7 @@
           "x": 214198,
           "y": 114416,
           "rows": 1,
+          "scene": "pleasure-pier",
           "url": "/atlas-v2/production/sea-0458-214fa25e052ab6e0.webp"
         }
       ],
@@ -4642,6 +4980,7 @@
           "x": 214203,
           "y": 114419,
           "rows": 1,
+          "scene": "lighthouse",
           "url": "/atlas-v2/production/sea-0459-e4480445f5ea9338.webp"
         }
       ],
@@ -4657,6 +4996,7 @@
           "x": 214220,
           "y": 114417,
           "rows": 1,
+          "scene": "canal-lock",
           "url": "/atlas-v2/production/sea-0461-c395fc4a7eccfea1.webp"
         }
       ],
@@ -4672,6 +5012,7 @@
           "x": 214223,
           "y": 114423,
           "rows": 1,
+          "scene": "japanese-garden",
           "url": "/atlas-v2/production/0462-08fafc6fb938ae66.webp"
         }
       ],
@@ -4687,6 +5028,7 @@
           "x": 214215,
           "y": 114427,
           "rows": 1,
+          "scene": "zoo",
           "url": "/atlas-v2/production/0464-ba2e9b907b4c1af6.webp"
         }
       ],
@@ -4702,6 +5044,7 @@
           "x": 214216,
           "y": 114427,
           "rows": 1,
+          "scene": "tropical-aquarium",
           "url": "/atlas-v2/production/0465-5632432404650819.webp"
         }
       ],
@@ -4717,6 +5060,7 @@
           "x": 214217,
           "y": 114426,
           "rows": 1,
+          "scene": "suspension-bridge",
           "url": "/atlas-v2/production/0466-8216033f397b2023.webp"
         }
       ],
@@ -4732,6 +5076,7 @@
           "x": 214219,
           "y": 114426,
           "rows": 1,
+          "scene": "market-quarter",
           "url": "/atlas-v2/production/0467-e22db2cd18407fbc.webp"
         }
       ],
@@ -4747,6 +5092,7 @@
           "x": 214221,
           "y": 114425,
           "rows": 1,
+          "scene": "market-quarter",
           "url": "/atlas-v2/production/0469-d5511d7db316589a.webp"
         }
       ],
@@ -4762,6 +5108,7 @@
           "x": 214200,
           "y": 114423,
           "rows": 1,
+          "scene": "theme-park",
           "url": "/atlas-v2/production/0470-ee356cd808f64142.webp"
         }
       ],
@@ -4777,6 +5124,7 @@
           "x": 214197,
           "y": 114391,
           "rows": 1,
+          "scene": "flying-fish-burgers",
           "url": "/atlas-v2/production/sea-0471-0750a9eacaded311.webp"
         }
       ],
@@ -4792,6 +5140,7 @@
           "x": 214208,
           "y": 114394,
           "rows": 1,
+          "scene": "mesmerist-salon",
           "url": "/atlas-v2/production/0472-f5ee4615208b74b2.webp"
         }
       ],
@@ -4807,6 +5156,7 @@
           "x": 214210,
           "y": 114410,
           "rows": 1,
+          "scene": "telegraph-office",
           "url": "/atlas-v2/production/0473-861992c3c377e45b.webp"
         }
       ],
@@ -4822,6 +5172,7 @@
           "x": 214182,
           "y": 114419,
           "rows": 1,
+          "scene": "analytical-engine",
           "url": "/atlas-v2/production/0023-6f43d4be9b5a0c5b.webp"
         },
         {
@@ -4829,6 +5180,7 @@
           "x": 214185,
           "y": 114422,
           "rows": 1,
+          "scene": "analytical-engine",
           "url": "/atlas-v2/production/0049-fa6309c0f83b1639.webp"
         },
         {
@@ -4836,6 +5188,7 @@
           "x": 214187,
           "y": 114417,
           "rows": 1,
+          "scene": "analytical-engine",
           "url": "/atlas-v2/production/0107-684f2623b98653f4.webp"
         },
         {
@@ -4843,6 +5196,7 @@
           "x": 214175,
           "y": 114422,
           "rows": 1,
+          "scene": "analytical-engine",
           "url": "/atlas-v2/production/0156-1cd46eb10046854d.webp"
         },
         {
@@ -4850,6 +5204,7 @@
           "x": 214177,
           "y": 114422,
           "rows": 1,
+          "scene": "analytical-engine",
           "url": "/atlas-v2/production/0162-fee55e542641b435.webp"
         }
       ],
@@ -4865,6 +5220,7 @@
           "x": 214209,
           "y": 114426,
           "rows": 1,
+          "scene": "analytical-engine",
           "url": "/atlas-v2/production/0288-27f2a041851d834e.webp"
         },
         {
@@ -4872,6 +5228,7 @@
           "x": 214214,
           "y": 114423,
           "rows": 1,
+          "scene": "analytical-engine",
           "url": "/atlas-v2/production/0321-e9611f3666291651.webp"
         },
         {
@@ -4879,6 +5236,7 @@
           "x": 214208,
           "y": 114406,
           "rows": 1,
+          "scene": "analytical-engine",
           "url": "/atlas-v2/production/0429-3c1fda45ddca75c7.webp"
         }
       ],
@@ -4894,6 +5252,7 @@
           "x": 214183,
           "y": 114418,
           "rows": 1,
+          "scene": "anatomical-museum",
           "url": "/atlas-v2/production/0003-b24451f850507900.webp"
         },
         {
@@ -4901,6 +5260,7 @@
           "x": 214181,
           "y": 114423,
           "rows": 1,
+          "scene": "anatomical-museum",
           "url": "/atlas-v2/production/0083-bd449ee3528a5e87.webp"
         },
         {
@@ -4908,6 +5268,7 @@
           "x": 214170,
           "y": 114422,
           "rows": 1,
+          "scene": "anatomical-museum",
           "url": "/atlas-v2/production/0146-4c8d7ac213db1e72.webp"
         },
         {
@@ -4915,6 +5276,7 @@
           "x": 214190,
           "y": 114418,
           "rows": 1,
+          "scene": "anatomical-museum",
           "url": "/atlas-v2/production/0187-7c57df852e8c80a3.webp"
         },
         {
@@ -4922,6 +5284,7 @@
           "x": 214199,
           "y": 114418,
           "rows": 1,
+          "scene": "anatomical-museum",
           "url": "/atlas-v2/production/0233-cfcfa807c0a801ae.webp"
         }
       ],
@@ -4937,6 +5300,7 @@
           "x": 214185,
           "y": 114418,
           "rows": 1,
+          "scene": "archaeological-excavation",
           "url": "/atlas-v2/production/0011-984e923c9af21b4f.webp"
         },
         {
@@ -4944,6 +5308,7 @@
           "x": 214181,
           "y": 114417,
           "rows": 1,
+          "scene": "archaeological-excavation",
           "url": "/atlas-v2/production/0072-1e55b7b81a157639.webp"
         },
         {
@@ -4951,6 +5316,7 @@
           "x": 214187,
           "y": 114416,
           "rows": 1,
+          "scene": "archaeological-excavation",
           "url": "/atlas-v2/production/0105-7fd8675065c9c706.webp"
         },
         {
@@ -4958,6 +5324,7 @@
           "x": 214171,
           "y": 114422,
           "rows": 1,
+          "scene": "archaeological-excavation",
           "url": "/atlas-v2/production/0147-8dedc38b663d2451.webp"
         },
         {
@@ -4965,6 +5332,7 @@
           "x": 214191,
           "y": 114417,
           "rows": 1,
+          "scene": "archaeological-excavation",
           "url": "/atlas-v2/production/0191-f368cac518146db5.webp"
         }
       ],
@@ -4980,6 +5348,7 @@
           "x": 214219,
           "y": 114423,
           "rows": 1,
+          "scene": "archaeological-excavation",
           "url": "/atlas-v2/production/0354-ed2b978d738e4016.webp"
         }
       ],
@@ -4995,6 +5364,7 @@
           "x": 214183,
           "y": 114418,
           "rows": 1,
+          "scene": "art-nouveau-palace",
           "url": "/atlas-v2/production/0004-775f4f3855a7e1c7.webp"
         },
         {
@@ -5002,6 +5372,7 @@
           "x": 214184,
           "y": 114416,
           "rows": 1,
+          "scene": "art-nouveau-palace",
           "url": "/atlas-v2/production/0094-059194cdfe1e5846.webp"
         },
         {
@@ -5009,6 +5380,7 @@
           "x": 214189,
           "y": 114417,
           "rows": 1,
+          "scene": "art-nouveau-palace",
           "url": "/atlas-v2/production/0181-3448b3f2f939678c.webp"
         }
       ],
@@ -5024,6 +5396,7 @@
           "x": 214185,
           "y": 114422,
           "rows": 1,
+          "scene": "automata",
           "url": "/atlas-v2/production/0048-95a19619447fb32a.webp"
         },
         {
@@ -5031,6 +5404,7 @@
           "x": 214175,
           "y": 114421,
           "rows": 1,
+          "scene": "automata",
           "url": "/atlas-v2/production/0157-ae182a42c8631fb8.webp"
         },
         {
@@ -5038,6 +5412,7 @@
           "x": 214179,
           "y": 114422,
           "rows": 1,
+          "scene": "automata",
           "url": "/atlas-v2/production/0171-55ad65232c3b1ef1.webp"
         }
       ],
@@ -5053,6 +5428,7 @@
           "x": 214182,
           "y": 114420,
           "rows": 1,
+          "scene": "balloon-festival",
           "url": "/atlas-v2/production/0028-f0433e1037fae6c5.webp"
         },
         {
@@ -5060,6 +5436,7 @@
           "x": 214186,
           "y": 114421,
           "rows": 1,
+          "scene": "balloon-festival",
           "url": "/atlas-v2/production/0063-8fcf430c44cc4e88.webp"
         },
         {
@@ -5067,6 +5444,7 @@
           "x": 214184,
           "y": 114423,
           "rows": 1,
+          "scene": "balloon-festival",
           "url": "/atlas-v2/production/0096-be853b24c01af3bf.webp"
         },
         {
@@ -5074,6 +5452,7 @@
           "x": 214180,
           "y": 114422,
           "rows": 1,
+          "scene": "balloon-festival",
           "url": "/atlas-v2/production/0128-d7fe64bc41de62c5.webp"
         },
         {
@@ -5081,6 +5460,7 @@
           "x": 214177,
           "y": 114419,
           "rows": 1,
+          "scene": "balloon-festival",
           "url": "/atlas-v2/production/0165-8bffaf630aaeeed0.webp"
         }
       ],
@@ -5096,6 +5476,7 @@
           "x": 214220,
           "y": 114424,
           "rows": 1,
+          "scene": "balloon-festival",
           "url": "/atlas-v2/production/0363-3e15e67b6a64a134.webp"
         }
       ],
@@ -5111,6 +5492,7 @@
           "x": 214182,
           "y": 114421,
           "rows": 1,
+          "scene": "botanical-laboratory",
           "url": "/atlas-v2/production/0030-18caf98a9a128734.webp"
         },
         {
@@ -5118,6 +5500,7 @@
           "x": 214181,
           "y": 114418,
           "rows": 1,
+          "scene": "botanical-laboratory",
           "url": "/atlas-v2/production/0073-7f22c68cfd58d999.webp"
         },
         {
@@ -5125,6 +5508,7 @@
           "x": 214181,
           "y": 114422,
           "rows": 1,
+          "scene": "botanical-laboratory",
           "url": "/atlas-v2/production/0081-83e513e160230cdd.webp"
         },
         {
@@ -5132,6 +5516,7 @@
           "x": 214190,
           "y": 114417,
           "rows": 1,
+          "scene": "botanical-laboratory",
           "url": "/atlas-v2/production/0186-367709dcb15efe3a.webp"
         },
         {
@@ -5139,6 +5524,7 @@
           "x": 214195,
           "y": 114419,
           "rows": 1,
+          "scene": "botanical-laboratory",
           "url": "/atlas-v2/production/0210-aadf2bcbade6d7a3.webp"
         }
       ],
@@ -5154,6 +5540,7 @@
           "x": 214183,
           "y": 114422,
           "rows": 1,
+          "scene": "circus",
           "url": "/atlas-v2/production/0039-91f23b6e1fcb45f2.webp"
         },
         {
@@ -5161,6 +5548,7 @@
           "x": 214184,
           "y": 114422,
           "rows": 1,
+          "scene": "circus",
           "url": "/atlas-v2/production/0044-01a2ffb6feb0e9a6.webp"
         },
         {
@@ -5168,6 +5556,7 @@
           "x": 214188,
           "y": 114423,
           "rows": 1,
+          "scene": "circus",
           "url": "/atlas-v2/production/0144-6b4cc92281e397b0.webp"
         }
       ],
@@ -5183,6 +5572,7 @@
           "x": 214183,
           "y": 114422,
           "rows": 1,
+          "scene": "civic-centre",
           "url": "/atlas-v2/production/0038-4a062526415e9f6a.webp"
         },
         {
@@ -5190,6 +5580,7 @@
           "x": 214186,
           "y": 114418,
           "rows": 1,
+          "scene": "civic-centre",
           "url": "/atlas-v2/production/0054-10d6ac662b90fb3b.webp"
         },
         {
@@ -5197,6 +5588,7 @@
           "x": 214181,
           "y": 114423,
           "rows": 1,
+          "scene": "civic-centre",
           "url": "/atlas-v2/production/0084-d1a7e98bba377586.webp"
         },
         {
@@ -5204,6 +5596,7 @@
           "x": 214189,
           "y": 114416,
           "rows": 1,
+          "scene": "civic-centre",
           "url": "/atlas-v2/production/0182-1e4ef700fdc9b0b5.webp"
         }
       ],
@@ -5219,6 +5612,7 @@
           "x": 214185,
           "y": 114418,
           "rows": 1,
+          "scene": "cyber-deck-alley",
           "url": "/atlas-v2/production/0012-158af731cec83631.webp"
         },
         {
@@ -5226,6 +5620,7 @@
           "x": 214186,
           "y": 114417,
           "rows": 1,
+          "scene": "cyber-deck-alley",
           "url": "/atlas-v2/production/0053-b66d77686ac15264.webp"
         },
         {
@@ -5233,6 +5628,7 @@
           "x": 214186,
           "y": 114423,
           "rows": 1,
+          "scene": "cyber-deck-alley",
           "url": "/atlas-v2/production/0104-6cd5e4a096685aaa.webp"
         },
         {
@@ -5240,6 +5636,7 @@
           "x": 214173,
           "y": 114422,
           "rows": 1,
+          "scene": "cyber-deck-alley",
           "url": "/atlas-v2/production/0151-3180219a4ee88eb0.webp"
         }
       ],
@@ -5255,6 +5652,7 @@
           "x": 214183,
           "y": 114421,
           "rows": 1,
+          "scene": "electrical-laboratory",
           "url": "/atlas-v2/production/0006-6807d11a5f24ecf9.webp"
         },
         {
@@ -5262,6 +5660,7 @@
           "x": 214186,
           "y": 114417,
           "rows": 1,
+          "scene": "electrical-laboratory",
           "url": "/atlas-v2/production/0052-c2770687f7e94400.webp"
         },
         {
@@ -5269,6 +5668,7 @@
           "x": 214181,
           "y": 114422,
           "rows": 1,
+          "scene": "electrical-laboratory",
           "url": "/atlas-v2/production/0082-a4c3d87676246526.webp"
         },
         {
@@ -5276,6 +5676,7 @@
           "x": 214173,
           "y": 114421,
           "rows": 1,
+          "scene": "electrical-laboratory",
           "url": "/atlas-v2/production/0152-77192cf5ce9bb798.webp"
         }
       ],
@@ -5291,6 +5692,7 @@
           "x": 214183,
           "y": 114421,
           "rows": 1,
+          "scene": "ferris-wheel",
           "url": "/atlas-v2/production/0008-bd84c4c824385f93.webp"
         },
         {
@@ -5298,6 +5700,7 @@
           "x": 214184,
           "y": 114422,
           "rows": 1,
+          "scene": "ferris-wheel",
           "url": "/atlas-v2/production/0043-9096c4ca719ef9cd.webp"
         },
         {
@@ -5305,6 +5708,7 @@
           "x": 214191,
           "y": 114419,
           "rows": 1,
+          "scene": "ferris-wheel",
           "url": "/atlas-v2/production/0189-162693ee7505ffbe.webp"
         },
         {
@@ -5312,6 +5716,7 @@
           "x": 214195,
           "y": 114418,
           "rows": 1,
+          "scene": "ferris-wheel",
           "url": "/atlas-v2/production/0211-3af64dbd301e8294.webp"
         }
       ],
@@ -5327,6 +5732,7 @@
           "x": 214182,
           "y": 114417,
           "rows": 1,
+          "scene": "film-backlot",
           "url": "/atlas-v2/production/0019-e065f66a7b5bd342.webp"
         },
         {
@@ -5334,6 +5740,7 @@
           "x": 214187,
           "y": 114420,
           "rows": 1,
+          "scene": "film-backlot",
           "url": "/atlas-v2/production/0114-f04a3ce625937343.webp"
         },
         {
@@ -5341,6 +5748,7 @@
           "x": 214180,
           "y": 114423,
           "rows": 1,
+          "scene": "film-backlot",
           "url": "/atlas-v2/production/0129-3f1df7172efcca76.webp"
         },
         {
@@ -5348,6 +5756,7 @@
           "x": 214179,
           "y": 114421,
           "rows": 1,
+          "scene": "film-backlot",
           "url": "/atlas-v2/production/0172-22ac945d957fb45b.webp"
         }
       ],
@@ -5363,6 +5772,7 @@
           "x": 214216,
           "y": 114426,
           "rows": 1,
+          "scene": "film-backlot",
           "url": "/atlas-v2/production/0339-1b1bb3769b9c6643.webp"
         },
         {
@@ -5370,6 +5780,7 @@
           "x": 214211,
           "y": 114407,
           "rows": 1,
+          "scene": "film-backlot",
           "url": "/atlas-v2/production/0437-7f5374f4ebad1f76.webp"
         },
         {
@@ -5377,6 +5788,7 @@
           "x": 214203,
           "y": 114392,
           "rows": 1,
+          "scene": "film-backlot",
           "url": "/atlas-v2/production/0449-61f5fa0ba31fd005.webp"
         }
       ],
@@ -5392,6 +5804,7 @@
           "x": 214185,
           "y": 114415,
           "rows": 1,
+          "scene": "floating-opera",
           "url": "/atlas-v2/production/sea-0133-506a0833077b83cd.webp"
         },
         {
@@ -5399,6 +5812,7 @@
           "x": 214197,
           "y": 114397,
           "rows": 1,
+          "scene": "floating-opera",
           "url": "/atlas-v2/production/sea-0393-20ab1139ea67dfb8.webp"
         },
         {
@@ -5406,6 +5820,7 @@
           "x": 214210,
           "y": 114412,
           "rows": 1,
+          "scene": "floating-opera",
           "url": "/atlas-v2/production/sea-0435-c7f42b514a6cfa6f.webp"
         },
         {
@@ -5413,6 +5828,7 @@
           "x": 214213,
           "y": 114410,
           "rows": 1,
+          "scene": "floating-opera",
           "url": "/atlas-v2/production/sea-0455-16e560ef2d0f1a4d.webp"
         }
       ],
@@ -5428,6 +5844,7 @@
           "x": 214182,
           "y": 114419,
           "rows": 1,
+          "scene": "grand-library",
           "url": "/atlas-v2/production/0024-0600c3018602f35f.webp"
         },
         {
@@ -5435,6 +5852,7 @@
           "x": 214169,
           "y": 114419,
           "rows": 1,
+          "scene": "grand-library",
           "url": "/atlas-v2/production/0145-2b4e9f39db84a1ba.webp"
         },
         {
@@ -5442,6 +5860,7 @@
           "x": 214212,
           "y": 114426,
           "rows": 1,
+          "scene": "grand-library",
           "url": "/atlas-v2/production/0313-670a0b8eaa90abba.webp"
         }
       ],
@@ -5457,6 +5876,7 @@
           "x": 214182,
           "y": 114422,
           "rows": 1,
+          "scene": "hall-of-mirrors",
           "url": "/atlas-v2/production/0034-6879ba180a7d8afa.webp"
         },
         {
@@ -5464,6 +5884,7 @@
           "x": 214181,
           "y": 114417,
           "rows": 1,
+          "scene": "hall-of-mirrors",
           "url": "/atlas-v2/production/0071-b550155e8d4941c7.webp"
         },
         {
@@ -5471,6 +5892,7 @@
           "x": 214187,
           "y": 114416,
           "rows": 1,
+          "scene": "hall-of-mirrors",
           "url": "/atlas-v2/production/0106-9daa50dfea58af72.webp"
         },
         {
@@ -5478,6 +5900,7 @@
           "x": 214180,
           "y": 114420,
           "rows": 1,
+          "scene": "hall-of-mirrors",
           "url": "/atlas-v2/production/0126-2e152d1fcd945575.webp"
         }
       ],
@@ -5493,6 +5916,7 @@
           "x": 214185,
           "y": 114421,
           "rows": 1,
+          "scene": "ironworks",
           "url": "/atlas-v2/production/0015-c25f9bf4cd471389.webp"
         },
         {
@@ -5500,6 +5924,7 @@
           "x": 214184,
           "y": 114417,
           "rows": 1,
+          "scene": "ironworks",
           "url": "/atlas-v2/production/0042-af8c645e0cecac9b.webp"
         },
         {
@@ -5507,6 +5932,7 @@
           "x": 214180,
           "y": 114421,
           "rows": 1,
+          "scene": "ironworks",
           "url": "/atlas-v2/production/0127-71dad22ceeeda449.webp"
         }
       ],
@@ -5522,6 +5948,7 @@
           "x": 214182,
           "y": 114417,
           "rows": 1,
+          "scene": "japanese-garden",
           "url": "/atlas-v2/production/0018-b5d8852eac79375b.webp"
         },
         {
@@ -5529,6 +5956,7 @@
           "x": 214181,
           "y": 114419,
           "rows": 1,
+          "scene": "japanese-garden",
           "url": "/atlas-v2/production/0075-c6ec417976407636.webp"
         },
         {
@@ -5536,6 +5964,7 @@
           "x": 214183,
           "y": 114416,
           "rows": 1,
+          "scene": "japanese-garden",
           "url": "/atlas-v2/production/0090-83a7530b444f93be.webp"
         },
         {
@@ -5543,6 +5972,7 @@
           "x": 214188,
           "y": 114419,
           "rows": 1,
+          "scene": "japanese-garden",
           "url": "/atlas-v2/production/0140-8b8a1e7eb366cb87.webp"
         },
         {
@@ -5550,6 +5980,7 @@
           "x": 214189,
           "y": 114418,
           "rows": 1,
+          "scene": "japanese-garden",
           "url": "/atlas-v2/production/0180-512df36b6fc2ec53.webp"
         }
       ],
@@ -5565,6 +5996,7 @@
           "x": 214210,
           "y": 114425,
           "rows": 1,
+          "scene": "japanese-garden",
           "url": "/atlas-v2/production/0300-78391af198a5669f.webp"
         },
         {
@@ -5572,6 +6004,7 @@
           "x": 214209,
           "y": 114409,
           "rows": 1,
+          "scene": "japanese-garden",
           "url": "/atlas-v2/production/0432-63a46a900ed11fda.webp"
         }
       ],
@@ -5587,6 +6020,7 @@
           "x": 214188,
           "y": 114414,
           "rows": 1,
+          "scene": "lighthouse",
           "url": "/atlas-v2/production/sea-0178-39d907680f4e60c1.webp"
         },
         {
@@ -5594,6 +6028,7 @@
           "x": 214203,
           "y": 114420,
           "rows": 1,
+          "scene": "lighthouse",
           "url": "/atlas-v2/production/sea-0258-681ed380eccf8e46.webp"
         },
         {
@@ -5601,6 +6036,7 @@
           "x": 214206,
           "y": 114420,
           "rows": 1,
+          "scene": "lighthouse",
           "url": "/atlas-v2/production/sea-0270-8d51f114b10598d2.webp"
         },
         {
@@ -5608,6 +6044,7 @@
           "x": 214218,
           "y": 114420,
           "rows": 1,
+          "scene": "lighthouse",
           "url": "/atlas-v2/production/sea-0346-534d5e99a2a1ad2b.webp"
         },
         {
@@ -5615,6 +6052,7 @@
           "x": 214215,
           "y": 114408,
           "rows": 1,
+          "scene": "lighthouse",
           "url": "/atlas-v2/production/sea-0443-2cf422f0e933b072.webp"
         }
       ],
@@ -5630,6 +6068,7 @@
           "x": 214182,
           "y": 114421,
           "rows": 1,
+          "scene": "market-quarter",
           "url": "/atlas-v2/production/0031-332f05ae36ffa46c.webp"
         },
         {
@@ -5637,6 +6076,7 @@
           "x": 214186,
           "y": 114417,
           "rows": 1,
+          "scene": "market-quarter",
           "url": "/atlas-v2/production/0051-a5532ac82f3081d8.webp"
         },
         {
@@ -5644,6 +6084,7 @@
           "x": 214182,
           "y": 114423,
           "rows": 1,
+          "scene": "market-quarter",
           "url": "/atlas-v2/production/0088-01f16d01327b42a5.webp"
         },
         {
@@ -5651,6 +6092,7 @@
           "x": 214180,
           "y": 114415,
           "rows": 1,
+          "scene": "market-quarter",
           "url": "/atlas-v2/production/0121-58112f2ec120bbe4.webp"
         },
         {
@@ -5658,6 +6100,7 @@
           "x": 214177,
           "y": 114421,
           "rows": 1,
+          "scene": "market-quarter",
           "url": "/atlas-v2/production/0163-32efdc3eefeac9b8.webp"
         }
       ],
@@ -5673,6 +6116,7 @@
           "x": 214212,
           "y": 114422,
           "rows": 1,
+          "scene": "market-quarter",
           "url": "/atlas-v2/production/0309-63bb66412f319cca.webp"
         },
         {
@@ -5680,6 +6124,7 @@
           "x": 214220,
           "y": 114420,
           "rows": 1,
+          "scene": "market-quarter",
           "url": "/atlas-v2/production/0359-a9d2979b9c333474.webp"
         },
         {
@@ -5687,6 +6132,7 @@
           "x": 214209,
           "y": 114390,
           "rows": 1,
+          "scene": "market-quarter",
           "url": "/atlas-v2/production/0414-d809052132d353f9.webp"
         }
       ],
@@ -5702,6 +6148,7 @@
           "x": 214186,
           "y": 114421,
           "rows": 1,
+          "scene": "marshmallow-factory",
           "url": "/atlas-v2/production/0065-b45a814c66a02aaf.webp"
         },
         {
@@ -5709,6 +6156,7 @@
           "x": 214182,
           "y": 114415,
           "rows": 1,
+          "scene": "marshmallow-factory",
           "url": "/atlas-v2/production/0130-8ccae1057a54389d.webp"
         },
         {
@@ -5716,6 +6164,7 @@
           "x": 214177,
           "y": 114420,
           "rows": 1,
+          "scene": "marshmallow-factory",
           "url": "/atlas-v2/production/0164-f3800da335751221.webp"
         }
       ],
@@ -5731,6 +6180,7 @@
           "x": 214202,
           "y": 114420,
           "rows": 1,
+          "scene": "marshmallow-factory",
           "url": "/atlas-v2/production/0249-0535283d2133ef26.webp"
         },
         {
@@ -5738,6 +6188,7 @@
           "x": 214211,
           "y": 114426,
           "rows": 1,
+          "scene": "marshmallow-factory",
           "url": "/atlas-v2/production/0302-1f0148ae6292efb0.webp"
         },
         {
@@ -5745,6 +6196,7 @@
           "x": 214219,
           "y": 114422,
           "rows": 1,
+          "scene": "marshmallow-factory",
           "url": "/atlas-v2/production/0355-d99c92b7a9a465cf.webp"
         }
       ],
@@ -5760,6 +6212,7 @@
           "x": 214185,
           "y": 114418,
           "rows": 1,
+          "scene": "maze-garden",
           "url": "/atlas-v2/production/0010-1ee6c61bdb797939.webp"
         },
         {
@@ -5767,6 +6220,7 @@
           "x": 214181,
           "y": 114421,
           "rows": 1,
+          "scene": "maze-garden",
           "url": "/atlas-v2/production/0079-b0b8ae0ce662ed53.webp"
         },
         {
@@ -5774,6 +6228,7 @@
           "x": 214185,
           "y": 114423,
           "rows": 1,
+          "scene": "maze-garden",
           "url": "/atlas-v2/production/0100-5f1f36489db41d5e.webp"
         },
         {
@@ -5781,6 +6236,7 @@
           "x": 214180,
           "y": 114419,
           "rows": 1,
+          "scene": "maze-garden",
           "url": "/atlas-v2/production/0125-3c13c80c9e79c487.webp"
         },
         {
@@ -5788,6 +6244,7 @@
           "x": 214178,
           "y": 114421,
           "rows": 1,
+          "scene": "maze-garden",
           "url": "/atlas-v2/production/0169-adf9f589fac9a4c6.webp"
         }
       ],
@@ -5803,6 +6260,7 @@
           "x": 214198,
           "y": 114419,
           "rows": 1,
+          "scene": "maze-garden",
           "url": "/atlas-v2/production/0227-5338593ece386742.webp"
         },
         {
@@ -5810,6 +6268,7 @@
           "x": 214208,
           "y": 114425,
           "rows": 1,
+          "scene": "maze-garden",
           "url": "/atlas-v2/production/0286-cea7e7a2a3a22972.webp"
         },
         {
@@ -5817,6 +6276,7 @@
           "x": 214219,
           "y": 114421,
           "rows": 1,
+          "scene": "maze-garden",
           "url": "/atlas-v2/production/0356-73c08d8217c67a14.webp"
         }
       ],
@@ -5832,6 +6292,7 @@
           "x": 214184,
           "y": 114417,
           "rows": 1,
+          "scene": "mechanical-theatre",
           "url": "/atlas-v2/production/0040-a9f8736dd639eb28.webp"
         },
         {
@@ -5839,6 +6300,7 @@
           "x": 214186,
           "y": 114420,
           "rows": 1,
+          "scene": "mechanical-theatre",
           "url": "/atlas-v2/production/0062-250c15251a532e08.webp"
         },
         {
@@ -5846,6 +6308,7 @@
           "x": 214185,
           "y": 114416,
           "rows": 1,
+          "scene": "mechanical-theatre",
           "url": "/atlas-v2/production/0097-e30457fff2c88e5c.webp"
         },
         {
@@ -5853,6 +6316,7 @@
           "x": 214176,
           "y": 114420,
           "rows": 1,
+          "scene": "mechanical-theatre",
           "url": "/atlas-v2/production/0159-16c8259ee3ef3ee3.webp"
         }
       ],
@@ -5868,6 +6332,7 @@
           "x": 214182,
           "y": 114418,
           "rows": 1,
+          "scene": "mesmerist-salon",
           "url": "/atlas-v2/production/0020-ad2837392989af0a.webp"
         },
         {
@@ -5875,6 +6340,7 @@
           "x": 214181,
           "y": 114421,
           "rows": 1,
+          "scene": "mesmerist-salon",
           "url": "/atlas-v2/production/0080-d4dc1bb22e79295c.webp"
         },
         {
@@ -5882,6 +6348,7 @@
           "x": 214182,
           "y": 114423,
           "rows": 1,
+          "scene": "mesmerist-salon",
           "url": "/atlas-v2/production/0087-e5f0131f02b18cfd.webp"
         },
         {
@@ -5889,6 +6356,7 @@
           "x": 214184,
           "y": 114415,
           "rows": 1,
+          "scene": "mesmerist-salon",
           "url": "/atlas-v2/production/0132-c3bfda10ec3d91f3.webp"
         },
         {
@@ -5896,6 +6364,7 @@
           "x": 214176,
           "y": 114422,
           "rows": 1,
+          "scene": "mesmerist-salon",
           "url": "/atlas-v2/production/0161-060d318195433041.webp"
         }
       ],
@@ -5911,6 +6380,7 @@
           "x": 214210,
           "y": 114424,
           "rows": 1,
+          "scene": "mesmerist-salon",
           "url": "/atlas-v2/production/0299-110c2d696727fb59.webp"
         },
         {
@@ -5918,6 +6388,7 @@
           "x": 214206,
           "y": 114393,
           "rows": 1,
+          "scene": "mesmerist-salon",
           "url": "/atlas-v2/production/0404-7616f11eeb1bedbc.webp"
         },
         {
@@ -5925,6 +6396,7 @@
           "x": 214208,
           "y": 114392,
           "rows": 1,
+          "scene": "mesmerist-salon",
           "url": "/atlas-v2/production/0450-55d097afbc885694.webp"
         },
         {
@@ -5932,6 +6404,7 @@
           "x": 214208,
           "y": 114394,
           "rows": 1,
+          "scene": "mesmerist-salon",
           "url": "/atlas-v2/production/0472-f5ee4615208b74b2.webp"
         }
       ],
@@ -5947,6 +6420,7 @@
           "x": 214182,
           "y": 114419,
           "rows": 1,
+          "scene": "observatory",
           "url": "/atlas-v2/production/0025-6b97e252e2e11c39.webp"
         },
         {
@@ -5954,6 +6428,7 @@
           "x": 214185,
           "y": 114423,
           "rows": 1,
+          "scene": "observatory",
           "url": "/atlas-v2/production/0099-d76a944a650b42d3.webp"
         },
         {
@@ -5961,6 +6436,7 @@
           "x": 214172,
           "y": 114421,
           "rows": 1,
+          "scene": "observatory",
           "url": "/atlas-v2/production/0149-2fb1a04c55628cda.webp"
         },
         {
@@ -5968,6 +6444,7 @@
           "x": 214192,
           "y": 114417,
           "rows": 1,
+          "scene": "observatory",
           "url": "/atlas-v2/production/0195-f214bc6c3611cec4.webp"
         }
       ],
@@ -5983,6 +6460,7 @@
           "x": 214205,
           "y": 114422,
           "rows": 1,
+          "scene": "observatory",
           "url": "/atlas-v2/production/0268-2416e7f8eddbf72b.webp"
         },
         {
@@ -5990,6 +6468,7 @@
           "x": 214211,
           "y": 114423,
           "rows": 1,
+          "scene": "observatory",
           "url": "/atlas-v2/production/0305-4e5f8b168f4a9e6c.webp"
         },
         {
@@ -5997,6 +6476,7 @@
           "x": 214208,
           "y": 114389,
           "rows": 1,
+          "scene": "observatory",
           "url": "/atlas-v2/production/0408-beba4ae561ac8d9a.webp"
         }
       ],
@@ -6012,6 +6492,7 @@
           "x": 214185,
           "y": 114421,
           "rows": 1,
+          "scene": "orrery-hall",
           "url": "/atlas-v2/production/0016-6d21bc2f7731941d.webp"
         },
         {
@@ -6019,6 +6500,7 @@
           "x": 214185,
           "y": 114417,
           "rows": 1,
+          "scene": "orrery-hall",
           "url": "/atlas-v2/production/0045-7b97f0226dd3ddc4.webp"
         },
         {
@@ -6026,6 +6508,7 @@
           "x": 214182,
           "y": 114416,
           "rows": 1,
+          "scene": "orrery-hall",
           "url": "/atlas-v2/production/0085-41914b902d7c58b9.webp"
         },
         {
@@ -6033,6 +6516,7 @@
           "x": 214174,
           "y": 114421,
           "rows": 1,
+          "scene": "orrery-hall",
           "url": "/atlas-v2/production/0154-5850db3ba6b94cbf.webp"
         },
         {
@@ -6040,6 +6524,7 @@
           "x": 214197,
           "y": 114418,
           "rows": 1,
+          "scene": "orrery-hall",
           "url": "/atlas-v2/production/0222-9bc727cbcec575f6.webp"
         }
       ],
@@ -6055,6 +6540,7 @@
           "x": 214211,
           "y": 114422,
           "rows": 1,
+          "scene": "orrery-hall",
           "url": "/atlas-v2/production/0306-f5705d323b084bfd.webp"
         }
       ],
@@ -6070,6 +6556,7 @@
           "x": 214182,
           "y": 114422,
           "rows": 1,
+          "scene": "photography-studio",
           "url": "/atlas-v2/production/0032-ded2cdafaaa99099.webp"
         },
         {
@@ -6077,6 +6564,7 @@
           "x": 214186,
           "y": 114416,
           "rows": 1,
+          "scene": "photography-studio",
           "url": "/atlas-v2/production/0102-aa6fe06e763f0b5d.webp"
         },
         {
@@ -6084,6 +6572,7 @@
           "x": 214180,
           "y": 114416,
           "rows": 1,
+          "scene": "photography-studio",
           "url": "/atlas-v2/production/0122-c1d20e091def90c5.webp"
         },
         {
@@ -6091,6 +6580,7 @@
           "x": 214197,
           "y": 114417,
           "rows": 1,
+          "scene": "photography-studio",
           "url": "/atlas-v2/production/0223-35de500c0df0a712.webp"
         }
       ],
@@ -6106,6 +6596,7 @@
           "x": 214211,
           "y": 114424,
           "rows": 1,
+          "scene": "photography-studio",
           "url": "/atlas-v2/production/0304-545db7eebe64e77d.webp"
         },
         {
@@ -6113,6 +6604,7 @@
           "x": 214220,
           "y": 114421,
           "rows": 1,
+          "scene": "photography-studio",
           "url": "/atlas-v2/production/0360-7a0e2d102b34e6bc.webp"
         },
         {
@@ -6120,6 +6612,7 @@
           "x": 214223,
           "y": 114420,
           "rows": 1,
+          "scene": "photography-studio",
           "url": "/atlas-v2/production/0380-eecf26b600d49699.webp"
         },
         {
@@ -6127,6 +6620,7 @@
           "x": 214206,
           "y": 114411,
           "rows": 1,
+          "scene": "photography-studio",
           "url": "/atlas-v2/production/0425-54695cfda4b3095b.webp"
         }
       ],
@@ -6142,6 +6636,7 @@
           "x": 214182,
           "y": 114418,
           "rows": 1,
+          "scene": "printworks",
           "url": "/atlas-v2/production/0021-0677ee9a55b8a384.webp"
         },
         {
@@ -6149,6 +6644,7 @@
           "x": 214185,
           "y": 114417,
           "rows": 1,
+          "scene": "printworks",
           "url": "/atlas-v2/production/0047-cccd089eba0348ac.webp"
         },
         {
@@ -6156,6 +6652,7 @@
           "x": 214176,
           "y": 114421,
           "rows": 1,
+          "scene": "printworks",
           "url": "/atlas-v2/production/0160-850b962367d0fb04.webp"
         }
       ],
@@ -6171,6 +6668,7 @@
           "x": 214203,
           "y": 114424,
           "rows": 1,
+          "scene": "printworks",
           "url": "/atlas-v2/production/0254-4027540803af524b.webp"
         },
         {
@@ -6178,6 +6676,7 @@
           "x": 214210,
           "y": 114422,
           "rows": 1,
+          "scene": "printworks",
           "url": "/atlas-v2/production/0297-d1184cacdf04f6f1.webp"
         },
         {
@@ -6185,6 +6684,7 @@
           "x": 214214,
           "y": 114424,
           "rows": 1,
+          "scene": "printworks",
           "url": "/atlas-v2/production/0322-c02b6d6485a4cc7d.webp"
         },
         {
@@ -6192,6 +6692,7 @@
           "x": 214190,
           "y": 114380,
           "rows": 1,
+          "scene": "printworks",
           "url": "/atlas-v2/production/0387-6f502d45f2d133ee.webp"
         }
       ],
@@ -6207,6 +6708,7 @@
           "x": 214182,
           "y": 114418,
           "rows": 1,
+          "scene": "raver-arena",
           "url": "/atlas-v2/production/0022-01ba3d70f10b1644.webp"
         },
         {
@@ -6214,6 +6716,7 @@
           "x": 214188,
           "y": 114415,
           "rows": 1,
+          "scene": "raver-arena",
           "url": "/atlas-v2/production/0136-605cba7e732734ef.webp"
         },
         {
@@ -6221,6 +6724,7 @@
           "x": 214179,
           "y": 114417,
           "rows": 1,
+          "scene": "raver-arena",
           "url": "/atlas-v2/production/0175-88539898d0fecaa1.webp"
         }
       ],
@@ -6236,6 +6740,7 @@
           "x": 214183,
           "y": 114418,
           "rows": 1,
+          "scene": "rice-sculpture-festival",
           "url": "/atlas-v2/production/0001-01acdb1d78a13bfd.webp"
         },
         {
@@ -6243,6 +6748,7 @@
           "x": 214181,
           "y": 114419,
           "rows": 1,
+          "scene": "rice-sculpture-festival",
           "url": "/atlas-v2/production/0076-e81b45823da9fbff.webp"
         },
         {
@@ -6250,6 +6756,7 @@
           "x": 214182,
           "y": 114416,
           "rows": 1,
+          "scene": "rice-sculpture-festival",
           "url": "/atlas-v2/production/0086-ebcef59162159c93.webp"
         },
         {
@@ -6257,6 +6764,7 @@
           "x": 214174,
           "y": 114420,
           "rows": 1,
+          "scene": "rice-sculpture-festival",
           "url": "/atlas-v2/production/0153-c2f633c4174cb0da.webp"
         },
         {
@@ -6264,6 +6772,7 @@
           "x": 214189,
           "y": 114419,
           "rows": 1,
+          "scene": "rice-sculpture-festival",
           "url": "/atlas-v2/production/0179-737774014840f28e.webp"
         }
       ],
@@ -6279,6 +6788,7 @@
           "x": 214197,
           "y": 114421,
           "rows": 1,
+          "scene": "rice-sculpture-festival",
           "url": "/atlas-v2/production/0219-d8b5c528425c0118.webp"
         },
         {
@@ -6286,6 +6796,7 @@
           "x": 214218,
           "y": 114425,
           "rows": 1,
+          "scene": "rice-sculpture-festival",
           "url": "/atlas-v2/production/0351-55cf7f3fab256136.webp"
         },
         {
@@ -6293,6 +6804,7 @@
           "x": 214211,
           "y": 114388,
           "rows": 1,
+          "scene": "rice-sculpture-festival",
           "url": "/atlas-v2/production/0423-6f261ca9973b74b7.webp"
         }
       ],
@@ -6308,6 +6820,7 @@
           "x": 214185,
           "y": 114418,
           "rows": 1,
+          "scene": "solar-farm",
           "url": "/atlas-v2/production/0009-3aac08c47f4c1284.webp"
         },
         {
@@ -6315,6 +6828,7 @@
           "x": 214186,
           "y": 114422,
           "rows": 1,
+          "scene": "solar-farm",
           "url": "/atlas-v2/production/0066-9d3094560237ec93.webp"
         },
         {
@@ -6322,6 +6836,7 @@
           "x": 214187,
           "y": 114420,
           "rows": 1,
+          "scene": "solar-farm",
           "url": "/atlas-v2/production/0113-89ce51894aadda9e.webp"
         },
         {
@@ -6329,6 +6844,7 @@
           "x": 214188,
           "y": 114422,
           "rows": 1,
+          "scene": "solar-farm",
           "url": "/atlas-v2/production/0143-08bce4dedc1370ee.webp"
         },
         {
@@ -6336,6 +6852,7 @@
           "x": 214191,
           "y": 114415,
           "rows": 1,
+          "scene": "solar-farm",
           "url": "/atlas-v2/production/0192-3d9a59835a547607.webp"
         }
       ],
@@ -6351,6 +6868,7 @@
           "x": 214215,
           "y": 114424,
           "rows": 1,
+          "scene": "solar-farm",
           "url": "/atlas-v2/production/0327-87c57b7882c10b12.webp"
         }
       ],
@@ -6366,6 +6884,7 @@
           "x": 214182,
           "y": 114420,
           "rows": 1,
+          "scene": "steam-railway",
           "url": "/atlas-v2/production/0027-ce22e8776e082db9.webp"
         },
         {
@@ -6373,6 +6892,7 @@
           "x": 214183,
           "y": 114423,
           "rows": 1,
+          "scene": "steam-railway",
           "url": "/atlas-v2/production/0091-ada9e34243aeab04.webp"
         },
         {
@@ -6380,6 +6900,7 @@
           "x": 214188,
           "y": 114416,
           "rows": 1,
+          "scene": "steam-railway",
           "url": "/atlas-v2/production/0137-5acbbfc135952b13.webp"
         },
         {
@@ -6387,6 +6908,7 @@
           "x": 214178,
           "y": 114422,
           "rows": 1,
+          "scene": "steam-railway",
           "url": "/atlas-v2/production/0170-a885ebaeacb5817b.webp"
         }
       ],
@@ -6402,6 +6924,7 @@
           "x": 214183,
           "y": 114421,
           "rows": 1,
+          "scene": "sushi-restaurant",
           "url": "/atlas-v2/production/0005-182ad518f261a7d2.webp"
         },
         {
@@ -6409,6 +6932,7 @@
           "x": 214175,
           "y": 114420,
           "rows": 1,
+          "scene": "sushi-restaurant",
           "url": "/atlas-v2/production/0158-5e926674fe212a55.webp"
         },
         {
@@ -6416,6 +6940,7 @@
           "x": 214186,
           "y": 114414,
           "rows": 1,
+          "scene": "sushi-restaurant",
           "url": "/atlas-v2/production/0176-56a32c93b19c8442.webp"
         }
       ],
@@ -6431,6 +6956,7 @@
           "x": 214207,
           "y": 114426,
           "rows": 1,
+          "scene": "sushi-restaurant",
           "url": "/atlas-v2/production/0277-a594d2c4d9b1b4b2.webp"
         },
         {
@@ -6438,6 +6964,7 @@
           "x": 214213,
           "y": 114421,
           "rows": 1,
+          "scene": "sushi-restaurant",
           "url": "/atlas-v2/production/0318-f55a36e327acefa8.webp"
         },
         {
@@ -6445,6 +6972,7 @@
           "x": 214221,
           "y": 114421,
           "rows": 1,
+          "scene": "sushi-restaurant",
           "url": "/atlas-v2/production/0367-6808cfdc29d35252.webp"
         }
       ],
@@ -6460,6 +6988,7 @@
           "x": 214181,
           "y": 114416,
           "rows": 1,
+          "scene": "suspension-bridge",
           "url": "/atlas-v2/production/0069-0387d271a77e2142.webp"
         },
         {
@@ -6467,6 +6996,7 @@
           "x": 214186,
           "y": 114416,
           "rows": 1,
+          "scene": "suspension-bridge",
           "url": "/atlas-v2/production/0101-7decaf9a4b2d77f2.webp"
         },
         {
@@ -6474,6 +7004,7 @@
           "x": 214172,
           "y": 114422,
           "rows": 1,
+          "scene": "suspension-bridge",
           "url": "/atlas-v2/production/0150-c71a14781fca4a1d.webp"
         }
       ],
@@ -6489,6 +7020,7 @@
           "x": 214215,
           "y": 114426,
           "rows": 1,
+          "scene": "suspension-bridge",
           "url": "/atlas-v2/production/0325-4e3bc43d79298319.webp"
         },
         {
@@ -6496,6 +7028,7 @@
           "x": 214205,
           "y": 114391,
           "rows": 1,
+          "scene": "suspension-bridge",
           "url": "/atlas-v2/production/0403-8caeb796213c2b5b.webp"
         },
         {
@@ -6503,6 +7036,7 @@
           "x": 214217,
           "y": 114426,
           "rows": 1,
+          "scene": "suspension-bridge",
           "url": "/atlas-v2/production/0466-8216033f397b2023.webp"
         }
       ],
@@ -6518,6 +7052,7 @@
           "x": 214182,
           "y": 114417,
           "rows": 1,
+          "scene": "telegraph-office",
           "url": "/atlas-v2/production/0017-973f7b31e811f834.webp"
         },
         {
@@ -6525,6 +7060,7 @@
           "x": 214181,
           "y": 114420,
           "rows": 1,
+          "scene": "telegraph-office",
           "url": "/atlas-v2/production/0077-76a7008c739ca5c5.webp"
         },
         {
@@ -6532,6 +7068,7 @@
           "x": 214180,
           "y": 114418,
           "rows": 1,
+          "scene": "telegraph-office",
           "url": "/atlas-v2/production/0124-0788da8b176dc4ab.webp"
         }
       ],
@@ -6547,6 +7084,7 @@
           "x": 214209,
           "y": 114424,
           "rows": 1,
+          "scene": "telegraph-office",
           "url": "/atlas-v2/production/0290-3f9e403e253ff910.webp"
         },
         {
@@ -6554,6 +7092,7 @@
           "x": 214210,
           "y": 114410,
           "rows": 1,
+          "scene": "telegraph-office",
           "url": "/atlas-v2/production/0473-861992c3c377e45b.webp"
         }
       ],
@@ -6569,6 +7108,7 @@
           "x": 214183,
           "y": 114417,
           "rows": 1,
+          "scene": "textile-mill",
           "url": "/atlas-v2/production/0037-95238805c8769011.webp"
         },
         {
@@ -6576,6 +7116,7 @@
           "x": 214181,
           "y": 114416,
           "rows": 1,
+          "scene": "textile-mill",
           "url": "/atlas-v2/production/0070-8f4d716a00856561.webp"
         },
         {
@@ -6583,6 +7124,7 @@
           "x": 214183,
           "y": 114415,
           "rows": 1,
+          "scene": "textile-mill",
           "url": "/atlas-v2/production/0131-f2592215d2fe9d43.webp"
         },
         {
@@ -6590,6 +7132,7 @@
           "x": 214201,
           "y": 114423,
           "rows": 1,
+          "scene": "textile-mill",
           "url": "/atlas-v2/production/0240-3b7e68a54d6baba6.webp"
         }
       ],
@@ -6605,6 +7148,7 @@
           "x": 214183,
           "y": 114417,
           "rows": 1,
+          "scene": "theme-park",
           "url": "/atlas-v2/production/0035-d0334a04cf190b69.webp"
         },
         {
@@ -6612,6 +7156,7 @@
           "x": 214181,
           "y": 114420,
           "rows": 1,
+          "scene": "theme-park",
           "url": "/atlas-v2/production/0078-03432ca3fce308ea.webp"
         },
         {
@@ -6619,6 +7164,7 @@
           "x": 214186,
           "y": 114423,
           "rows": 1,
+          "scene": "theme-park",
           "url": "/atlas-v2/production/0103-22e2b42f9fdc24d0.webp"
         },
         {
@@ -6626,6 +7172,7 @@
           "x": 214188,
           "y": 114417,
           "rows": 1,
+          "scene": "theme-park",
           "url": "/atlas-v2/production/0138-f15f76bf715b9889.webp"
         }
       ],
@@ -6641,6 +7188,7 @@
           "x": 214196,
           "y": 114418,
           "rows": 1,
+          "scene": "theme-park",
           "url": "/atlas-v2/production/0216-57ea24be9dbb3309.webp"
         },
         {
@@ -6648,6 +7196,7 @@
           "x": 214184,
           "y": 114379,
           "rows": 1,
+          "scene": "theme-park",
           "url": "/atlas-v2/production/0384-d4ef78c296abe70d.webp"
         },
         {
@@ -6655,6 +7204,7 @@
           "x": 214214,
           "y": 114407,
           "rows": 1,
+          "scene": "theme-park",
           "url": "/atlas-v2/production/0442-cf5e3a25e044529f.webp"
         }
       ],
@@ -6670,6 +7220,7 @@
           "x": 214181,
           "y": 114418,
           "rows": 1,
+          "scene": "thrifting-paradise",
           "url": "/atlas-v2/production/0074-c88dae7e2050a37c.webp"
         },
         {
@@ -6677,6 +7228,7 @@
           "x": 214187,
           "y": 114419,
           "rows": 1,
+          "scene": "thrifting-paradise",
           "url": "/atlas-v2/production/0111-d75276a16805929d.webp"
         },
         {
@@ -6684,6 +7236,7 @@
           "x": 214171,
           "y": 114421,
           "rows": 1,
+          "scene": "thrifting-paradise",
           "url": "/atlas-v2/production/0148-809be17a107e5fee.webp"
         },
         {
@@ -6691,6 +7244,7 @@
           "x": 214193,
           "y": 114419,
           "rows": 1,
+          "scene": "thrifting-paradise",
           "url": "/atlas-v2/production/0199-6fb07c7e2d510da5.webp"
         }
       ],
@@ -6706,6 +7260,7 @@
           "x": 214183,
           "y": 114418,
           "rows": 1,
+          "scene": "tropical-aquarium",
           "url": "/atlas-v2/production/0002-4258be297352c980.webp"
         },
         {
@@ -6713,6 +7268,7 @@
           "x": 214186,
           "y": 114419,
           "rows": 1,
+          "scene": "tropical-aquarium",
           "url": "/atlas-v2/production/0058-d5808e6d2ed76b36.webp"
         },
         {
@@ -6720,6 +7276,7 @@
           "x": 214183,
           "y": 114423,
           "rows": 1,
+          "scene": "tropical-aquarium",
           "url": "/atlas-v2/production/0092-6cc2569a7a0a13dd.webp"
         },
         {
@@ -6727,6 +7284,7 @@
           "x": 214187,
           "y": 114414,
           "rows": 1,
+          "scene": "tropical-aquarium",
           "url": "/atlas-v2/production/0177-05340b45e09f9322.webp"
         }
       ],
@@ -6742,6 +7300,7 @@
           "x": 214194,
           "y": 114417,
           "rows": 1,
+          "scene": "tropical-aquarium",
           "url": "/atlas-v2/production/0205-67818a113891347e.webp"
         },
         {
@@ -6749,6 +7308,7 @@
           "x": 214208,
           "y": 114424,
           "rows": 1,
+          "scene": "tropical-aquarium",
           "url": "/atlas-v2/production/0285-774ac05ca65c6995.webp"
         },
         {
@@ -6756,6 +7316,7 @@
           "x": 214216,
           "y": 114423,
           "rows": 1,
+          "scene": "tropical-aquarium",
           "url": "/atlas-v2/production/0336-25a36d2a47b1ffc0.webp"
         }
       ],
@@ -6771,6 +7332,7 @@
           "x": 214185,
           "y": 114422,
           "rows": 1,
+          "scene": "utopian-garden",
           "url": "/atlas-v2/production/0050-057deca957e1d03e.webp"
         },
         {
@@ -6778,6 +7340,7 @@
           "x": 214184,
           "y": 114423,
           "rows": 1,
+          "scene": "utopian-garden",
           "url": "/atlas-v2/production/0095-a31d58be44e9ed2f.webp"
         },
         {
@@ -6785,6 +7348,7 @@
           "x": 214180,
           "y": 114417,
           "rows": 1,
+          "scene": "utopian-garden",
           "url": "/atlas-v2/production/0123-3cc49d3ae067911a.webp"
         },
         {
@@ -6792,6 +7356,7 @@
           "x": 214179,
           "y": 114420,
           "rows": 1,
+          "scene": "utopian-garden",
           "url": "/atlas-v2/production/0173-103b1643b3f93351.webp"
         }
       ],
@@ -6807,6 +7372,7 @@
           "x": 214211,
           "y": 114421,
           "rows": 1,
+          "scene": "utopian-garden",
           "url": "/atlas-v2/production/0307-a70bddfadfe18200.webp"
         },
         {
@@ -6814,6 +7380,7 @@
           "x": 214207,
           "y": 114409,
           "rows": 1,
+          "scene": "utopian-garden",
           "url": "/atlas-v2/production/0427-57a8a7ab24c5ec5b.webp"
         }
       ],
@@ -6829,6 +7396,7 @@
           "x": 214182,
           "y": 114421,
           "rows": 1,
+          "scene": "weather-station",
           "url": "/atlas-v2/production/0029-93126310cee915cd.webp"
         },
         {
@@ -6836,6 +7404,7 @@
           "x": 214187,
           "y": 114422,
           "rows": 1,
+          "scene": "weather-station",
           "url": "/atlas-v2/production/0118-eeb13620b6cdcb3b.webp"
         },
         {
@@ -6843,6 +7412,7 @@
           "x": 214189,
           "y": 114415,
           "rows": 1,
+          "scene": "weather-station",
           "url": "/atlas-v2/production/0183-593277d533ed5adf.webp"
         },
         {
@@ -6850,6 +7420,7 @@
           "x": 214193,
           "y": 114417,
           "rows": 1,
+          "scene": "weather-station",
           "url": "/atlas-v2/production/0201-26f0b95d4f8257ad.webp"
         }
       ],
@@ -6865,6 +7436,7 @@
           "x": 214183,
           "y": 114421,
           "rows": 1,
+          "scene": "zoo",
           "url": "/atlas-v2/production/0007-410f95aacc478091.webp"
         },
         {
@@ -6872,6 +7444,7 @@
           "x": 214184,
           "y": 114417,
           "rows": 1,
+          "scene": "zoo",
           "url": "/atlas-v2/production/0041-60441a393ec05d4d.webp"
         },
         {
@@ -6879,6 +7452,7 @@
           "x": 214187,
           "y": 114419,
           "rows": 1,
+          "scene": "zoo",
           "url": "/atlas-v2/production/0112-bfad4069400f9ccf.webp"
         },
         {
@@ -6886,6 +7460,7 @@
           "x": 214193,
           "y": 114418,
           "rows": 1,
+          "scene": "zoo",
           "url": "/atlas-v2/production/0200-c265b9937abb43c4.webp"
         }
       ],
@@ -6901,6 +7476,7 @@
           "x": 214183,
           "y": 114433,
           "rows": 1,
+          "scene": "tropical-aquarium",
           "url": "/generated-tiles/18/214183/114433/tropical-aquarium?version=6&variant=discovery-2243a5da-28ba-4bb0-89ff-1b75dcc98607-f745b7a24386"
         },
         {
@@ -6908,6 +7484,7 @@
           "x": 214174,
           "y": 114422,
           "rows": 1,
+          "scene": "botanical-laboratory",
           "url": "/atlas-v2/production/0155-dc4e442c48389ccb.webp"
         },
         {
@@ -6915,6 +7492,7 @@
           "x": 214181,
           "y": 114421,
           "rows": 1,
+          "scene": "mesmerist-salon",
           "url": "/atlas-v2/production/0080-04d3505e5950fdbc.webp"
         },
         {
@@ -6922,6 +7500,7 @@
           "x": 214185,
           "y": 114434,
           "rows": 1,
+          "scene": "printworks",
           "url": "/generated-tiles/18/214185/114434/printworks?version=6&variant=discovery-2243a5da-28ba-4bb0-89ff-1b75dcc98607-b8177e69fbd5"
         },
         {
@@ -6929,6 +7508,7 @@
           "x": 214182,
           "y": 114416,
           "rows": 1,
+          "scene": "orrery-hall",
           "url": "/atlas-v2/production/0085-725471150f49c926.webp"
         },
         {
@@ -6936,6 +7516,7 @@
           "x": 214182,
           "y": 114423,
           "rows": 1,
+          "scene": "mesmerist-salon",
           "url": "/atlas-v2/production/0087-4af79893a6e28e15.webp"
         },
         {
@@ -6943,6 +7524,7 @@
           "x": 214183,
           "y": 114417,
           "rows": 1,
+          "scene": "utopian-garden",
           "url": "/atlas-v2/production/0036-01ae9237b9d2fa98.webp"
         },
         {
@@ -6950,6 +7532,7 @@
           "x": 214183,
           "y": 114417,
           "rows": 1,
+          "scene": "textile-mill",
           "url": "/atlas-v2/production/0037-2e3463a726bccd7c.webp"
         },
         {
@@ -6957,6 +7540,7 @@
           "x": 214184,
           "y": 114415,
           "rows": 1,
+          "scene": "mesmerist-salon",
           "url": "/atlas-v2/production/0132-4d36f83986e12ebd.webp"
         },
         {
@@ -6964,6 +7548,7 @@
           "x": 214185,
           "y": 114421,
           "rows": 1,
+          "scene": "steampunk-city",
           "url": "/generated-tiles/18/214185/114421/steampunk-city?version=6&variant=discovery-2243a5da-28ba-4bb0-89ff-1b75dcc98607-7b98bbc4415f"
         },
         {
@@ -6978,6 +7563,7 @@
           "x": 214216,
           "y": 114423,
           "rows": 1,
+          "scene": "tropical-aquarium",
           "url": "/atlas-v2/production/0336-c62a8b27e54cd109.webp"
         },
         {
@@ -6985,6 +7571,7 @@
           "x": 214217,
           "y": 114426,
           "rows": 1,
+          "scene": "suspension-bridge",
           "url": "/atlas-v2/production/0466-3e76e06b497c8d19.webp"
         },
         {
@@ -6992,6 +7579,7 @@
           "x": 214209,
           "y": 114426,
           "rows": 1,
+          "scene": "analytical-engine",
           "url": "/atlas-v2/production/0288-c67070229ada31aa.webp"
         },
         {
@@ -6999,6 +7587,7 @@
           "x": 214214,
           "y": 114426,
           "rows": 1,
+          "scene": "art-nouveau-palace",
           "url": "/artwork-revisions/50c817a2b47a4a2aa93ce2f065837bcf.png"
         },
         {
@@ -7006,6 +7595,7 @@
           "x": 214205,
           "y": 114425,
           "rows": 1,
+          "scene": "hall-of-mirrors",
           "url": "/artwork-revisions/14eb9849f7cc4dcfb7f838bec8028d00.png"
         },
         {
@@ -7013,6 +7603,7 @@
           "x": 214206,
           "y": 114425,
           "rows": 1,
+          "scene": "orrery-hall",
           "url": "/artwork-revisions/a2bd401e1fa141e3a7000b3881989d82.png"
         },
         {
@@ -7020,6 +7611,7 @@
           "x": 214214,
           "y": 114424,
           "rows": 1,
+          "scene": "printworks",
           "url": "/atlas-v2/production/0322-ec8f833eddc78be1.webp"
         },
         {
@@ -7027,6 +7619,7 @@
           "x": 214219,
           "y": 114423,
           "rows": 1,
+          "scene": "archaeological-excavation",
           "url": "/atlas-v2/production/0354-7b558cf9f80a1a6d.webp"
         },
         {
@@ -7034,6 +7627,7 @@
           "x": 214213,
           "y": 114426,
           "rows": 1,
+          "scene": "raver-arena",
           "url": "/artwork-revisions/9e8b53b24b7e4386b49cc89bdf16ee13.png"
         },
         {
@@ -7041,6 +7635,7 @@
           "x": 214220,
           "y": 114425,
           "rows": 1,
+          "scene": "film-backlot",
           "url": "/artwork-revisions/fa2a77c2a1ff4f3d96ee77e7435b9c78.png"
         },
         {
@@ -7048,6 +7643,7 @@
           "x": 214209,
           "y": 114425,
           "rows": 1,
+          "scene": "zoo",
           "url": "/artwork-revisions/d86310b56bb640048b300e3335b47e9f.png"
         },
         {
@@ -7055,6 +7651,7 @@
           "x": 214207,
           "y": 114425,
           "rows": 1,
+          "scene": "analytical-engine",
           "url": "/artwork-revisions/d14659bcee4440fbbb786892f4ad5942.png"
         },
         {
@@ -7062,6 +7659,7 @@
           "x": 214221,
           "y": 114422,
           "rows": 1,
+          "scene": "grand-library",
           "url": "/atlas-v2/production/0366-526341ffd86047dd.webp"
         },
         {
@@ -7069,6 +7667,7 @@
           "x": 214213,
           "y": 114426,
           "rows": 1,
+          "scene": "automata",
           "url": "/generated-tiles/18/214213/114426/automata?version=6&variant=discovery-7694c7ec-8ffb-465f-9f9f-723bf42fb80f-0b2da16ce4ef"
         },
         {
@@ -7076,6 +7675,7 @@
           "x": 214215,
           "y": 114425,
           "rows": 1,
+          "scene": "grand-library",
           "url": "/artwork-revisions/2970471140544dc2ab52ff4ee50a14f9.png"
         },
         {
@@ -7083,6 +7683,7 @@
           "x": 214211,
           "y": 114425,
           "rows": 1,
+          "scene": "weather-station",
           "url": "/artwork-revisions/cb13356fd9134e598260709f83b3dbc6.png"
         },
         {
@@ -7090,6 +7691,7 @@
           "x": 214216,
           "y": 114425,
           "rows": 1,
+          "scene": "telegraph-office",
           "url": "/artwork-revisions/a49e546254af4a1986034f425ecf9178.png"
         },
         {
@@ -7097,6 +7699,7 @@
           "x": 214202,
           "y": 114424,
           "rows": 1,
+          "scene": "mechanical-theatre",
           "url": "/artwork-revisions/268b9cfeb39b4a86a9deaca50847fc0e.png"
         },
         {
@@ -7104,6 +7707,7 @@
           "x": 214205,
           "y": 114424,
           "rows": 1,
+          "scene": "maze-garden",
           "url": "/artwork-revisions/fc65a55c74ed411bafb910a01eef51f8.png"
         },
         {
@@ -7111,6 +7715,7 @@
           "x": 214219,
           "y": 114421,
           "rows": 1,
+          "scene": "maze-garden",
           "url": "/atlas-v2/production/0356-2ee1f613f86177be.webp"
         },
         {
@@ -7118,6 +7723,7 @@
           "x": 214206,
           "y": 114424,
           "rows": 1,
+          "scene": "film-backlot",
           "url": "/artwork-revisions/d9463e1b94844d589f4fced583988db3.png"
         },
         {
@@ -7125,6 +7731,7 @@
           "x": 214217,
           "y": 114424,
           "rows": 1,
+          "scene": "botanical-laboratory",
           "url": "/artwork-revisions/25aeb005885f4a3aad3611d33792c2c0.png"
         },
         {
@@ -7132,6 +7739,7 @@
           "x": 214212,
           "y": 114424,
           "rows": 1,
+          "scene": "solar-farm",
           "url": "/artwork-revisions/fea425566b8a4582ad7c867a7ed85093.png"
         },
         {
@@ -7139,6 +7747,7 @@
           "x": 214187,
           "y": 114423,
           "rows": 1,
+          "scene": "circus",
           "url": "/artwork-revisions/d29753cef00c4b54bf086fd5de7bdcbc.png"
         },
         {
@@ -7146,6 +7755,7 @@
           "x": 214188,
           "y": 114419,
           "rows": 1,
+          "scene": "japanese-garden",
           "url": "/atlas-v2/production/0140-9769ef197c61a080.webp"
         },
         {
@@ -7153,6 +7763,7 @@
           "x": 214195,
           "y": 114418,
           "rows": 1,
+          "scene": "ferris-wheel",
           "url": "/atlas-v2/production/0211-dac256ba790d9f2e.webp"
         },
         {
@@ -7160,6 +7771,7 @@
           "x": 214203,
           "y": 114423,
           "rows": 1,
+          "scene": "steam-railway",
           "url": "/artwork-revisions/1108cd308b824876a5e8c1f46e10584c.png"
         },
         {
@@ -7167,6 +7779,7 @@
           "x": 214207,
           "y": 114423,
           "rows": 1,
+          "scene": "ironworks",
           "url": "/artwork-revisions/37a732ee2cfe4d5c9ba854a2af3f7f8d.png"
         },
         {
@@ -7174,6 +7787,7 @@
           "x": 214209,
           "y": 114423,
           "rows": 1,
+          "scene": "balloon-festival",
           "url": "/artwork-revisions/f904c5304b9448ee976581d3680a5b5f.png"
         },
         {
@@ -7181,6 +7795,7 @@
           "x": 214212,
           "y": 114423,
           "rows": 1,
+          "scene": "suspension-bridge",
           "url": "/artwork-revisions/154521beb6154699ada2ed5eca97bead.png"
         },
         {
@@ -7188,6 +7803,7 @@
           "x": 214215,
           "y": 114423,
           "rows": 1,
+          "scene": "orrery-hall",
           "url": "/artwork-revisions/d403db7d44224ec5afe8c76d84921afe.png"
         },
         {
@@ -7195,6 +7811,7 @@
           "x": 214222,
           "y": 114423,
           "rows": 1,
+          "scene": "archaeological-excavation",
           "url": "/artwork-revisions/4bfa4bcdbf554f61b29b562173064a95.png"
         },
         {
@@ -7202,6 +7819,7 @@
           "x": 214222,
           "y": 114422,
           "rows": 1,
+          "scene": "orrery-hall",
           "url": "/artwork-revisions/fb517182d0ae48129b7a4ec46ee0d302.png"
         },
         {
@@ -7209,6 +7827,7 @@
           "x": 214220,
           "y": 114422,
           "rows": 1,
+          "scene": "ironworks",
           "url": "/artwork-revisions/8e6723bde3d9427cbe6b1939b682f3ac.png"
         },
         {
@@ -7216,6 +7835,7 @@
           "x": 214193,
           "y": 114417,
           "rows": 1,
+          "scene": "volcano-observatory",
           "url": "/generated-tiles/18/214193/114417/volcano-observatory?version=6&variant=discovery-126b0efb-076d-466e-ad35-4d2cb626d684-cd8d9c41f994"
         },
         {
@@ -7223,6 +7843,7 @@
           "x": 214187,
           "y": 114417,
           "rows": 1,
+          "scene": "grand-library",
           "url": "/generated-tiles/18/214187/114417/grand-library?version=6&variant=discovery-7edb00b6-d116-453c-ba09-2a5a74687406-f9f4fec68efe"
         },
         {
@@ -7230,6 +7851,7 @@
           "x": 214219,
           "y": 114425,
           "rows": 1,
+          "scene": "utopian-garden",
           "url": "/artwork-revisions/f5f2b7ee117d4cb8bb4cd18dc95ecbfe.png"
         },
         {
@@ -7237,6 +7859,7 @@
           "x": 214214,
           "y": 114422,
           "rows": 1,
+          "scene": "hall-of-mirrors",
           "url": "/artwork-revisions/b1ab16e7f526465bbbf1d2d4dc547b61.png"
         },
         {
@@ -7244,6 +7867,7 @@
           "x": 214213,
           "y": 114422,
           "rows": 1,
+          "scene": "theme-park",
           "url": "/artwork-revisions/9333276efbf0459084fa85e6e7ccf5fb.png"
         },
         {
@@ -7251,6 +7875,7 @@
           "x": 214182,
           "y": 114422,
           "rows": 1,
+          "scene": "marshmallow-factory",
           "url": "/artwork-revisions/0a2ad6a81ad147219b9ee1ba2ebc954e.png"
         },
         {
@@ -7258,6 +7883,7 @@
           "x": 214187,
           "y": 114416,
           "rows": 1,
+          "scene": "aquarium",
           "url": "/generated-tiles/18/214187/114416/aquarium?version=6&variant=discovery-7edb00b6-d116-453c-ba09-2a5a74687406-ff8893b9a7cc"
         },
         {
@@ -7265,6 +7891,7 @@
           "x": 214209,
           "y": 114422,
           "rows": 1,
+          "scene": "art-nouveau-palace",
           "url": "/artwork-revisions/6951d9a3275e4b299b11d7f07ba976fb.png"
         },
         {
@@ -7272,6 +7899,7 @@
           "x": 214208,
           "y": 114422,
           "rows": 1,
+          "scene": "mechanical-theatre",
           "url": "/artwork-revisions/7280192531244215acc800ffbd1a8bde.png"
         },
         {
@@ -7279,6 +7907,7 @@
           "x": 214201,
           "y": 114378,
           "rows": 1,
+          "scene": "tropical-aquarium",
           "url": "/generated-tiles/18/214201/114378/tropical-aquarium?version=6&variant=discovery-7edb00b6-d116-453c-ba09-2a5a74687406-9783e86689c8"
         },
         {
@@ -7286,6 +7915,7 @@
           "x": 214201,
           "y": 114377,
           "rows": 1,
+          "scene": "festival-city",
           "url": "/generated-tiles/18/214201/114377/festival-city?version=6&variant=discovery-7edb00b6-d116-453c-ba09-2a5a74687406-0d953585795f"
         },
         {
@@ -7293,6 +7923,7 @@
           "x": 214207,
           "y": 114422,
           "rows": 1,
+          "scene": "civic-centre",
           "url": "/artwork-revisions/873524ebba874ddcbde9e062fad7f868.png"
         },
         {
@@ -7300,6 +7931,7 @@
           "x": 214206,
           "y": 114422,
           "rows": 1,
+          "scene": "circus",
           "url": "/artwork-revisions/c059f527b29b499d91d3cc81777b25f0.png"
         },
         {
@@ -7307,6 +7939,7 @@
           "x": 214204,
           "y": 114422,
           "rows": 1,
+          "scene": "tropical-aquarium",
           "url": "/artwork-revisions/359180ed3cfc4cc6a3a49c08327e3d4b.png"
         },
         {
@@ -7314,6 +7947,7 @@
           "x": 214186,
           "y": 114421,
           "rows": 1,
+          "scene": "film-backlot",
           "url": "/artwork-revisions/62821fb6eaea4174ad6dadd89adef1c5.png"
         },
         {
@@ -7321,6 +7955,7 @@
           "x": 214185,
           "y": 114421,
           "rows": 1,
+          "scene": "automata",
           "url": "/artwork-revisions/0bdaf435e09947c2be49fd54b7d164cb.png"
         },
         {
@@ -7328,6 +7963,7 @@
           "x": 214185,
           "y": 114421,
           "rows": 1,
+          "scene": "thrifting-paradise",
           "url": "/artwork-revisions/11e57dfd29da47c49f45cf38ab000590.png"
         },
         {
@@ -7335,6 +7971,7 @@
           "x": 214187,
           "y": 114421,
           "rows": 1,
+          "scene": "automata",
           "url": "/artwork-revisions/f00206802b624fff8484f551a469ae04.png"
         },
         {
@@ -7342,6 +7979,7 @@
           "x": 214187,
           "y": 114421,
           "rows": 1,
+          "scene": "telegraph-office",
           "url": "/artwork-revisions/24a11c05fd944ff6bd5f39736a80bdf7.png"
         },
         {
@@ -7349,6 +7987,7 @@
           "x": 214212,
           "y": 114421,
           "rows": 1,
+          "scene": "rice-sculpture-festival",
           "url": "/artwork-revisions/26d1227eadfd414aac0af816fb63d541.png"
         },
         {
@@ -7356,6 +7995,7 @@
           "x": 214207,
           "y": 114421,
           "rows": 1,
+          "scene": "botanical-laboratory",
           "url": "/artwork-revisions/f5417961ae384e0bba664f0198c82d5a.png"
         },
         {
@@ -7363,6 +8003,7 @@
           "x": 214202,
           "y": 114421,
           "rows": 1,
+          "scene": "weather-station",
           "url": "/artwork-revisions/2d89e7c292f74a209e12742aabfe9058.png"
         },
         {
@@ -7370,6 +8011,7 @@
           "x": 214201,
           "y": 114421,
           "rows": 1,
+          "scene": "mesmerist-salon",
           "url": "/artwork-revisions/f62888e72dab4d2da999b8488d940245.png"
         },
         {
@@ -7377,6 +8019,7 @@
           "x": 214183,
           "y": 114434,
           "rows": 1,
+          "scene": "wind-farm",
           "url": "/generated-tiles/18/214183/114434/wind-farm?version=6&variant=discovery-atlas-prompt-90cf4ce03f2e348f"
         },
         {
@@ -7384,6 +8027,7 @@
           "x": 214185,
           "y": 114434,
           "rows": 1,
+          "scene": "printworks",
           "url": "/generated-tiles/18/214185/114434/printworks?version=6&variant=discovery-atlas-prompt-c99eacd06d5ab28b"
         },
         {
@@ -7391,6 +8035,7 @@
           "x": 214183,
           "y": 114433,
           "rows": 1,
+          "scene": "tropical-aquarium",
           "url": "/generated-tiles/18/214183/114433/tropical-aquarium?version=6&variant=discovery-atlas-prompt-600043188433faf0"
         },
         {
@@ -7398,6 +8043,7 @@
           "x": 214197,
           "y": 114421,
           "rows": 1,
+          "scene": "rice-sculpture-festival",
           "url": "/artwork-revisions/bec74397ac0145bd84f3b29cb617839a.png"
         },
         {
@@ -7405,6 +8051,7 @@
           "x": 214199,
           "y": 114421,
           "rows": 1,
+          "scene": "balloon-festival",
           "url": "/artwork-revisions/74e09542925a4446ba0ec5b282b8e1d6.png"
         },
         {
@@ -7412,6 +8059,7 @@
           "x": 214182,
           "y": 114420,
           "rows": 1,
+          "scene": "suspension-bridge",
           "url": "/artwork-revisions/d3822e844a8743609bf7731401d092d4.png"
         },
         {
@@ -7419,6 +8067,7 @@
           "x": 214187,
           "y": 114417,
           "rows": 1,
+          "scene": "grand-library",
           "url": "/generated-tiles/18/214187/114417/grand-library?version=6&variant=discovery-atlas-prompt-46422c4e0b372475"
         },
         {
@@ -7426,6 +8075,7 @@
           "x": 214187,
           "y": 114416,
           "rows": 1,
+          "scene": "aquarium",
           "url": "/generated-tiles/18/214187/114416/aquarium?version=6&variant=discovery-atlas-prompt-eb1e4af7aa8f9fa7"
         },
         {
@@ -7433,6 +8083,7 @@
           "x": 214201,
           "y": 114377,
           "rows": 1,
+          "scene": "festival-city",
           "url": "/generated-tiles/18/214201/114377/festival-city?version=6&variant=discovery-atlas-prompt-7dae1d80a2a99513"
         },
         {
@@ -7440,6 +8091,7 @@
           "x": 214188,
           "y": 114420,
           "rows": 1,
+          "scene": "civic-centre",
           "url": "/artwork-revisions/b852406d648a45e4b158973b0edec39a.png"
         },
         {
@@ -7447,6 +8099,7 @@
           "x": 214207,
           "y": 114424,
           "rows": 1,
+          "scene": "archaeological-excavation",
           "url": "/artwork-revisions/f3237e85af5442bd9dfc9121d5437c41.png"
         },
         {
@@ -7454,6 +8107,7 @@
           "x": 214219,
           "y": 114424,
           "rows": 1,
+          "scene": "sushi-restaurant",
           "url": "/artwork-revisions/c7affa1f39d14df680ba3691d0f07453.png"
         },
         {
@@ -7461,6 +8115,7 @@
           "x": 214193,
           "y": 114420,
           "rows": 1,
+          "scene": "circus",
           "url": "/artwork-revisions/4f32e083cd394c619c16f4bb925a2b1c.png"
         },
         {
@@ -7468,6 +8123,7 @@
           "x": 214194,
           "y": 114420,
           "rows": 1,
+          "scene": "utopian-garden",
           "url": "/artwork-revisions/2387555c05e94028b4aa71f9cda5030d.png"
         },
         {
@@ -7475,6 +8131,7 @@
           "x": 214195,
           "y": 114420,
           "rows": 1,
+          "scene": "steam-railway",
           "url": "/artwork-revisions/f60136f9e4444609afa92f1e9102d14f.png"
         },
         {
@@ -7482,6 +8139,7 @@
           "x": 214196,
           "y": 114420,
           "rows": 1,
+          "scene": "archaeological-excavation",
           "url": "/artwork-revisions/ffed97c9299d488983d327059d5e7260.png"
         },
         {
@@ -7489,6 +8147,7 @@
           "x": 214197,
           "y": 114420,
           "rows": 1,
+          "scene": "suspension-bridge",
           "url": "/artwork-revisions/a6c344f104c241e392ec35458722938e.png"
         },
         {
@@ -7496,6 +8155,7 @@
           "x": 214198,
           "y": 114420,
           "rows": 1,
+          "scene": "marshmallow-factory",
           "url": "/artwork-revisions/018a024ce2264eb9865855fd7745c7f3.png"
         }
       ]

@@ -93,7 +93,7 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
       if (admin && adminMode !== true) throw Error('Admin access required')
       for (const tile of tiles) {
         if (tile.variant.startsWith('discovery-') && status.get(tile.url) !== 'rejected') {
-          add({ x: tile.x, y: tile.y, rows: 1, title: tile.title || atlasSceneTitle(tile.scene), url: tile.url })
+          add({ x: tile.x, y: tile.y, rows: 1, scene: tile.scene, title: tile.title || atlasSceneTitle(tile.scene), url: tile.url })
         }
       }
     } else {

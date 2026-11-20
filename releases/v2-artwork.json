@@ -67,6 +67,7 @@
             214205,
             114420
           ],
+          "scene": "mermaid-station",
           "image": "public/harbour-curiosities/214205-114420.webp",
           "sha256": "82de5196697b91525ce9f6f0f2d696895bfc10833d1a132f8aea8fd4c8d4744c",
           "edition": "corrected-figure-scale",
@@ -79,6 +80,7 @@
             214209,
             114419
           ],
+          "scene": "walking-yacht-club",
           "image": "public/harbour-curiosities/214209-114419.webp",
           "sha256": "9bfa9a33a83001edfb336d5089dc9124b6a6607333dfa65058997a34b9c77d4b",
           "original": "generated-tiles/harbour-curiosities/walking-yacht-club.raw.png"
@@ -90,6 +92,7 @@
             214210,
             114419
           ],
+          "scene": "staircase-foundation",
           "image": "public/harbour-curiosities/214210-114419.webp",
           "sha256": "35872eb7dceab0fb2b4c385a076f3a771b00d932b6195486ede1331f2e9545fd",
           "original": "generated-tiles/harbour-curiosities/staircase-foundation.raw.png"
@@ -101,6 +104,7 @@
             214211,
             114419
           ],
+          "scene": "car-boat-works",
           "image": "public/harbour-curiosities/214211-114419.webp",
           "sha256": "aa68798ced4a84f1a4c127499ffadc92d8f997748d7617a4ef3390915c3f0045",
           "original": "generated-tiles/harbour-curiosities/car-boat-works.raw.png"
@@ -112,6 +116,7 @@
             214211,
             114420
           ],
+          "scene": "flying-fish-burgers",
           "image": "public/harbour-curiosities/214211-114420.webp",
           "sha256": "2bf3a5e8a5969ba4c30f3517da6f60f6864bbbafd9c1a737d068d52d46384f0e",
           "edition": "corrected-figure-scale-and-fish-catch",
@@ -124,6 +129,7 @@
             214212,
             114420
           ],
+          "scene": "bottled-post",
           "image": "public/harbour-curiosities/214212-114420.webp",
           "sha256": "3ca61892b9e9b0df38e918425486c853ec03886489b4f7445cf4a7cf4c0f6145",
           "original": "generated-tiles/harbour-curiosities/bottled-post.raw.png"
@@ -135,6 +141,7 @@
             214213,
             114420
           ],
+          "scene": "wave-organ",
           "image": "public/harbour-curiosities/214213-114420.webp",
           "sha256": "554f9f1394b2cc4fe5486e463b62aa4cadd2992541064651526697114303f0fb",
           "original": "generated-tiles/harbour-curiosities/wave-organ.raw.png"
@@ -146,6 +153,7 @@
             214214,
             114420
           ],
+          "scene": "moon-jelly-lanterns",
           "image": "public/harbour-curiosities/214214-114420.webp",
           "sha256": "eeb01a62e7f5f4767c1653156e0cf39bd071ca368e96967d798ac61c65dd6510",
           "edition": "corrected-figure-scale",
@@ -169,6 +177,7 @@
             214272,
             114478
           ],
+          "scene": "lighthouse",
           "image": "public/south-island-shore/214272-114478.webp",
           "sha256": "14341ef2b5e4f5dd4bdfc96c9a3e9cade86268ed855a865fa346b7f3c9699de3",
           "original": "generated-tiles/south-island-shore/lighthouse.raw.png"
@@ -180,6 +189,7 @@
             214268,
             114463
           ],
+          "scene": "pirate-harbour",
           "image": "public/south-island-shore/214268-114463.webp",
           "sha256": "aec572f2863158f122dc795af2c43075c3c2e86b9ecc012d53811be2f4a8f739",
           "original": "generated-tiles/south-island-shore/pirate-harbour.raw.png"
@@ -191,6 +201,7 @@
             214195,
             114448
           ],
+          "scene": "canal-lock",
           "image": "public/south-island-shore/214195-114448.webp",
           "sha256": "4210446bf286c633ff534d5c03bcb155972de66ac3ea3d1e61303c4b3de9effd",
           "original": "generated-tiles/south-island-shore/canal-lock.raw.png"
@@ -202,6 +213,7 @@
             214227,
             114457
           ],
+          "scene": "pleasure-pier",
           "image": "public/south-island-shore/214227-114457.webp",
           "sha256": "314e5617885bd27a65f08aa1b089a61d9bdf21dbf11877be0c79893139125c82",
           "original": "generated-tiles/south-island-shore/pleasure-pier.raw.png"
@@ -213,6 +225,7 @@
             214228,
             114469
           ],
+          "scene": "tidal-bathhouse",
           "image": "public/south-island-shore/214228-114469.webp",
           "sha256": "26b56dee80247463d717387aab2f0fb1e1674981ec70d6e42e048dd34ce08723",
           "original": "generated-tiles/south-island-shore/tidal-bathhouse.raw.png"
@@ -224,6 +237,7 @@
             214236,
             114472
           ],
+          "scene": "floating-opera",
           "image": "public/south-island-shore/214236-114472.webp",
           "sha256": "5d0342fecb0118aa8e49f50b3f51f95cd60a98aa3d88580e19c9db418692a5eb",
           "original": "generated-tiles/south-island-shore/floating-opera.raw.png"
@@ -235,6 +249,7 @@
             214204,
             114453
           ],
+          "scene": "shipwright-dock",
           "image": "public/south-island-shore/214204-114453.webp",
           "sha256": "7f033d1f0260a899b4a9d42aa13da338501c064dff95c19dc2056f93a12065cc",
           "original": "generated-tiles/south-island-shore/shipwright-dock.raw.png"
@@ -246,6 +261,7 @@
             214227,
             114477
           ],
+          "scene": "kelp-conservatory",
           "image": "public/south-island-shore/214227-114477.webp",
           "sha256": "bb09a642080f2b34b575792079c8f0f67e9fd77f9b00552c8a99230c25532401",
           "original": "generated-tiles/south-island-shore/kelp-conservatory.raw.png"
@@ -257,6 +273,7 @@
             214216,
             114450
           ],
+          "scene": "mermaid-station",
           "image": "public/south-island-shore/214216-114450.webp",
           "sha256": "c5a5147dbef74c12bad9eadf128c6120e43fbc694e282072506d3cf834836c55",
           "original": "generated-tiles/south-island-shore/mermaid-station.raw.png"
@@ -268,6 +285,7 @@
             214221,
             114456
           ],
+          "scene": "walking-yacht-club",
           "image": "public/south-island-shore/214221-114456.webp",
           "sha256": "58fc7a18ec1bfbdec2df3b84de1427337994137040c4046ffe35c09835d3fb41",
           "original": "generated-tiles/south-island-shore/walking-yacht-club.raw.png"
@@ -279,6 +297,7 @@
             214238,
             114489
           ],
+          "scene": "staircase-foundation",
           "image": "public/south-island-shore/214238-114489.webp",
           "sha256": "73c6222d7116ea219da01ef9d86615253687e3ac2b23ba19c590d57057263524",
           "original": "generated-tiles/south-island-shore/staircase-foundation.raw.png"
@@ -290,6 +309,7 @@
             214183,
             114447
           ],
+          "scene": "car-boat-works",
           "image": "public/south-island-shore/214183-114447.webp",
           "sha256": "cd06d1b23e0129f10105c28a3c2677b9c8b09cfb2aa8e1c0bd535e44a0542514",
           "original": "generated-tiles/south-island-shore/car-boat-works.raw.png"
@@ -301,6 +321,7 @@
             214238,
             114478
           ],
+          "scene": "flying-fish-burgers",
           "image": "public/south-island-shore/214238-114478.webp",
           "sha256": "abd68e3241198616053e3d02fbec4789c6067687f290a712413c843aa1fe648f",
           "original": "generated-tiles/south-island-shore/flying-fish-burgers.raw.png"
@@ -312,6 +333,7 @@
             214247,
             114460
           ],
+          "scene": "bottled-post",
           "image": "public/south-island-shore/214247-114460.webp",
           "sha256": "1541f19109f0ec301e26f23a6a4aa1b9a927538c41037b4b17f984c05e8e5289",
           "original": "generated-tiles/south-island-shore/bottled-post.raw.png"
@@ -323,6 +345,7 @@
             214208,
             114462
           ],
+          "scene": "wave-organ",
           "image": "public/south-island-shore/214208-114462.webp",
           "sha256": "5a023e88b212ee972f09854df1af23e2438b9427046c62923bb8188b6dbb8b5c",
           "original": "generated-tiles/south-island-shore/wave-organ.raw.png"
@@ -334,6 +357,7 @@
             214228,
             114462
           ],
+          "scene": "moon-jelly-lanterns",
           "image": "public/south-island-shore/214228-114462.webp",
           "sha256": "c24d21b9206cc892201a596ad65837df48a30aeaf5244973719c9392db948092",
           "original": "generated-tiles/south-island-shore/moon-jelly-lanterns.raw.png"
@@ -361,6 +385,7 @@
             214185,
             114420
           ],
+          "scene": "civic-centre",
           "image": "public/atlas-v2/hku-ring-214185-114420/office-of-unwanted-gifts.webp",
           "sha256": "1aec592aab4c62381d41342dac0f78760d878f5227236e0c795b94b3b7a7eb6a",
           "original": "/home/io/code/maps-romanticatlas/generated-tiles/dream-atlas/hku-next/unwanted-gifts/furnishing/jobs/0005/image.png"
@@ -372,6 +397,7 @@
             214185,
             114420
           ],
+          "scene": "suspension-bridge",
           "image": "public/atlas-v2/hku-ring-214185-114420/2.webp",
           "sha256": "d44489a4729d7f0b298aa87e5149403d0dd35d27c952304ba0c22e17ed08c3a3",
           "original": "generated-tiles/dream-atlas/hku-next/jobs/0006/image.png"
@@ -383,6 +409,7 @@
             214185,
             114420
           ],
+          "scene": "thrifting-paradise",
           "image": "public/atlas-v2/hku-ring-214185-114420/3.webp",
           "sha256": "9df7b8fe6834ec4f4f84cdb2cfbd4fb3d78f90cbd6766052c3abdd35459abf33",
           "original": "generated-tiles/dream-atlas/hku-next/jobs/0007/image.png"
@@ -394,6 +421,7 @@
             214185,
             114420
           ],
+          "scene": "steam-railway",
           "image": "public/atlas-v2/hku-ring-214185-114420/4.webp",
           "sha256": "a3e1ea55b450783c39e747b22c2f30aebfdf4771ba8d433689074c637d91d30e",
           "original": "generated-tiles/dream-atlas/hku-next/jobs/0008/image.png"
@@ -415,6 +443,7 @@
             214184,
             114421
           ],
+          "scene": "photography-studio",
           "image": "public/atlas-v2/hku-ring-214184-114421/1.webp",
           "sha256": "2ba0f4f8f8f1494e72031ad51d9728ce45d2798b3334f7ae95c38f8efca8057e",
           "original": "generated-tiles/dream-atlas/hku-next/jobs/0001/site-wide.png"
@@ -426,6 +455,7 @@
             214184,
             114421
           ],
+          "scene": "cyber-deck-alley",
           "image": "public/atlas-v2/hku-ring-214184-114421/2.webp",
           "sha256": "2c7fc6b1273294519e50d94f0a792fc2fd7a442d3e6514a699207adac9dea1bb",
           "original": "generated-tiles/dream-atlas/hku-next/jobs/0002/site-wide.png"
@@ -437,6 +467,7 @@
             214184,
             114421
           ],
+          "scene": "rice-sculpture-festival",
           "image": "public/atlas-v2/hku-ring-214184-114421/3.webp",
           "sha256": "fd4410385e409f5d1ed28eea1073c7fc9e5a2b51112f3b8e8bb24b6c26713ae4",
           "original": "generated-tiles/dream-atlas/hku-next/jobs/0003/site-wide.png"
@@ -448,6 +479,7 @@
             214184,
             114421
           ],
+          "scene": "film-backlot",
           "image": "public/atlas-v2/hku-ring-214184-114421/4.webp",
           "sha256": "2399c8a96a3a4c715511377ca20a76fedaa413ebf11562f101b426c41784d979",
           "original": "generated-tiles/dream-atlas/hku-next/jobs/0004/site-wide.png"
@@ -469,6 +501,7 @@
             214184,
             114418
           ],
+          "scene": "grand-library",
           "image": "public/atlas-v2/hku-ring-214184-114418/1.webp",
           "sha256": "05f5e3da0959746fabbb8c78c846f630f5c4d5473eec906f1edc346a82aef78c",
           "original": "generated-tiles/dream-atlas/hku-north/site-wide/jobs/0001/image.png"
@@ -480,6 +513,7 @@
             214184,
             114418
           ],
+          "scene": "automata",
           "image": "public/atlas-v2/hku-ring-214184-114418/2.webp",
           "sha256": "ef46f481956b57966513436637412dc308afc0935f0840c3ec5ad6691d43544f",
           "original": "generated-tiles/dream-atlas/hku-north/site-wide/jobs/0002/image.png"
@@ -491,6 +525,7 @@
             214184,
             114418
           ],
+          "scene": "mechanical-theatre",
           "image": "public/atlas-v2/hku-ring-214184-114418/3.webp",
           "sha256": "db0ee094c767fa7f7188ca756ba5c4bdc34a65518fb114548f61649dfb1500cc",
           "original": "generated-tiles/dream-atlas/hku-north/site-wide/jobs/0003/image.png"
@@ -502,6 +537,7 @@
             214184,
             114418
           ],
+          "scene": "market-quarter",
           "image": "public/atlas-v2/hku-ring-214184-114418/4.webp",
           "sha256": "70ca41590f4acb80716540d5673f82cb076958c35c9a2b5c03f77b8c42d1dd49",
           "original": "generated-tiles/dream-atlas/hku-north/site-wide/jobs/0004/image.png"
@@ -523,6 +559,7 @@
             214179,
             114419
           ],
+          "scene": "ancient-temple",
           "image": "public/atlas-v2/ancient-temple.png",
           "sha256": "08c1b579d864a08491a6b56503ef89315c820b4368d395aca14cde7822bb0bde",
           "original": "generated-tiles/dream-atlas/live/jobs/e9962d50-2f69-4180-9c43-3cdafaae5d02/image.png"
@@ -544,6 +581,7 @@
             214183,
             114419
           ],
+          "scene": "observatory",
           "image": "public/atlas-v2/hku-ring-214183-114419/1.webp",
           "sha256": "1c28e6b651dff9b76f485cf6f2c5c88186774cb8f08bdb7a0bc046b1e716ed62",
           "original": "generated-tiles/dream-atlas/hku-west-upper/street-edition/jobs/0001/registered.png"
@@ -555,6 +593,7 @@
             214183,
             114419
           ],
+          "scene": "solar-farm",
           "image": "public/atlas-v2/hku-ring-214183-114419/2.webp",
           "sha256": "4b595a2dd7e8081ac1c987b565d77ac7bf1cd147aa78477af376c8408c2ad74f",
           "original": "generated-tiles/dream-atlas/hku-west-upper/street-edition/jobs/0002/registered.png"
@@ -566,6 +605,7 @@
             214183,
             114419
           ],
+          "scene": "botanical-laboratory",
           "image": "public/atlas-v2/hku-ring-214183-114419/3.webp",
           "sha256": "b83ca561dc4dbc82156df658ef8309ae5565b0bb0e11bf4967256d1b035f5e16",
           "original": "generated-tiles/dream-atlas/hku-west-upper/street-edition/jobs/0003/registered.png"
@@ -577,6 +617,7 @@
             214183,
             114419
           ],
+          "scene": "textile-mill",
           "image": "public/atlas-v2/hku-ring-214183-114419/4.webp",
           "sha256": "24656997768945f54c37be0250bd9f6ca6c0dbdb7125d89fa9d28fc5c39cf94b",
           "original": "generated-tiles/dream-atlas/hku-west-upper/street-edition/jobs/0004/registered.png"
