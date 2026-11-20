@@ -607,6 +607,8 @@ def main():
         family = SOURCE / 'families' / (args.scene + '.json')
         if family.parent != SOURCE / 'families':
             raise ValueError('Invalid scene family')
+        if not family.exists():
+            family = family.parent / 'backfill' / family.name
         brief = sys.stdin.read(10000).strip()
         if family.exists():
             brief = random.choice(load(family))['prompt']

@@ -88,6 +88,14 @@ def draw_card(path, row):
 def publish():
     manifest, _ = effective_plan(read(BATCH / 'jobs.json'))
     jobs = manifest['jobs']
+    district = BATCH / 'central-western/jobs.json'
+    if district.exists():
+        jobs = jobs + [job for job in read(district)['jobs']
+                       if (BATCH/'jobs'/job['id']/'production.json').is_file()]
+    maze = BATCH / 'scopes/maze-garden-additions/jobs.json'
+    if maze.exists():
+        jobs = jobs + [job for job in read(maze)['jobs']
+                       if (BATCH/'jobs'/job['id']/'production.json').is_file()]
     sites_path = BATCH / 'selected-sites.json'
     sites = {cell_key(site): site for site in read(sites_path)} if sites_path.exists() else {}
     cells = defaultdict(list)

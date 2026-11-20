@@ -1,5 +1,5 @@
-import { revisionEndpoint, revisionImagePattern, revisionRequest } from '../src/artwork-revision'
-import { resumeRevisions, revisionFile, revisionList, submitRevision } from './review-revisions'
+import { revisionEndpoint, revisionId, revisionImagePattern, revisionRequest } from '../src/artwork-revision'
+import { resumeRevisions, revisionFile, revisionList, changeRevision } from './review-revisions'
 import { createFakeRenderStore } from './fake-render-store'
 import { isFakeRenderTile, isRotatingVariant } from '../src/fake-render-state'
 import { fakeRenderSeed } from '../src/fake-render-seed'
@@ -1224,11 +1224,17 @@ const server = createServer(async (request, response) => {
     }
     if (pathname === revisionEndpoint) {
       if (request.method === 'GET') return sendJson(response, 200, await revisionList(), { 'cache-control': 'no-store' })
-      if (request.method !== 'POST') return sendError(response, 405, 'Unsupported revision method.')
+      if (request.method !== 'POST' && request.method !== 'DELETE') return sendError(response, 405, 'Unsupported revision method.')
       if (rejectAdminAccess(request, response, { requireOrigin: true, requireCsrf: true })) return
-      const body = revisionRequest(await readRequestBody(request).catch(() => null))
+      const payload = await readRequestBody(request).catch(() => null)
+      if (request.method === 'DELETE') {
+        const id = revisionId(payload)
+        if (!id) return sendError(response, 400, 'Invalid revision id.')
+        return sendJson(response, 200, await changeRevision('withdraw', { id }))
+      }
+      const body = revisionRequest(payload)
       if (!body) return sendError(response, 400, 'Invalid artwork revision.')
-      return sendJson(response, 202, await submitRevision(body))
+      return sendJson(response, 202, await changeRevision('submit', body))
     }
 
     if (pathname === reviewEndpoint) {

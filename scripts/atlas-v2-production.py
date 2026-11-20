@@ -362,10 +362,15 @@ def main():
     parser.add_argument("action", choices=("run", "status", "plan"))
     scope = parser.add_mutually_exclusive_group()
     scope.add_argument('--scope', action='append', choices=('hku', 'north', 'kowloon'))
+    scope.add_argument('--central-western', action='store_true', help='Staggered district backfill of the 24 additional families')
     scope.add_argument('--cell', action='append', help='Registered production cell as 18/X/Y; repeat for an area')
     parser.add_argument('--workers', type=int, choices=range(1, 7), default=6)
     args = parser.parse_args()
     os.chdir(ROOT)
+    if args.central_western:
+        from atlas_central_western import run
+        run(sys.modules[__name__], args)
+        return
     if args.scope or args.cell:
         from atlas_v2_scope import run
         run(sys.modules[__name__], args)

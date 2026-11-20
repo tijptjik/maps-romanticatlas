@@ -5,6 +5,7 @@ import importlib.util
 import io
 import json
 import os
+import re
 from pathlib import Path
 import sys
 import tempfile
@@ -40,7 +41,20 @@ def atomic(path, obj):
     os.replace(tmp, path)
 
 def records():
-    return [json.loads(p.read_text()) for p in sorted(JOBS.glob('*/revision.json'))]
+    items = (json.loads(p.read_text()) for p in sorted(JOBS.glob('*/revision.json')))
+    return [record for record in items if record['state'] != 'withdrawn']
+
+def withdraw(job_id):
+    if not isinstance(job_id, str) or not re.fullmatch(r'[a-f0-9]{32}', job_id):
+        raise ValueError('Invalid revision id')
+    path = JOBS / job_id / 'revision.json'
+    with (STORE / 'submit.lock').open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        record = json.loads(path.read_text())
+        record.pop('candidate', None)
+        record['state'] = 'withdrawn'
+        atomic(path, record)
+    return record
 
 def submit(body):
     JOBS.mkdir(parents=True, exist_ok=True)
@@ -112,17 +126,25 @@ def drain():
             if record['state'] != 'pending':
                 continue
             folder = JOBS/record['id']
+            path = folder/'revision.json'
+            if json.loads(path.read_text())['state'] != 'pending':
+                continue
             try:
                 finish(folder, record)
             except Exception as exc:
                 print('Revision failed:', record['id'], exc, file=sys.stderr)
                 record.update(state='failed')
-            atomic(folder/'revision.json', record)
+            with (STORE / 'submit.lock').open('a') as submit_lock:
+                fcntl.flock(submit_lock, fcntl.LOCK_EX)
+                if json.loads(path.read_text())['state'] == 'pending':
+                    atomic(path, record)
 
 if __name__ == '__main__':
     command = sys.argv[1]
     if command == 'submit':
         print(json.dumps(submit(json.load(sys.stdin))))
+    elif command == 'withdraw':
+        print(json.dumps(withdraw(json.load(sys.stdin)['id'])))
     elif command == 'work':
         drain()
     elif command == 'list':

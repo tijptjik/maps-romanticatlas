@@ -12,7 +12,8 @@ export async function revisionList(): Promise<Revision[]> {
     if (error.code === 'ENOENT') return []
     throw error
   })
-  return Promise.all(entries.map(async id => JSON.parse(await readFile(path.join(jobs, id, 'revision.json'), 'utf8'))))
+  const records = await Promise.all(entries.map(async id => JSON.parse(await readFile(path.join(jobs, id, 'revision.json'), 'utf8'))))
+  return records.filter(record => record.state !== 'withdrawn')
 }
 export const revisionFile = (id: string, projectRoot = root) =>
   path.join(projectRoot, jobsDirectory, id, 'candidate.png')
@@ -37,12 +38,12 @@ export async function resumeRevisions() {
   }
 }
 
-export async function submitRevision(body: unknown) {
-  const child = Bun.spawn(['python3', script, 'submit'], {
+export async function changeRevision(command: 'submit' | 'withdraw', body: unknown) {
+  const child = Bun.spawn(['python3', script, command], {
     cwd: root, stdin: new Blob([JSON.stringify(body)]), stdout: 'pipe', stderr: 'inherit',
   })
   const [code, text] = await Promise.all([child.exited, new Response(child.stdout).text()])
-  if (code) throw Error('Could not queue the artwork revision.')
-  void resumeRevisions()
+  if (code) throw Error('Could not ' + command + ' the artwork revision.')
+  if (command === 'submit') void resumeRevisions()
   return JSON.parse(text)
 }

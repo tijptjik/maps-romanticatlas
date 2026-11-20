@@ -1,6 +1,7 @@
 // Find eligible replacement sites against the same seeded grid used for reveal.
 import { createHash } from 'node:crypto'
 import { readFile, access } from 'node:fs/promises'
+import { cloudSeed } from '../src/cloud-seed.ts'
 import { isFogPatternSelected } from '../src/fog-pattern.js'
 import { classifyFogEligibility } from '../src/fog-eligibility.ts'
 import { atlasSeaScenes, atlasScenes } from '../src/atlas-scenes.ts'
@@ -9,7 +10,9 @@ import { west, mongKok, tst, serpentine } from './atlas-route-geometry.ts'
 import { output, reference, renderReference, siteContext, sourceTile } from './dream-atlas-reference.ts'
 
 const request = await Bun.stdin.json()
-if (request.action === 'coastal-catalog') {
+if (request.action === 'cloud-seed') {
+  console.log(JSON.stringify(cloudSeed))
+} else if (request.action === 'coastal-catalog') {
   console.log(JSON.stringify(Object.fromEntries([...atlasSeaScenes].map(scene =>
     [scene, {brief:atlasScenes[scene], direction:atlasPrompt(scene,true)}]))))
 } else if (request.action === 'eligible') {
@@ -17,6 +20,8 @@ if (request.action === 'coastal-catalog') {
 } else if (request.action === 'inspect') {
   const survey = await Bun.file(output + '/production/sites.json').json()
   const pinned = await Bun.file('releases/sources/source.json').json()
+  const extra = request.centralWestern ? await Bun.file('releases/sources/central-western/vectors.json').json() : null
+  if (extra && extra.release !== pinned.release) throw Error('Central and Western source release differs')
   const hashes = new Map<string, string>()
   const sites = []
   for (const site of request.tiles) {
@@ -24,7 +29,7 @@ if (request.action === 'coastal-catalog') {
     if (!hashes.has(parent)) {
       const bytes = await readFile(output + '/vectors/' + parent + '.mvt')
       const hash = createHash('sha256').update(bytes).digest('hex')
-      if (hash !== (survey.hashes[parent] ?? pinned.hashes[parent])) {
+      if (hash !== (survey.hashes[parent] ?? pinned.hashes[parent] ?? extra?.hashes[parent])) {
         throw Error('Unpinned or changed source vector ' + parent)
       }
       hashes.set(parent, hash)

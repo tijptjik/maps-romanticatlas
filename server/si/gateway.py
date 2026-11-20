@@ -75,13 +75,18 @@ class Handler(BaseHTTPRequestHandler):
         if not hmac.compare_digest(self.headers.get('Authorization', ''), 'Bearer ' + TOKEN):
             return self.reply(401, {'error': 'Authentication required.'})
         parts = self.path.strip('/').split('/')
+        if self.command == 'DELETE' and parts != ['revisions']:
+            return self.reply(405, {'error': 'Unsupported generator method.'})
         if parts == ['revisions']:
             if self.command == 'GET':
                 return self.reply(200, revisions.records())
             length = int(self.headers.get('Content-Length', '0'))
             if not 0 < length <= MAX_BODY:
                 return self.reply(413, {'error': 'Revision references exceed the input limit.'})
-            return self.reply(202, revisions.submit(json.loads(self.rfile.read(length))))
+            body = json.loads(self.rfile.read(length))
+            if self.command == 'DELETE':
+                return self.reply(200, revisions.withdraw(body['id']))
+            return self.reply(202, revisions.submit(body))
         if len(parts) == 2 and parts[0] == 'revisions' and re.fullmatch(r'[a-f0-9]{32}', parts[1]) and self.command == 'GET':
             path = revisions.JOBS / parts[1] / 'candidate.png'
             if not path.is_file():
@@ -145,6 +150,7 @@ class Handler(BaseHTTPRequestHandler):
             self.reply(400, {'error': 'Invalid generator request.'})
 
     do_POST = do_GET
+    do_DELETE = do_GET
 
 
 def work():
