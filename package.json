@@ -22,6 +22,7 @@
     "format:markdown:check": "bun run scripts/checks/markdown.ts --check",
     "lint": "biome lint . && bun run format:markdown:check",
     "test:performance": "node scripts/checks/fog-performance.mjs",
+    "test:artwork-image": "node scripts/checks/artwork-image.mjs",
     "test:artwork-pan": "node scripts/checks/artwork-pan.mjs",
     "atlas:v2:export": "python3 scripts/export-v2-map.py",
     "atlas:v2:queue": "python3 scripts/atlas-v2-queue.py",

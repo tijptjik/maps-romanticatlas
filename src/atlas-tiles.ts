@@ -1,4 +1,5 @@
 import { copyTileLink, linkedTile } from './tile-link'
+import { decodeArtworkImage as decodeTileImage, forgetArtworkImage, loadArtworkImage } from './artwork-image'
 import { waitForAtlasGeneration } from './wait-for-atlas-generation'
 import { isFakeRenderTile, type RevealImage, type rotationSnapshot } from './fake-render-state'
 import { noFakeRenderEnabled } from './runtime-modes'
@@ -693,21 +694,6 @@ const createGenerationArtifacts = (map, sourceCanvas, northWest, southEast, stud
           }
         : null,
   }
-}
-
-const decodedTileImages = new Map<string, Promise<HTMLImageElement>>()
-
-const decodeTileImage = url => {
-  if (decodedTileImages.has(url)) return decodedTileImages.get(url)
-  const image = new Image()
-  image.decoding = 'async'
-  image.src = url
-  const promise = image.decode().then(() => image)
-  decodedTileImages.set(url, promise)
-  promise.catch(() => {
-    if (decodedTileImages.get(url) === promise) decodedTileImages.delete(url)
-  })
-  return promise
 }
 
 export const addGeneratedTile = async (
@@ -2389,7 +2375,7 @@ export const installAtlasTileInteractions = (
       if (!tileState.has(id)) {
         cachedTileRequests.delete(id)
         preloadedTileRequests.delete(id)
-        if (indexed?.url) decodedTileImages.delete(indexed.url)
+        if (indexed?.url) forgetArtworkImage(indexed.url)
       }
     })
   }
@@ -2938,11 +2924,10 @@ export const installAtlasTileInteractions = (
     const frames = new Map<Painting, ArtworkFrame>()
     async function mount(art: Painting, signal: AbortSignal) {
       const { bounds } = drawingFootprint({ ...art, tileSpan: { columns: art.columns ?? 1, rows: art.rows } })
-      const image = new Image()
-      image.src = art.animation?.plate ?? art.imageUrl ?? art.url
+      const url = art.animation?.plate ?? art.imageUrl ?? art.url
       try {
-        await image.decode()
-        await addGeneratedTile(map, art, image.src, art.title, titleCards, undefined,
+        const image = await loadArtworkImage(url)
+        await addGeneratedTile(map, art, url, art.title, titleCards, undefined,
           1, signal, { bounds, title: art.title, image })
         if (signal.aborted) return
         titleCards.get(tileId(art)).card.classList.remove('is-awaiting-focus')
@@ -3022,10 +3007,8 @@ export const installAtlasTileInteractions = (
     for (const cell of cells) tileState.set(cell, 'checking')
     fog.invalidate()
     try {
-      const image = new Image()
       const plate = art.animation?.plate ?? art.imageUrl ?? art.url
-      image.src = plate
-      await image.decode()
+      const image = await loadArtworkImage(plate)
       if (tileState.get(id) !== 'checking') return
       await addGeneratedTile(map, art, plate, art.title, titleCards, undefined,
         0, undefined, { bounds: footprint.bounds, title: art.title, image })

@@ -153,6 +153,10 @@ focusing it, panning and zooming out retain the original basemap tile grid. Add
 `--mobile` for a narrow viewport. Screenshots and tile-level evidence are saved in
 the runner artifacts.
 
+Run `dev-remote --port 4173 chrome bun run test:artwork-image` against the development
+server to verify recovery from failed downloads, HTML error responses and corrupt
+image bytes, plus a fresh retry after a persistent failure.
+
 ## Production build and deployment
 
 ```sh
