@@ -111,6 +111,14 @@ print(json.dumps({'type':'thread.started','thread_id':thread}))
         const meta = await sharp(Buffer.from(await image.arrayBuffer())).metadata()
         assert.equal(meta.hasAlpha, true)
         assert.deepEqual([meta.width, meta.height], [512, 1024])
+        const withdraw = (authenticated: boolean) => fetch(revisionUrl + '?admin', {
+          method: 'DELETE', headers: { ...headers, 'content-type': 'application/json',
+            ...(authenticated ? { cookie, 'x-atlas-csrf-token': cookie.split('=')[1] } : {}) },
+          body: JSON.stringify({ id: job.id }),
+        })
+        assert.equal((await withdraw(false)).status, 403)
+        assert.equal((await withdraw(true)).status, 200)
+        assert.deepEqual(await (await fetch(revisionUrl)).json(), [])
         assert.deepEqual(await (await fetch(endpoint)).json(), [])
       }
     } finally {

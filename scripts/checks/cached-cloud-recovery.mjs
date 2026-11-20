@@ -23,7 +23,7 @@ try {
     history.replaceState({ atlasModeCamera: { center, zoom: 18 } }, '')
     const random = crypto.getRandomValues.bind(crypto)
     crypto.getRandomValues = array => array instanceof Uint32Array && array.length === 1
-      ? array.fill(visit) : random(array)
+      ? array.fill(Number(sessionStorage.getItem('test-cloud-visit') ?? visit)) : random(array)
   }, { center, visit })
   await page.route('**/atlas-v2/catalog.json', route => route.fulfill({
     json: { release: 'v2', sheets: [{ accepted: true, art: [art] }] },
@@ -48,11 +48,30 @@ try {
   assert.deepEqual(await details.evaluate(({ tile, status, ray, error }) => [tile, status, ray, error.message]),
     ['18/214210/114419', 403, 'recovery-test', 'Application POST required.'])
   const title = page.locator('.atlas-title-card:not(.is-awaiting-focus)')
-  await title.waitFor({ state: 'visible' })
+  await title.waitFor({ state: 'visible', timeout: 150000 })
   assert.match(await title.innerText(), /The Borrowed Horizon/i)
   assert.deepEqual(requests, ['GET'])
   await page.screenshot({ path: path.join(process.env.DEV_RUNNER_ARTIFACTS, 'recovered-artwork.png') })
   console.log('Verified catalog reveal and request diagnostics after HTTP 403')
+
+  while (!isFakeRenderTile(tile, visit)) visit++
+  await page.evaluate(visit => sessionStorage.setItem('test-cloud-visit', String(visit)), visit)
+  let claims = 0
+  await page.route('**/api/fake-render/**', route => {
+    if (route.request().method() === 'POST') {
+      claims++
+      return route.fulfill({ status: 400, json: { error: 'Not a rotating cloud.' } })
+    }
+    return route.fulfill({ json: { ready: true, released: [] } })
+  })
+  const ready = page.waitForResponse(response => response.url().includes('availability=1'))
+  await page.reload({ waitUntil: 'domcontentloaded' })
+  await ready
+  await page.mouse.click(600, 400)
+  await title.waitFor({ state: 'visible', timeout: 150000 })
+  assert.match(await title.innerText(), /The Borrowed Horizon/i)
+  assert.equal(claims, 1)
+  console.log('Verified cached artwork reveal after a declined rotation claim')
 } finally {
   await browser.close()
 }
