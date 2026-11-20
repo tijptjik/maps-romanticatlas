@@ -267,3 +267,13 @@ Chrome on Li for application interaction checks. Record pending editorial decisi
 explicitly. New pixels receive their own review identity, including repairs of an
 accepted scene. Production release uses the repository's separately authorized release
 workflow.
+
+## Reusable prompt for a custom render
+
+> Render **[scene name and brief]** at **[locations or z18 tile IDs]** and enter each finished edition in the existing Atlas review queue at `/review`. Leave the editorial decision pending for me.
+>
+> Read the actual surveyed tiles and follow `src/atlas-prompt.ts` and the artwork-generation runbook. Fit each composition to its mapped footprints, paths and figure scale. Register the final overlay and inspect it on the map.
+>
+> Reuse the correct registered scene family, or register a genuinely new family in `src/atlas-scenes.ts` before using its slug. Give each edition its own immutable, versioned artwork URL. Put its title, scene, z18 anchor, footprint dimensions and exact URL in the catalog source, then rebuild the local review catalog. Preserve earlier editions and their decisions. Verify that the running app serves the new catalog and image.
+>
+> Check the exact exported painting with `parseArtworkReview` for both accepted and rejected decisions. Open `/review` in managed Chrome on Li and verify that the pending edition loads at its tile. In isolated review storage, exercise Accept, Reject and Undo through the authenticated review flow. Confirm the save returns HTTP 200, then reload and read back the decision for that exact URL from `GET /api/artwork-reviews`. Verify Undo restores the prior pending state. If the running server rejects a payload the checkout accepts, inspect the submitted JSON and loaded server version. Report the tile, edition URL, review link and checks that passed. Leave the real candidate pending.
