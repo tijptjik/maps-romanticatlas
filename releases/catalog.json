@@ -7620,6 +7620,21 @@
       "accepted": true
     },
     {
+      "id": "space-elevator",
+      "title": "Space Elevator",
+      "isolated": true,
+      "art": [
+        {
+          "title": "Space Elevator",
+          "x": 214198,
+          "y": 114418,
+          "rows": 2,
+          "url": "/space-elevator/space-elevator.webp?v=0c3d2daf4b042aad"
+        }
+      ],
+      "accepted": true
+    },
+    {
       "id": "accepted-discoveries",
       "title": "Accepted discoveries",
       "accepted": true,
