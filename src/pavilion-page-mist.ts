@@ -30,7 +30,7 @@ const fragment = `
                     + eddy*vec2(.025,.075));
     float a = near.a * (.60 + .18*eddy.x);
     float b = far.a * (.24 - .09*current.y) * (1.-a);
-    gl_FragColor = vec4((near.rgb*a + far.rgb*b)/max(a+b,.001), a+b);
+    gl_FragColor = vec4(near.rgb*a + far.rgb*b, a+b);
   }
 `
 
@@ -38,7 +38,7 @@ export function createPageMist(canvas: HTMLCanvasElement) {
   const gl = canvas.getContext('webgl', {
     alpha: true,
     antialias: false,
-    premultipliedAlpha: false,
+    premultipliedAlpha: true,
   })
   if (!gl) return () => {}
   let uniforms: { seconds: WebGLUniformLocation | null } | undefined

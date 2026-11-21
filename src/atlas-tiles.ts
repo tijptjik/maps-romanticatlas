@@ -838,7 +838,8 @@ const fogFragmentShader = `
     vec3 pearl = vec3(0.91, 0.93, 0.93);
     vec3 ivory = vec3(1.0, 0.993, 0.974);
     vec3 fogColor = mix(pearl, ivory, 0.60 + 0.20 * light);
-    gl_FragColor = vec4(fogColor, softMask * (0.72 + 0.23 * light));
+    float alpha = softMask * (0.72 + 0.23 * light);
+    gl_FragColor = vec4(fogColor * alpha, alpha);
   }
 `
 
@@ -944,7 +945,7 @@ export const createFogCanvas = (
     // The share export composites this canvas separately from MapLibre's
     // canvas, so its latest cloud frame must remain drawable after presentation.
     preserveDrawingBuffer: true,
-    premultipliedAlpha: false,
+    premultipliedAlpha: true,
     stencil: false,
   })
   const program = gl && createFogProgram(gl)
