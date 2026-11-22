@@ -19,7 +19,7 @@ const kioskMode = kioskModeEnabled()
 const restoringMap = history.state?.atlasView === 'map' ||
   (!history.state?.atlasView && Boolean(history.state?.atlasModeCamera))
 const directArtistStatement = location.hash === '#artist-statement'
-const directEntry = directArtistStatement || Boolean(linkedTile()) || revealedModeEnabled() || reviewMode || kioskMode || noSplashEnabled() || restoringMap
+const directEntry = Boolean(linkedTile()) || revealedModeEnabled() || reviewMode || kioskMode || noSplashEnabled() || restoringMap
 
 if (directEntry) document.documentElement.classList.remove('atlas-boot')
 if (reviewMode) {
