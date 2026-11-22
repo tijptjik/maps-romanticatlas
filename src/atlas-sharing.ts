@@ -22,6 +22,21 @@ const actionIcon = (paths: string) => `<svg viewBox="0 0 24 24" fill="none"
   aria-hidden="true" focusable="false">${paths}</svg>`
 
 const shareIcon = actionIcon('<path d="M12 15V3m-4 4 4-4 4 4M6 10H4v11h16V10h-2"/>')
+
+const isMobileDevice = () => {
+  const userAgentData = navigator as Navigator & { userAgentData?: { mobile?: boolean } }
+  return userAgentData.userAgentData?.mobile ?? /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
+}
+
+const canShareImageFile = (image: Blob) => {
+  if (!('share' in navigator) || !('canShare' in navigator)) return false
+  try {
+    const file = new File([image], 'romantic-atlas-map.png', { type: 'image/png' })
+    return navigator.canShare({ files: [file] })
+  } catch {
+    return false
+  }
+}
 const retakeIcon = actionIcon('<path d="M5 8h3l2-3h5l2 3h4v11h-6"/><circle cx="13" cy="12" r="3"/><path d="M2 16a5 5 0 1 1 1 5m-1-9v4h4"/>')
 
 const nextFrame = () =>
@@ -325,7 +340,7 @@ export const installAtlasSharing = (
 
   const result = document.createElement('dialog')
   result.className = 'atlas-share-result'
-  result.setAttribute('aria-label', 'Map image ready to scan')
+  result.setAttribute('aria-label', 'Your map image is ready')
   const resultTitle = document.createElement('h2')
   resultTitle.textContent = 'Your map is ready'
   const resultCopy = document.createElement('p')
@@ -430,6 +445,40 @@ export const installAtlasSharing = (
     audio?.playCameraFlash()
     try {
       const image = await captureMap(map, frame)
+      if (isMobileDevice()) {
+        mode = 'result'
+        frameMount.hidden = true
+        composePanel.hidden = true
+        const file = new File([image], 'romantic-atlas-map.png', { type: 'image/png' })
+        qrImage.hidden = true
+        if (canShareImageFile(image)) {
+          resultTitle.textContent = 'Your map is ready to share'
+          resultCopy.textContent = 'Choose where to share your map image.'
+          try {
+            await navigator.share({ files: [file], title: 'My Romantic Atlas map' })
+            resultCopy.textContent = 'Your map has been shared.'
+          } catch (error) {
+            if (error instanceof DOMException && error.name === 'AbortError') {
+              resultCopy.textContent = 'Your map is ready to share whenever you are.'
+            } else {
+              throw error
+            }
+          }
+          result.showModal()
+        } else {
+          const downloadUrl = URL.createObjectURL(image)
+          const download = document.createElement('a')
+          download.href = downloadUrl
+          download.download = 'romantic-atlas-map.png'
+          download.click()
+          window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 60_000)
+          resultTitle.textContent = 'Your map was downloaded'
+          resultCopy.textContent = 'It’s in your Downloads folder. Share it from there.'
+          result.showModal()
+        }
+        return
+      }
+
       const response = await fetch('/api/share-maps', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -443,6 +492,11 @@ export const installAtlasSharing = (
         ? new URL(new URL(body.url).pathname, devShareOrigin).href
         : body.url
       if (devShareOrigin) previewLink.href = imageUrl
+      resultTitle.textContent = 'Your map is ready'
+      resultCopy.textContent = devShareOrigin
+        ? 'Scan or open the image on a device connected to your tailnet.'
+        : 'Scan to get the image on your phone, then share it anywhere.'
+      qrImage.hidden = false
       qrImage.src = await QRCode.toDataURL(imageUrl, {
         errorCorrectionLevel: 'M',
         margin: 4,
@@ -454,6 +508,12 @@ export const installAtlasSharing = (
       composePanel.hidden = true
       result.showModal()
     } catch (error) {
+      if (mode === 'result') {
+        mode = 'compose'
+        frameMount.hidden = false
+        composePanel.hidden = false
+        result.close()
+      }
       setError(error)
     } finally {
       snapButton.disabled = false

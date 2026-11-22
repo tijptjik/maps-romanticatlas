@@ -248,8 +248,10 @@ corner; hovering it reveals the complete hash.
 
 For development previews on your tailnet, set `VITE_ATLAS_DEV_SHARE_ORIGIN` in
 `.env.local` to the HTTPS origin that Tailscale Serve routes to this Atlas server.
-The capture dialog encodes the saved PNG’s tailnet URL in its QR code and offers
-an **Open image** link you can copy. Recipients need tailnet access, and the
+On desktop, the capture dialog encodes the saved PNG’s tailnet URL in its QR code
+and offers an **Open image** link. On mobile, the image is shared through the
+device’s sharing interface when file sharing is supported, or downloaded with a
+reminder to share it from Downloads. Recipients need tailnet access, and the
 development server must be running to serve the file from `shared-maps/`.
 
 To enable visitor map sharing, make the existing `maps-romanticatlas-assets` bucket
@@ -258,7 +260,9 @@ public through an R2 custom domain (or its `r2.dev` public-development URL), the
 name. For this deployment, use `https://romanticassets.hype.hk`. The app exports a
 2160×2700 PNG and scales it to 1080×1350 if it exceeds the 8 MB sharing limit.
 It writes the PNG to `shared-maps/` in that bucket and the QR code contains the direct R2
-asset URL only; it never contains the application URL. Set the value in the deployed
+asset URL only; it never contains the application URL. Mobile sharing sends or
+downloads the captured image directly, while desktop devices continue to show its
+QR code. Set the value in the deployed
 Worker environment (for example, `wrangler secret put ATLAS_SHARE_ASSET_ORIGIN`) before
 deploying the sharing feature.
 
