@@ -6927,15 +6927,6 @@
     "status": "accepted"
   },
   {
-    "title": "Car Boat Works",
-    "x": 214256,
-    "y": 114469,
-    "rows": 1,
-    "scene": "car-boat-works",
-    "url": "/generated-tiles/18/214256/114469/car-boat-works?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-c6c1d64c263f",
-    "status": "accepted"
-  },
-  {
     "title": "Pirate Harbour",
     "x": 214165,
     "y": 114465,
@@ -7203,6 +7194,177 @@
     "rows": 1,
     "scene": "photography-studio",
     "url": "/artwork-revisions/bc9540ac8b3f4734beb3a6427134fe90.png",
+    "status": "accepted"
+  },
+  {
+    "title": "Shipwright Dock",
+    "x": 214185,
+    "y": 114451,
+    "rows": 1,
+    "scene": "shipwright-dock",
+    "url": "/generated-tiles/18/214185/114451/shipwright-dock?version=6&variant=discovery-rotating-91eb0f6acae8",
+    "status": "accepted"
+  },
+  {
+    "title": "Flying Fish Burgers",
+    "x": 214186,
+    "y": 114451,
+    "rows": 1,
+    "scene": "flying-fish-burgers",
+    "url": "/generated-tiles/18/214186/114451/flying-fish-burgers?version=6&variant=discovery-efba4fe3-8a13-4075-9e46-e9b9b9332031-b4ed7cf40957",
+    "status": "accepted"
+  },
+  {
+    "title": "The Carpet River",
+    "x": 214189,
+    "y": 114428,
+    "rows": 1,
+    "scene": "textile-mill",
+    "url": "/generated-tiles/18/214189/114428/textile-mill?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-118ee0caa8e5",
+    "status": "accepted"
+  },
+  {
+    "title": "An Orchestra Under Glass",
+    "x": 214187,
+    "y": 114421,
+    "rows": 1,
+    "scene": "automata",
+    "url": "/generated-tiles/18/214187/114421/automata?version=6&variant=discovery-rotating-753769ebb204",
+    "status": "accepted"
+  },
+  {
+    "title": "The Sleepwalking Wardrobe",
+    "x": 214185,
+    "y": 114421,
+    "rows": 1,
+    "scene": "automata",
+    "url": "/generated-tiles/18/214185/114421/automata?version=6&variant=discovery-rotating-6f29cc912bbd",
+    "status": "accepted"
+  },
+  {
+    "title": "The Rain Abacus",
+    "x": 214182,
+    "y": 114421,
+    "rows": 1,
+    "scene": "weather-station",
+    "url": "/generated-tiles/18/214182/114421/weather-station?version=6&variant=discovery-rotating-cf9dfbb5a09d",
+    "status": "accepted"
+  },
+  {
+    "title": "The Unfinished Question",
+    "x": 214181,
+    "y": 114421,
+    "rows": 1,
+    "scene": "maze-garden",
+    "url": "/generated-tiles/18/214181/114421/maze-garden?version=6&variant=discovery-rotating-dfb71c4aaad7",
+    "status": "accepted"
+  },
+  {
+    "title": "Platform Minus Twelve",
+    "x": 214182,
+    "y": 114420,
+    "rows": 1,
+    "scene": "steam-railway",
+    "url": "/generated-tiles/18/214182/114420/steam-railway?version=6&variant=discovery-rotating-b5f4eec94d50",
+    "status": "accepted"
+  },
+  {
+    "title": "The Moving Shade Office",
+    "x": 214185,
+    "y": 114420,
+    "rows": 1,
+    "scene": "civic-centre",
+    "url": "/generated-tiles/18/214185/114420/civic-centre?version=6&variant=discovery-rotating-4dec975fea75",
+    "status": "accepted"
+  },
+  {
+    "title": "The Common Table Harvest",
+    "x": 214194,
+    "y": 114420,
+    "rows": 1,
+    "scene": "utopian-garden",
+    "url": "/generated-tiles/18/214194/114420/utopian-garden?version=6&variant=discovery-rotating-966c8225f0e5",
+    "status": "accepted"
+  },
+  {
+    "title": "The Sleeve Exchange",
+    "x": 214193,
+    "y": 114419,
+    "rows": 1,
+    "scene": "thrifting-paradise",
+    "url": "/generated-tiles/18/214193/114419/thrifting-paradise?version=6&variant=discovery-rotating-09715ce2a7f4",
+    "status": "accepted"
+  },
+  {
+    "title": "The Wheel of Borrowed Rooms",
+    "x": 214191,
+    "y": 114419,
+    "rows": 1,
+    "scene": "ferris-wheel",
+    "url": "/generated-tiles/18/214191/114419/ferris-wheel?version=6&variant=discovery-rotating-9afd564a7599",
+    "status": "accepted"
+  },
+  {
+    "title": "Lessons in Balance",
+    "x": 214190,
+    "y": 114418,
+    "rows": 1,
+    "scene": "anatomical-museum",
+    "url": "/generated-tiles/18/214190/114418/anatomical-museum?version=6&variant=discovery-rotating-93caa38710c9",
+    "status": "accepted"
+  },
+  {
+    "title": "The Awning Library",
+    "x": 214277,
+    "y": 114394,
+    "rows": 1,
+    "scene": "market-quarter",
+    "url": "/generated-tiles/18/214277/114394/market-quarter?version=6&variant=discovery-efba4fe3-8a13-4075-9e46-e9b9b9332031-3ea3df2a8556",
+    "status": "accepted"
+  },
+  {
+    "title": "A Queue That Plays Music",
+    "x": 214188,
+    "y": 114427,
+    "rows": 1,
+    "scene": "giant-fairground",
+    "url": "/artwork-revisions/0f7d5f0513294de3bdb65ca0350a0001.png",
+    "status": "accepted"
+  },
+  {
+    "title": "The Rain Cache",
+    "x": 214190,
+    "y": 114419,
+    "rows": 1,
+    "scene": "cyber-deck-alley",
+    "url": "/artwork-revisions/11dd96b4431b414a974197ea9374f9fe.png",
+    "status": "rejected"
+  },
+  {
+    "title": "The Maze Goes to Market",
+    "x": 214278,
+    "y": 114393,
+    "rows": 1,
+    "scene": "maze-garden",
+    "url": "/artwork-revisions/f065694835c74c7c95a0758b48ebe8fa.png",
+    "status": "accepted"
+  },
+  {
+    "title": "Car Boat Works",
+    "x": 214256,
+    "y": 114469,
+    "rows": 1,
+    "scene": "car-boat-works",
+    "url": "/generated-tiles/18/214256/114469/car-boat-works?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-c6c1d64c263f",
+    "status": "rejected"
+  },
+  {
+    "title": "Staircase Foundation",
+    "x": 214256,
+    "y": 114469,
+    "rows": 1,
+    "scene": "staircase-foundation",
+    "url": "/artwork-revisions/6b28a3cf2757487a929c3383d43b0e33.png",
     "status": "accepted"
   }
 ]

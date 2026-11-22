@@ -1870,7 +1870,7 @@ body {
 }
 
 .atlas-review-queue {
-  width: max-content;
+  width: 166px;
   max-width: min(28rem, 85vw);
   padding-inline: 20px;
   gap: 5px;

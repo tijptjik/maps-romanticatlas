@@ -464,7 +464,10 @@
           "rows": 2,
           "url": "/harbour-airworks/214192-114377.webp?v=6eca4d66e87f35e5",
           "animation": {
-            "glitterOrigin": [0.537065, -0.376339],
+            "glitterOrigin": [
+              0.537065,
+              -0.376339
+            ],
             "pixelsPerTile": 1254
           }
         },
@@ -477,7 +480,12 @@
           "animation": {
             "motion": {
               "sprite": "wire-walker",
-              "box": [380, 925, 526, 982]
+              "box": [
+                380,
+                925,
+                526,
+                982
+              ]
             },
             "folder": "harbour-airworks",
             "plate": "/harbour-airworks/214246-114421.webp?v=ad26b448ec58792a",
@@ -498,7 +506,10 @@
           "rows": 2,
           "url": "/harbour-airworks/214231-114455.webp?v=aaa6b58ee743a563",
           "animation": {
-            "auditoriumOriginPixels": [460, 1290],
+            "auditoriumOriginPixels": [
+              460,
+              1290
+            ],
             "pixelsPerTile": 1254
           }
         },
@@ -511,7 +522,12 @@
           "animation": {
             "motion": {
               "sprite": "samara-glider",
-              "box": [989, 1400, 1085, 1444]
+              "box": [
+                989,
+                1400,
+                1085,
+                1444
+              ]
             },
             "folder": "harbour-airworks",
             "plate": "/harbour-airworks/214190-114379.webp?v=b3d339858919aa26",
