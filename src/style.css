@@ -28,11 +28,16 @@ body {
 }
 
 #map {
-  height: 100dvh;
+  /* Keep the scene behind mobile browser chrome when the bars are visible. */
+  height: 100vh;
   -webkit-touch-callout: none;
   position: relative;
   isolation: isolate;
   background: #efe0bd;
+}
+
+@supports (height: 100lvh) {
+  #map { height: 100lvh; }
 }
 
 #map.maplibregl-map::after {

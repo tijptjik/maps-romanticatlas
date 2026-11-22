@@ -298,7 +298,8 @@
 @media (max-aspect-ratio: 9/10) {
   /* Place the petal on the right cabinet panel. */
   .pavilion-credit {
-    top: 94%;
+    /* Leave it above the mobile browser toolbar, which overlays the scene. */
+    top: 88%;
     left: 70%;
     right: auto;
     bottom: auto;
