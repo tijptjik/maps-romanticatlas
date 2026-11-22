@@ -451,6 +451,7 @@ export const installAtlasSharing = (
         composePanel.hidden = true
         const file = new File([image], 'romantic-atlas-map.png', { type: 'image/png' })
         qrImage.hidden = true
+        previewLink.hidden = true
         if (canShareImageFile(image)) {
           resultTitle.textContent = 'Your map is ready to share'
           resultCopy.textContent = 'Choose where to share your map image.'

@@ -470,6 +470,7 @@ body {
 }
 
 .atlas-share-button[hidden],
+.atlas-share-qr[hidden],
 .atlas-share-frame[hidden],
 .atlas-share-compose[hidden] {
   display: none;

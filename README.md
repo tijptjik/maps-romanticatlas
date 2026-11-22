@@ -157,6 +157,12 @@ Run `dev-remote --port 4173 chrome bun run test:artwork-image` against the devel
 server to verify recovery from failed downloads, HTML error responses and corrupt
 image bytes, plus a fresh retry after a persistent failure.
 
+Run `dev-remote --port 4173 chrome bun run test:sharing` against the development
+server (substitute its actual port) to check mobile PNG downloads, simulated native
+sharing and cancellation, retaking, and the desktop QR code. The runner saves
+screenshots and the downloaded PNG. Native sharing is stubbed; the operating
+system's share sheet still requires a physical-device check.
+
 ## Production build and deployment
 
 ```sh
