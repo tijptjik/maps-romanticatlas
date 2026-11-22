@@ -13,11 +13,18 @@ export async function loadArtworkImage(url: string) {
     let response: Response | undefined
     let objectUrl: string | undefined
     try {
-      response = await fetch(url, { cache: attempt ? 'reload' : 'default', signal: AbortSignal.timeout(30_000) })
+      response = await fetch(url, {
+        cache: attempt ? 'reload' : 'default',
+        signal: AbortSignal.timeout(30_000),
+      })
       if (!response.ok) throw Error(`HTTP ${response.status}`)
       const blob = await response.blob()
       if (!blob.size) throw Error('Empty image response')
-      if (blob.type && !blob.type.startsWith('image/') && blob.type !== 'application/octet-stream')
+      if (
+        blob.type &&
+        !blob.type.startsWith('image/') &&
+        blob.type !== 'application/octet-stream'
+      )
         throw Error(`Unexpected image content type: ${blob.type}`)
       objectUrl = URL.createObjectURL(blob)
       const image = new Image()
@@ -28,14 +35,20 @@ export async function loadArtworkImage(url: string) {
     } catch (error) {
       failure = error
       console.warn('[atlas] Artwork image load failed', {
-        url, attempt: attempt + 1, status: response?.status,
-        contentType: response?.headers.get('content-type'), ray: response?.headers.get('cf-ray'), error,
+        url,
+        attempt: attempt + 1,
+        status: response?.status,
+        contentType: response?.headers.get('content-type'),
+        ray: response?.headers.get('cf-ray'),
+        error,
       })
     } finally {
       if (objectUrl) URL.revokeObjectURL(objectUrl)
     }
   }
-  throw new Error('The artwork could not load. Click the cloud to try again.', { cause: failure })
+  throw new Error('The artwork could not load. Click the cloud to try again.', {
+    cause: failure,
+  })
 }
 
 export function decodeArtworkImage(url: string): Promise<HTMLImageElement> {

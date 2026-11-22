@@ -7,11 +7,15 @@ export function linkedTile() {
   const tile = { x: Number(match[2]), y: Number(match[3]) }
   const { west, east, south, north } = tileBounds(tile)
   if (west > 114.5 || east < 113.8 || south > 22.6 || north < 22.1) return
-  return { ...tile, center: [(west + east) / 2, (south + north) / 2] as [number, number], art: params.get('art') }
+  return {
+    ...tile,
+    center: [(west + east) / 2, (south + north) / 2] as [number, number],
+    art: params.get('art'),
+  }
 }
 
 export async function copyTileLink(id: string, art: string) {
-  const url = new URL('/?tile=' + id + '&art=' + encodeURIComponent(art), location.origin)
+  const url = new URL(`/?tile=${id}&art=${encodeURIComponent(art)}`, location.origin)
   if (navigator.clipboard?.writeText) {
     try {
       await navigator.clipboard.writeText(url.href)

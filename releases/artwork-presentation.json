@@ -8,23 +8,6 @@
   "/atlas-v2/coasters/counterweight-ballet-cleared.png": {
     "edgeFade": true,
     "waterFadeStart": 0.72,
-    "backgroundMask": [
-      [
-        0,
-        0
-      ],
-      [
-        0.78,
-        0
-      ],
-      [
-        0.31,
-        0.205
-      ],
-      [
-        0,
-        0.25
-      ]
-    ]
+    "backgroundMask": [[0, 0], [0.78, 0], [0.31, 0.205], [0, 0.25]]
   }
 }

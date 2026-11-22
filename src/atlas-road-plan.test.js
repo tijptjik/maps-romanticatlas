@@ -57,10 +57,41 @@ test('protects links with no surface alternative, one-way routes and tile edges'
 })
 
 test('reclaims a dead end to its junction while preserving the through road', () => {
-  const main = road([[1,5],[5,5],[9,5]])
-  const branch = road([[5,5],[5,7],[6,8]], local)
+  const main = road([
+    [1, 5],
+    [5, 5],
+    [9, 5],
+  ])
+  const branch = road(
+    [
+      [5, 5],
+      [5, 7],
+      [6, 8],
+    ],
+    local,
+  )
   const plan = planAtlasRoads([main, branch], bounds)
-  expect(plan.removedPaths).toEqual([[[6,8],[5,7],[5,5]]])
+  expect(plan.removedPaths).toEqual([
+    [
+      [6, 8],
+      [5, 7],
+      [5, 5],
+    ],
+  ])
   expect(plan.retained.map(f => f.geometry)).toEqual([main.geometry])
-  expect(planAtlasRoads([main, road([[5,5],[5,10]],local)], bounds).removedPaths).toEqual([])
+  expect(
+    planAtlasRoads(
+      [
+        main,
+        road(
+          [
+            [5, 5],
+            [5, 10],
+          ],
+          local,
+        ),
+      ],
+      bounds,
+    ).removedPaths,
+  ).toEqual([])
 })

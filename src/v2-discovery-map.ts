@@ -1,5 +1,10 @@
 import { allowsArtwork } from './artwork-reservation'
-import { revisionEndpoint, revisionImagePattern, type Revision, type RevisionMode } from './artwork-revision'
+import {
+  revisionEndpoint,
+  revisionImagePattern,
+  type Revision,
+  type RevisionMode,
+} from './artwork-revision'
 import { revisionReferences } from './revision-references'
 import { installReviewQueue } from './review-queue'
 import { neighborhoodLabelLayerId } from './map-style'
@@ -10,7 +15,12 @@ import { originalArtwork } from './artwork-sampling'
 import { csrfToken, fetchAdmin } from './cached-tile-admin'
 import { reviewEndpoint, type ArtworkReview, type Painting } from './artwork-review'
 import { focusAtlasTile, installAtlasTileInteractions, tileId } from './atlas-tiles'
-import { drawingFootprint, tileBounds, tileForPosition, tilePolygon } from './tile-geometry'
+import {
+  drawingFootprint,
+  tileBounds,
+  tileForPosition,
+  tilePolygon,
+} from './tile-geometry'
 
 type Footprint = ReturnType<typeof drawingFootprint>
 type Unit = { art: Painting; footprint: Footprint; layer: string }
@@ -18,8 +28,14 @@ type Label = { element: HTMLElement; title: HTMLElement; bounds: Footprint['boun
 
 type Catalog = { release: string; sheets: { accepted?: boolean; art: Painting[] }[] }
 
-export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 'queue' | 'admin', noNoise: boolean,
-  onCount: (count: number) => void, audio: Parameters<typeof installAtlasTileInteractions>[1], revealed = false) {
+export async function installDiscoveryMap(
+  map: AtlasMap,
+  diagnostics: boolean | 'queue' | 'admin',
+  noNoise: boolean,
+  onCount: (count: number) => void,
+  audio: Parameters<typeof installAtlasTileInteractions>[1],
+  revealed = false,
+) {
   const admin = diagnostics === 'admin'
   const queue = diagnostics === 'queue'
   const units = new Map<string, Unit>()
@@ -29,15 +45,24 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
   const labels = new Map<string, Label>()
   const superseded = new Set<string>()
   let disposed = false
-  let targetControls: ReturnType<typeof import('./admin-generation').installAdminGeneration>
+  let targetControls: ReturnType<
+    typeof import('./admin-generation').installAdminGeneration
+  >
   const placementInventory: Painting[] = []
 
   function add(art: Painting) {
     if (!allowsArtwork(art)) return
-    if (art.scene) art = { ...art, title: discoveryTitle(art.url, art.scene, art.title) ?? art.title }
+    if (art.scene)
+      art = {
+        ...art,
+        title: discoveryTitle(art.url, art.scene, art.title) ?? art.title,
+      }
     if (superseded.has(art.url) || units.has(art.url)) return
-    const footprint = drawingFootprint({ ...art, tileSpan: { columns: art.columns ?? 1, rows: art.rows } })
-    const unit = { art, footprint, layer: 'discovery-' + units.size }
+    const footprint = drawingFootprint({
+      ...art,
+      tileSpan: { columns: art.columns ?? 1, rows: art.rows },
+    })
+    const unit = { art, footprint, layer: `discovery-${units.size}` }
     units.set(art.url, unit)
     for (const cell of footprint.cells) {
       const id = tileId(cell)
@@ -57,24 +82,43 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
     const [catalogResponse, reviewResponse, discoveryResponse] = await Promise.all([
       fetch('/atlas-v2/catalog.json', { cache: 'no-cache' }),
       fetch(reviewEndpoint, { cache: 'no-store' }),
-      admin ? fetchAdmin('/api/atlas-tiles/cached?admin=true&diagnostics=true&collection=discovery', { cache: 'no-store' }) :
-      diagnostics || revealed ? fetch('/api/atlas-tiles/cached?diagnostics=true&collection=discovery', { cache: 'no-store' }) : null,
+      admin
+        ? fetchAdmin(
+            '/api/atlas-tiles/cached?admin=true&diagnostics=true&collection=discovery',
+            { cache: 'no-store' },
+          )
+        : diagnostics || revealed
+          ? fetch('/api/atlas-tiles/cached?diagnostics=true&collection=discovery', {
+              cache: 'no-store',
+            })
+          : null,
     ])
-    if ((!catalogResponse.ok && catalogResponse.status !== 404) || !reviewResponse.ok) throw Error('Artwork catalog or reviews unavailable')
+    if ((!catalogResponse.ok && catalogResponse.status !== 404) || !reviewResponse.ok)
+      throw Error('Artwork catalog or reviews unavailable')
     // Static hosts can return their HTML entry point when no catalog is installed.
-    const missing = catalogResponse.status === 404 || catalogResponse.headers.get('content-type')?.includes('text/html')
-    const catalog: Catalog = missing ? { release: 'v2', sheets: [] } : await catalogResponse.json()
+    const missing =
+      catalogResponse.status === 404 ||
+      catalogResponse.headers.get('content-type')?.includes('text/html')
+    const catalog: Catalog = missing
+      ? { release: 'v2', sheets: [] }
+      : await catalogResponse.json()
     const reviews: ArtworkReview[] = await reviewResponse.json()
-    if (catalog.release !== 'v2' || !Array.isArray(catalog.sheets) || !Array.isArray(reviews)) {
+    if (
+      catalog.release !== 'v2' ||
+      !Array.isArray(catalog.sheets) ||
+      !Array.isArray(reviews)
+    ) {
       throw Error('Invalid V2 artwork catalog or reviews')
     }
     for (const sheet of catalog.sheets) {
       if (sheet.accepted) for (const art of sheet.art) status.set(art.url, 'accepted')
     }
-    if (admin) placementInventory.push(...catalog.sheets.flatMap(sheet => sheet.art), ...reviews)
+    if (admin)
+      placementInventory.push(...catalog.sheets.flatMap(sheet => sheet.art), ...reviews)
     for (const review of reviews) status.set(review.url, review.status)
     if (diagnostics || revealed) {
-      revisions = admin || queue ? await readRevisions() : await readRevisions().catch(() => [])
+      revisions =
+        admin || queue ? await readRevisions() : await readRevisions().catch(() => [])
     }
     if (admin) {
       for (const job of revisions) {
@@ -84,34 +128,53 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
     for (const sheet of catalog.sheets) {
       for (const art of sheet.art) {
         const decision = status.get(art.url)
-        if (diagnostics || revealed ? decision !== 'rejected' : decision === 'accepted') add(art)
+        if (diagnostics || revealed ? decision !== 'rejected' : decision === 'accepted')
+          add(art)
       }
     }
     for (const revision of revisions) {
-      if (revision.candidate && status.get(revision.candidate.url) !== 'rejected') add(revision.candidate)
+      if (revision.candidate && status.get(revision.candidate.url) !== 'rejected')
+        add(revision.candidate)
     }
     for (const art of reviews) {
-      if (revisionImagePattern.test(art.url) && status.get(art.url) === 'accepted') add(art)
+      if (revisionImagePattern.test(art.url) && status.get(art.url) === 'accepted')
+        add(art)
     }
     if (discoveryResponse) {
       if (!discoveryResponse.ok) throw Error('Generated artwork unavailable')
       const { tiles, adminMode } = await discoveryResponse.json()
       if (admin && adminMode !== true) throw Error('Admin access required')
       for (const tile of tiles) {
-        if (tile.variant.startsWith('discovery-') && status.get(tile.url) !== 'rejected') {
-          add({ x: tile.x, y: tile.y, rows: 1, scene: tile.scene, title: tile.title || atlasSceneTitle(tile.scene), url: tile.url })
+        if (
+          tile.variant.startsWith('discovery-') &&
+          status.get(tile.url) !== 'rejected'
+        ) {
+          add({
+            x: tile.x,
+            y: tile.y,
+            rows: 1,
+            scene: tile.scene,
+            title: tile.title || atlasSceneTitle(tile.scene),
+            url: tile.url,
+          })
         }
       }
     } else {
       for (const art of reviews) {
-        if (art.url.startsWith('/generated-tiles/') && status.get(art.url) === 'accepted') add(art)
+        if (
+          art.url.startsWith('/generated-tiles/') &&
+          status.get(art.url) === 'accepted'
+        )
+          add(art)
       }
     }
   } catch (error) {
     console.warn('Atlas artwork reviews unavailable', error)
     const retry = document.createElement('button')
     retry.className = 'atlas-review-retry'
-    retry.textContent = admin ? 'Admin artwork unavailable · Retry' : 'Artwork reviews unavailable · Retry'
+    retry.textContent = admin
+      ? 'Admin artwork unavailable · Retry'
+      : 'Artwork reviews unavailable · Retry'
     retry.onclick = () => location.reload()
     map.getContainer().append(retry)
     return () => {}
@@ -121,19 +184,34 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
     if (revealed) {
       // Give cells with few alternatives first choice. Reserve the whole drawing
       // so a neighbouring tile cannot select an overlapping painting.
-      for (const [id, choices] of [...byCell].sort((a, b) => a[1].length - b[1].length)) {
+      for (const [id, choices] of [...byCell].sort(
+        (a, b) => a[1].length - b[1].length,
+      )) {
         if (artwork.has(id)) continue
-        const available = choices.filter(unit => unit.footprint.cells.every(cell => !artwork.has(tileId(cell))))
+        const available = choices.filter(unit =>
+          unit.footprint.cells.every(cell => !artwork.has(tileId(cell))),
+        )
         if (!available.length) continue
         const unit = available[Math.floor(Math.random() * available.length)]
         for (const cell of unit.footprint.cells) artwork.set(tileId(cell), [unit.art])
       }
     } else {
-      for (const [id, choices] of byCell) artwork.set(id, choices.map(unit => unit.art))
+      for (const [id, choices] of byCell)
+        artwork.set(
+          id,
+          choices.map(unit => unit.art),
+        )
     }
     const atlas = installAtlasTileInteractions(map, audio, {
-      artwork, revealed, noNoise, onRevealCountChange: onCount,
-      rejectedUrls: new Set([...status].filter(([, decision]) => decision === 'rejected').map(([url]) => url)),
+      artwork,
+      revealed,
+      noNoise,
+      onRevealCountChange: onCount,
+      rejectedUrls: new Set(
+        [...status]
+          .filter(([, decision]) => decision === 'rejected')
+          .map(([url]) => url),
+      ),
     })
     return atlas.resetReveals
   }
@@ -175,11 +253,13 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
     })
     try {
       await navigator.clipboard.writeText(reference)
-      copyStatus.textContent = 'Copied reference for ' + art.title
+      copyStatus.textContent = `Copied reference for ${art.title}`
       window.clearTimeout(clearCopyStatus)
-      clearCopyStatus = window.setTimeout(() => { copyStatus.textContent = '' }, 2200)
+      clearCopyStatus = window.setTimeout(() => {
+        copyStatus.textContent = ''
+      }, 2200)
     } catch {
-      window.prompt('Copy the regeneration reference for ' + art.title, reference)
+      window.prompt(`Copy the regeneration reference for ${art.title}`, reference)
     }
   }
 
@@ -187,16 +267,19 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
     const view = map.getBounds()
     for (const { element, title, bounds } of labels.values()) {
       const { west, east, north, south } = bounds
-      element.hidden = !view.intersects([[west, south], [east, north]])
+      element.hidden = !view.intersects([
+        [west, south],
+        [east, north],
+      ])
       title.hidden = element.hidden
       if (element.hidden) continue
       const point = map.project([(east + west) / 2, south])
-      element.style.left = point.x + 'px'
-      element.style.top = point.y + 'px'
+      element.style.left = `${point.x}px`
+      element.style.top = `${point.y}px`
       const corner = map.project([east, north])
       title.style.left = element.style.left
-      title.style.top = corner.y + 'px'
-      title.style.maxWidth = Math.max(0, 2 * (corner.x - point.x) - 8) + 'px'
+      title.style.top = `${corner.y}px`
+      title.style.maxWidth = `${Math.max(0, 2 * (corner.x - point.x) - 8)}px`
     }
   }
 
@@ -205,10 +288,37 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
   })
 
   function draw(unit: Unit, art: Painting, opacity: number) {
-    const {layer, footprint: {bounds: {west, east, north, south}}} = unit
-    const coordinates: [[number, number], [number, number], [number, number], [number, number]] = [[west,north],[east,north],[east,south],[west,south]]
-    map.addSource(layer, { type: 'image', url: art.animation?.plate ?? art.imageUrl ?? art.url, coordinates })
-    map.addLayer({id: layer, type: 'raster', source: layer, paint: { 'raster-opacity': opacity, 'raster-fade-duration': 0 }}, edges)
+    const {
+      layer,
+      footprint: {
+        bounds: { west, east, north, south },
+      },
+    } = unit
+    const coordinates: [
+      [number, number],
+      [number, number],
+      [number, number],
+      [number, number],
+    ] = [
+      [west, north],
+      [east, north],
+      [east, south],
+      [west, south],
+    ]
+    map.addSource(layer, {
+      type: 'image',
+      url: art.animation?.plate ?? art.imageUrl ?? art.url,
+      coordinates,
+    })
+    map.addLayer(
+      {
+        id: layer,
+        type: 'raster',
+        source: layer,
+        paint: { 'raster-opacity': opacity, 'raster-fade-duration': 0 },
+      },
+      edges,
+    )
   }
 
   const edges = 'discovery-tile-edges'
@@ -222,32 +332,43 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
     renderDiagnostics()
   }
 
-  async function mutation(endpoint: string, record: unknown, method: 'PUT' | 'DELETE' | 'POST') {
-    const write = (token: string) => fetchAdmin(endpoint + '?admin=true', {
-      method,
-      headers: { 'content-type': 'application/json', 'x-atlas-csrf-token': token },
-      body: JSON.stringify(record),
-    })
+  async function mutation(
+    endpoint: string,
+    record: unknown,
+    method: 'PUT' | 'DELETE' | 'POST',
+  ) {
+    const write = (token: string) =>
+      fetchAdmin(`${endpoint}?admin=true`, {
+        method,
+        headers: { 'content-type': 'application/json', 'x-atlas-csrf-token': token },
+        body: JSON.stringify(record),
+      })
     const existingToken = csrfToken()
     let response = existingToken ? await write(existingToken) : null
     if (!response || response.status === 403) {
       const session = await fetchAdmin('/api/atlas-tiles/cached?admin=true')
-      if (!session.ok) throw Error('Admin access required (' + session.status + ')')
+      if (!session.ok) throw Error(`Admin access required (${session.status})`)
       const token = csrfToken()
       if (!token) throw Error('The browser did not receive the review session cookie.')
       response = await write(token)
     }
     if (!response.ok) {
       const details = await response.json().catch(() => null)
-      throw Error(details?.error || 'Review returned ' + response.status)
+      throw Error(details?.error || `Review returned ${response.status}`)
     }
     return response.json()
   }
 
-  const writeReview = (record: ArtworkReview, method: 'PUT' | 'DELETE'): Promise<ArtworkReview> =>
-    mutation(reviewEndpoint, record, method)
+  const writeReview = (
+    record: ArtworkReview,
+    method: 'PUT' | 'DELETE',
+  ): Promise<ArtworkReview> => mutation(reviewEndpoint, record, method)
 
-  async function review(choices: Unit[], unit: Unit, decision: ArtworkReview['status']) {
+  async function review(
+    choices: Unit[],
+    unit: Unit,
+    decision: ArtworkReview['status'],
+  ) {
     if (saving.has(unit.art.url)) return
     const selectionAtClick = sequence
     saving.add(unit.art.url)
@@ -269,7 +390,7 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
         priority.delete(unit)
         for (const cell of unit.footprint.cells) {
           const id = tileId(cell)
-          const remaining = byCell.get(id)!.filter(choice => choice !== unit)
+          const remaining = byCell.get(id)?.filter(choice => choice !== unit)
           if (remaining.length) {
             byCell.set(id, remaining)
           } else {
@@ -281,7 +402,7 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
         }
       }
     } catch (error) {
-      window.alert('Could not save the artwork review. ' + error.message)
+      window.alert(`Could not save the artwork review. ${error.message}`)
     } finally {
       saving.delete(unit.art.url)
       if (!disposed) renderDiagnostics()
@@ -289,13 +410,22 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
   }
 
   function renderDiagnostics() {
-    if (inventoryCount) inventoryCount.value = units.size + (units.size === 1 ? ' painting' : ' paintings')
+    if (inventoryCount)
+      inventoryCount.value =
+        units.size + (units.size === 1 ? ' painting' : ' paintings')
     const view = map.getBounds()
     const candidates: Unit[] = []
     for (const unit of units.values()) {
-      if (superseded.has(unit.art.url) || status.get(unit.art.url) === 'rejected') continue
-      const {west,east,north,south} = unit.footprint.bounds
-      if (!view.intersects([[west,south],[east,north]])) continue
+      if (superseded.has(unit.art.url) || status.get(unit.art.url) === 'rejected')
+        continue
+      const { west, east, north, south } = unit.footprint.bounds
+      if (
+        !view.intersects([
+          [west, south],
+          [east, north],
+        ])
+      )
+        continue
       candidates.push(unit)
     }
     candidates.sort((a, b) => (priority.get(b) ?? 0) - (priority.get(a) ?? 0))
@@ -306,7 +436,12 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
       for (const id of cells) top.set(id, unit)
       return true
     })
-    const layers = new Map(displayed.map(unit => [unit.layer, comparison?.unit === unit ? comparison.previous : unit.art]))
+    const layers = new Map(
+      displayed.map(unit => [
+        unit.layer,
+        comparison?.unit === unit ? comparison.previous : unit.art,
+      ]),
+    )
     for (const [layer, art] of visibleLayers) {
       if (layers.get(layer) === art) continue
       map.removeLayer(layer)
@@ -323,11 +458,19 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
     showAnimations(new Set(layers.values()))
     if (gridSize !== byCell.size) {
       gridSize = byCell.size
-      const coordinates = [...byCell.keys()].filter(id => !queue || byCell.get(id)!.some(unit => status.get(unit.art.url) !== 'rejected')).map(id => {
-        const [zoom, x, y] = id.split('/').map(Number)
-        return tilePolygon({zoom, x, y})
-      })
-      map.getSource<GeoJSONSource>(edges)!.setData({ type: 'MultiLineString', coordinates })
+      const coordinates = [...byCell.keys()]
+        .filter(
+          id =>
+            !queue ||
+            byCell.get(id)?.some(unit => status.get(unit.art.url) !== 'rejected'),
+        )
+        .map(id => {
+          const [zoom, x, y] = id.split('/').map(Number)
+          return tilePolygon({ zoom, x, y })
+        })
+      map
+        .getSource<GeoJSONSource>(edges)
+        ?.setData({ type: 'MultiLineString', coordinates })
     }
     if (queue) return
     for (const [id, label] of labels) {
@@ -343,25 +486,26 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
         const element = document.createElement('div')
         element.className = 'atlas-image-count'
         element.setAttribute('role', 'group')
-        element.innerHTML = '<span class="atlas-image-pips"></span><output></output><button type="button" data-action="accepted">✓</button><button type="button" data-action="rejected">×</button>'
+        element.innerHTML =
+          '<span class="atlas-image-pips"></span><output></output><button type="button" data-action="accepted">✓</button><button type="button" data-action="rejected">×</button>'
         const title = document.createElement('button')
         title.type = 'button'
         title.className = 'atlas-discovery-title'
         title.dataset.tile = id
         map.getContainer().append(title, element)
         const cell = current.footprint.cells.find(cell => tileId(cell) === id)!
-        label = {element, title, bounds: tileBounds(cell)}
+        label = { element, title, bounds: tileBounds(cell) }
         labels.set(id, label)
       }
-      const {element, title} = label
+      const { element, title } = label
       title.textContent = current.art.title
-      title.title = 'Copy regeneration reference for ' + current.art.title
+      title.title = `Copy regeneration reference for ${current.art.title}`
       title.setAttribute('aria-label', title.title)
       title.onclick = event => {
         event.stopPropagation()
         void copyReference(current)
       }
-      element.setAttribute('aria-label', choices.length + ' images on tile ' + id)
+      element.setAttribute('aria-label', `${choices.length} images on tile ${id}`)
       element.querySelector('output')!.value = String(choices.length)
       const pips = element.querySelector('.atlas-image-pips')!
       choices.forEach((unit, index) => {
@@ -374,16 +518,22 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
         pip.onclick = () => select(unit)
         const state = status.get(unit.art.url) ?? 'considered'
         pip.dataset.status = state
-        pip.title = (index + 1) + '. ' + unit.art.title + ' · ' + state
+        pip.title = `${index + 1}. ${unit.art.title} · ${state}`
         pip.setAttribute('aria-label', pip.title)
         pip.setAttribute('aria-pressed', String(unit === current))
       })
-      while (pips.children.length > choices.length) pips.lastElementChild!.remove()
-      for (const button of element.querySelectorAll<HTMLButtonElement>('[data-action]')) {
+      while (pips.children.length > choices.length) pips.lastElementChild?.remove()
+      for (const button of element.querySelectorAll<HTMLButtonElement>(
+        '[data-action]',
+      )) {
         const decision = button.dataset.action as ArtworkReview['status']
-        button.title = (decision === 'accepted' ? 'Accept ' : 'Reject ') + current.art.title + ' for production'
+        button.title =
+          (decision === 'accepted' ? 'Accept ' : 'Reject ') +
+          current.art.title +
+          ' for production'
         button.setAttribute('aria-label', button.title)
-        button.disabled = saving.has(current.art.url) || status.get(current.art.url) === decision
+        button.disabled =
+          saving.has(current.art.url) || status.get(current.art.url) === decision
         button.onclick = () => void review(choices, current, decision)
       }
     }
@@ -391,22 +541,50 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
   }
 
   if (diagnostics) {
-    map.addSource(edges, {type: 'geojson', data: {type: 'MultiLineString', coordinates: []}})
-    map.addLayer({id: edges, source: edges, type: 'line', paint: {
-      'line-color': '#382e20', 'line-width': 1.5, 'line-dasharray': [4, 2], 'line-opacity': queue ? 0.45 : 0.9,
-    }}, neighborhoodLabelLayerId)
+    map.addSource(edges, {
+      type: 'geojson',
+      data: { type: 'MultiLineString', coordinates: [] },
+    })
+    map.addLayer(
+      {
+        id: edges,
+        source: edges,
+        type: 'line',
+        paint: {
+          'line-color': '#382e20',
+          'line-width': 1.5,
+          'line-dasharray': [4, 2],
+          'line-opacity': queue ? 0.45 : 0.9,
+        },
+      },
+      neighborhoodLabelLayerId,
+    )
     if (queue) {
       map.on('moveend', renderDiagnostics)
       function remaining() {
         const submitted = new Set(revisions.map(item => item.source.url))
-        return [...units.values()].filter(unit => !superseded.has(unit.art.url) && !status.has(unit.art.url) && !submitted.has(unit.art.url))
+        return [...units.values()].filter(
+          unit =>
+            !superseded.has(unit.art.url) &&
+            !status.has(unit.art.url) &&
+            !submitted.has(unit.art.url),
+        )
       }
       let revisionChanges = 0
       async function revise(art: Painting, mode: RevisionMode) {
         const references = await revisionReferences(units.get(art.url)?.art ?? art)
-        const job: Revision = await mutation(revisionEndpoint, { source: art, mode, ...references }, 'POST')
+        const job: Revision = await mutation(
+          revisionEndpoint,
+          { source: art, mode, ...references },
+          'POST',
+        )
         revisionChanges++
-        revisions = [...revisions.filter(item => item.source.url !== job.source.url || item.state === 'failed'), job]
+        revisions = [
+          ...revisions.filter(
+            item => item.source.url !== job.source.url || item.state === 'failed',
+          ),
+          job,
+        ]
         if (job.candidate) add(job.candidate)
         return async () => {
           await mutation(revisionEndpoint, { id: job.id }, 'DELETE')
@@ -418,24 +596,45 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
         }
       }
       function failedRevision() {
-        const active = new Set(revisions.filter(job => job.state !== 'failed').map(job => job.source.url))
-        return [...revisions].reverse().find(job => job.state === 'failed' && units.has(job.source.url) &&
-          !active.has(job.source.url) && !status.has(job.source.url))
+        const active = new Set(
+          revisions.filter(job => job.state !== 'failed').map(job => job.source.url),
+        )
+        return [...revisions]
+          .reverse()
+          .find(
+            job =>
+              job.state === 'failed' &&
+              units.has(job.source.url) &&
+              !active.has(job.source.url) &&
+              !status.has(job.source.url),
+          )
       }
-      const sync = installReviewQueue(map, remaining(), async (record, method) => {
-        const saved = await writeReview(record, method)
-        if (method === 'DELETE') status.delete(saved.url)
-        else status.set(saved.url, saved.status)
-        gridSize = -1
-        return saved
-      }, (unit, previous) => {
-        comparison = unit && previous ? { unit, previous } : undefined
-        if (unit) select(unit)
-        else renderDiagnostics()
-      }, revise, remaining, () => revisions.filter(job => job.state === 'pending').length, failedRevision, art => {
-        const source = revisions.find(job => job.mode !== 'generate' && job.candidate?.url === art.url)?.source
-        return source && (units.get(source.url)?.art ?? source)
-      })
+      const sync = installReviewQueue(
+        map,
+        remaining(),
+        async (record, method) => {
+          const saved = await writeReview(record, method)
+          if (method === 'DELETE') status.delete(saved.url)
+          else status.set(saved.url, saved.status)
+          gridSize = -1
+          return saved
+        },
+        (unit, previous) => {
+          comparison = unit && previous ? { unit, previous } : undefined
+          if (unit) select(unit)
+          else renderDiagnostics()
+        },
+        revise,
+        remaining,
+        () => revisions.filter(job => job.state === 'pending').length,
+        failedRevision,
+        art => {
+          const source = revisions.find(
+            job => job.mode !== 'generate' && job.candidate?.url === art.url,
+          )?.source
+          return source && (units.get(source.url)?.art ?? source)
+        },
+      )
       let refreshing = false
       const timer = window.setInterval(async () => {
         if (refreshing || !revisions.some(item => item.state === 'pending')) return
@@ -445,7 +644,8 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
           const updated = await readRevisions()
           if (disposed || before !== revisionChanges) return
           revisions = updated
-          for (const job of revisions) if (job.candidate && !status.has(job.candidate.url)) add(job.candidate)
+          for (const job of revisions)
+            if (job.candidate && !status.has(job.candidate.url)) add(job.candidate)
           sync()
         } catch (error) {
           console.warn('Could not refresh artwork revisions', error)
@@ -453,15 +653,29 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
           refreshing = false
         }
       }, 5000)
-      map.once('remove', () => { disposed = true; clearInterval(timer) })
+      map.once('remove', () => {
+        disposed = true
+        clearInterval(timer)
+      })
       return () => {}
     }
     renderDiagnostics()
     if (admin) {
       const { installAdminGeneration } = await import('./admin-generation')
-      targetControls = installAdminGeneration(map, () => [...placementInventory,
-        ...revisions.filter(job => job.state !== 'failed').map(job => job.candidate ?? job.source)],
-        mutation, job => { revisions.push(job) }, copyStatus)
+      targetControls = installAdminGeneration(
+        map,
+        () => [
+          ...placementInventory,
+          ...revisions
+            .filter(job => job.state !== 'failed')
+            .map(job => job.candidate ?? job.source),
+        ],
+        mutation,
+        job => {
+          revisions.push(job)
+        },
+        copyStatus,
+      )
       let reading = false
       const timer = window.setInterval(async () => {
         if (reading || disposed) return
@@ -469,18 +683,27 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
         const before = revisions.length
         try {
           const updated = await readRevisions()
-          if (disposed || revisions.length !== before || JSON.stringify(updated) === JSON.stringify(revisions)) return
+          if (
+            disposed ||
+            revisions.length !== before ||
+            JSON.stringify(updated) === JSON.stringify(revisions)
+          )
+            return
           revisions = updated
-          for (const job of revisions) if (job.candidate && status.get(job.candidate.url) !== 'rejected') add(job.candidate)
+          for (const job of revisions)
+            if (job.candidate && status.get(job.candidate.url) !== 'rejected')
+              add(job.candidate)
           renderDiagnostics()
           void targetControls.refresh()
-        } catch (error) { console.warn('Could not refresh the artwork queue', error) }
-        finally { reading = false }
+        } catch (error) {
+          console.warn('Could not refresh the artwork queue', error)
+        } finally {
+          reading = false
+        }
       }, 10000)
       map.once('remove', () => clearInterval(timer))
     }
     map.on('moveend', renderDiagnostics)
-
   }
 
   map.on('click', async event => {
@@ -506,10 +729,14 @@ export async function installDiscoveryMap(map: AtlasMap, diagnostics: boolean | 
     }
     const { width, height } = originalArtwork(image)
     focusAtlasTile(map, next.art, undefined, {
-      bounds: next.footprint.bounds, width, height,
+      bounds: next.footprint.bounds,
+      width,
+      height,
     })
   })
   map.on('move', positionLabels)
-  map.once('remove', () => { disposed = true })
+  map.once('remove', () => {
+    disposed = true
+  })
   return () => {}
 }

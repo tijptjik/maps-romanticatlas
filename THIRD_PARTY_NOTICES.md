@@ -1,15 +1,15 @@
 # Third-party audio notices
 
-The background theme, *Harbour Light (Legato)*, is an original piano composition.
-Its recorded piano samples were pitch-shifted, filtered and mixed for the atlas. Every
-scene cue is a 2.35-second excerpt from public-domain material. Freesound recordings are
+The background theme, _Harbour Light (Legato)_, is an original piano composition. Its
+recorded piano samples were pitch-shifted, filtered and mixed for the atlas. Every scene
+cue is a 2.35-second excerpt from public-domain material. Freesound recordings are
 published under the
 [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/) dedication; the
 NASA recording is United States government public-domain material. The local Ogg files
 are clipped and transcoded versions of the linked source recordings.
 
-| Local track                        | Source                                                 | Creator   | Licence |
-| ---------------------------------- | ------------------------------------------------------ | --------- | ------- |
+| Local track                                   | Source                                                               | Creator        | Licence                                                   |
+| --------------------------------------------- | -------------------------------------------------------------------- | -------------- | --------------------------------------------------------- |
 | `public/atlas-audio/harbour-light-legato.ogg` | [Salamander Grand Piano](https://tonejs.github.io/audio/salamander/) | Alexander Holm | [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/) |
 
 | Local cue                                          | Source recording                                                                                                      | Creator              | Licence              |

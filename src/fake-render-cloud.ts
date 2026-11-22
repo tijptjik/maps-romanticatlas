@@ -1,6 +1,11 @@
 import { restoreSeedScene } from './fake-render-seed'
 import { DurableObject } from 'cloudflare:workers'
-import { claimImage, rotationSnapshot, type FakeRenderState, type RevealImage } from './fake-render-state'
+import {
+  claimImage,
+  rotationSnapshot,
+  type FakeRenderState,
+  type RevealImage,
+} from './fake-render-state'
 import { startSiGeneration, siGenerationStatus } from './si-generation'
 import type { AtlasScene } from './atlas-scenes'
 
@@ -18,7 +23,11 @@ export class FakeRenderCloud extends DurableObject<Env> {
       const images: RevealImage[] = []
       let startAfter: string | undefined
       for (;;) {
-        const page = await txn.list<RevealImage>({ prefix: 'claim:', startAfter, limit: 256 })
+        const page = await txn.list<RevealImage>({
+          prefix: 'claim:',
+          startAfter,
+          limit: 256,
+        })
         images.push(...Array.from(page.values(), restoreSeedScene))
         if (page.size < 256) break
         startAfter = [...page.keys()].at(-1)
@@ -27,8 +36,13 @@ export class FakeRenderCloud extends DurableObject<Env> {
     })
   }
 
-  async claim(position: Position, seed: RevealImage | null, requestId: string, sourceImage: string) {
-    const priorClaim = await this.ctx.storage.get<RevealImage>('claim:' + requestId)
+  async claim(
+    position: Position,
+    seed: RevealImage | null,
+    requestId: string,
+    sourceImage: string,
+  ) {
+    const priorClaim = await this.ctx.storage.get<RevealImage>(`claim:${requestId}`)
     if (priorClaim) return restoreSeedScene(priorClaim)
     const sourceKey = `fake-render-sources/${position.zoom}/${position.x}/${position.y}/${requestId}.txt`
     const previous = await this.ctx.storage.get<FakeRenderState>('state')
@@ -36,17 +50,29 @@ export class FakeRenderCloud extends DurableObject<Env> {
     await this.env.ATLAS_BUCKET.put(sourceKey, sourceImage)
     // The storage transaction serializes claims, including across Worker instances.
     const result = await this.ctx.storage.transaction(async txn => {
-      const prior = await txn.get<RevealImage>('claim:' + requestId)
+      const prior = await txn.get<RevealImage>(`claim:${requestId}`)
       if (prior) return restoreSeedScene(prior)
       let state = await txn.get<FakeRenderState>('state')
       if (!state) {
         if (!seed) return null
-        state = { ready: seed, claims: {}, job: null, sourceImage: '', scene: seed.scene, seedSceneVerified: true, attempts: 0 }
+        state = {
+          ready: seed,
+          claims: {},
+          job: null,
+          sourceImage: '',
+          scene: seed.scene,
+          seedSceneVerified: true,
+          attempts: 0,
+        }
       }
       if (!state.seedSceneVerified && state.scene === 'maze-garden') {
         let startAfter: string | undefined
         for (;;) {
-          const page = await txn.list<RevealImage>({ prefix: 'claim:', startAfter, limit: 256 })
+          const page = await txn.list<RevealImage>({
+            prefix: 'claim:',
+            startAfter,
+            limit: 256,
+          })
           for (const image of page.values()) {
             const restored = restoreSeedScene(image)
             if (restored !== image) state.scene = restored.scene
@@ -57,14 +83,16 @@ export class FakeRenderCloud extends DurableObject<Env> {
       }
       state.seedSceneVerified = true
       const image = claimImage(state, requestId, sourceKey)
-      if (image) await txn.put('claim:' + requestId, image)
+      if (image) await txn.put(`claim:${requestId}`, image)
       state.claims = {}
       await txn.put({ state, position })
-      if (state.job && state.attempts < 3 && !await txn.getAlarm()) await txn.setAlarm(Date.now() + 100)
+      if (state.job && state.attempts < 3 && !(await txn.getAlarm()))
+        await txn.setAlarm(Date.now() + 100)
       return image
     })
     const current = await this.ctx.storage.get<FakeRenderState>('state')
-    if (current?.sourceImage !== sourceKey) await this.env.ATLAS_BUCKET.delete(sourceKey)
+    if (current?.sourceImage !== sourceKey)
+      await this.env.ATLAS_BUCKET.delete(sourceKey)
     return result
   }
 
@@ -77,8 +105,18 @@ export class FakeRenderCloud extends DurableObject<Env> {
     try {
       const source = await this.env.ATLAS_BUCKET.get(state.sourceImage)
       if (!source) throw Error('Missing replacement source')
-      await startSiGeneration(this.env, { ...position, scene: state.scene as AtlasScene }, await source.text(), 'discovery-rotating', state.job)
-      const response = await siGenerationStatus(new Request('https://atlas.internal/status'), this.env, state.job)
+      await startSiGeneration(
+        this.env,
+        { ...position, scene: state.scene as AtlasScene },
+        await source.text(),
+        'discovery-rotating',
+        state.job,
+      )
+      const response = await siGenerationStatus(
+        new Request('https://atlas.internal/status'),
+        this.env,
+        state.job,
+      )
       if (response.status === 202) return
       if (!response.ok) {
         const latest = await this.ctx.storage.get<FakeRenderState>('state')

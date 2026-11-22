@@ -3,8 +3,9 @@ import path from 'node:path'
 import { chromium } from 'playwright'
 
 const browser = await chromium.launch({
-  channel: 'chrome', headless: false,
-  args: ['--ozone-platform=x11', '--class=' + process.env.DEV_RUNNER_CHROME_CLASS],
+  channel: 'chrome',
+  headless: false,
+  args: ['--ozone-platform=x11', `--class=${process.env.DEV_RUNNER_CHROME_CLASS}`],
 })
 try {
   const page = await browser.newPage({ reducedMotion: 'reduce' })
@@ -25,7 +26,9 @@ try {
   await book.waitFor()
   assert.equal(await page.evaluate(() => history.state.atlasView), 'pavilion')
   assert.ok(await intro.evaluate(el => el === document.activeElement))
-  await page.screenshot({ path: path.join(process.env.DEV_RUNNER_ARTIFACTS, 'map-escape.png') })
+  await page.screenshot({
+    path: path.join(process.env.DEV_RUNNER_ARTIFACTS, 'map-escape.png'),
+  })
   await book.press('Enter')
   await intro.waitFor({ state: 'hidden' })
   assert.equal(await page.evaluate(() => history.state.atlasView), 'map')

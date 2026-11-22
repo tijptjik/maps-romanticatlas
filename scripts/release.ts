@@ -1,4 +1,8 @@
-import { productionArtwork, pullProduction, type PullStore } from './pull-production-artwork'
+import {
+  productionArtwork,
+  pullProduction,
+  type PullStore,
+} from './pull-production-artwork'
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises'
 import { join, resolve } from 'node:path'
 import { digest, planRelease, type Asset } from './release-plan'
@@ -12,10 +16,20 @@ type Store = Pick<PullStore, 'list'> & {
 
 const auditInterval = 30 * 24 * 60 * 60 * 1000
 
-export async function ensureObject(asset: Asset, store: Store, previous?: Receipt, audit = false) {
+export async function ensureObject(
+  asset: Asset,
+  store: Store,
+  previous?: Receipt,
+  audit = false,
+) {
   const age = Date.now() - (previous?.verifiedAt ?? 0)
-  const reuse = !audit && previous && age >= 0 && age < auditInterval &&
-    /^"[a-zA-Z0-9-]+"$/.test(previous.etag) && /^[a-f0-9]{64}$/.test(previous.sha256) &&
+  const reuse =
+    !audit &&
+    previous &&
+    age >= 0 &&
+    age < auditInterval &&
+    /^"[a-zA-Z0-9-]+"$/.test(previous.etag) &&
+    /^[a-f0-9]{64}$/.test(previous.sha256) &&
     (!asset.digest || asset.digest === previous.sha256)
   let current = await store.read(asset, reuse ? previous.etag : undefined)
   if (current === 'unchanged') {
@@ -29,7 +43,8 @@ export async function ensureObject(asset: Asset, store: Store, previous?: Receip
       throw new Error(`Release input changed: ${asset.file}`)
     await store.put(asset, bytes)
     current = await store.read(asset)
-    if (!current || current === 'unchanged') throw new Error(`R2 verification failed: ${asset.key}`)
+    if (!current || current === 'unchanged')
+      throw new Error(`R2 verification failed: ${asset.key}`)
   }
   const sha256 = digest(current.bytes)
   if (!current.bytes.length || (asset.digest && sha256 !== asset.digest))
@@ -54,7 +69,7 @@ async function wranglerJson(args: string[]) {
 
 function strongETag(value: string | null) {
   const match = value?.match(/^(?:"([0-9a-f]+(?:-\d+)?)"|([0-9a-f]+(?:-\d+)?))$/i)
-  return match ? '"' + (match[1] ?? match[2]) + '"' : null
+  return match ? `"${match[1] ?? match[2]}"` : null
 }
 
 export async function productionStore() {
@@ -73,15 +88,21 @@ export async function productionStore() {
     headers.set('x-auth-email', auth.email)
   } else throw new Error('Missing Wrangler credentials')
 
-  async function request(asset: Asset, method: 'GET' | 'PUT', body?: Uint8Array, listing?: URLSearchParams) {
+  async function request(
+    asset: Asset,
+    method: 'GET' | 'PUT',
+    body?: Uint8Array,
+    listing?: URLSearchParams,
+  ) {
     const url =
       'https://api.cloudflare.com/client/v4/accounts/' +
       account +
       '/r2/buckets/' +
       encodeURIComponent(asset.bucket) +
-      '/objects' + (listing
-        ? '?' + listing
-        : '/' + asset.key.split('/').map(encodeURIComponent).join('/'))
+      '/objects' +
+      (listing
+        ? `?${listing}`
+        : `/${asset.key.split('/').map(encodeURIComponent).join('/')}`)
     const options = new Headers(headers)
     if (body) {
       options.set('content-type', asset.mime)
@@ -117,39 +138,64 @@ export async function productionStore() {
       const params = new URLSearchParams({ per_page: '1000' })
       const seen = new Set<string>()
       while (true) {
-        const response = await request({ bucket, key: '', mime: '' }, 'GET', undefined, params)
-        const page = await response.json() as {
-          success: boolean; result: { key: string; size: number }[]
+        const response = await request(
+          { bucket, key: '', mime: '' },
+          'GET',
+          undefined,
+          params,
+        )
+        const page = (await response.json()) as {
+          success: boolean
+          result: { key: string; size: number }[]
           result_info?: { cursor?: string; is_truncated?: boolean }
         }
         if (!response.ok || !page.success || !Array.isArray(page.result))
           throw new Error(`Incomplete R2 listing for ${bucket}`)
         for (const object of page.result) {
-          if (typeof object.key !== 'string' || !Number.isSafeInteger(object.size) || object.size < 0)
+          if (
+            typeof object.key !== 'string' ||
+            !Number.isSafeInteger(object.size) ||
+            object.size < 0
+          )
             throw new Error(`Invalid R2 object in ${bucket}`)
           yield object
         }
         const { cursor, is_truncated } = page.result_info ?? {}
         if (!cursor && !is_truncated) {
           if (!page.result.length) return
-          const last = page.result.at(-1)!.key
-          if (params.get('start_after') === last) throw new Error(`R2 listing did not advance in ${bucket}`)
+          const last = page.result.at(-1)?.key
+          if (params.get('start_after') === last)
+            throw new Error(`R2 listing did not advance in ${bucket}`)
           params.delete('cursor')
           params.set('start_after', last)
           continue
         }
         params.delete('start_after')
-        if (!cursor || seen.has(cursor)) throw new Error(`Incomplete R2 pagination for ${bucket}`)
+        if (!cursor || seen.has(cursor))
+          throw new Error(`Incomplete R2 pagination for ${bucket}`)
         seen.add(cursor)
         params.set('cursor', cursor)
       }
     },
-    async read(asset: Asset, etag?: string): Promise<RemoteObject | null | 'unchanged'> {
+    async read(
+      asset: Asset,
+      etag?: string,
+    ): Promise<RemoteObject | null | 'unchanged'> {
       if (etag) {
-        const metadata = await request(asset, 'GET', undefined, new URLSearchParams({ prefix: asset.key, per_page: '1' }))
-        if (!metadata.ok) throw new Error(`Cannot list release metadata in ${asset.bucket}`)
-        const page = await metadata.json() as { success: boolean; result: { key: string; etag: string }[] }
-        if (!page.success || !Array.isArray(page.result)) throw new Error('Invalid R2 metadata listing')
+        const metadata = await request(
+          asset,
+          'GET',
+          undefined,
+          new URLSearchParams({ prefix: asset.key, per_page: '1' }),
+        )
+        if (!metadata.ok)
+          throw new Error(`Cannot list release metadata in ${asset.bucket}`)
+        const page = (await metadata.json()) as {
+          success: boolean
+          result: { key: string; etag: string }[]
+        }
+        if (!page.success || !Array.isArray(page.result))
+          throw new Error('Invalid R2 metadata listing')
         const object = page.result.find(item => item.key === asset.key)
         if (object && strongETag(object.etag) === etag) return 'unchanged'
       }
@@ -158,7 +204,10 @@ export async function productionStore() {
         await response.body?.cancel()
         return null
       }
-      return { bytes: new Uint8Array(await response.arrayBuffer()), etag: strongETag(response.headers.get('etag')) }
+      return {
+        bytes: new Uint8Array(await response.arrayBuffer()),
+        etag: strongETag(response.headers.get('etag')),
+      }
     },
     async get(asset: Asset) {
       const result = await this.read(asset)
@@ -184,7 +233,7 @@ export async function release(
   pullOnly = false,
 ) {
   const store = dryRun ? undefined : await openStore()
-  const snapshot = store && await readProduction(root)
+  const snapshot = store && (await readProduction(root))
   if (store && snapshot) await pullProduction(root, store, snapshot)
   const plan = planRelease(root, snapshot)
   const directory = join(root, '.local/release')
@@ -220,7 +269,7 @@ export async function release(
       for (const asset of pending) {
         if (failed) return
         try {
-          const id = asset.bucket + '/' + asset.key
+          const id = `${asset.bucket}/${asset.key}`
           const receipt = await ensureObject(asset, store, receipts[id], audit)
           if (receipt) verified[id] = receipt
         } catch (error) {
@@ -231,8 +280,8 @@ export async function release(
     }),
   )
   for (const result of results) if (result.status === 'rejected') throw result.reason
-  await writeFile(receiptPath + '.tmp', json(verified))
-  await rename(receiptPath + '.tmp', receiptPath)
+  await writeFile(`${receiptPath}.tmp`, json(verified))
+  await rename(`${receiptPath}.tmp`, receiptPath)
   // Reviews or exports can change while a large batch is uploading.
   const currentProduction = await readProduction(root)
   if (json(currentProduction) !== json(snapshot))
@@ -251,9 +300,9 @@ export async function release(
   })
   const history = join(directory, 'history')
   await mkdir(history, { recursive: true })
-  const record = join(history, digest(Buffer.from(previous)) + '.json')
-  await writeFile(record + '.tmp', previous)
-  await rename(record + '.tmp', record)
+  const record = join(history, `${digest(Buffer.from(previous))}.json`)
+  await writeFile(`${record}.tmp`, previous)
+  await rename(`${record}.tmp`, record)
   for (const name of files)
     await rename(join(directory, name), join(root, 'releases', name))
   await deploy(root)
@@ -282,7 +331,18 @@ async function deployProduction(root: string) {
 
 if (import.meta.main) {
   const args = process.argv.slice(2)
-  if (args.length && !(args.length === 1 && ['--dry-run', '--audit', '--pull-only'].includes(args[0])))
+  if (
+    args.length &&
+    !(args.length === 1 && ['--dry-run', '--audit', '--pull-only'].includes(args[0]))
+  )
     throw new Error('Usage: bun release [--dry-run | --audit | --pull-only]')
-  await release(resolve(import.meta.dir, '..'), args.includes('--dry-run'), productionStore, deployProduction, args.includes('--audit'), productionArtwork, args.includes('--pull-only'))
+  await release(
+    resolve(import.meta.dir, '..'),
+    args.includes('--dry-run'),
+    productionStore,
+    deployProduction,
+    args.includes('--audit'),
+    productionArtwork,
+    args.includes('--pull-only'),
+  )
 }

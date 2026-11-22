@@ -89,7 +89,8 @@ export const installAtlasAudio = (
   const updateControl = () => {
     const labels: Record<AudioMode, string> = {
       'all-on': 'All atlas sounds on. Activate to turn off music only.',
-      'music-off': 'Atlas music off; sound effects remain on. Activate to turn off all sounds.',
+      'music-off':
+        'Atlas music off; sound effects remain on. Activate to turn off all sounds.',
       'all-off': 'All atlas sounds off. Activate to turn on music and sound effects.',
     }
     control.setAttribute('aria-label', labels[audioMode])
@@ -214,7 +215,9 @@ export const installAtlasAudio = (
     if (!context) return Promise.resolve(undefined)
 
     const decodingContext = context
-    themeAudioRequest = fetch(new URL('/atlas-audio/harbour-light-legato.ogg', window.location.origin))
+    themeAudioRequest = fetch(
+      new URL('/atlas-audio/harbour-light-legato.ogg', window.location.origin),
+    )
       .then(async response => {
         if (!response.ok) throw new Error('Could not load the atlas theme.')
         return decodingContext.decodeAudioData(await response.arrayBuffer())
@@ -302,7 +305,13 @@ export const installAtlasAudio = (
     updateControl()
     syncAudioMode()
     // The toggle itself can acknowledge muting after the effects bus goes silent.
-    if (context) soundPavilionItem(context, context.destination, 'orb', audioMode === 'all-on' ? 'rise' : 'fall')
+    if (context)
+      soundPavilionItem(
+        context,
+        context.destination,
+        'orb',
+        audioMode === 'all-on' ? 'rise' : 'fall',
+      )
   }
 
   const scheduleFallbackChime = (at: number) => {
@@ -418,7 +427,15 @@ export const installAtlasAudio = (
 
   updateControl()
 
-  return { playPavilionCue, playCameraFlash, playFogLift, preloadScene, start, stop, unlock: ensureContext }
+  return {
+    playPavilionCue,
+    playCameraFlash,
+    playFogLift,
+    preloadScene,
+    start,
+    stop,
+    unlock: ensureContext,
+  }
 }
 
 declare global {

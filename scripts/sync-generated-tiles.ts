@@ -16,26 +16,44 @@ const collectFiles = async (directory: string): Promise<string[]> => {
   const files = []
   for (const entry of entries) {
     const entryPath = path.join(directory, entry.name)
-    if (entry.isDirectory()) files.push(...await collectFiles(entryPath))
-    else if (entry.isFile() && /\.(?:image|json)$/.test(entry.name)) files.push(entryPath)
+    if (entry.isDirectory()) files.push(...(await collectFiles(entryPath)))
+    else if (entry.isFile() && /\.(?:image|json)$/.test(entry.name))
+      files.push(entryPath)
   }
   return files
 }
 
-const reviews = JSON.parse(await readFile(path.join(rootDirectory, 'releases/v2-reviews.json'), 'utf8'))
-const config = Bun.JSONC.parse(await readFile(path.join(rootDirectory, 'wrangler.jsonc'), 'utf8')) as {
+const reviews = JSON.parse(
+  await readFile(path.join(rootDirectory, 'releases/v2-reviews.json'), 'utf8'),
+)
+const config = Bun.JSONC.parse(
+  await readFile(path.join(rootDirectory, 'wrangler.jsonc'), 'utf8'),
+) as {
   vars: { ATLAS_ALLOWED_ORIGIN: string }
 }
-const live = await fetch(new URL('/api/artwork-reviews', config.vars.ATLAS_ALLOWED_ORIGIN), { cache: 'no-store' })
-if (!live.ok) throw new Error(`Could not check production artwork reviews: HTTP ${live.status}`)
-const rejected = new Set([reviews, await live.json()].flatMap(records =>
-  [...latestDecisions(records)].flatMap(([url, status]) =>
-    status === 'rejected' ? discoveryObjects(url)?.keys ?? [] : [])))
-const files = (await collectFiles(cacheDirectory)).filter(filename => {
-  const key = path.relative(cacheDirectory, filename)
-  return /^18\/\d+\/\d+\/[a-z0-9-]+(?:\.v\d+(?:\.[a-z0-9-]+)?)?\.(?:json|image)$/.test(key) &&
-    !rejected.has(`atlas/${key}`)
-}).sort()
+const live = await fetch(
+  new URL('/api/artwork-reviews', config.vars.ATLAS_ALLOWED_ORIGIN),
+  { cache: 'no-store' },
+)
+if (!live.ok)
+  throw new Error(`Could not check production artwork reviews: HTTP ${live.status}`)
+const rejected = new Set(
+  [reviews, await live.json()].flatMap(records =>
+    [...latestDecisions(records)].flatMap(([url, status]) =>
+      status === 'rejected' ? (discoveryObjects(url)?.keys ?? []) : [],
+    ),
+  ),
+)
+const files = (await collectFiles(cacheDirectory))
+  .filter(filename => {
+    const key = path.relative(cacheDirectory, filename)
+    return (
+      /^18\/\d+\/\d+\/[a-z0-9-]+(?:\.v\d+(?:\.[a-z0-9-]+)?)?\.(?:json|image)$/.test(
+        key,
+      ) && !rejected.has(`atlas/${key}`)
+    )
+  })
+  .sort()
 if (!files.length) throw new Error(`No cache files found in ${cacheDirectory}`)
 
 let completed = 0
@@ -44,20 +62,38 @@ const uploadNext = async () => {
   while (cursor < files.length) {
     const filePath = files[cursor]
     cursor += 1
-    const relativePath = path.relative(rootDirectory, filePath).split(path.sep).join('/')
+    const relativePath = path
+      .relative(rootDirectory, filePath)
+      .split(path.sep)
+      .join('/')
     const key = relativePath.replace(/^generated-tiles\//, 'atlas/')
-    const contentType = filePath.endsWith('.image') ? 'image/png' : 'application/json; charset=utf-8'
-    await execFileAsync('wrangler', [
-      'r2', 'object', 'put', `${bucket}/${key}`,
-      '--file', filePath,
-      '--content-type', contentType,
-      '--cache-control', 'public, max-age=31536000, immutable',
-      '--remote', '--force',
-    ], { cwd: rootDirectory, maxBuffer: 2_000_000 })
+    const contentType = filePath.endsWith('.image')
+      ? 'image/png'
+      : 'application/json; charset=utf-8'
+    await execFileAsync(
+      'wrangler',
+      [
+        'r2',
+        'object',
+        'put',
+        `${bucket}/${key}`,
+        '--file',
+        filePath,
+        '--content-type',
+        contentType,
+        '--cache-control',
+        'public, max-age=31536000, immutable',
+        '--remote',
+        '--force',
+      ],
+      { cwd: rootDirectory, maxBuffer: 2_000_000 },
+    )
     completed += 1
     console.log(`[${completed}/${files.length}] uploaded ${key}`)
   }
 }
 
-await Promise.all(Array.from({ length: Math.min(concurrency, files.length) }, uploadNext))
+await Promise.all(
+  Array.from({ length: Math.min(concurrency, files.length) }, uploadNext),
+)
 console.log(`Uploaded ${files.length} cache files to R2 bucket ${bucket}`)

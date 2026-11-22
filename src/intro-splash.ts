@@ -3,17 +3,20 @@ import type { PavilionCue } from './pavilion-audio'
 import { installPavilionScene } from './pavilion-scene'
 
 const pavilionLights = Array.from({ length: 15 }, (_, index) => {
-  const x = 4 + index * 92 / 14
+  const x = 4 + (index * 92) / 14
   const y = 10 + 5 * Math.cos((index * Math.PI) / 7)
   return `<i style="left:${x}%;top:${y}%;animation-delay:-${index * 0.41}s"></i>`
 }).join('')
 
-const airPetals = Array.from({ length: 6 }, (_, i) =>
-  `<i style="--i:${i};--drift:${i % 2 ? 8 : -5}cqh"></i>`,
+const airPetals = Array.from(
+  { length: 6 },
+  (_, i) => `<i style="--i:${i};--drift:${i % 2 ? 8 : -5}cqh"></i>`,
 ).join('')
 
-const orbParticles = Array.from({ length: 14 }, (_, i) =>
-  `<i style="--angle:${i * 137.5}deg;--delay:-${i * .19}s;--hue:${i * 27}"></i>`,
+const orbParticles = Array.from(
+  { length: 14 },
+  (_, i) =>
+    `<i style="--angle:${i * 137.5}deg;--delay:-${i * 0.19}s;--hue:${i * 27}"></i>`,
 ).join('')
 
 const splashMarkup = `
@@ -70,8 +73,12 @@ async function preparePavilion(pieces: NodeListOf<HTMLImageElement>) {
   do {
     tall = portrait.matches
     const room = tall ? 'glasshouse-portrait' : 'glasshouse'
-    const layers = [room, 'whole-cloud-banks', 'lavender-mist',
-      ...['piers', 'water'].map(layer => `${room}-${layer}`)]
+    const layers = [
+      room,
+      'whole-cloud-banks',
+      'lavender-mist',
+      ...['piers', 'water'].map(layer => `${room}-${layer}`),
+    ]
     const plates = layers.map(layer => {
       const image = new Image()
       image.src = `/pavilion/${layer}.webp`
@@ -82,7 +89,9 @@ async function preparePavilion(pieces: NodeListOf<HTMLImageElement>) {
       document.fonts.ready,
     ])
     // Allow image-load callbacks and the canvas renderers to paint behind the curtain.
-    await new Promise<void>(done => requestAnimationFrame(() => requestAnimationFrame(() => done())))
+    await new Promise<void>(done =>
+      requestAnimationFrame(() => requestAnimationFrame(() => done())),
+    )
   } while (tall !== portrait.matches)
 }
 
@@ -99,25 +108,39 @@ export const createIntroSplash = (
   splash.innerHTML = splashMarkup
   mapContainer.append(splash)
   // Some browsers report a long press as a mouse event, and the opening curtain makes the pavilion inert.
-  document.addEventListener('contextmenu', event => {
-    if (splash.classList.contains('is-visible')) event.preventDefault()
-  }, { capture: true })
+  document.addEventListener(
+    'contextmenu',
+    event => {
+      if (splash.classList.contains('is-visible')) event.preventDefault()
+    },
+    { capture: true },
+  )
   // Native image and link previews can start before the browser emits contextmenu.
   // Handle a single tap on an illustrated control, leaving a hold unassigned.
-  let tap: { control: HTMLElement, x: number, y: number, started: number } | undefined
-  splash.addEventListener('touchstart', event => {
-    tap = undefined
-    const control = event.target instanceof Element ? event.target.closest<HTMLElement>('button, a[href]') : null
-    if (!control || event.touches.length !== 1 || !event.cancelable) return
-    event.preventDefault()
-    const touch = event.touches[0]
-    tap = { control, x: touch.clientX, y: touch.clientY, started: event.timeStamp }
-  }, { passive: false })
+  let tap: { control: HTMLElement; x: number; y: number; started: number } | undefined
+  splash.addEventListener(
+    'touchstart',
+    event => {
+      tap = undefined
+      const control =
+        event.target instanceof Element
+          ? event.target.closest<HTMLElement>('button, a[href]')
+          : null
+      if (!control || event.touches.length !== 1 || !event.cancelable) return
+      event.preventDefault()
+      const touch = event.touches[0]
+      tap = { control, x: touch.clientX, y: touch.clientY, started: event.timeStamp }
+    },
+    { passive: false },
+  )
   splash.addEventListener('touchmove', event => {
     const touch = event.touches[0]
-    if (tap && Math.hypot(touch.clientX - tap.x, touch.clientY - tap.y) > 10) tap = undefined
+    if (tap && Math.hypot(touch.clientX - tap.x, touch.clientY - tap.y) > 10)
+      tap = undefined
   })
-  splash.addEventListener('touchcancel', () => { tap = undefined })
+  splash.addEventListener('touchcancel', () => {
+    tap = undefined
+  })
   splash.addEventListener('touchend', event => {
     const released = tap
     tap = undefined
@@ -125,12 +148,15 @@ export const createIntroSplash = (
   })
   const pieces = splash.querySelectorAll<HTMLImageElement>('img')
   const book = splash.querySelector<HTMLButtonElement>('.pavilion-book')!
-  book.querySelector('img')!.addEventListener('error', () => splash.classList.add('without-illustrations'))
+  book
+    .querySelector('img')
+    ?.addEventListener('error', () => splash.classList.add('without-illustrations'))
   splash.tabIndex = -1
   let setSceneVisible: ReturnType<typeof installPavilionScene> | undefined
   let transitionTimer: number | undefined
   let lightTimer: number | undefined
-  const transitionDuration = () => matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 1550
+  const transitionDuration = () =>
+    matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 1550
   const aimAtBook = () => {
     const bounds = book.getBoundingClientRect()
     const frame = splash.getBoundingClientRect()
@@ -147,7 +173,8 @@ export const createIntroSplash = (
     window.clearTimeout(transitionTimer)
     for (const piece of pieces) {
       piece.draggable = false
-      if (!piece.hasAttribute('src')) piece.src = `/pavilion/${piece.dataset.piece}.webp`
+      if (!piece.hasAttribute('src'))
+        piece.src = `/pavilion/${piece.dataset.piece}.webp`
     }
     splash.hidden = false
     setSceneVisible ??= installPavilionScene(splash)
@@ -171,7 +198,9 @@ export const createIntroSplash = (
       splash.append(curtain)
       document.documentElement.classList.remove('atlas-boot')
       const reveal = curtain.animate([{ opacity: 1 }, { opacity: 0 }], {
-        duration: reduced ? 0 : 1100, easing: 'ease-in-out', fill: 'forwards',
+        duration: reduced ? 0 : 1100,
+        easing: 'ease-in-out',
+        fill: 'forwards',
       })
       await reveal.finished
       curtain.remove()
@@ -198,7 +227,9 @@ export const createIntroSplash = (
     aimAtBook()
     splash.classList.replace('is-visible', 'is-exiting')
     splash.inert = true
-    mapContainer.querySelector<HTMLElement>('.maplibregl-canvas')?.focus({ preventScroll: true })
+    mapContainer
+      .querySelector<HTMLElement>('.maplibregl-canvas')
+      ?.focus({ preventScroll: true })
     transitionTimer = window.setTimeout(() => {
       setSceneVisible?.(false)
       splash.hidden = true
@@ -210,7 +241,11 @@ export const createIntroSplash = (
   const orrery = splash.querySelector<HTMLButtonElement>('.pavilion-orrery')!
   const notes = splash.querySelector<HTMLButtonElement>('.pavilion-notes')!
   const leaf = splash.querySelector<HTMLAnchorElement>('.pavilion-credit')!
-  for (const [button, item] of [[book, 'orb'], [notes, 'book'], [leaf, 'leaf']] as const) {
+  for (const [button, item] of [
+    [book, 'orb'],
+    [notes, 'book'],
+    [leaf, 'leaf'],
+  ] as const) {
     button.addEventListener('click', () => {
       if (button.matches('button, a[href]')) playCue(item, 'activate')
     })
@@ -221,7 +256,11 @@ export const createIntroSplash = (
       const next = hovered || button.matches(':focus-visible')
       if (next === selected) return
       selected = next
-      if (splash.matches('.is-visible') && !mapContainer.inert && button.getAttribute('aria-expanded') !== 'true') {
+      if (
+        splash.matches('.is-visible') &&
+        !mapContainer.inert &&
+        button.getAttribute('aria-expanded') !== 'true'
+      ) {
         playCue(item, next ? 'rise' : 'fall')
       }
     }

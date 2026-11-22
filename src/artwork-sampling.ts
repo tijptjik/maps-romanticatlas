@@ -52,9 +52,17 @@ export const installArtworkSampling = (map: AtlasMap) => {
 
       let image = original
       let levels = pyramids.get(original)
-      for (let index = 0; image.width >= 2 * width && image.height >= 2 * height &&
-        (image.width > 1 || image.height > 1); index++) {
-        if (!levels) pyramids.set(original, levels = [])
+      for (
+        let index = 0;
+        image.width >= 2 * width &&
+        image.height >= 2 * height &&
+        (image.width > 1 || image.height > 1);
+        index++
+      ) {
+        if (!levels) {
+          levels = []
+          pyramids.set(original, levels)
+        }
         if (!levels[index]) {
           const next = document.createElement('canvas')
           next.width = Math.max(1, Math.ceil(image.width / 2))
@@ -86,7 +94,9 @@ export const installArtworkSampling = (map: AtlasMap) => {
     }
   }
 
-  const schedule = () => { frame ||= requestAnimationFrame(sync) }
+  const schedule = () => {
+    frame ||= requestAnimationFrame(sync)
+  }
   map.on('zoom', schedule)
   map.on('resize', schedule)
   map.on('styledata', schedule)

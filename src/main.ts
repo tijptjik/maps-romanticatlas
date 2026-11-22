@@ -14,7 +14,11 @@ import { installAtlasSharing } from './atlas-sharing.ts'
 import { createMapFlight } from './map-flight.ts'
 import { hongKongStyle } from './map-style.ts'
 import { atlasTileSize, modeEnabled } from './atlas-protocol.ts'
-import { artworkZoomScale, installNativeTileZoom, nativeTileZoom } from './native-tile-zoom.ts'
+import {
+  artworkZoomScale,
+  installNativeTileZoom,
+  nativeTileZoom,
+} from './native-tile-zoom.ts'
 import { installBasemapPreload } from './basemap-preload.ts'
 import {
   mapModePath,
@@ -33,7 +37,9 @@ maplibregl.setWorkerUrl(workerUrl)
 
 const initialView = {
   center: [114.13765, 22.28364] as [number, number],
-  zoom: 17 + Math.log2(artworkZoomScale(document.documentElement.clientWidth)) -
+  zoom:
+    17 +
+    Math.log2(artworkZoomScale(document.documentElement.clientWidth)) -
     (document.documentElement.clientWidth <= 700 ? 1 : 0),
   bearing: 0,
   pitch: 0,
@@ -54,7 +60,10 @@ const map = new maplibregl.Map({
   transformRequest(url, type) {
     if (type === 'Tile') {
       const tile = new URL(url, document.baseURI)
-      if (tile.origin === location.origin && tile.pathname === '/map-assets/saanseoi/hongkong-latest/15/26773/14303.mvt') {
+      if (
+        tile.origin === location.origin &&
+        tile.pathname === '/map-assets/saanseoi/hongkong-latest/15/26773/14303.mvt'
+      ) {
         return { url: new URL(peakWoodlandTile, document.baseURI).href }
       }
     }
@@ -73,7 +82,12 @@ const map = new maplibregl.Map({
   pitchWithRotate: false,
   // Atlas interactions use the z18 tile grid. The fog remains visible above it,
   // while generation still requires a complete z18 tile in the viewport.
-  ...(adminMap ? {} : { minZoom: minimumZoom, maxBounds: [113.8, 22.1, 114.5, 22.6] as [number, number, number, number] }),
+  ...(adminMap
+    ? {}
+    : {
+        minZoom: minimumZoom,
+        maxBounds: [113.8, 22.1, 114.5, 22.6] as [number, number, number, number],
+      }),
   maxZoom: reviewQueueEnabled() ? 22 : initialMaxZoom,
   // Artwork changes maxZoom to match its native resolution. MapLibre's default
   // tile splitting uses that ceiling, replacing warm basemap geometry whenever
@@ -83,9 +97,14 @@ const map = new maplibregl.Map({
   canvasContextAttributes: { preserveDrawingBuffer: true },
 })
 
-map.getContainer().addEventListener('contextmenu', event => {
-  if (event.pointerType === 'touch' || event.pointerType === 'pen') event.preventDefault()
-}, { capture: true })
+map.getContainer().addEventListener(
+  'contextmenu',
+  event => {
+    if (event.pointerType === 'touch' || event.pointerType === 'pen')
+      event.preventDefault()
+  },
+  { capture: true },
+)
 
 map.touchZoomRotate.disableRotation()
 installArtworkSampling(map)
@@ -93,11 +112,29 @@ if (!reviewQueueEnabled()) installNativeTileZoom(map, map.getMinZoom())
 installBasemapPreload(map)
 
 function installModeShortcuts(mapVisible: () => boolean) {
-  const modes = { r: null, d: 'diagnostics', a: 'admin', v: 'review', w: 'revealed' } as const
+  const modes = {
+    r: null,
+    d: 'diagnostics',
+    a: 'admin',
+    v: 'review',
+    w: 'revealed',
+  } as const
   window.addEventListener('keydown', event => {
-    if (kioskMode || !mapVisible() || event.repeat || event.isComposing ||
-        event.altKey || event.ctrlKey || event.metaKey || event.shiftKey ||
-        (event.target instanceof Element && event.target.closest('input, textarea, select, [contenteditable], [role="dialog"]'))) return
+    if (
+      kioskMode ||
+      !mapVisible() ||
+      event.repeat ||
+      event.isComposing ||
+      event.altKey ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.shiftKey ||
+      (event.target instanceof Element &&
+        event.target.closest(
+          'input, textarea, select, [contenteditable], [role="dialog"]',
+        ))
+    )
+      return
     const key = event.key.toLowerCase()
     if (reviewMode && key === 'd') return
     if (reviewQueueEnabled() && key === 'a') return
@@ -106,24 +143,41 @@ function installModeShortcuts(mapVisible: () => boolean) {
     const url = new URL(location.href)
     const selected = modes[key]
     const flags = ['admin', 'diagnostics', 'review', 'revealed']
-    if (!reviewQueueEnabled() && flags.every(flag => modeEnabled(url.searchParams, flag) === (flag === selected))) return
+    if (
+      !reviewQueueEnabled() &&
+      flags.every(flag => modeEnabled(url.searchParams, flag) === (flag === selected))
+    )
+      return
     if (reviewQueueEnabled()) url.pathname = '/'
     for (const flag of flags) url.searchParams.delete(flag)
     if (selected) url.searchParams.set(selected, '')
-    history.replaceState({ ...history.state, atlasModeCamera: {
-      center: map.getCenter().toArray(), zoom: map.getZoom(),
-    } }, '', mapModePath(url))
+    history.replaceState(
+      {
+        ...history.state,
+        atlasModeCamera: {
+          center: map.getCenter().toArray(),
+          zoom: map.getZoom(),
+        },
+      },
+      '',
+      mapModePath(url),
+    )
     location.reload()
   })
 }
 
-map.addControl(new maplibregl.AttributionControl({
-  compact: true,
-  customAttribution: reviewMode ? undefined :
-    '<a href="https://github.com/tijptjik/maps-romanticatlas/blob/main/THIRD_PARTY_NOTICES.md" target="_blank" rel="noopener noreferrer">Sounds</a>',
-}))
+map.addControl(
+  new maplibregl.AttributionControl({
+    compact: true,
+    customAttribution: reviewMode
+      ? undefined
+      : '<a href="https://github.com/tijptjik/maps-romanticatlas/blob/main/THIRD_PARTY_NOTICES.md" target="_blank" rel="noopener noreferrer">Sounds</a>',
+  }),
+)
 // Initialize the compact state before asynchronous source credits arrive.
-const credits = map.getContainer().querySelector<HTMLDetailsElement>('.maplibregl-ctrl-attrib')!
+const credits = map
+  .getContainer()
+  .querySelector<HTMLDetailsElement>('.maplibregl-ctrl-attrib')!
 credits.classList.add('maplibregl-compact')
 credits.classList.remove('maplibregl-compact-show')
 credits.open = false
@@ -131,7 +185,8 @@ credits.open = false
 if (reviewMode) {
   installModeShortcuts(() => true)
   map.once('load', () => {
-    if (reviewQueueEnabled()) void installDiscoveryMap(map, 'queue', true, () => {}, undefined)
+    if (reviewQueueEnabled())
+      void installDiscoveryMap(map, 'queue', true, () => {}, undefined)
     else installV2ReviewMap(map)
   })
 }
@@ -173,7 +228,10 @@ export function startAtlas(pavilion: Pavilion) {
       isResetting = true
       returnToPavilion()
       map.stop()
-      map.easeTo({ ...initialView, duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 900 })
+      map.easeTo({
+        ...initialView,
+        duration: matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 900,
+      })
       try {
         await resetAtlas?.()
       } finally {
@@ -201,7 +259,15 @@ export function startAtlas(pavilion: Pavilion) {
 
   map.getContainer().addEventListener('atlas-generation-progress', noteActivity)
 
-  for (const type of ['pointerdown', 'pointerup', 'pointermove', 'wheel', 'touchstart', 'touchmove', 'keydown']) {
+  for (const type of [
+    'pointerdown',
+    'pointerup',
+    'pointermove',
+    'wheel',
+    'touchstart',
+    'touchmove',
+    'keydown',
+  ]) {
     window.addEventListener(type, noteActivity, { passive: true, capture: true })
   }
   if (pavilion.directEntry) map.once('click', () => audio.start())
@@ -224,9 +290,19 @@ export function startAtlas(pavilion: Pavilion) {
   )
   installModeShortcuts(() => Boolean(intro.element.hidden))
   window.addEventListener('keydown', event => {
-    if (event.key !== 'Escape' || event.defaultPrevented || event.repeat || event.isComposing ||
-        event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || kioskMode ||
-        intro.element.classList.contains('is-visible')) return
+    if (
+      event.key !== 'Escape' ||
+      event.defaultPrevented ||
+      event.repeat ||
+      event.isComposing ||
+      event.altKey ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.shiftKey ||
+      kioskMode ||
+      intro.element.classList.contains('is-visible')
+    )
+      return
     event.preventDefault()
     returnToPavilion()
   })
@@ -241,11 +317,21 @@ export function startAtlas(pavilion: Pavilion) {
         noNoise: noNoiseEnabled(),
         onRevealCountChange: sharing.setRevealCount,
       })
-      resetAtlas = async () => { await atlas.resetReveals() }
+      resetAtlas = async () => {
+        await atlas.resetReveals()
+      }
     } else {
-      const reset = await installDiscoveryMap(map, adminMap ? 'admin' : diagnosticsModeEnabled(), noNoiseEnabled(),
-        sharing.setRevealCount, audio, revealedModeEnabled() && !diagnosticsModeEnabled())
-      resetAtlas = async () => { await reset() }
+      const reset = await installDiscoveryMap(
+        map,
+        adminMap ? 'admin' : diagnosticsModeEnabled(),
+        noNoiseEnabled(),
+        sharing.setRevealCount,
+        audio,
+        revealedModeEnabled() && !diagnosticsModeEnabled(),
+      )
+      resetAtlas = async () => {
+        await reset()
+      }
     }
 
     if (kioskMode) {

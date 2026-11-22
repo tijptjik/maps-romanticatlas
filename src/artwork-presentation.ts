@@ -1,6 +1,10 @@
 import metadata from '../releases/artwork-presentation.json'
 
-type Presentation = { edgeFade: boolean; waterFadeStart?: number; backgroundMask?: number[][] }
+type Presentation = {
+  edgeFade: boolean
+  waterFadeStart?: number
+  backgroundMask?: number[][]
+}
 
 function identity(url: string) {
   const asset = new URL(url, 'https://atlas.invalid')
@@ -16,11 +20,14 @@ const settings = new Map<string, Presentation>(
 // Fragments identify the presentation locally and never enter the HTTP cache key.
 export function publishedArtworkUrl(path: string, original: string) {
   const key = identity(original)
-  return settings.get(key)?.edgeFade ? path + '#presentation=' + encodeURIComponent(key) : path
+  return settings.get(key)?.edgeFade
+    ? `${path}#presentation=${encodeURIComponent(key)}`
+    : path
 }
 
 export function artworkPresentation(asset: URL) {
-  const original = asset.pathname.startsWith('/release-assets/') &&
+  const original =
+    asset.pathname.startsWith('/release-assets/') &&
     new URLSearchParams(asset.hash.slice(1)).get('presentation')
   return settings.get(original || identity(asset.href))
 }

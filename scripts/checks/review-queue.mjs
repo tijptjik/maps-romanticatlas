@@ -5,38 +5,88 @@ import sharp from 'sharp'
 
 const base = process.env.PLAYWRIGHT_BASE_URL
 const browser = await chromium.launch({
-  channel: 'chrome', headless: false,
-  args: ['--ozone-platform=x11', '--class=' + process.env.DEV_RUNNER_CHROME_CLASS],
+  channel: 'chrome',
+  headless: false,
+  args: ['--ozone-platform=x11', `--class=${process.env.DEV_RUNNER_CHROME_CLASS}`],
 })
 try {
   const page = await browser.newPage({ viewport: { width: 1200, height: 800 } })
   await page.route('**/src/main.ts*', async route => {
     const response = await route.fetch()
-    const body = (await response.text()).replace('installArtworkSampling(map)', 'window.atlasMap = map; installArtworkSampling(map)')
+    const body = (await response.text()).replace(
+      'installArtworkSampling(map)',
+      'window.atlasMap = map; installArtworkSampling(map)',
+    )
     await route.fulfill({ response, body })
   })
   const art = (title, dx, dy, rows = 1) => ({
-    x: 214184 + dx, y: 114420 + dy, title, rows, url: '/fixture/' + title + '.png',
+    x: 214184 + dx,
+    y: 114420 + dy,
+    title,
+    rows,
+    url: `/fixture/${title}.png`,
   })
-  const first = art('A', 0, 0), alternate = art('B', 0, 0), east = art('East', 1, 0, 2)
-  const north = art('North', 0, -1, 2), northeast = art('Northeast', 1, -1)
-  const accepted = art('Accepted', -1, 0), rejected = art('Rejected', -1, 0)
+  const first = art('A', 0, 0),
+    alternate = art('B', 0, 0),
+    east = art('East', 1, 0, 2)
+  const north = art('North', 0, -1, 2),
+    northeast = art('Northeast', 1, -1)
+  const accepted = art('Accepted', -1, 0),
+    rejected = art('Rejected', -1, 0)
   const records = new Map([[rejected.url, { ...rejected, status: 'rejected' }]])
   const requested = new Set()
-  const png = await sharp({ create: { width: 128, height: 128, channels: 3, background: '#e62359' } }).png().toBuffer()
-  const blue = await sharp({ create: { width: 128, height: 128, channels: 3, background: '#2244dd' } }).png().toBuffer()
+  const png = await sharp({
+    create: { width: 128, height: 128, channels: 3, background: '#e62359' },
+  })
+    .png()
+    .toBuffer()
+  const blue = await sharp({
+    create: { width: 128, height: 128, channels: 3, background: '#2244dd' },
+  })
+    .png()
+    .toBuffer()
   await page.route('**/fixture/*', route => {
     requested.add(new URL(route.request().url()).pathname)
-    return route.fulfill({ contentType: 'image/png', body: [first.url, '/fixture/North-revision.png'].some(url => route.request().url().endsWith(url)) ? png : blue })
+    return route.fulfill({
+      contentType: 'image/png',
+      body: [first.url, '/fixture/North-revision.png'].some(url =>
+        route.request().url().endsWith(url),
+      )
+        ? png
+        : blue,
+    })
   })
-  await page.route('**/atlas-v2/catalog.json', route => route.fulfill({ json: { release: 'v2', sheets: [
-    { art: [north, east, northeast, first, rejected, first] }, { accepted: true, art: [accepted] },
-  ] } }))
-  await page.route('**/api/atlas-tiles/cached?*', route => route.fulfill({ json: { tiles: [
-    { ...alternate, variant: 'discovery-test', scene: 'circus', title: 'Midnight Circus' },
-  ] } }))
-  await page.addInitScript(() => sessionStorage.setItem('atlas-admin-token', 'review-test'))
-  await page.context().addCookies([{ name: 'atlas_csrf', value: 'fixture-session', url: base }])
+  await page.route('**/atlas-v2/catalog.json', route =>
+    route.fulfill({
+      json: {
+        release: 'v2',
+        sheets: [
+          { art: [north, east, northeast, first, rejected, first] },
+          { accepted: true, art: [accepted] },
+        ],
+      },
+    }),
+  )
+  await page.route('**/api/atlas-tiles/cached?*', route =>
+    route.fulfill({
+      json: {
+        tiles: [
+          {
+            ...alternate,
+            variant: 'discovery-test',
+            scene: 'circus',
+            title: 'Midnight Circus',
+          },
+        ],
+      },
+    }),
+  )
+  await page.addInitScript(() =>
+    sessionStorage.setItem('atlas-admin-token', 'review-test'),
+  )
+  await page
+    .context()
+    .addCookies([{ name: 'atlas_csrf', value: 'fixture-session', url: base }])
   let revisionJobs = []
   await page.route('**/api/artwork-revisions*', async route => {
     const request = route.request()
@@ -52,17 +102,25 @@ try {
     const { source, mode, mapImage, previousImage } = request.postDataJSON()
     assert.notEqual(mapImage, previousImage)
     for (const data of [mapImage, previousImage]) {
-      const dimensions = await sharp(Buffer.from(data.split(',')[1], 'base64')).metadata()
+      const dimensions = await sharp(
+        Buffer.from(data.split(',')[1], 'base64'),
+      ).metadata()
       assert.equal(dimensions.width, 1024)
       assert.equal(dimensions.height, 1024)
     }
-    const job = { id: crypto.randomUUID().replaceAll('-', ''), source, mode, state: 'pending' }
+    const job = {
+      id: crypto.randomUUID().replaceAll('-', ''),
+      source,
+      mode,
+      state: 'pending',
+    }
     revisionJobs.push(job)
     return route.fulfill({ status: 202, json: job })
   })
   await page.route('**/api/artwork-reviews*', route => {
     const request = route.request()
-    if (request.method() === 'GET') return route.fulfill({ json: [...records.values()] })
+    if (request.method() === 'GET')
+      return route.fulfill({ json: [...records.values()] })
     assert.equal(new URL(request.url()).searchParams.get('admin'), 'true')
     assert.equal(request.headers().authorization, 'Bearer review-test')
     assert.equal(request.headers()['x-atlas-csrf-token'], 'fixture-session')
@@ -72,7 +130,7 @@ try {
     else records.set(record.url, record)
     return route.fulfill({ json: record })
   })
-  await page.goto(base + '/review', { waitUntil: 'domcontentloaded' })
+  await page.goto(`${base}/review`, { waitUntil: 'domcontentloaded' })
   const panel = page.locator('.atlas-review-queue')
   const complete = page.locator('.atlas-review-queue[data-complete="true"]')
   async function ready(title) {
@@ -80,10 +138,13 @@ try {
     await page.locator('.atlas-review-queue[aria-busy="false"]').waitFor()
   }
   async function checkOverlap(visible, hidden) {
-    const urls = await page.evaluate(() => Object.values(window.atlasMap.getStyle().sources)
-      .filter(source => source.type === 'image').map(source => source.url))
-    assert.ok(urls.includes(visible.url), visible.title + ' should be displayed')
-    assert.ok(!urls.includes(hidden.url), hidden.title + ' should be fully hidden')
+    const urls = await page.evaluate(() =>
+      Object.values(window.atlasMap.getStyle().sources)
+        .filter(source => source.type === 'image')
+        .map(source => source.url),
+    )
+    assert.ok(urls.includes(visible.url), `${visible.title} should be displayed`)
+    assert.ok(!urls.includes(hidden.url), `${hidden.title} should be fully hidden`)
   }
   await ready('A')
   await panel.getByText('1 / 5').waitFor()
@@ -112,14 +173,23 @@ try {
   for (const y of [44, 755]) assert.ok(isFocusedArtwork(data, info, 410, y))
   for (const x of [100, 1100]) {
     const offset = (400 * info.width + x) * info.channels
-    assert.ok(data[offset + 2] > data[offset] + 100, 'Neighboring artwork should be visible')
+    assert.ok(
+      data[offset + 2] > data[offset] + 100,
+      'Neighboring artwork should be visible',
+    )
   }
   // Width limits the same artwork after rotating to a portrait viewport.
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.evaluate(() => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))))
-  const portrait = await sharp(await page.screenshot()).raw().toBuffer({ resolveWithObject: true })
-  for (const x of [15, 375]) assert.ok(!isFocusedArtwork(portrait.data, portrait.info, x, 422))
-  for (const x of [24, 366]) assert.ok(isFocusedArtwork(portrait.data, portrait.info, x, 422))
+  await page.evaluate(
+    () => new Promise(done => requestAnimationFrame(() => requestAnimationFrame(done))),
+  )
+  const portrait = await sharp(await page.screenshot())
+    .raw()
+    .toBuffer({ resolveWithObject: true })
+  for (const x of [15, 375])
+    assert.ok(!isFocusedArtwork(portrait.data, portrait.info, x, 422))
+  for (const x of [24, 366])
+    assert.ok(isFocusedArtwork(portrait.data, portrait.info, x, 422))
   await page.setViewportSize({ width: 1200, height: 800 })
   await page.keyboard.press('=')
   await ready('Midnight Circus')
@@ -168,7 +238,9 @@ try {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.reload({ waitUntil: 'domcontentloaded' })
   await ready('North')
-  await page.screenshot({ path: path.join(process.env.DEV_RUNNER_ARTIFACTS, 'review-queue-mobile.png') })
+  await page.screenshot({
+    path: path.join(process.env.DEV_RUNNER_ARTIFACTS, 'review-queue-mobile.png'),
+  })
   await panel.getByRole('button', { name: '[S]pread' }).click()
   await panel.getByText('0 / 1 · 1 rendering').waitFor()
   assert.equal(revisionJobs[0].mode, 'spread')
@@ -179,16 +251,27 @@ try {
   Object.assign(revisionJobs[0], { state: 'ready', candidate })
   const diff = panel.getByRole('button', { name: '[D]iff' })
   async function checkVersion(version, rgb) {
-    await ready('North · ' + version)
-    await page.evaluate(() => new Promise(resolve => {
-      window.atlasMap.once('idle', resolve)
-      window.atlasMap.triggerRepaint()
-    }))
-    const shot = await page.screenshot({ path: path.join(process.env.DEV_RUNNER_ARTIFACTS, 'diff-' + version + '.png') })
-    const sample = await sharp(shot).extract({ left: 148, top: 420, width: 1, height: 1 }).removeAlpha().raw().toBuffer()
+    await ready(`North · ${version}`)
+    await page.evaluate(
+      () =>
+        new Promise(resolve => {
+          window.atlasMap.once('idle', resolve)
+          window.atlasMap.triggerRepaint()
+        }),
+    )
+    const shot = await page.screenshot({
+      path: path.join(process.env.DEV_RUNNER_ARTIFACTS, `diff-${version}.png`),
+    })
+    const sample = await sharp(shot)
+      .extract({ left: 148, top: 420, width: 1, height: 1 })
+      .removeAlpha()
+      .raw()
+      .toBuffer()
     // Compare the rendered pixel after the map’s paper treatment.
-    assert.ok(rgb.every((value, i) => Math.abs(sample[i] - value) <= 6),
-      version + ' rendered RGB ' + [...sample] + ', expected near ' + rgb)
+    assert.ok(
+      rgb.every((value, i) => Math.abs(sample[i] - value) <= 6),
+      `${version} rendered RGB ${[...sample]}, expected near ${rgb}`,
+    )
   }
   await checkVersion('Replacement', [226, 42, 85])
   await page.keyboard.press('d')
@@ -207,7 +290,10 @@ try {
   await retryFailed.click()
   await complete.getByText('0 / 1 · 1 rendering').waitFor()
   assert.equal(revisionJobs[2].source.url, candidate.url)
-  Object.assign(revisionJobs[2], { state: 'ready', candidate: { ...north, url: '/fixture/final.png' } })
+  Object.assign(revisionJobs[2], {
+    state: 'ready',
+    candidate: { ...north, url: '/fixture/final.png' },
+  })
   await ready('North · Replacement')
   await diff.click()
   await checkVersion('Previous', [226, 42, 85])

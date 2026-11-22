@@ -59,7 +59,10 @@ function tieBookmark(button: HTMLButtonElement, board: HTMLElement, scale: numbe
 const coverTurnStart = 0.08
 const closeRecordingImpactMs = 135
 
-export const installArtistStatement = (container: HTMLElement, { showMapTrigger = true, onPavilionClose = () => {}, onBookmarkPull = () => {} } = {}) => {
+export const installArtistStatement = (
+  container: HTMLElement,
+  { showMapTrigger = true, onPavilionClose = () => {}, onBookmarkPull = () => {} } = {},
+) => {
   const wrapper = document.createElement('div')
   wrapper.className = 'artist-statement-ui'
   wrapper.innerHTML = artistStatementMarkup
@@ -67,13 +70,17 @@ export const installArtistStatement = (container: HTMLElement, { showMapTrigger 
   container.append(wrapper)
 
   const trigger = container.querySelector<HTMLButtonElement>('.pavilion-notes')
-  const mapTrigger = wrapper.querySelector<HTMLButtonElement>('.artist-statement__map-trigger')
+  const mapTrigger = wrapper.querySelector<HTMLButtonElement>(
+    '.artist-statement__map-trigger',
+  )
   const triggers = [trigger, mapTrigger].filter(
     (button): button is HTMLButtonElement => button instanceof HTMLButtonElement,
   )
   const statement = wrapper.querySelector<HTMLElement>('.artist-statement')
   const dialog = wrapper.querySelector<HTMLElement>('.artist-statement__dialog')
-  const closeButton = wrapper.querySelector<HTMLButtonElement>('.artist-statement__close')
+  const closeButton = wrapper.querySelector<HTMLButtonElement>(
+    '.artist-statement__close',
+  )
   const board = wrapper.querySelector<HTMLElement>('.note-board')!
   const pages = wrapper.querySelector<HTMLElement>('.note-pages')!
   const cover = trigger?.querySelector<HTMLElement>('.pavilion-notes__cover')
@@ -97,7 +104,7 @@ export const installArtistStatement = (container: HTMLElement, { showMapTrigger 
       let played = false
       if (fromPavilion && coverTurn) {
         const turn = coverTurn
-        const { duration } = turn.effect!.getComputedTiming()
+        const { duration } = turn.effect?.getComputedTiming() ?? {}
         // In reverse the cover meets the pages at the first hinge keyframe.
         const contact = Number(duration) * coverTurnStart
         const followCover = () => {
@@ -121,48 +128,81 @@ export const installArtistStatement = (container: HTMLElement, { showMapTrigger 
     coverTurn = undefined
     bookmark?.plane.remove()
     bookmark = undefined
-    paperFaces.forEach(face => face.remove())
+    paperFaces.forEach(face => {
+      face.remove()
+    })
     paperFaces = []
     if (cover && trigger && board.contains(cover)) trigger.append(cover)
     statement.hidden = true
-    triggers.forEach(button => button.setAttribute('aria-expanded', 'false'))
+    triggers.forEach(button => {
+      button.setAttribute('aria-expanded', 'false')
+    })
     previouslyFocused?.focus({ preventScroll: true })
     closing = false
   }
 
   const open = (source?: HTMLElement) => {
-    if (!statement || !statement.hidden || !dialog) return
-    previouslyFocused = source ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null)
+    if (!statement?.hidden || !dialog) return
+    previouslyFocused =
+      source ??
+      (document.activeElement instanceof HTMLElement ? document.activeElement : null)
     statement.classList.toggle('from-pavilion', source === trigger)
-    statement.classList.toggle('is-night', source === trigger && !!trigger?.closest('.atlas-intro.is-night'))
+    statement.classList.toggle(
+      'is-night',
+      source === trigger && !!trigger?.closest('.atlas-intro.is-night'),
+    )
     const fromMap = !!mapTrigger && source === mapTrigger
     if (fromMap) onBookmarkPull()
     const tab = fromMap ? mapTrigger.getBoundingClientRect() : undefined
     let desk = cover?.getBoundingClientRect()
     if (tab && cover) {
       const image = cover.querySelector('img')!
-      if (!image.hasAttribute('src')) image.src = `/pavilion/${image.dataset.piece}.webp`
+      if (!image.hasAttribute('src'))
+        image.src = `/pavilion/${image.dataset.piece}.webp`
       const width = Math.min(320, Math.max(180, tab.width * 1.32))
-      const height = width * Number(image.getAttribute('height')) / Number(image.getAttribute('width'))
-      desk = new DOMRect(tab.right - width * .05, tab.top + tab.height / 2 - height * .8, width, height)
+      const height =
+        (width * Number(image.getAttribute('height'))) /
+        Number(image.getAttribute('width'))
+      desk = new DOMRect(
+        tab.right - width * 0.05,
+        tab.top + tab.height / 2 - height * 0.8,
+        width,
+        height,
+      )
     }
     statement.hidden = false
     pages.scrollTop = 0
-    triggers.forEach(button => button.setAttribute('aria-expanded', 'true'))
-    if ((fromMap || source === trigger) && cover && desk && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    triggers.forEach(button => {
+      button.setAttribute('aria-expanded', 'true')
+    })
+    if (
+      (fromMap || source === trigger) &&
+      cover &&
+      desk &&
+      !matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
       const page = dialog.getBoundingClientRect()
       // The painted spine is centred at row 172 of the 215px desk image.
       // Its transparent bottom margin must sit outside the paper hinge.
       const spineRow = 172 / 215
-      const angle = fromMap || !trigger ? 0 : parseFloat(getComputedStyle(trigger).rotate) || 0
+      const angle =
+        fromMap || !trigger ? 0 : parseFloat(getComputedStyle(trigger).rotate) || 0
       // Measure the flat cover, then rotate its hinge around the cover centre.
       const coverWidth = angle ? cover.offsetWidth : desk.width
       const coverHeight = angle ? cover.offsetHeight : desk.height
-      const hingeOffset = coverHeight * (spineRow - .5)
-      const radians = angle * Math.PI / 180
+      const hingeOffset = coverHeight * (spineRow - 0.5)
+      const radians = (angle * Math.PI) / 180
       const scale = coverWidth / page.height
-      const dx = desk.left + desk.width / 2 - hingeOffset * Math.sin(radians) - (page.left + page.width / 2)
-      const dy = desk.top + desk.height / 2 + hingeOffset * Math.cos(radians) - (page.top + page.height / 2)
+      const dx =
+        desk.left +
+        desk.width / 2 -
+        hingeOffset * Math.sin(radians) -
+        (page.left + page.width / 2)
+      const dy =
+        desk.top +
+        desk.height / 2 +
+        hingeOffset * Math.cos(radians) -
+        (page.top + page.height / 2)
       const boardWidth = coverHeight / scale
       board.style.width = `${boardWidth}px`
       board.style.setProperty('--spine-inset', `${boardWidth * (1 - spineRow)}px`)
@@ -177,8 +217,12 @@ export const installArtistStatement = (container: HTMLElement, { showMapTrigger 
         face.className = `note-face note-face--${side}`
         face.inert = true
         face.setAttribute('aria-hidden', 'true')
-        const print = (singleColumn ? spread : spread.children[index]).cloneNode(true) as HTMLElement
-        print.querySelectorAll('[id]').forEach(node => node.removeAttribute('id'))
+        const print = (singleColumn ? spread : spread.children[index]).cloneNode(
+          true,
+        ) as HTMLElement
+        print.querySelectorAll('[id]').forEach(node => {
+          node.removeAttribute('id')
+        })
         face.append(print)
         if (index === 1 && closeButton) face.append(closeButton.cloneNode(true))
         dialog.append(face)
@@ -188,63 +232,141 @@ export const installArtistStatement = (container: HTMLElement, { showMapTrigger 
 
       const tug = fromMap ? 420 : 0
       const duration = tug + 1500
-      const timing: KeyframeAnimationOptions = { duration: 1500, delay: tug, fill: 'both' }
-      const edge = .54
-      const land = .98
+      const timing: KeyframeAnimationOptions = {
+        duration: 1500,
+        delay: tug,
+        fill: 'both',
+      }
+      const edge = 0.54
+      const land = 0.98
       const lifted = `translate(${dx}px,${dy}px) rotate(${angle - 90}deg) scale(${scale})`
-      const start = fromMap ? `translate(${dx - 50}px,${dy + 4}px) rotate(-90deg) scale(${scale})` : lifted
-      coverTurn = board.animate([
-        {transform: 'perspective(1800px) rotateY(0deg)', opacity: 1},
-        {transform: 'perspective(1800px) rotateY(0deg)', opacity: 1, offset: coverTurnStart, easing: 'ease-in'},
-        {transform: 'perspective(1800px) rotateY(-90deg)', opacity: 1, offset: edge, easing: 'steps(1, start)'},
-        {transform: 'perspective(1800px) rotateY(-90deg)', opacity: 0},
-      ], timing)
+      const start = fromMap
+        ? `translate(${dx - 50}px,${dy + 4}px) rotate(-90deg) scale(${scale})`
+        : lifted
+      coverTurn = board.animate(
+        [
+          { transform: 'perspective(1800px) rotateY(0deg)', opacity: 1 },
+          {
+            transform: 'perspective(1800px) rotateY(0deg)',
+            opacity: 1,
+            offset: coverTurnStart,
+            easing: 'ease-in',
+          },
+          {
+            transform: 'perspective(1800px) rotateY(-90deg)',
+            opacity: 1,
+            offset: edge,
+            easing: 'steps(1, start)',
+          },
+          { transform: 'perspective(1800px) rotateY(-90deg)', opacity: 0 },
+        ],
+        timing,
+      )
       movement = [
-        statement.animate([
-          {backgroundColor: 'transparent'},
-          {backgroundColor: getComputedStyle(statement).backgroundColor},
-        ], {duration, easing: 'ease-in-out', fill: 'both'}),
-        dialog.animate([
-          ...(fromMap ? [{transform: lifted, offset: 0, easing: 'cubic-bezier(.55,.02,.9,.55)'}] : []),
-          {transform: start, offset: tug / duration, easing: 'cubic-bezier(.25,.6,.28,1)' },
-          {transform: 'translate(0,0) rotate(0deg) scale(1)'},
-        ], {duration, fill: 'both'}),
+        statement.animate(
+          [
+            { backgroundColor: 'transparent' },
+            { backgroundColor: getComputedStyle(statement).backgroundColor },
+          ],
+          { duration, easing: 'ease-in-out', fill: 'both' },
+        ),
+        dialog.animate(
+          [
+            ...(fromMap
+              ? [
+                  {
+                    transform: lifted,
+                    offset: 0,
+                    easing: 'cubic-bezier(.55,.02,.9,.55)',
+                  },
+                ]
+              : []),
+            {
+              transform: start,
+              offset: tug / duration,
+              easing: 'cubic-bezier(.25,.6,.28,1)',
+            },
+            { transform: 'translate(0,0) rotate(0deg) scale(1)' },
+          ],
+          { duration, fill: 'both' },
+        ),
         coverTurn,
-        leftFace.animate([
-          {transform: 'perspective(1800px) rotateY(90deg)', visibility: 'hidden'},
-          {transform: 'perspective(1800px) rotateY(90deg)', visibility: 'visible', offset: edge, easing: 'ease-out'},
-          {transform: 'perspective(1800px) rotateY(0deg)', visibility: 'visible', offset: land, easing: 'steps(1, start)'},
-          {transform: 'perspective(1800px) rotateY(0deg)', visibility: 'hidden'},
-        ], timing),
-        rightFace.animate([
-          {transform: 'perspective(1800px) rotateY(90deg)', opacity: 0},
-          {transform: 'perspective(1800px) rotateY(90deg)', opacity: 1, offset: coverTurnStart, easing: 'ease-out'},
-          {transform: 'perspective(1800px) rotateY(0deg)', opacity: 1, offset: land, easing: 'steps(1, start)'},
-          {transform: 'none', opacity: 0},
-        ], timing),
-        pages.animate([
-          {opacity: 0},
-          {opacity: 0, offset: land, easing: 'steps(1, start)'},
-          {opacity: 1},
-        ], timing),
+        leftFace.animate(
+          [
+            { transform: 'perspective(1800px) rotateY(90deg)', visibility: 'hidden' },
+            {
+              transform: 'perspective(1800px) rotateY(90deg)',
+              visibility: 'visible',
+              offset: edge,
+              easing: 'ease-out',
+            },
+            {
+              transform: 'perspective(1800px) rotateY(0deg)',
+              visibility: 'visible',
+              offset: land,
+              easing: 'steps(1, start)',
+            },
+            { transform: 'perspective(1800px) rotateY(0deg)', visibility: 'hidden' },
+          ],
+          timing,
+        ),
+        rightFace.animate(
+          [
+            { transform: 'perspective(1800px) rotateY(90deg)', opacity: 0 },
+            {
+              transform: 'perspective(1800px) rotateY(90deg)',
+              opacity: 1,
+              offset: coverTurnStart,
+              easing: 'ease-out',
+            },
+            {
+              transform: 'perspective(1800px) rotateY(0deg)',
+              opacity: 1,
+              offset: land,
+              easing: 'steps(1, start)',
+            },
+            { transform: 'none', opacity: 0 },
+          ],
+          timing,
+        ),
+        pages.animate(
+          [
+            { opacity: 0 },
+            { opacity: 0, offset: land, easing: 'steps(1, start)' },
+            { opacity: 1 },
+          ],
+          timing,
+        ),
       ]
       if (fromMap) {
         bookmark = tieBookmark(mapTrigger, board, scale)
-        const pull = {duration, fill: 'both' as const}
+        const pull = { duration, fill: 'both' as const }
         movement.push(
-          bookmark.tag.animate([
-            {translate: '0', easing: 'ease-out'},
-            {translate: '-38px', offset: tug / duration},
-            {translate: '-38px'},
-          ], pull),
-          bookmark.cord.animate([
-            {scale: '0 1', easing: 'ease-out'},
-            {scale: '1 1', offset: tug / duration},
-            {scale: '1 1'},
-          ], pull),
-          bookmark.plane.animate([
-            {opacity: 1}, {opacity: 1, offset: .37}, {opacity: 0, offset: .55}, {opacity: 0},
-          ], pull),
+          bookmark.tag.animate(
+            [
+              { translate: '0', easing: 'ease-out' },
+              { translate: '-38px', offset: tug / duration },
+              { translate: '-38px' },
+            ],
+            pull,
+          ),
+          bookmark.cord.animate(
+            [
+              { scale: '0 1', easing: 'ease-out' },
+              { scale: '1 1', offset: tug / duration },
+              { scale: '1 1' },
+            ],
+            pull,
+          ),
+          bookmark.plane.animate(
+            [
+              { opacity: 1 },
+              { opacity: 1, offset: 0.37 },
+              { opacity: 0, offset: 0.55 },
+              { opacity: 0 },
+            ],
+            pull,
+          ),
         )
       }
     }
@@ -270,7 +392,9 @@ export const installArtistStatement = (container: HTMLElement, { showMapTrigger 
     }
 
     if (event.key !== 'Tab' || !dialog) return
-    const focusable = pages.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
+    const focusable = pages.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    )
     if (!focusable.length) return
     const first = focusable[0]
     const last = focusable[focusable.length - 1]

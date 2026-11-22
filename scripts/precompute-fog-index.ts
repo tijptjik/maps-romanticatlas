@@ -1,12 +1,14 @@
 export {}
 
-const origin = (process.env.ATLAS_FOG_INDEX_ORIGIN ?? 'https://romanticatlas.hype.hk')
-  .replace(/\/$/, '')
+const origin = (
+  process.env.ATLAS_FOG_INDEX_ORIGIN ?? 'https://romanticatlas.hype.hk'
+).replace(/\/$/, '')
 const defaultBounds = [113.75, 22.1, 114.5, 22.6]
-const requestedBounds = process.env.ATLAS_FOG_INDEX_BOUNDS
-  ?.split(',')
-  .map(Number)
-const concurrency = Math.max(1, Math.min(16, Number(process.env.ATLAS_FOG_INDEX_CONCURRENCY ?? 4)))
+const requestedBounds = process.env.ATLAS_FOG_INDEX_BOUNDS?.split(',').map(Number)
+const concurrency = Math.max(
+  1,
+  Math.min(16, Number(process.env.ATLAS_FOG_INDEX_CONCURRENCY ?? 4)),
+)
 const zoom = 15
 const deploymentPropagationDelayMs = 2_000
 const requestAttempts = Math.max(
@@ -25,7 +27,8 @@ const retryDelay = (attempt: number) => requestRetryDelayMs * 2 ** (attempt - 1)
 
 if (
   requestedBounds &&
-  (requestedBounds.length !== 4 || requestedBounds.some(value => !Number.isFinite(value)))
+  (requestedBounds.length !== 4 ||
+    requestedBounds.some(value => !Number.isFinite(value)))
 ) {
   throw new Error(
     'ATLAS_FOG_INDEX_BOUNDS must be west,south,east,north (for example 113.75,22.1,114.5,22.6).',
@@ -33,16 +36,21 @@ if (
 }
 
 const [west, south, east, north] = requestedBounds ?? defaultBounds
-if (west < -180 || east > 180 || west >= east || south < -85 || north > 85 || south >= north) {
+if (
+  west < -180 ||
+  east > 180 ||
+  west >= east ||
+  south < -85 ||
+  north > 85 ||
+  south >= north
+) {
   throw new Error('The fog-index bounds are outside valid longitude/latitude ranges.')
 }
 
-const tileX = (longitude: number) =>
-  Math.floor(((longitude + 180) / 360) * (2 ** zoom))
+const tileX = (longitude: number) => Math.floor(((longitude + 180) / 360) * 2 ** zoom)
 const tileY = (latitude: number) =>
   Math.floor(
-    ((1 - Math.asinh(Math.tan((latitude * Math.PI) / 180)) / Math.PI) / 2) *
-      (2 ** zoom),
+    ((1 - Math.asinh(Math.tan((latitude * Math.PI) / 180)) / Math.PI) / 2) * 2 ** zoom,
   )
 
 const minimumX = tileX(west)
@@ -80,13 +88,17 @@ const warm = async () => {
       }
 
       const contentType = response.headers.get('content-type') ?? ''
-      if (contentType.includes('application/json') && !isRetryableStatus(response.status)) break
+      if (
+        contentType.includes('application/json') &&
+        !isRetryableStatus(response.status)
+      )
+        break
       if (attempt === requestAttempts) {
         throw new Error(
           contentType.includes('application/json')
             ? `Fog index ${zoom}/${tile.x}/${tile.y} failed with HTTP ${response.status} after ${requestAttempts} attempts.`
             : `Fog index ${zoom}/${tile.x}/${tile.y} did not return JSON (${contentType || 'no content-type'}). ` +
-              `Deploy the Worker containing /api/fog-index before warming ${origin}.`,
+                `Deploy the Worker containing /api/fog-index before warming ${origin}.`,
         )
       }
       const delay = contentType.includes('application/json')
@@ -94,27 +106,37 @@ const warm = async () => {
         : deploymentPropagationDelayMs
       console.warn(
         `Fog index ${zoom}/${tile.x}/${tile.y} returned ${
-          contentType.includes('application/json') ? `HTTP ${response.status}` : contentType || 'no content-type'
+          contentType.includes('application/json')
+            ? `HTTP ${response.status}`
+            : contentType || 'no content-type'
         }; retrying in ${delay}ms (${attempt}/${requestAttempts}).`,
       )
       await wait(delay)
     }
-    if (!response) throw new Error(`Fog index ${zoom}/${tile.x}/${tile.y} was not requested.`)
+    if (!response)
+      throw new Error(`Fog index ${zoom}/${tile.x}/${tile.y} was not requested.`)
     const body = await response.json().catch(() => null)
     if (!response.ok) {
       throw new Error(
-        body?.error ?? `Fog index ${zoom}/${tile.x}/${tile.y} failed with HTTP ${response.status}.`,
+        body?.error ??
+          `Fog index ${zoom}/${tile.x}/${tile.y} failed with HTTP ${response.status}.`,
       )
     }
     if (!Array.isArray(body?.eligibility) || body.eligibility.length !== 64) {
-      throw new Error(`Fog index ${zoom}/${tile.x}/${tile.y} returned an incomplete eligibility tile.`)
+      throw new Error(
+        `Fog index ${zoom}/${tile.x}/${tile.y} returned an incomplete eligibility tile.`,
+      )
     }
     if (cacheVersion && cacheVersion !== body.version) {
-      throw new Error('The basemap release changed while the fog index was being precomputed.')
+      throw new Error(
+        'The basemap release changed while the fog index was being precomputed.',
+      )
     }
     cacheVersion = body.version
     completed += 1
-    console.log(`Fog index ${completed}/${(maximumX - minimumX + 1) * (maximumY - minimumY + 1)}: ${zoom}/${tile.x}/${tile.y}`)
+    console.log(
+      `Fog index ${completed}/${(maximumX - minimumX + 1) * (maximumY - minimumY + 1)}: ${zoom}/${tile.x}/${tile.y}`,
+    )
   }
 }
 

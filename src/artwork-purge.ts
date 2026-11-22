@@ -45,22 +45,35 @@ export type ReleaseObjects = Record<AssetBucket, string[]>
 export function managedPair(bucket: AssetBucket, key: string): string[] | null {
   if (bucket === 'media') return releaseFileKey.test(key) ? [key] : null
   // Includes the unversioned layout used before versioned tile generation.
-  const match = /^(atlas\/\d+\/\d+\/\d+\/[a-z0-9-]+(?:\.v\d+(?:\.[a-z0-9-]+)?)?)\.(?:image|json)$/.exec(key)
-  return match ? [match[1] + '.image', match[1] + '.json'] : null
+  const match =
+    /^(atlas\/\d+\/\d+\/\d+\/[a-z0-9-]+(?:\.v\d+(?:\.[a-z0-9-]+)?)?)\.(?:image|json)$/.exec(
+      key,
+    )
+  return match ? [`${match[1]}.image`, `${match[1]}.json`] : null
 }
 
 // assets.json enumerates the published static media including interface assets,
 // plates and sprites. Generated tile dependencies live in catalog.json.
-export function releaseObjects(media: Iterable<string>, urls: Iterable<string>): ReleaseObjects {
+export function releaseObjects(
+  media: Iterable<string>,
+  urls: Iterable<string>,
+): ReleaseObjects {
   const tiles = new Set<string>()
   for (const path of urls) {
     if (!path.startsWith('/generated-tiles/')) continue
     const parsed = new URL(path, 'https://atlas.invalid')
-    const tile = parseAtlasTilePath(parsed.pathname, (scene): scene is string => /^[a-z0-9-]+$/.test(scene))
+    const tile = parseAtlasTilePath(parsed.pathname, (scene): scene is string =>
+      /^[a-z0-9-]+$/.test(scene),
+    )
     const version = requestedCacheVersion(parsed.searchParams)
     const variant = requestedAtlasVariant(parsed.searchParams)
-    if (!tile || !version || (parsed.searchParams.has('variant') && parsed.searchParams.get('variant') !== variant))
-      throw new Error('Unresolved catalog tile: ' + path)
+    if (
+      !tile ||
+      !version ||
+      (parsed.searchParams.has('variant') &&
+        parsed.searchParams.get('variant') !== variant)
+    )
+      throw new Error(`Unresolved catalog tile: ${path}`)
     tiles.add(atlasImageKey(tile, version, variant))
     tiles.add(atlasMetadataKey(tile, version, variant))
   }
@@ -69,7 +82,7 @@ export function releaseObjects(media: Iterable<string>, urls: Iterable<string>):
 
 export function orphanGroup(bucket: AssetBucket, key: string, keep: Set<string>) {
   const keys = managedPair(bucket, key)
-  return keys && keys.every(k => !keep.has(k)) ? keys : null
+  return keys?.every(k => !keep.has(k)) ? keys : null
 }
 
 type Bucket = {

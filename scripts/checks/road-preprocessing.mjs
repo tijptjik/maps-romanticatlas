@@ -73,7 +73,7 @@ const tile = Buffer.from(
 const browser = await chromium.launch({
   channel: 'chrome',
   headless: false,
-  args: ['--ozone-platform=x11', '--class=' + process.env.DEV_RUNNER_CHROME_CLASS],
+  args: ['--ozone-platform=x11', `--class=${process.env.DEV_RUNNER_CHROME_CLASS}`],
 })
 try {
   const page = await browser.newPage({ viewport: { width: 1200, height: 1000 } })
@@ -81,7 +81,7 @@ try {
     route.fulfill({
       json: {
         tilejson: '3.0.0',
-        tiles: [base + '/fixture/{z}/{x}/{y}.pbf'],
+        tiles: [`${base}/fixture/{z}/{x}/{y}.pbf`],
         minzoom: 18,
         maxzoom: 18,
       },
@@ -90,7 +90,7 @@ try {
   await page.route('**/fixture/**', route =>
     route.fulfill({ body: tile, contentType: 'application/x-protobuf' }),
   )
-  await page.goto(base + '/?review')
+  await page.goto(`${base}/?review`)
   const result = await page.evaluate(async () => {
     const { captureRoadMap } = await import('/scripts/checks/capture-road-map.ts')
     const { highResolution: capture, baseline } = await captureRoadMap({
@@ -120,8 +120,18 @@ try {
     ]
     return {
       connectors: capture.reclaimedConnectors,
-      projection: await sample('projectionMask', [[680, 250], [680, 750]]),
-      liveLine: await sample('lineOverlay', [[340, 125], [340, 375]], baseline),
+      projection: await sample('projectionMask', [
+        [680, 250],
+        [680, 750],
+      ]),
+      liveLine: await sample(
+        'lineOverlay',
+        [
+          [340, 125],
+          [340, 375],
+        ],
+        baseline,
+      ),
       safe: await sample('safeMask', positions),
       patch: await sample('roadCleanup', positions),
       building: await sample('buildingMask', positions),
@@ -138,8 +148,14 @@ try {
     [255, 0, 0, 0, 255, 255, 0],
   )
   assert.equal(result.building[2][3], 255)
-  assert.deepEqual(result.projection.map(p => p[3]), [255, 0])
-  assert.deepEqual(result.liveLine.map(p => p[3]), [0, 255])
+  assert.deepEqual(
+    result.projection.map(p => p[3]),
+    [255, 0],
+  )
+  assert.deepEqual(
+    result.liveLine.map(p => p[3]),
+    [0, 255],
+  )
 } finally {
   await browser.close()
 }

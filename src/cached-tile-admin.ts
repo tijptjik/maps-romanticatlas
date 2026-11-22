@@ -1,6 +1,10 @@
 import { waitForAtlasGeneration } from './wait-for-atlas-generation'
 import * as maplibregl from 'maplibre-gl'
-import { createAtlasTitleCard, discoveryTitle, positionAtlasTitleCard } from './atlas-title-cards.ts'
+import {
+  createAtlasTitleCard,
+  discoveryTitle,
+  positionAtlasTitleCard,
+} from './atlas-title-cards.ts'
 import { captureTile, tileHasSea } from './atlas-tiles.ts'
 import { atlasSceneNames, pickAtlasScene, type AtlasScene } from './atlas-scenes.ts'
 import { atlasZoom, tileBounds, tileForPosition, tilePolygon } from './tile-geometry.ts'
@@ -234,7 +238,11 @@ export const installCachedTileAdmin = async map => {
 
     const titleCards = new Map()
     tiles.forEach(tile => {
-      const card = createAtlasTitleCard(map.getContainer(), tile.scene, discoveryTitle(tile.url, tile.scene, tile.title))
+      const card = createAtlasTitleCard(
+        map.getContainer(),
+        tile.scene,
+        discoveryTitle(tile.url, tile.scene, tile.title),
+      )
       const positionKey = tilePositionKey(tile)
       card.hidden = activeTilesByPosition.get(positionKey) !== tile
       titleCards.set(tileKey(tile), { card, tile })
@@ -484,7 +492,8 @@ export const installCachedTileAdmin = async map => {
         return
       }
       const isEligible =
-        fogEligibilityByPosition.get(fogEligibilityPositionKey(selectedPosition)) === true
+        fogEligibilityByPosition.get(fogEligibilityPositionKey(selectedPosition)) ===
+        true
       actionBar.hidden = !selectedTile && !isEligible
       rerenderControl.hidden = !isEligible
       if (!selectedTile) {
@@ -525,11 +534,14 @@ export const installCachedTileAdmin = async map => {
       const parentX = Math.floor(tile.x / fogEligibilityChildSpan)
       const parentY = Math.floor(tile.y / fogEligibilityChildSpan)
       const request = fetch(
-        runtimeModeUrl(`/api/fog-index/${fogEligibilitySourceZoom}/${parentX}/${parentY}`),
+        runtimeModeUrl(
+          `/api/fog-index/${fogEligibilitySourceZoom}/${parentX}/${parentY}`,
+        ),
         { cache: 'no-store' },
       )
         .then(async response => {
-          if (!response.ok) throw new Error(`Fog index returned HTTP ${response.status}.`)
+          if (!response.ok)
+            throw new Error(`Fog index returned HTTP ${response.status}.`)
           const body = (await response.json()) as { eligibility?: FogEligibility[] }
           if (!Array.isArray(body.eligibility))
             throw new Error('Fog index did not include eligibility data.')
@@ -713,7 +725,11 @@ export const installCachedTileAdmin = async map => {
       }
 
       tilesByPosition.set(positionKey, candidates)
-      const card = createAtlasTitleCard(container, tile.scene, discoveryTitle(tile.url, tile.scene, tile.title))
+      const card = createAtlasTitleCard(
+        container,
+        tile.scene,
+        discoveryTitle(tile.url, tile.scene, tile.title),
+      )
       titleCards.set(tileKey(tile), { card, tile })
       activeTilesByPosition.set(positionKey, tile)
       // A render recenters the map for capture, but the operator may then pan
@@ -812,7 +828,10 @@ export const installCachedTileAdmin = async map => {
               },
               body: JSON.stringify({ ...capturedTile, hasSea: tileHasSea(map, tile) }),
             })
-        const response = await waitForAtlasGeneration(submission, AbortSignal.timeout(35 * 60_000))
+        const response = await waitForAtlasGeneration(
+          submission,
+          AbortSignal.timeout(35 * 60_000),
+        )
         const body = await response.json().catch(() => null)
         if (!response.ok) {
           throw new Error(body?.error ?? `Rerender failed with HTTP ${response.status}`)

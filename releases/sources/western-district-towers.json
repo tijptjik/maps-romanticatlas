@@ -28,28 +28,12 @@
         "name": "圖書館新翼 Library Extension",
         "sourceLayer": "buildings",
         "featureId": "35184554112011",
-        "sourceTile": [
-          15,
-          26773,
-          14302
-        ],
+        "sourceTile": [15, 26773, 14302],
         "coordinatesInBaseTile": [
-          [
-            0.794921875,
-            0.671875
-          ],
-          [
-            0.443359375,
-            0.65625
-          ],
-          [
-            0.4609375,
-            0.251953125
-          ],
-          [
-            0.8125,
-            0.267578125
-          ]
+          [0.794921875, 0.671875],
+          [0.443359375, 0.65625],
+          [0.4609375, 0.251953125],
+          [0.8125, 0.267578125]
         ]
       },
       "prompt": "Create a single FINISHED bird's-eye architectural atlas illustration: look steeply down at the Lantern Archive in Hong Kong from above, almost the view of a bird circling directly overhead. The guide fixes ONLY the orientation and front corners of the base. The roofs and open courts should dominate. Design a dense inhabited 32-storey Art Deco archive with upper towers at three uneven heights, elongated brass lantern roofs with visibly deep glass ridges, a library bridge suspended above a deep rectangular bookcloth drying courtyard and an open terrace of tiny bookbinding tables. Distinctive dark rosebrick and amber windows; greatly varying volumes, crisp cornices, cut-in loggias, occasional vertical piers running across many small windows. Paper-printed, delicate sepia outlines, muted sophisticated watercolour. Keep floor windows tiny, several dozen rows of small windows down the tall occupied wing. Omit visible people entirely at this viewing distance. The viewpoint must clearly show the BACKS AND TOPS of the roof terraces: no street-level elevation, facade cutaway or dollhouse. Draw the entire building as ONE coherent object isolated on perfectly flat pure magenta #ff00ff, no landscape or floor shadow. Preserve mapped base and northward height projection; uppers can recede but verticals parallel, do not make an isometric diamond of the parcel. Keep a complete silhouetted roof, no labels. The footprint is about 50 by 56 metres, the highest ridge about 105 metres above the doors.",
@@ -60,20 +44,8 @@
         "pixelsPerTile": 1254,
         "heightMetres": 108.8,
         "verticalProjection": 0.6,
-        "frontCorners": [
-          1,
-          0
-        ],
-        "rawFrontPixels": [
-          [
-            66,
-            1623
-          ],
-          [
-            798,
-            1642
-          ]
-        ]
+        "frontCorners": [1, 0],
+        "rawFrontPixels": [[66, 1623], [798, 1642]]
       }
     },
     {
@@ -96,28 +68,12 @@
         "name": "華大盛品酒店 Best Western Plus Hotel Hong Kong",
         "sourceLayer": "buildings",
         "featureId": "35184694928424",
-        "sourceTile": [
-          15,
-          26773,
-          14302
-        ],
+        "sourceTile": [15, 26773, 14302],
         "coordinatesInBaseTile": [
-          [
-            0.4921875,
-            0.58203125
-          ],
-          [
-            0.427734375,
-            0.3671875
-          ],
-          [
-            0.62890625,
-            0.306640625
-          ],
-          [
-            0.693359375,
-            0.5234375
-          ]
+          [0.4921875, 0.58203125],
+          [0.427734375, 0.3671875],
+          [0.62890625, 0.306640625],
+          [0.693359375, 0.5234375]
         ]
       },
       "prompt": "Draw ONE complete inhabited skyscraper, a single original miniature illustration for the Romantic Atlas of Hong Kong. Use the supplied measured massing solely as ground footprint, scale and camera reference. Keep EXACTLY its ground-contact front edge and ground corners, no plinth extensions. Look from high overhead in parallel projection; horizontal surfaces follow the mapped footprint, elevations rise straight up the page, no horizon, parallel uprights. Invent a rich sculptural silhouette and internal voids. Compose foreground, middle distance and rear volumes; use fine hatching and subtle warm/cool local shade where one volume overlaps another. Never just decorate stacked rectangular boxes. No pasted windows or repeating tile textures. Preserve relative heights including many tiny 3.4-m floors, a few 1.7-m adults at 2.1-m doors. Hand-drawn Victorian ink and transparent watercolour on the architectural surfaces only, precise edges and strong legibility. Entire isolated building, full uncropped roof and feet. Perfectly uniform bright magenta #ff00ff in ALL external empty space for extraction. No ground rectangle, cast ground shadow, text or diagram markings. THE TIDAL TELEGRAPH: an oceanographic high-rise of approximately 36 small floors. Sea-green enameled living quarters wrap a tapering limestone instrument spine. Multiple genuinely three-dimensional offset teal drums, open-air platforms with balustrades, and a deep cleft exposing a suspended bronze tide pendulum. On the high roof one dramatic armillary sphere, lower down a stepped cluster of circular tidal pools and two weather vanes. Long engraved brass pipes dive through the open shaft. Small dark windows at realistic close floor intervals. People only as microscopic specks, maximum one percent of the tower height. Match the reference roof-to-front-foot displacement and exact ground contact orientation; ensure generous top surfaces visible from high overhead.",
@@ -128,25 +84,8 @@
         "pixelsPerTile": 1254,
         "heightMetres": 122.4,
         "verticalProjection": 0.6,
-        "frontCorners": [
-          1,
-          0,
-          3
-        ],
-        "rawFrontPixels": [
-          [
-            73,
-            1322
-          ],
-          [
-            227,
-            1818
-          ],
-          [
-            729,
-            1682
-          ]
-        ]
+        "frontCorners": [1, 0, 3],
+        "rawFrontPixels": [[73, 1322], [227, 1818], [729, 1682]]
       }
     },
     {
@@ -169,28 +108,12 @@
         "name": "邵仁枚樓 Runme Shaw Building",
         "sourceLayer": "buildings",
         "featureId": "35184554292441",
-        "sourceTile": [
-          15,
-          26773,
-          14302
-        ],
+        "sourceTile": [15, 26773, 14302],
         "coordinatesInBaseTile": [
-          [
-            0.087890625,
-            0.10546875
-          ],
-          [
-            0.408203125,
-            0.11328125
-          ],
-          [
-            0.404296875,
-            0.298828125
-          ],
-          [
-            0.083984375,
-            0.291015625
-          ]
+          [0.087890625, 0.10546875],
+          [0.408203125, 0.11328125],
+          [0.404296875, 0.298828125],
+          [0.083984375, 0.291015625]
         ]
       },
       "prompt": "Single hand-drawn complete skyscraper for a Hong Kong architectural atlas: The Porcelain Kiln. Almost vertically overhead bird's-eye illustration in north-up parallel projection. The supplied raised massing is a measured guide to the foot and amount of apparent vertical rise. Fill the high view with visible roof planes, visibly deep alleys and recessed courts at several heights. Inside this 24-storey ceramics manufactory: clusters of round brick kiln stacks with clearly visible dark elliptical mouths, celadon undulating shed roofs covered in finely scalloped glazed tiles, sheltered raised courtyards with orderly white porcelain wares drying on racks, freight lifts, suspended external staircases and a tiny firing bridge. Make a coherent volumetric building with interesting irregular silhouette. Dark red terracotta masonry, sage and celadon greens, russet, warm cream. Closely spaced tiny windows: ground footprint 45 by 26 metres, height 82 metres. No visible human figures at atlas scale. Keep the orientation of the measured front plinth as shown; the gallery shadows stay attached to the building. Steep downward view: emphasize TOPS of kilns, walkways, roof forms and inner terraces. No cutaway or frontal dollhouse. Finely etched muted Victorian watercolour, one isolated continuous building, crop clear of every tip and cornice, no smoke or clouds, all outside area perfectly flat solid pure magenta #ff00ff. No title, words or shadow on the ground.",
@@ -201,20 +124,8 @@
         "pixelsPerTile": 1254,
         "heightMetres": 81.6,
         "verticalProjection": 0.6,
-        "frontCorners": [
-          3,
-          2
-        ],
-        "rawFrontPixels": [
-          [
-            57,
-            1438
-          ],
-          [
-            992,
-            1440
-          ]
-        ]
+        "frontCorners": [3, 2],
+        "rawFrontPixels": [[57, 1438], [992, 1440]]
       }
     }
   ]

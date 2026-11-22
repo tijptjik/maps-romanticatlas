@@ -7,13 +7,17 @@ export const artworkRequest: RequestTransformFunction = (url, type) => {
   if (type !== 'Image') return { url }
   const asset = new URL(url, document.baseURI)
   if (asset.origin !== location.origin) return { url }
-  return { url: artworkPresentation(asset)?.edgeFade ? protocol + asset.pathname + asset.search + asset.hash : url }
+  return {
+    url: artworkPresentation(asset)?.edgeFade
+      ? protocol + asset.pathname + asset.search + asset.hash
+      : url,
+  }
 }
 
 export function installArtworkEdgeFade() {
   addProtocol('atlas-edge-fade', async ({ url }, { signal }) => {
     const response = await fetch(url.slice(protocol.length), { signal })
-    if (!response.ok) throw Error('Artwork returned HTTP ' + response.status)
+    if (!response.ok) throw Error(`Artwork returned HTTP ${response.status}`)
     const image = await createImageBitmap(await response.blob())
     try {
       signal.throwIfAborted()
@@ -21,7 +25,9 @@ export function installArtworkEdgeFade() {
       const canvas = new OffscreenCanvas(width, height)
       const context = canvas.getContext('2d')!
       context.drawImage(image, 0, 0)
-      const settings = artworkPresentation(new URL(url.slice(protocol.length), location.origin))
+      const settings = artworkPresentation(
+        new URL(url.slice(protocol.length), location.origin),
+      )
       if (settings?.backgroundMask) {
         context.save()
         context.globalCompositeOperation = 'destination-out'
@@ -44,7 +50,10 @@ export function installArtworkEdgeFade() {
           const alpha = (y * width + x) * 4 + 3
           pixels.data[alpha] *= t * t * (3 - 2 * t)
           if (settings?.waterFadeStart !== undefined) {
-            const water = Math.max(0, Math.min(1, (1 - y / (height - 1)) / (1 - settings.waterFadeStart)))
+            const water = Math.max(
+              0,
+              Math.min(1, (1 - y / (height - 1)) / (1 - settings.waterFadeStart)),
+            )
             pixels.data[alpha] *= water * water * (3 - 2 * water)
           }
         }

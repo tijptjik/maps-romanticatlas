@@ -4,19 +4,30 @@ import type { ArtworkReview, Painting } from './artwork-review'
 import { createAtlasTitleCard, positionAtlasTitleCard } from './atlas-title-cards'
 import type { drawingFootprint } from './tile-geometry'
 
-type Unit = { art: Painting; footprint: ReturnType<typeof drawingFootprint>; layer: string }
+type Unit = {
+  art: Painting
+  footprint: ReturnType<typeof drawingFootprint>
+  layer: string
+}
 
-export function installReviewQueue(map: AtlasMap, units: Unit[],
+export function installReviewQueue(
+  map: AtlasMap,
+  units: Unit[],
   write: (review: ArtworkReview, method: 'PUT' | 'DELETE') => Promise<ArtworkReview>,
   select: (unit?: Unit, previous?: Painting) => void,
   revise: (art: Painting, mode: RevisionMode) => Promise<() => Promise<void>>,
-  remainingUnits: () => Unit[], renderingCount: () => number, failedRevision: () => Revision | undefined,
-  previousVersion: (art: Painting) => Painting | undefined) {
+  remainingUnits: () => Unit[],
+  renderingCount: () => number,
+  failedRevision: () => Revision | undefined,
+  previousVersion: (art: Painting) => Painting | undefined,
+) {
   function ordered(items: Unit[]) {
     const rows = [...new Set(items.map(unit => unit.art.y))].sort((a, b) => b - a)
     const direction = new Map(rows.map((y, index) => [y, index % 2 ? -1 : 1]))
-    return items.sort(({ art: a }, { art: b }) =>
-      b.y - a.y || direction.get(a.y)! * (a.x - b.x) || a.url.localeCompare(b.url))
+    return items.sort(
+      ({ art: a }, { art: b }) =>
+        b.y - a.y || direction.get(a.y)! * (a.x - b.x) || a.url.localeCompare(b.url),
+    )
   }
   ordered(units)
 
@@ -30,7 +41,8 @@ export function installReviewQueue(map: AtlasMap, units: Unit[],
   card.append(output)
   const tools = document.createElement('div')
   tools.className = 'atlas-revision-actions'
-  tools.innerHTML = '<button type="button" aria-keyshortcuts="A" title="Adjust roads and edges [A]">[A]djust</button><button type="button" aria-keyshortcuts="S" title="Spread this concept across the tile [S]">[S]pread</button>'
+  tools.innerHTML =
+    '<button type="button" aria-keyshortcuts="A" title="Adjust roads and edges [A]">[A]djust</button><button type="button" aria-keyshortcuts="S" title="Spread this concept across the tile [S]">[S]pread</button>'
   card.append(tools)
   const [adjust, spread] = tools.querySelectorAll('button')
   const diff = document.createElement('button')
@@ -59,7 +71,14 @@ export function installReviewQueue(map: AtlasMap, units: Unit[],
   let removed = false
 
   function position() {
-    if (current) positionAtlasTitleCard(map, card, current.art, undefined, current.footprint.bounds)
+    if (current)
+      positionAtlasTitleCard(
+        map,
+        card,
+        current.art,
+        undefined,
+        current.footprint.bounds,
+      )
   }
   function ready() {
     return current && map.getSource<ImageSource>(current.layer)?.image
@@ -77,25 +96,40 @@ export function installReviewQueue(map: AtlasMap, units: Unit[],
     const { clientWidth, clientHeight } = map.getContainer()
     const horizontal = clientWidth * 0.05
     const vertical = clientHeight * 0.05
-    map.fitBounds([[west, south], [east, north]], {
-      padding: { left: horizontal, right: horizontal, top: vertical, bottom: vertical },
-      duration: 0, maxZoom: 22,
-    })
+    map.fitBounds(
+      [
+        [west, south],
+        [east, north],
+      ],
+      {
+        padding: {
+          left: horizontal,
+          right: horizontal,
+          top: vertical,
+          bottom: vertical,
+        },
+        duration: 0,
+        maxZoom: 22,
+      },
+    )
   }
   function progress() {
     const failed = failedRevision()
     failedActions.hidden = !failed
     if (failed && failed.mode !== 'generate') {
       const mode = failed.mode
-      retryRevision.textContent = 'Retry failed ' + failed.mode + ' · ' + failed.source.title
+      retryRevision.textContent = `Retry failed ${failed.mode} · ${failed.source.title}`
       retryRevision.onclick = () => void act(mode, failed.source)
     }
     const rendering = renderingCount()
     const total = reviewed + units.length + rendering
     const position = reviewed + (current ? 1 : 0)
-    const count = position + ' / ' + total
-    output.value = rendering ? count + ' · ' + rendering + ' rendering' : count
-    output.setAttribute('aria-label', current ? 'Image ' + output.value : output.value + ' reviewed')
+    const count = `${position} / ${total}`
+    output.value = rendering ? `${count} · ${rendering} rendering` : count
+    output.setAttribute(
+      'aria-label',
+      current ? `Image ${output.value}` : `${output.value} reviewed`,
+    )
   }
   function displayVersion() {
     select(current, showingPrevious ? previous : undefined)
@@ -104,13 +138,16 @@ export function installReviewQueue(map: AtlasMap, units: Unit[],
       const layer = current.layer
       const source = map.getSource<ImageSource>(layer)
       source?.once('error', () => {
-        if (current?.layer === layer && map.getSource(layer) === source) retry.hidden = false
+        if (current?.layer === layer && map.getSource(layer) === source)
+          retry.hidden = false
       })
     }
     diff.hidden = !previous
     diff.setAttribute('aria-pressed', String(showingPrevious))
     const version = showingPrevious ? 'Previous' : 'Replacement'
-    title.textContent = current ? current.art.title + (previous ? ' · ' + version : '') : ''
+    title.textContent = current
+      ? current.art.title + (previous ? ` · ${version}` : '')
+      : ''
     updateLoading()
   }
   function toggleDiff() {
@@ -141,7 +178,10 @@ export function installReviewQueue(map: AtlasMap, units: Unit[],
     if (units[0] !== current) show()
     else progress()
   }
-  async function act(action: 'accepted' | 'rejected' | 'undo' | RevisionMode, retrySource?: Painting) {
+  async function act(
+    action: 'accepted' | 'rejected' | 'undo' | RevisionMode,
+    retrySource?: Painting,
+  ) {
     const reversing = action === 'undo'
     if (busy || (reversing ? !history.length : !retrySource && !ready())) return
     busy = true
@@ -149,7 +189,7 @@ export function installReviewQueue(map: AtlasMap, units: Unit[],
     try {
       if (action === 'adjust' || action === 'spread') {
         output.value = 'Queuing revision…'
-        const undo = await revise(retrySource ?? current!.art, action)
+        const undo = await revise(retrySource ?? current?.art, action)
         history.push({ unit: retrySource ? undefined : current, undo })
       } else if (reversing) {
         const last = history.at(-1)!
@@ -157,15 +197,18 @@ export function installReviewQueue(map: AtlasMap, units: Unit[],
         history.pop()
         if (last.unit) units.unshift(last.unit)
       } else {
-        const record = await write({ ...current!.art, status: action }, 'PUT')
+        const record = await write({ ...current?.art, status: action }, 'PUT')
         reviewed++
-        history.push({ unit: current, undo: async () => {
-          await write(record, 'DELETE')
-          reviewed--
-        } })
+        history.push({
+          unit: current,
+          undo: async () => {
+            await write(record, 'DELETE')
+            reviewed--
+          },
+        })
       }
     } catch (error) {
-      window.alert('Could not save the artwork review. ' + error.message)
+      window.alert(`Could not save the artwork review. ${error.message}`)
     } finally {
       busy = false
       if (!removed) {
@@ -175,17 +218,40 @@ export function installReviewQueue(map: AtlasMap, units: Unit[],
     }
   }
   function keydown(event: KeyboardEvent) {
-    if (event.repeat || event.isComposing || event.altKey || (event.shiftKey && !['A', 'S', 'D'].includes(event.key)) ||
-        (event.target instanceof Element && event.target.closest('input, textarea, select, [contenteditable]'))) return
-    if (!event.ctrlKey && !event.metaKey && event.key.toLowerCase() === 'd' && previous) {
+    if (
+      event.repeat ||
+      event.isComposing ||
+      event.altKey ||
+      (event.shiftKey && !['A', 'S', 'D'].includes(event.key)) ||
+      (event.target instanceof Element &&
+        event.target.closest('input, textarea, select, [contenteditable]'))
+    )
+      return
+    if (
+      !event.ctrlKey &&
+      !event.metaKey &&
+      event.key.toLowerCase() === 'd' &&
+      previous
+    ) {
       event.preventDefault()
       event.stopImmediatePropagation()
       toggleDiff()
       return
     }
-    const action = event.ctrlKey || event.metaKey ? (event.key.toLowerCase() === 'z' ? 'undo' : null)
-      : event.key.toLowerCase() === 'a' ? 'adjust' : event.key.toLowerCase() === 's' ? 'spread'
-      : event.key === '=' ? 'accepted' : event.key === '-' ? 'rejected' : null
+    const action =
+      event.ctrlKey || event.metaKey
+        ? event.key.toLowerCase() === 'z'
+          ? 'undo'
+          : null
+        : event.key.toLowerCase() === 'a'
+          ? 'adjust'
+          : event.key.toLowerCase() === 's'
+            ? 'spread'
+            : event.key === '='
+              ? 'accepted'
+              : event.key === '-'
+                ? 'rejected'
+                : null
     if (!action) return
     event.preventDefault()
     void act(action)

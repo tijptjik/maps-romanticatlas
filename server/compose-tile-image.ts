@@ -17,11 +17,20 @@ export const composeTileImage = async (
   )
   const generated = generatedImage.data
   if (waterfront) {
-    const rgba = (data: Buffer) => sharp(data)
-      .resize(pixelSize, pixelSize, { fit: 'fill' }).toColourspace('srgb').ensureAlpha().raw().toBuffer()
+    const rgba = (data: Buffer) =>
+      sharp(data)
+        .resize(pixelSize, pixelSize, { fit: 'fill' })
+        .toColourspace('srgb')
+        .ensureAlpha()
+        .raw()
+        .toBuffer()
     const [base, art] = await Promise.all([rgba(source.data), rgba(generated)])
     const pixels = composeWaterfrontPixels(base, art, pixelSize)
-    const data = await sharp(pixels, { raw: { width: pixelSize, height: pixelSize, channels: 4 } }).png().toBuffer()
+    const data = await sharp(pixels, {
+      raw: { width: pixelSize, height: pixelSize, channels: 4 },
+    })
+      .png()
+      .toBuffer()
     return { contentType: 'image/png', data }
   }
   const mask = parseImageDataUrl(

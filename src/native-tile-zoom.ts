@@ -2,7 +2,8 @@ import { originalArtwork } from './artwork-sampling.ts'
 import type { ImageSource, Map as AtlasMap } from 'maplibre-gl'
 import { atlasTileSize, atlasZoom } from './atlas-protocol.ts'
 
-export const artworkZoomScale = (viewportWidth: number) => viewportWidth <= 700 ? 1.75 : 1
+export const artworkZoomScale = (viewportWidth: number) =>
+  viewportWidth <= 700 ? 1.75 : 1
 
 // At the grid zoom a tile spans 512 CSS pixels.
 export const nativeTileZoom = (imageWidth: number) =>
@@ -33,15 +34,23 @@ export const installNativeTileZoom = (map: AtlasMap, minimumZoom: number) => {
       if (distance <= nearest) {
         nearest = distance
         const image = originalArtwork(source.image)
-        const scale = Math.min(image.width / (se.x - nw.x), image.height / (se.y - nw.y))
+        const scale = Math.min(
+          image.width / (se.x - nw.x),
+          image.height / (se.y - nw.y),
+        )
         artworkZoom = map.getZoom() + Math.log2(scale)
       }
     }
 
-    const limit = Math.max(minimumZoom, artworkZoom + Math.log2(artworkZoomScale(width)))
+    const limit = Math.max(
+      minimumZoom,
+      artworkZoom + Math.log2(artworkZoomScale(width)),
+    )
     if (Math.abs(limit - map.getMaxZoom()) > 1e-6) map.setMaxZoom(limit)
   }
-  const schedule = () => { frame ||= requestAnimationFrame(sync) }
+  const schedule = () => {
+    frame ||= requestAnimationFrame(sync)
+  }
   map.getContainer().addEventListener('load', schedule, true)
   map.on('moveend', schedule)
   map.on('resize', schedule)

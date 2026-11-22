@@ -6,12 +6,12 @@ export function createHarbourWater(canvas: HTMLCanvasElement) {
   const plates = new Map<string, HTMLImageElement>()
   return (time: number, night: boolean) => {
     const tall = portrait.matches
-    const key = 'glasshouse' + (tall ? '-portrait' : '') + (night ? '-night' : '')
+    const key = `glasshouse${tall ? '-portrait' : ''}${night ? '-night' : ''}`
     let plate = plates.get(key)
     if (!plate) {
       plate = new Image()
       plate.onload = () => canvas.dispatchEvent(new Event('water-ready'))
-      plate.src = '/pavilion/' + key + '-water.webp'
+      plate.src = `/pavilion/${key}-water.webp`
       plates.set(key, plate)
     }
     if (!plate.complete || !plate.naturalWidth) return
@@ -25,7 +25,7 @@ export function createHarbourWater(canvas: HTMLCanvasElement) {
     }
     // Night reflections stay close to the vertical strokes in the painted water.
     const phase = night ? time * 1.65 : time
-    const amplitude = night ? .48 : 1
+    const amplitude = night ? 0.48 : 1
     context.clearRect(0, 0, w, h)
     for (let y = 0; y < h; y++) {
       const depth = y / h

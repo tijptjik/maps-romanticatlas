@@ -1,7 +1,7 @@
 import { createFogSilhouette } from './fog-silhouette'
 
 function colouredVapour(variant: number, colour: string) {
-  const sprite = createFogSilhouette(variant, .57, 0, 64)
+  const sprite = createFogSilhouette(variant, 0.57, 0, 64)
   const brush = sprite.getContext('2d')!
   brush.globalCompositeOperation = 'source-in'
   brush.fillStyle = colour
@@ -21,26 +21,38 @@ export function createMist(canvas: HTMLCanvasElement) {
   const glowRadius = 61
   const pearl = ctx.createRadialGradient(coreX - 2, coreY, 2, coreX, coreY, glowRadius)
   pearl.addColorStop(0, '#fff')
-  pearl.addColorStop(.22, '#fffdfffa')
-  pearl.addColorStop(.38, '#fff6ffd9')
-  pearl.addColorStop(.54, '#f2e8ff8c')
-  pearl.addColorStop(.73, '#e9e1ff29')
-  pearl.addColorStop(.89, '#ede5ff0c')
+  pearl.addColorStop(0.22, '#fffdfffa')
+  pearl.addColorStop(0.38, '#fff6ffd9')
+  pearl.addColorStop(0.54, '#f2e8ff8c')
+  pearl.addColorStop(0.73, '#e9e1ff29')
+  pearl.addColorStop(0.89, '#ede5ff0c')
   pearl.addColorStop(1, '#f1eaff00')
 
   // Offset two translucent banks behind the pearl so only their outer folds show.
   return (time: number) => {
     ctx.clearRect(0, 0, size, size)
-    const sway = Math.sin(time * .69)
-    const swell = Math.sin(time * .47 + 1.3)
-    ctx.globalAlpha = .46
-    ctx.drawImage(violet, coreX - 46 + 3 * sway, coreY - 51 + 2 * swell, 95 + 4 * swell, 91)
-    ctx.globalAlpha = .43
-    ctx.drawImage(blush, coreX - 53 - 2 * swell, coreY - 46 - 3 * sway, 94, 89 + 4 * sway)
+    const sway = Math.sin(time * 0.69)
+    const swell = Math.sin(time * 0.47 + 1.3)
+    ctx.globalAlpha = 0.46
+    ctx.drawImage(
+      violet,
+      coreX - 46 + 3 * sway,
+      coreY - 51 + 2 * swell,
+      95 + 4 * swell,
+      91,
+    )
+    ctx.globalAlpha = 0.43
+    ctx.drawImage(
+      blush,
+      coreX - 53 - 2 * swell,
+      coreY - 46 - 3 * sway,
+      94,
+      89 + 4 * sway,
+    )
     ctx.globalAlpha = 1
     ctx.fillStyle = pearl
     ctx.fillRect(coreX - glowRadius, coreY - glowRadius, glowRadius * 2, glowRadius * 2)
-    const pulse = .89 + .025 * swell
+    const pulse = 0.89 + 0.025 * swell
     book.style.setProperty('--orb-radiance', pulse.toFixed(3))
   }
 }

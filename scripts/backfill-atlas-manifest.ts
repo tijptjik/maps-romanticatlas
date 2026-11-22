@@ -5,7 +5,9 @@ const origin = (
   process.env.ATLAS_ALLOWED_ORIGIN ??
   'https://romanticatlas.hype.hk'
 ).replace(/\/$/, '')
-const token = (process.env.ATLAS_MANIFEST_TOKEN ?? process.env.ATLAS_ADMIN_TOKEN)?.trim()
+const token = (
+  process.env.ATLAS_MANIFEST_TOKEN ?? process.env.ATLAS_ADMIN_TOKEN
+)?.trim()
 
 if (!token) {
   throw new Error(

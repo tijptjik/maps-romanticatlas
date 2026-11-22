@@ -16,14 +16,16 @@ export const loadingConcepts = [
   {
     title: 'A World Reimagined',
     question: 'Is imagination a way of knowing, not an escape from knowledge?',
-    quote: 'The still, sad music of humanity, / Nor harsh nor grating, though of ample power',
+    quote:
+      'The still, sad music of humanity, / Nor harsh nor grating, though of ample power',
     author: 'William Wordsworth',
     work: 'Lines Written a Few Miles above Tintern Abbey',
   },
   {
     title: 'The Measuring Eye',
     question: 'What do we lose when the world is reduced to its measurements?',
-    quote: 'The world is too much with us; late and soon, / Getting and spending, we lay waste our powers;',
+    quote:
+      'The world is too much with us; late and soon, / Getting and spending, we lay waste our powers;',
     author: 'William Wordsworth',
     work: 'The World Is Too Much with Us',
   },
@@ -86,7 +88,8 @@ export const loadingConcepts = [
   {
     title: 'The Pathless City',
     question: 'What kinds of freedom are found outside the prescribed route?',
-    quote: 'There is a pleasure in the pathless woods, / There is a rapture on the lonely shore',
+    quote:
+      'There is a pleasure in the pathless woods, / There is a rapture on the lonely shore',
     author: 'Lord Byron',
     work: 'Childe Harold’s Pilgrimage',
   },
@@ -114,13 +117,15 @@ export const loadingConcepts = [
   {
     title: 'The Unseen Force',
     question: 'Can the invisible become a material for the city?',
-    quote: 'One infinite and intellectual Breeze, / At once the Soul of each, and God of all.',
+    quote:
+      'One infinite and intellectual Breeze, / At once the Soul of each, and God of all.',
     author: 'S. T. Coleridge',
     work: 'The Eolian Harp',
   },
   {
     title: 'The Dreaming Instrument',
-    question: 'What happens when a tool begins to produce more than its maker intended?',
+    question:
+      'What happens when a tool begins to produce more than its maker intended?',
     quote: 'Our sweetest songs are those that tell of saddest thought.',
     author: 'Percy Bysshe Shelley',
     work: 'To a Skylark',

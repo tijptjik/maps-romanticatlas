@@ -5,12 +5,24 @@ import { drawingFootprint } from './tile-geometry'
 
 // Feed the frames into the painting's existing raster layer so fog, labels,
 // opacity, tile registration and click handling all keep working.
-export function installAnimatedPainting(map: AtlasMap, art: Painting, url: string, getSource: () => ImageSource | undefined) {
+export function installAnimatedPainting(
+  map: AtlasMap,
+  art: Painting,
+  url: string,
+  getSource: () => ImageSource | undefined,
+) {
   if (!('ImageDecoder' in window)) return () => {}
   const reduced = matchMedia('(prefers-reduced-motion: reduce)')
-  const { west, south, east, north } = drawingFootprint({ ...art, tileSpan: { columns: art.columns ?? 1, rows: art.rows } }).bounds
-  const still = new URL(art.animation?.plate ?? art.imageUrl ?? art.url, document.baseURI).href
-  const matchesPoster = (source?: ImageSource) => source?.url && new URL(source.url, document.baseURI).href === still
+  const { west, south, east, north } = drawingFootprint({
+    ...art,
+    tileSpan: { columns: art.columns ?? 1, rows: art.rows },
+  }).bounds
+  const still = new URL(
+    art.animation?.plate ?? art.imageUrl ?? art.url,
+    document.baseURI,
+  ).href
+  const matchesPoster = (source?: ImageSource) =>
+    source?.url && new URL(source.url, document.baseURI).href === still
   let selected = false
   let failed = false
   let active: AbortController | undefined
@@ -24,7 +36,8 @@ export function installAnimatedPainting(map: AtlasMap, art: Painting, url: strin
     const stop = () => {
       clearTimeout(timer)
       decoder?.close()
-      if (frame && getSource() === source && matchesPoster(source)) source.updateImage({ image: poster })
+      if (frame && getSource() === source && matchesPoster(source))
+        source.updateImage({ image: poster })
       frame?.close()
     }
     signal.addEventListener('abort', stop, { once: true })
@@ -36,7 +49,7 @@ export function installAnimatedPainting(map: AtlasMap, art: Painting, url: strin
     }
     try {
       const response = await fetch(url, { signal })
-      if (!response.ok) throw Error('HTTP ' + response.status)
+      if (!response.ok) throw Error(`HTTP ${response.status}`)
       const data = await response.arrayBuffer()
       signal.throwIfAborted()
       decoder = new ImageDecoder({ data, type: 'image/webp', preferAnimation: true })
@@ -50,23 +63,47 @@ export function installAnimatedPainting(map: AtlasMap, art: Painting, url: strin
           const { image } = await decoder.decode({ frameIndex: index })
           const duration = (image.duration ?? 83333) / 1000
           let bitmap: ImageBitmap
-          try { bitmap = await createImageBitmap(image) } finally { image.close() }
-          if (signal.aborted) { bitmap.close(); return }
+          try {
+            bitmap = await createImageBitmap(image)
+          } finally {
+            image.close()
+          }
+          if (signal.aborted) {
+            bitmap.close()
+            return
+          }
           source.updateImage({ image: bitmap })
           frame?.close()
           frame = bitmap
           index = (index + 1) % count
-          timer = window.setTimeout(next, Math.max(0, duration - (performance.now() - start)))
-        } catch (error) { fail(error) }
+          timer = window.setTimeout(
+            next,
+            Math.max(0, duration - (performance.now() - start)),
+          )
+        } catch (error) {
+          fail(error)
+        }
       }
       if (!signal.aborted) void next()
-    } catch (error) { fail(error) }
+    } catch (error) {
+      fail(error)
+    }
   }
 
   function refresh() {
-    const source = selected && !failed && !reduced.matches && !document.hidden &&
-      map.getBounds().intersects([[west, south], [east, north]]) ? getSource() : undefined
-    const ready = matchesPoster(source) && source.loaded() && source.image ? source : undefined
+    const source =
+      selected &&
+      !failed &&
+      !reduced.matches &&
+      !document.hidden &&
+      map.getBounds().intersects([
+        [west, south],
+        [east, north],
+      ])
+        ? getSource()
+        : undefined
+    const ready =
+      matchesPoster(source) && source.loaded() && source.image ? source : undefined
     if (ready === playing) return
     active?.abort()
     playing = ready
@@ -86,5 +123,8 @@ export function installAnimatedPainting(map: AtlasMap, art: Painting, url: strin
     map.off('idle', refresh)
     active?.abort()
   })
-  return (visible: boolean) => { selected = visible; refresh() }
+  return (visible: boolean) => {
+    selected = visible
+    refresh()
+  }
 }

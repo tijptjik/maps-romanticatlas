@@ -24,8 +24,13 @@ const actionIcon = (paths: string) => `<svg viewBox="0 0 24 24" fill="none"
 const shareIcon = actionIcon('<path d="M12 15V3m-4 4 4-4 4 4M6 10H4v11h16V10h-2"/>')
 
 const isMobileDevice = () => {
-  const userAgentData = navigator as Navigator & { userAgentData?: { mobile?: boolean } }
-  return userAgentData.userAgentData?.mobile ?? /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
+  const userAgentData = navigator as Navigator & {
+    userAgentData?: { mobile?: boolean }
+  }
+  return (
+    userAgentData.userAgentData?.mobile ??
+    /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
+  )
 }
 
 const canShareImageFile = (image: Blob) => {
@@ -37,7 +42,9 @@ const canShareImageFile = (image: Blob) => {
     return false
   }
 }
-const retakeIcon = actionIcon('<path d="M5 8h3l2-3h5l2 3h4v11h-6"/><circle cx="13" cy="12" r="3"/><path d="M2 16a5 5 0 1 1 1 5m-1-9v4h4"/>')
+const retakeIcon = actionIcon(
+  '<path d="M5 8h3l2-3h5l2 3h4v11h-6"/><circle cx="13" cy="12" r="3"/><path d="M2 16a5 5 0 1 1 1 5m-1-9v4h4"/>',
+)
 
 const nextFrame = () =>
   new Promise<void>(resolve => {
@@ -166,11 +173,7 @@ const drawTitleCard = (
     context.textAlign = 'center'
     context.textBaseline = 'middle'
     context.letterSpacing = titleStyle?.letterSpacing || '0px'
-    const lines = wrapTitle(
-      context,
-      title.textContent || '',
-      title.clientWidth,
-    )
+    const lines = wrapTitle(context, title.textContent || '', title.clientWidth)
     const lineHeight = Number.parseFloat(titleStyle?.lineHeight || '') || 16
     const titleCenter = title.offsetTop + title.offsetHeight / 2
     const firstLineCenter = titleCenter - ((lines.length - 1) * lineHeight) / 2
@@ -230,8 +233,12 @@ const captureMap = async (map: MapLibreMap, frame: HTMLImageElement) => {
     // Rail centerlines in the 864 × 1080 artwork. Leave the outer filigree on transparent pixels.
     context.save()
     context.beginPath()
-    context.rect(frameBounds.width * 55 / 864, frameBounds.height * 57 / 1080,
-      frameBounds.width * 750 / 864, frameBounds.height * 952 / 1080)
+    context.rect(
+      (frameBounds.width * 55) / 864,
+      (frameBounds.height * 57) / 1080,
+      (frameBounds.width * 750) / 864,
+      (frameBounds.height * 952) / 1080,
+    )
     context.clip()
     context.drawImage(
       mapCanvas,
@@ -353,9 +360,11 @@ export const installAtlasSharing = (
   previewLink.textContent = 'Open image'
   previewLink.target = '_blank'
   previewLink.rel = 'noopener noreferrer'
-  const devShareOrigin = import.meta.env.DEV && import.meta.env.VITE_ATLAS_DEV_SHARE_ORIGIN
+  const devShareOrigin =
+    import.meta.env.DEV && import.meta.env.VITE_ATLAS_DEV_SHARE_ORIGIN
   if (devShareOrigin) {
-    resultCopy.textContent = 'Scan or open the image on a device connected to your tailnet.'
+    resultCopy.textContent =
+      'Scan or open the image on a device connected to your tailnet.'
   }
   const retakeButton = document.createElement('button')
   retakeButton.className = 'atlas-share-retake'
@@ -531,8 +540,13 @@ export const installAtlasSharing = (
   result.addEventListener('click', event => {
     if (event.target !== result) return
     const bounds = result.getBoundingClientRect()
-    if (event.clientX < bounds.left || event.clientX >= bounds.right ||
-      event.clientY < bounds.top || event.clientY >= bounds.bottom) showMap()
+    if (
+      event.clientX < bounds.left ||
+      event.clientX >= bounds.right ||
+      event.clientY < bounds.top ||
+      event.clientY >= bounds.bottom
+    )
+      showMap()
   })
   result.addEventListener('cancel', event => {
     event.preventDefault()

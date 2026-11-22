@@ -13,10 +13,10 @@
       "custom_domain": true
     }
   ],
-	"vars": {
-		"ATLAS_GENERATOR_ORIGIN": "https://home.type.hk/atlas-generation",
-		"ATLAS_ALLOWED_ORIGIN": "https://romanticatlas.hype.hk",
-		"ATLAS_SHARE_ASSET_ORIGIN": "https://romanticassets.hype.hk"
+  "vars": {
+    "ATLAS_GENERATOR_ORIGIN": "https://home.type.hk/atlas-generation",
+    "ATLAS_ALLOWED_ORIGIN": "https://romanticatlas.hype.hk",
+    "ATLAS_SHARE_ASSET_ORIGIN": "https://romanticassets.hype.hk"
   },
   "r2_buckets": [
     {

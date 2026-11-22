@@ -6,7 +6,8 @@ import type { RevealImage } from './fake-render-state'
 
 export function seedForPainting(art: Painting): RevealImage | null {
   if (art.rows !== 1 || (art.columns ?? 1) !== 1) return null
-  const scene = art.scene ?? parseAtlasTilePath(art.url.split('?')[0], isAtlasScene)?.scene
+  const scene =
+    art.scene ?? parseAtlasTilePath(art.url.split('?')[0], isAtlasScene)?.scene
   if (!isAtlasScene(scene)) return null
   return { title: art.title, url: art.imageUrl ?? art.url, scene, contentBounds: null }
 }
@@ -22,7 +23,7 @@ export function restoreSeedScene(image: RevealImage): RevealImage {
 const seeds = new Map<string, RevealImage>()
 for (const sheet of releaseCatalog.sheets) {
   for (const art of sheet.art) {
-    const key = art.x + '/' + art.y
+    const key = `${art.x}/${art.y}`
     const seed = seedForPainting(art)
     if (!seed) continue
     releaseScenes.set(art.url, seed.scene)
@@ -32,5 +33,5 @@ for (const sheet of releaseCatalog.sheets) {
 }
 
 export function fakeRenderSeed(position: { x: number; y: number }): RevealImage | null {
-  return seeds.get(position.x + '/' + position.y) ?? null
+  return seeds.get(`${position.x}/${position.y}`) ?? null
 }

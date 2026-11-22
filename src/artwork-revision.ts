@@ -18,8 +18,21 @@ export function revisionId(body: any): string | undefined {
 export function revisionRequest(body: any) {
   if (body?.mode !== 'adjust' && body?.mode !== 'spread') return null
   const art = parseArtworkReview({ ...body.source, status: 'rejected' })
-  if (!art || ![body.mapImage, body.previousImage].every(value =>
-    typeof value === 'string' && value.length <= 4_500_000 && value.startsWith('data:image/png;base64,'))) return null
+  if (
+    !art ||
+    ![body.mapImage, body.previousImage].every(
+      value =>
+        typeof value === 'string' &&
+        value.length <= 4_500_000 &&
+        value.startsWith('data:image/png;base64,'),
+    )
+  )
+    return null
   const { status, ...source } = art
-  return { mode: body.mode as RevisionMode, source, mapImage: body.mapImage, previousImage: body.previousImage }
+  return {
+    mode: body.mode as RevisionMode,
+    source,
+    mapImage: body.mapImage,
+    previousImage: body.previousImage,
+  }
 }

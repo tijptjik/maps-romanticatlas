@@ -11,9 +11,11 @@ export const composeWaterfrontPixels = (
     for (let x = 0; x < size; x++) {
       const edge = Math.min(x, y, size - 1 - x, size - 1 - y)
       const offset = (y * size + x) * 4
-      const opacity = Math.min(1, edge / margin) * generated[offset + 3] / 255
+      const opacity = (Math.min(1, edge / margin) * generated[offset + 3]) / 255
       for (let channel = offset; channel < offset + 3; channel++) {
-        result[channel] = Math.round(source[channel] + (generated[channel] - source[channel]) * opacity)
+        result[channel] = Math.round(
+          source[channel] + (generated[channel] - source[channel]) * opacity,
+        )
       }
     }
   }

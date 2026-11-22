@@ -4,8 +4,7 @@ export { atlasZoom }
 
 const tileCountAtZoom = zoom => 2 ** zoom
 
-const tileLongitude = (x, zoom = atlasZoom) =>
-  (x / tileCountAtZoom(zoom)) * 360 - 180
+const tileLongitude = (x, zoom = atlasZoom) => (x / tileCountAtZoom(zoom)) * 360 - 180
 
 const tileLatitude = (y, zoom = atlasZoom) => {
   const radians = Math.PI - (2 * Math.PI * y) / tileCountAtZoom(zoom)
@@ -44,12 +43,19 @@ export const tilePolygon = tile => {
 
 // Artwork images are anchored at their southwest tile and extend north and east.
 export const drawingFootprint = (tile: {
-  x: number; y: number; scene?: string; tileSpan?: { columns: number; rows: number }
+  x: number
+  y: number
+  scene?: string
+  tileSpan?: { columns: number; rows: number }
 }) => {
-  const { columns, rows } = tile.tileSpan ?? { columns: 1, rows: tile.scene === 'skyscraper' ? 2 : 1 }
+  const { columns, rows } = tile.tileSpan ?? {
+    columns: 1,
+    rows: tile.scene === 'skyscraper' ? 2 : 1,
+  }
   const cells = []
   for (let row = 0; row < rows; row++) {
-    for (let col = 0; col < columns; col++) cells.push({ x: tile.x + col, y: tile.y - row })
+    for (let col = 0; col < columns; col++)
+      cells.push({ x: tile.x + col, y: tile.y - row })
   }
   const { west, south } = tileBounds(tile)
   const { east, north } = tileBounds(cells.at(-1))

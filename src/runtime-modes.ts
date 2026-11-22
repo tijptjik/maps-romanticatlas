@@ -29,13 +29,17 @@ export const kioskModeEnabled = () => modeEnabled('kioskMode')
 export const noMusicEnabled = () =>
   new URLSearchParams(window.location.search).has('noMusic')
 
-export const noFakeRenderEnabled = () => modeEnabled('noFakeRender') || modeEnabled('no-fake-render')
+export const noFakeRenderEnabled = () =>
+  modeEnabled('noFakeRender') || modeEnabled('no-fake-render')
 
 export const noNoiseEnabled = () => modeEnabled('noNoise')
 
 // URLSearchParams adds '=' to empty values. Keep map mode links bare.
 export const mapModePath = (url: URL) => {
-  const search = url.search.replace(/(^\?|&)(admin|diagnostics|review|revealed)=(?:true)?(?=&|$)/g, '$1$2')
+  const search = url.search.replace(
+    /(^\?|&)(admin|diagnostics|review|revealed)=(?:true)?(?=&|$)/g,
+    '$1$2',
+  )
   return url.pathname + search + url.hash
 }
 
@@ -54,7 +58,8 @@ const toggleModeAndReload = (name: 'admin' | 'diagnostics') => {
   if (queryModeEnabled(url.searchParams, name)) {
     url.searchParams.delete(name)
   } else {
-    for (const flag of ['admin', 'diagnostics', 'review', 'revealed']) url.searchParams.delete(flag)
+    for (const flag of ['admin', 'diagnostics', 'review', 'revealed'])
+      url.searchParams.delete(flag)
     url.searchParams.set(name, '')
   }
   window.location.assign(mapModePath(url))

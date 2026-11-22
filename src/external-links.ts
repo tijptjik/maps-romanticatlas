@@ -16,12 +16,21 @@ export function disableExternalLinks() {
   scan(document.documentElement)
   new MutationObserver(records => {
     for (const record of records) {
-      if (record.type === 'attributes' && record.target instanceof Element && record.target.matches(selector)) {
+      if (
+        record.type === 'attributes' &&
+        record.target instanceof Element &&
+        record.target.matches(selector)
+      ) {
         disable(record.target)
       }
       for (const node of record.addedNodes) {
         if (node instanceof Element) scan(node)
       }
     }
-  }).observe(document.documentElement, { subtree: true, childList: true, attributes: true, attributeFilter: ['href'] })
+  }).observe(document.documentElement, {
+    subtree: true,
+    childList: true,
+    attributes: true,
+    attributeFilter: ['href'],
+  })
 }

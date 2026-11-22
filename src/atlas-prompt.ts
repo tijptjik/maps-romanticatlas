@@ -3,32 +3,32 @@ import { atlasSeaScenes, atlasScenes, type AtlasScene } from './atlas-scenes.ts'
 
 export const edgesAndFigures = {
   edges: [
-    "Plan the complete intervention inside the available site.",
-    "Follow the surveyed footprint and let the activity occupy its connected terraces, courts and approaches.",
-    "Finish each exposed edge at a real feature: a retaining wall turns the corner, a stair reaches its last landing, and a gate meets the existing path at grade.",
-    "Use parcel lines to place objects. Where a roof, stall or workshop would protrude past the usable site, shorten its span or move it inward so its end gable, projecting eave and return wall are all visible.",
-    "Trace each exposed outline as if the basemap were hidden. Give it a built or living end even where it runs alongside a straight street. Preserve fine projections and the openings between them when isolating the painting.",
-    "Then inspect that outline against the registered map. A crop is justified only at the actual tile boundary where the same surveyed building footprint or ground route demonstrably continues beyond it. A parcel boundary, placement-guide edge or inset safety margin is not evidence of continuation. Do not invent off-tile continuation to excuse an unfinished object.",
-    "At every other exposed end, finish the object in three dimensions: roof ridge and eave meet a return wall, deck boards meet a fascia and complete supports, railings turn or terminate at posts, and planting beds retain their soil. Never slice a raised walkway, canopy, tree, person or planter merely to expose the street beneath it. Where the street must remain visible, redesign complete objects on either side before drawing.",
-    "Allow clearance for the projected tops of structures, foliage, animals, people and contact shade inside the outer frame.",
-    "For a multi-tile composition apply this clearance to the outside of the combined frame; carry continuous features through its internal seam.",
+    'Plan the complete intervention inside the available site.',
+    'Follow the surveyed footprint and let the activity occupy its connected terraces, courts and approaches.',
+    'Finish each exposed edge at a real feature: a retaining wall turns the corner, a stair reaches its last landing, and a gate meets the existing path at grade.',
+    'Use parcel lines to place objects. Where a roof, stall or workshop would protrude past the usable site, shorten its span or move it inward so its end gable, projecting eave and return wall are all visible.',
+    'Trace each exposed outline as if the basemap were hidden. Give it a built or living end even where it runs alongside a straight street. Preserve fine projections and the openings between them when isolating the painting.',
+    'Then inspect that outline against the registered map. A crop is justified only at the actual tile boundary where the same surveyed building footprint or ground route demonstrably continues beyond it. A parcel boundary, placement-guide edge or inset safety margin is not evidence of continuation. Do not invent off-tile continuation to excuse an unfinished object.',
+    'At every other exposed end, finish the object in three dimensions: roof ridge and eave meet a return wall, deck boards meet a fascia and complete supports, railings turn or terminate at posts, and planting beds retain their soil. Never slice a raised walkway, canopy, tree, person or planter merely to expose the street beneath it. Where the street must remain visible, redesign complete objects on either side before drawing.',
+    'Allow clearance for the projected tops of structures, foliage, animals, people and contact shade inside the outer frame.',
+    'For a multi-tile composition apply this clearance to the outside of the combined frame; carry continuous features through its internal seam.',
     "Preserve the source map's exact ground colour and registered streets in all untouched areas.",
-    "At native resolution follow the actual painted silhouette around parapets, railings, treads, branches and openings.",
-    "For a keyed overlay, carry the uniform key right up to that silhouette and through exposed gaps.",
-    "Keep a raised object continuous wherever it passes in front of a mapped feature behind it. Open a gap only where the viewer can see through the painted structure. Leave detached outlines of existing roads and roofs to the basemap.",
-    "Keep the edge crisp: no rectangular feather, haze, colour halo, clipped steps or stray fragments of neighbouring paths.",
-    "Before finishing, inspect every side of every painted island and every internal opening, not only the most conspicuous defect. Trace each roof, wall, deck, railing, tree canopy and path to its end. Check that visible approaches reach a real entrance or continue along the surveyed route; do not leave detached road strips ending in empty water or ground. In a repair, recheck the entire perimeter after editing and preserve useful site coverage rather than shrinking the composition to hide a cutoff.",
+    'At native resolution follow the actual painted silhouette around parapets, railings, treads, branches and openings.',
+    'For a keyed overlay, carry the uniform key right up to that silhouette and through exposed gaps.',
+    'Keep a raised object continuous wherever it passes in front of a mapped feature behind it. Open a gap only where the viewer can see through the painted structure. Leave detached outlines of existing roads and roofs to the basemap.',
+    'Keep the edge crisp: no rectangular feather, haze, colour halo, clipped steps or stray fragments of neighbouring paths.',
+    'Before finishing, inspect every side of every painted island and every internal opening, not only the most conspicuous defect. Trace each roof, wall, deck, railing, tree canopy and path to its end. Check that visible approaches reach a real entrance or continue along the surveyed route; do not leave detached road strips ending in empty water or ground. In a repair, recheck the entire perimeter after editing and preserve useful site coverage rather than shrinking the composition to hide a cutoff.',
   ].join(' '),
   figures: [
     "Use the tile's ground scale and the same vertical projection for every person.",
-    "At Hong Kong z18 a 141 m-wide tile rendered 1024 px wide gives a 1.7 m standing adult about 7.4 vertical pixels and a 2.1 m doorway about 9 pixels at the 0.60 height projection.",
-    "Scale those measurements with the actual ground width and pixel resolution.",
-    "Use a correctly scaled standing pedestrian by a doorway as the reference throughout, including the nearest terrace.",
-    "Match head size and shoulder width across diners, staff and passers-by.",
-    "A seated adult has a lower crown than a standing companion on the same floor.",
-    "Size stools, counters, rails and hand-held objects against those people: feet meet the floor or pedals, knees fit below the table and a hand reaches the serving surface from the seat.",
+    'At Hong Kong z18 a 141 m-wide tile rendered 1024 px wide gives a 1.7 m standing adult about 7.4 vertical pixels and a 2.1 m doorway about 9 pixels at the 0.60 height projection.',
+    'Scale those measurements with the actual ground width and pixel resolution.',
+    'Use a correctly scaled standing pedestrian by a doorway as the reference throughout, including the nearest terrace.',
+    'Match head size and shoulder width across diners, staff and passers-by.',
+    'A seated adult has a lower crown than a standing companion on the same floor.',
+    'Size stools, counters, rails and hand-held objects against those people: feet meet the floor or pedals, knees fit below the table and a hand reaches the serving surface from the seat.',
     "Preserve tiny figures at map zoom; communicate the brief through the site's layout and working parts.",
-    "Check the largest foreground figure against a nearby walker at native resolution, and check the complete perimeter against the neighbouring map.",
+    'Check the largest foreground figure against a nearby walker at native resolution, and check the complete perimeter against the neighbouring map.',
   ].join(' '),
 }
 
@@ -64,16 +64,17 @@ export const atlasDrawingDirection = [
   'A raised roof may hide an amber street behind the building. Keep the street aligned where it reappears on both sides. Leave foreground streets visible and finish every roof and rear corner inside the safety margin.',
 ].join(' ')
 
-export const atlasSkyscraperPrompt = (brief: string, heightMetres: number) => [
-  brief,
-  'Draw one complete inhabited skyscraper as a single illustration. In the guide, the filled polygon is the surveyed ground footprint and the separate gauge measures projected height from its rear edge. Preserve the foot of each visible wall, the entry orientation and the parcel boundary. Invent the entire structure above it.',
-  `The highest point is ${heightMetres} metres above the base. The tower rises from the southern tile into the tile to its north.`,
-  atlasProjectionDirection,
-  'Begin with the extraordinary thing this place allows someone to do in the sky. Let that action determine the section and silhouette. A flight path might hollow out an inhabited ring; performers might cross a suspended stage between folded shells; water might descend through a split tower whose counterweight hangs in the gap. Choose a structural idea specific to this brief. Across a series, vary the load paths, crown heights, asymmetry and openings as well as the colour.',
-  'Follow the route from the street to the principal sky space. Show where a shell bears on a pier, where a suspended room hangs, or where a bridge lands. Compose foreground, middle and rear volumes with enough open air to see between them. Keep the finished back edges and crown inside the image.',
-  atlasIllustrationDirection,
-  'Isolate the whole silhouette on uniform pure magenta #ff00ff for alpha extraction, including open sky visible through holes. Reserve this colour for transparency. Keep shadows on the artwork itself. Omit labels, guide marks, frame and ground slab.',
-].join(' ')
+export const atlasSkyscraperPrompt = (brief: string, heightMetres: number) =>
+  [
+    brief,
+    'Draw one complete inhabited skyscraper as a single illustration. In the guide, the filled polygon is the surveyed ground footprint and the separate gauge measures projected height from its rear edge. Preserve the foot of each visible wall, the entry orientation and the parcel boundary. Invent the entire structure above it.',
+    `The highest point is ${heightMetres} metres above the base. The tower rises from the southern tile into the tile to its north.`,
+    atlasProjectionDirection,
+    'Begin with the extraordinary thing this place allows someone to do in the sky. Let that action determine the section and silhouette. A flight path might hollow out an inhabited ring; performers might cross a suspended stage between folded shells; water might descend through a split tower whose counterweight hangs in the gap. Choose a structural idea specific to this brief. Across a series, vary the load paths, crown heights, asymmetry and openings as well as the colour.',
+    'Follow the route from the street to the principal sky space. Show where a shell bears on a pier, where a suspended room hangs, or where a bridge lands. Compose foreground, middle and rear volumes with enough open air to see between them. Keep the finished back edges and crown inside the image.',
+    atlasIllustrationDirection,
+    'Isolate the whole silhouette on uniform pure magenta #ff00ff for alpha extraction, including open sky visible through holes. Reserve this colour for transparency. Keep shadows on the artwork itself. Omit labels, guide marks, frame and ground slab.',
+  ].join(' ')
 
 export const atlasPrompt = (scene: AtlasScene, hasSea: boolean) => {
   const waterfront = hasSea && atlasSeaScenes.has(scene)
@@ -81,7 +82,9 @@ export const atlasPrompt = (scene: AtlasScene, hasSea: boolean) => {
     ? hasSea
       ? 'The tile contains visible sea or coastal water; build this waterfront scene from the available coastal strip out over the blue nearshore water zone on piles, piers or floating pontoons connected to shore. A narrow strip of land is sufficient for the entrance and gangways. Preserve the coastline beneath the structure; do not fill in the sea. Leave open water visible between supports and around platforms.'
       : 'This tile does not contain visible sea or coastal water. Do not create the sea-side event; preserve the map unchanged.'
-    : hasSea ? 'Connect the activity on shore to the water with a loading yard and a moored cargo boat suited to the scene. Leave open water visible around each hull.' : ''
+    : hasSea
+      ? 'Connect the activity on shore to the water with a loading yard and a moored cargo boat suited to the scene. Leave open water visible around each hull.'
+      : ''
 
   const tileRule = `Create ${atlasScenes[scene]} on the mapped parcels in this single z18 map tile, leaving a ${waterfront ? 5 : 10}% safety margin.`
   const continuityRule =
@@ -90,7 +93,8 @@ export const atlasPrompt = (scene: AtlasScene, hasSea: boolean) => {
     'The first image is the source map. The second image is a zoning guide: brighter green marks priority building footprints and the remaining green areas are safe to transform, amber permits upper architecture to overlap a background street, blue permits moored vessels and shore-connected piers, piled buildings or floating platforms over existing sea, and red is protected. Use the guide as an instruction, not as artwork.'
   const preservationRule =
     'Preserve the exact tile size, orientation, scale, coastline, roads, paths, boundaries, and labels. Preserve water except where an allowed waterfront structure covers it; never replace water with land.'
-  const edgeRule = 'Keep the original basemap visible through the outer margin and between the added sites.'
+  const edgeRule =
+    'Keep the original basemap visible through the outer margin and between the added sites.'
   const infrastructureRule =
     'Treat every existing road and path as hard pixel-registered infrastructure: trace its original centerline exactly, keep every junction and curve in the same position, and preserve the road surface anywhere it is visible around an upright building. Only raised architecture on a southern footprint may obscure an amber segment.'
   const roadRestrictionRule =
@@ -116,7 +120,8 @@ export const atlasPrompt = (scene: AtlasScene, hasSea: boolean) => {
     waterfront ? atlasSiteDirection : atlasDrawingDirection,
     atlasIllustrationDirection,
     seaRule,
-    waterfront && `Target ${coastalSceneCoverage * 100}% of the entire tile in actual illustrated footprint. Carry one working waterfront complex well out over the water with broad connected decks, distinct buildings and populated working areas. Keep the people and doorways at atlas scale. Leave water channels between structures.`,
+    waterfront &&
+      `Target ${coastalSceneCoverage * 100}% of the entire tile in actual illustrated footprint. Carry one working waterfront complex well out over the water with broad connected decks, distinct buildings and populated working areas. Keep the people and doorways at atlas scale. Leave water channels between structures.`,
   ]
     .filter(Boolean)
     .join(' ')

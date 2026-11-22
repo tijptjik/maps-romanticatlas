@@ -4,8 +4,9 @@ import { join } from 'node:path'
 import { chromium } from 'playwright'
 
 const browser = await chromium.launch({
-  channel: 'chrome', headless: false,
-  args: ['--ozone-platform=x11', '--class=' + process.env.DEV_RUNNER_CHROME_CLASS],
+  channel: 'chrome',
+  headless: false,
+  args: ['--ozone-platform=x11', `--class=${process.env.DEV_RUNNER_CHROME_CLASS}`],
 })
 try {
   const page = await browser.newPage({ reducedMotion: 'reduce' })
@@ -15,9 +16,15 @@ try {
     AudioBufferSourceNode.prototype.start = function (...args) {
       const result = start.apply(this, args)
       if (this.loop && this.buffer) {
-        const observation = { duration: this.buffer.duration, ended: false, state: this.context.state }
+        const observation = {
+          duration: this.buffer.duration,
+          ended: false,
+          state: this.context.state,
+        }
         window.themeStarts.push(observation)
-        this.addEventListener('ended', () => { observation.ended = true })
+        this.addEventListener('ended', () => {
+          observation.ended = true
+        })
       }
       return result
     }
@@ -36,9 +43,14 @@ try {
   await control.click()
   await page.waitForFunction(() => window.themeStarts.length === 2)
   const starts = await page.evaluate(() => window.themeStarts)
-  assert.ok(starts.every(s => Math.abs(s.duration - 100.786) < .02 && s.state === 'running'))
+  assert.ok(
+    starts.every(s => Math.abs(s.duration - 100.786) < 0.02 && s.state === 'running'),
+  )
   assert.equal(starts[1].ended, false)
-  await writeFile(join(process.env.DEV_RUNNER_ARTIFACTS, 'theme-playback.json'), JSON.stringify(starts))
+  await writeFile(
+    join(process.env.DEV_RUNNER_ARTIFACTS, 'theme-playback.json'),
+    JSON.stringify(starts),
+  )
 } finally {
   await browser.close()
 }

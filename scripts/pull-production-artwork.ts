@@ -43,7 +43,7 @@ async function optionalFile(path: string) {
 
 async function install(path: string, bytes: Uint8Array) {
   await mkdir(dirname(path), { recursive: true })
-  const tmp = path + '.' + randomUUID()
+  const tmp = `${path}.${randomUUID()}`
   await writeFile(tmp, bytes)
   try {
     await link(tmp, path)
@@ -69,7 +69,7 @@ export async function productionArtwork(root: string): Promise<ProductionArtwork
     })
     if (!response.ok)
       throw new Error(
-        'Production artwork request failed: ' + path + ' HTTP ' + response.status,
+        `Production artwork request failed: ${path} HTTP ${response.status}`,
       )
     return response.json()
   }
@@ -89,13 +89,13 @@ export async function productionArtwork(root: string): Promise<ProductionArtwork
       return
     const key = published.split(/[?#]/)[0].slice(1)
     if (!releaseFileKey.test(key) || !published.startsWith('/'))
-      throw new Error('Invalid published media: ' + published)
+      throw new Error(`Invalid published media: ${published}`)
     media[path.split('?')[0]] = key
   }
   for (const sheet of catalog.sheets) {
     for (const art of sheet.art) {
       if (!parseArtworkReview({ ...art, status: 'accepted' }))
-        throw new Error('Invalid production painting: ' + art.url)
+        throw new Error(`Invalid production painting: ${art.url}`)
       mapMedia(art.url, art.imageUrl)
       delete art.imageUrl
       const animation = art.animation
@@ -103,7 +103,7 @@ export async function productionArtwork(root: string): Promise<ProductionArtwork
       if (animation?.plate) mapMedia(animation.plate, animation.plate)
       if (animation?.spriteUrl) {
         mapMedia(
-          '/' + animation.folder + '/' + animation.motion.sprite + '.webp',
+          `/${animation.folder}/${animation.motion.sprite}.webp`,
           animation.spriteUrl,
         )
         delete animation.spriteUrl
@@ -142,11 +142,11 @@ export async function pullProduction(
   for (const base of new Set(
     [...objects.keys()].map(key => key.replace(/\.(image|json)$/, '')),
   )) {
-    if (!objects.has(base + '.image') || !objects.has(base + '.json'))
-      throw new Error('Incomplete production tile pair: ' + base)
+    if (!objects.has(`${base}.image`) || !objects.has(`${base}.json`))
+      throw new Error(`Incomplete production tile pair: ${base}`)
     const pair = []
     for (const ext of ['image', 'json']) {
-      const key = base + '.' + ext
+      const key = `${base}.${ext}`
       const obj = objects.get(key)!
       const file = join(root, 'generated-tiles', key.slice(6))
       const local = await optionalFile(file)
@@ -159,16 +159,16 @@ export async function pullProduction(
         ? { bytes: local }
         : await store.read({ bucket, key, mime: '' })
       if (!remote || remote === 'unchanged' || remote.bytes.length !== obj.size)
-        throw new Error('Incomplete download: ' + key)
+        throw new Error(`Incomplete download: ${key}`)
       if (
         !matches &&
         etag &&
         /^[a-f0-9]{32}$/i.test(etag) &&
         createHash('md5').update(remote.bytes).digest('hex') !== etag
       )
-        throw new Error('Production tile changed during pull: ' + key)
+        throw new Error(`Production tile changed during pull: ${key}`)
       if (local && !local.equals(remote.bytes))
-        throw new Error('Local and production bytes differ: ' + key)
+        throw new Error(`Local and production bytes differ: ${key}`)
       pair.push({ file, local, bytes: remote.bytes })
     }
     const [image, meta] = pair
@@ -177,7 +177,7 @@ export async function pullProduction(
       !image.bytes.length ||
       (metadata.sha256 && metadata.sha256 !== digest(image.bytes))
     )
-      throw new Error('Invalid production tile: ' + base)
+      throw new Error(`Invalid production tile: ${base}`)
     for (const item of pair) if (!item.local) await install(item.file, item.bytes)
     if (!image.local || !meta.local) added++
   }
@@ -214,9 +214,13 @@ export async function pullProduction(
         historical.set(art.url, keys)
       }
   }
-  const localReviews = readJson(join(root,'releases/v2-reviews.json')) as ArtworkReview[]
+  const localReviews = readJson(
+    join(root, 'releases/v2-reviews.json'),
+  ) as ArtworkReview[]
   const released: Catalog = readJson(join(root, 'releases/catalog.json'))
-  const releasedUrls = new Set(released.sheets.flatMap(sheet => sheet.art.map(art => art.url)))
+  const releasedUrls = new Set(
+    released.sheets.flatMap(sheet => sheet.art.map(art => art.url)),
+  )
   const arts = [
     ...localReviews.filter(r => r.status === 'accepted' && !releasedUrls.has(r.url)),
     ...snapshot.catalog.sheets.flatMap(s => s.art),
@@ -228,37 +232,32 @@ export async function pullProduction(
     const candidates = historical.get(url)
     let key = snapshot.media[path] ?? identities[url]
     if (!key && candidates) {
-      if (candidates.size !== 1) throw new Error('Ambiguous prior editions for ' + url)
+      if (candidates.size !== 1) throw new Error(`Ambiguous prior editions for ${url}`)
       key = [...candidates][0]
     }
     if (!key) continue
     const match = releaseFileKey.exec(key)
     if (!match || !mediaBucket)
-      throw new Error('Invalid production artwork mapping: ' + url)
+      throw new Error(`Invalid production artwork mapping: ${url}`)
     const filename = join(directory, key)
     let bytes: Uint8Array = await optionalFile(filename)
     if (!bytes) {
       const object = await store.read({ bucket: mediaBucket, key, mime: '' })
       if (!object || object === 'unchanged')
-        throw new Error('Missing published painting: ' + key)
+        throw new Error(`Missing published painting: ${key}`)
       bytes = object.bytes
     }
     if (digest(bytes) !== match[1])
-      throw new Error('Invalid published painting checksum: ' + key)
+      throw new Error(`Invalid published painting checksum: ${key}`)
     if (!(await Bun.file(filename).exists())) await install(filename, bytes)
     identities[url] = key
   }
   await mkdir(directory, { recursive: true })
-  const tempIndex = index + '.' + randomUUID()
-  await writeFile(tempIndex, JSON.stringify(identities) + '\n')
+  const tempIndex = `${index}.${randomUUID()}`
+  await writeFile(tempIndex, `${JSON.stringify(identities)}\n`)
   await rename(tempIndex, index)
   // Production revisions can be accepted before they acquire a release-media key.
-  const localDecisions = new Map(
-    localReviews.map(r => [
-      r.url,
-      r.status,
-    ]),
-  )
+  const localDecisions = new Map(localReviews.map(r => [r.url, r.status]))
   for (const art of snapshot.reviews) {
     if (
       art.status !== 'accepted' ||
@@ -279,19 +278,19 @@ export async function pullProduction(
       redirect: 'error',
       signal: AbortSignal.timeout(60000),
     })
-    if (!response.ok) throw new Error('Missing production revision: ' + art.url)
+    if (!response.ok) throw new Error(`Missing production revision: ${art.url}`)
     const bytes = Buffer.from(await response.arrayBuffer())
     if (!bytes.subarray(0, 8).equals(Buffer.from('89504e470d0a1a0a', 'hex')))
-      throw new Error('Invalid production revision: ' + art.url)
+      throw new Error(`Invalid production revision: ${art.url}`)
     await install(
-      join(root, '.local/release/pulled-revisions', match[1] + '.png'),
+      join(root, '.local/release/pulled-revisions', `${match[1]}.png`),
       bytes,
     )
   }
   const path = join(root, '.local/release/production-artwork.json')
   await mkdir(dirname(path), { recursive: true })
-  const tmp = path + '.' + randomUUID()
-  await writeFile(tmp, JSON.stringify(snapshot) + '\n')
+  const tmp = `${path}.${randomUUID()}`
+  await writeFile(tmp, `${JSON.stringify(snapshot)}\n`)
   await rename(tmp, path)
   console.log(
     'Verified',

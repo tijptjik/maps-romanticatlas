@@ -420,7 +420,8 @@ const sourceRecordings: Record<string, RecordedSource> = {
     creator: 'sounds_from_palestine',
   },
   oneSmallStep: {
-    sourceUrl: 'https://upload.wikimedia.org/wikipedia/commons/3/3e/One_Small_Step_-_NASA.webm',
+    sourceUrl:
+      'https://upload.wikimedia.org/wikipedia/commons/3/3e/One_Small_Step_-_NASA.webm',
     sourcePage: 'https://commons.wikimedia.org/wiki/File:One_Small_Step_-_NASA.webm',
     title: 'One Small Step',
     creator: 'NASA',
@@ -581,7 +582,9 @@ const clipRecordedScene = (
           ([segmentStart, segmentEnd], index) =>
             `[0:a]atrim=start=${segmentStart}:end=${segmentEnd},asetpts=PTS-STARTPTS[clank${index}]`,
         )
-        .join(';')};${segments.map((_, index) => `[clank${index}]`).join('')}concat=n=${segments.length}:v=0:a=1,afade=t=in:st=0:d=0.04,afade=t=out:st=2.1:d=0.25,loudnorm=I=-20:TP=-2:LRA=7[output]`
+        .join(
+          ';',
+        )};${segments.map((_, index) => `[clank${index}]`).join('')}concat=n=${segments.length}:v=0:a=1,afade=t=in:st=0:d=0.04,afade=t=out:st=2.1:d=0.25,loudnorm=I=-20:TP=-2:LRA=7[output]`
     : 'afade=t=in:st=0:d=0.04,afade=t=out:st=2.1:d=0.25,loudnorm=I=-20:TP=-2:LRA=7'
   const inputArguments = segments
     ? ['-i', inputPath, '-filter_complex', filter, '-map', '[output]']
@@ -661,12 +664,14 @@ if (unknownScenes.length) {
 const selectedScenes = requestedScenes.length
   ? recordedSceneNames.filter(scene => requestedScenes.includes(scene))
   : recordedSceneNames
-const uniqueRecordings = [...new Map(
-  selectedScenes.map(scene => {
-    const source = sourceRecordings[recordedScenes[scene]]
-    return [source.sourceUrl, source]
-  }),
-).values()]
+const uniqueRecordings = [
+  ...new Map(
+    selectedScenes.map(scene => {
+      const source = sourceRecordings[recordedScenes[scene]]
+      return [source.sourceUrl, source]
+    }),
+  ).values(),
+]
 let nextRecording = 0
 const downloadWorker = async () => {
   while (nextRecording < uniqueRecordings.length) {

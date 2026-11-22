@@ -2,7 +2,14 @@ import { linkedTile } from './tile-link'
 import { createIntroSplash } from './intro-splash'
 import { installArtistStatement } from './artist-statement'
 import { installAtlasAudio } from './atlas-audio'
-import { revealedModeEnabled, reviewModeEnabled, adminModeEnabled, kioskModeEnabled, noMusicEnabled, noSplashEnabled } from './runtime-modes'
+import {
+  revealedModeEnabled,
+  reviewModeEnabled,
+  adminModeEnabled,
+  kioskModeEnabled,
+  noMusicEnabled,
+  noSplashEnabled,
+} from './runtime-modes'
 import './style.css'
 
 export interface Pavilion {
@@ -16,10 +23,17 @@ export interface Pavilion {
 
 const reviewMode = reviewModeEnabled()
 const kioskMode = kioskModeEnabled()
-const restoringMap = history.state?.atlasView === 'map' ||
+const restoringMap =
+  history.state?.atlasView === 'map' ||
   (!history.state?.atlasView && Boolean(history.state?.atlasModeCamera))
 const directArtistStatement = location.hash === '#artist-statement'
-const directEntry = Boolean(linkedTile()) || revealedModeEnabled() || reviewMode || kioskMode || noSplashEnabled() || restoringMap
+const directEntry =
+  Boolean(linkedTile()) ||
+  revealedModeEnabled() ||
+  reviewMode ||
+  kioskMode ||
+  noSplashEnabled() ||
+  restoringMap
 
 if (directEntry) document.documentElement.classList.remove('atlas-boot')
 if (reviewMode) {
@@ -38,10 +52,16 @@ if (reviewMode) {
     audio.unlock()
     return mapReady
   }
-  const intro = createIntroSplash(container, enterMap, !directEntry, () => {
-    audio.start()
-    pavilion.onMapVisible?.()
-  }, audio.playPavilionCue)
+  const intro = createIntroSplash(
+    container,
+    enterMap,
+    !directEntry,
+    () => {
+      audio.start()
+      pavilion.onMapVisible?.()
+    },
+    audio.playPavilionCue,
+  )
   const statement = installArtistStatement(container, {
     showMapTrigger: !adminModeEnabled(),
     onBookmarkPull: () => audio.playPavilionCue('book', 'pull'),

@@ -12,11 +12,25 @@ export function createPavilionSounds() {
     leaf: new Audio('/pavilion/petal-touch.ogg'),
   }
   const connected = new Set<HTMLAudioElement>()
-  return (ctx: AudioContext, output: AudioNode, item: PavilionItem, movement: Movement) => {
+  return (
+    ctx: AudioContext,
+    output: AudioNode,
+    item: PavilionItem,
+    movement: Movement,
+  ) => {
     if (item !== 'orb') {
-      const bookClips = { rise: 'book', activate: 'book', fall: 'close', pull: 'pull' } as const
-      const clipName = item === 'book' ? bookClips[movement]
-        : item === 'sun' && movement === 'fall' ? 'release' : item
+      const bookClips = {
+        rise: 'book',
+        activate: 'book',
+        fall: 'close',
+        pull: 'pull',
+      } as const
+      const clipName =
+        item === 'book'
+          ? bookClips[movement]
+          : item === 'sun' && movement === 'fall'
+            ? 'release'
+            : item
       const clip = recordings[clipName]
       if (!connected.has(clip)) {
         const source = ctx.createMediaElementSource(clip)
@@ -41,7 +55,10 @@ export function createPavilionSounds() {
     const tone = ctx.createOscillator()
     const gain = ctx.createGain()
     tone.frequency.setValueAtTime(falling ? 392 : 329.63, at)
-    tone.frequency.exponentialRampToValueAtTime(activating ? 493.88 : falling ? 329.63 : 392, at + duration * 0.7)
+    tone.frequency.exponentialRampToValueAtTime(
+      activating ? 493.88 : falling ? 329.63 : 392,
+      at + duration * 0.7,
+    )
     gain.gain.setValueAtTime(0, at)
     gain.gain.linearRampToValueAtTime(activating ? 0.041 : 0.028, at + 0.05)
     gain.gain.exponentialRampToValueAtTime(0.0001, at + duration)

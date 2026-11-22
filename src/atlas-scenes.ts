@@ -1,21 +1,38 @@
 export const atlasScenes = {
-  'cloud-launcher': 'a cloud launcher where keepers fill a waiting cloud with scent, animals, music, fireflies or blossom petals, then lift it into the sky to shower its contents over Kowloon',
-  'tourist-disappearance-trap': 'the Tourist Disappearance Trap, a theatrical disappearing act disguised as a souvenir photo tour. A queue leads to shutter galleries and a crimson-curtained portrait court. At the flash the tourists vanish, leaving hats and suitcases in the portrait. Behind the scenes they reappear unharmed in a second court, still posing. Make the mechanism legible through architecture, stage machinery and repeated empty portrait frames',
-  'cat-sanctuary': 'a neighbourhood cat sanctuary. A keeper opens a wicker carrier into a quiet intake court. Follow the cats through sheltered feeding verandas to a sunny climbing garden where timber ramps spiral around scratching posts and lead to woven basket nests under jade-green awnings. Show a ginger cat stretching on a warm sill, a calico crossing a low catwalk and sleeping cats curled into the baskets. Fit each group to its own parcel and leave the public lanes open',
-  'mermaid-station': 'a mermaid transformation station: visitors leave their shoes in numbered-looking cubbies, step through shell-shaped changing booths, and emerge as mermaids into a sea channel. Show the sequence from a person on foot to a half-submerged figure with a gleaming forked tail and a mermaid swimming out. A return staircase has a waiting row of shoes. Use pearlescent tile and sea-green glass',
-  'walking-yacht-club': 'a yacht club whose sailing yachts grow folding brass heron legs. Show one yacht sailing, another stepping from the sea onto the quay on four articulated legs, and one standing tall outside the clubhouse while its crew polish its feet. Keep the sails, hulls and mechanical joints legible; the clubhouse has a boot room for yacht-sized feet',
-  'staircase-foundation': 'the Staircase Foundation, an open-topped tidal institution built around a deep square stairwell in the sea. Broad stone flights switch back repeatedly beneath cantilevered landings and vanish far below sight. A sluice opens in one side; a foaming tongue of incoming seawater pours down successive flights and disappears below. Show progressively submerged treads and visitors watching the flush from a dry balustrade',
-  'car-boat-works': 'a shore workshop that converts customers’ own cars into boats. Follow one distinctive red motorcar design through three bays: road wheels on arrival, a suspended curved hull being fitted underneath the chassis in a cutaway workshop, and the finished red car afloat leaving a slipway with the same bonnet, steering wheel and headlamps still visible',
-  'flying-fish-burgers': 'a flying-fish burger restaurant where the kitchen gives each customer two bun halves and they catch their own filling. A long open counter hugs a narrow seawater race. Make the central action unmistakable: silver flying fish with outspread fins leap in arcs above the water; diners lean over the rail holding a bun half in each hand, and one fish is visibly between two halves. Show baskets of buns, striped awnings and a waterside dining terrace',
-  'bottled-post': 'a tidal post office where letters arrive inside floating glass bottles. A forked boom guides bottles into waist-high sorting channels beside an open sorting gallery. Clerks uncork them and hang wet letters on lines, while a postmistress dispatches sealed green bottles down a separate outgoing chute on the ebb tide. Broad copper roof and red postal fittings',
-  'pneumatic-wave-works': 'a submerged wave power station with long seabed frames carrying four flexible rubber air cells apiece. An overhead swell flattens one cell and the next refills. In a cutaway duct, check valves feed a small enclosed turbine and generator. A survey launch gives scale to the machinery below',
-  'wave-organ': 'a wave-powered public pipe organ built into a breakwater. Draw a cutaway row of sea chambers with waves squeezing air up a graduated rank of tall copper organ pipes. A seated organist works the stops in an open-sided music room, while listeners line curved stone steps on the sheltered side. The sea-facing mouths, bellows and pipe ranks should make the mechanism readable',
-  'moon-jelly-lanterns': 'a lending library for living moon-jelly lanterns. A marine librarian lifts a round glass seawater lantern, enclosing one pale peach jellyfish, from a rack beside the quay into the hands of a night ferryman. Filled lanterns are checked out onto small boats; returned jellies drift back into sheltered nursery pools. Show a broad glazed reading room, ranks of distinct round vessels, and a return flume. Daylight atlas colours with pearly lilac jellyfish',
-  'pleasure-pier': 'a Victorian pleasure pier with an iron pavilion, carousel and promenade on timber piles connected to shore',
-  'tidal-bathhouse': 'a Victorian tidal bathhouse with striped changing cabins and sea bathing pools on a shore-connected pier',
-  'floating-opera': 'a Victorian floating opera with a moored theatre barge, painted scenery and a gangway to a quayside foyer',
-  'shipwright-dock': 'a Victorian floating dry dock with a steam launch under repair, timber workshops and shore-connected pontoons',
-  'kelp-conservatory': 'a Victorian marine botanical conservatory with glasshouses on a piled pier, kelp growing frames and naturalists tending specimen tanks',
+  'cloud-launcher':
+    'a cloud launcher where keepers fill a waiting cloud with scent, animals, music, fireflies or blossom petals, then lift it into the sky to shower its contents over Kowloon',
+  'tourist-disappearance-trap':
+    'the Tourist Disappearance Trap, a theatrical disappearing act disguised as a souvenir photo tour. A queue leads to shutter galleries and a crimson-curtained portrait court. At the flash the tourists vanish, leaving hats and suitcases in the portrait. Behind the scenes they reappear unharmed in a second court, still posing. Make the mechanism legible through architecture, stage machinery and repeated empty portrait frames',
+  'cat-sanctuary':
+    'a neighbourhood cat sanctuary. A keeper opens a wicker carrier into a quiet intake court. Follow the cats through sheltered feeding verandas to a sunny climbing garden where timber ramps spiral around scratching posts and lead to woven basket nests under jade-green awnings. Show a ginger cat stretching on a warm sill, a calico crossing a low catwalk and sleeping cats curled into the baskets. Fit each group to its own parcel and leave the public lanes open',
+  'mermaid-station':
+    'a mermaid transformation station: visitors leave their shoes in numbered-looking cubbies, step through shell-shaped changing booths, and emerge as mermaids into a sea channel. Show the sequence from a person on foot to a half-submerged figure with a gleaming forked tail and a mermaid swimming out. A return staircase has a waiting row of shoes. Use pearlescent tile and sea-green glass',
+  'walking-yacht-club':
+    'a yacht club whose sailing yachts grow folding brass heron legs. Show one yacht sailing, another stepping from the sea onto the quay on four articulated legs, and one standing tall outside the clubhouse while its crew polish its feet. Keep the sails, hulls and mechanical joints legible; the clubhouse has a boot room for yacht-sized feet',
+  'staircase-foundation':
+    'the Staircase Foundation, an open-topped tidal institution built around a deep square stairwell in the sea. Broad stone flights switch back repeatedly beneath cantilevered landings and vanish far below sight. A sluice opens in one side; a foaming tongue of incoming seawater pours down successive flights and disappears below. Show progressively submerged treads and visitors watching the flush from a dry balustrade',
+  'car-boat-works':
+    'a shore workshop that converts customers’ own cars into boats. Follow one distinctive red motorcar design through three bays: road wheels on arrival, a suspended curved hull being fitted underneath the chassis in a cutaway workshop, and the finished red car afloat leaving a slipway with the same bonnet, steering wheel and headlamps still visible',
+  'flying-fish-burgers':
+    'a flying-fish burger restaurant where the kitchen gives each customer two bun halves and they catch their own filling. A long open counter hugs a narrow seawater race. Make the central action unmistakable: silver flying fish with outspread fins leap in arcs above the water; diners lean over the rail holding a bun half in each hand, and one fish is visibly between two halves. Show baskets of buns, striped awnings and a waterside dining terrace',
+  'bottled-post':
+    'a tidal post office where letters arrive inside floating glass bottles. A forked boom guides bottles into waist-high sorting channels beside an open sorting gallery. Clerks uncork them and hang wet letters on lines, while a postmistress dispatches sealed green bottles down a separate outgoing chute on the ebb tide. Broad copper roof and red postal fittings',
+  'pneumatic-wave-works':
+    'a submerged wave power station with long seabed frames carrying four flexible rubber air cells apiece. An overhead swell flattens one cell and the next refills. In a cutaway duct, check valves feed a small enclosed turbine and generator. A survey launch gives scale to the machinery below',
+  'wave-organ':
+    'a wave-powered public pipe organ built into a breakwater. Draw a cutaway row of sea chambers with waves squeezing air up a graduated rank of tall copper organ pipes. A seated organist works the stops in an open-sided music room, while listeners line curved stone steps on the sheltered side. The sea-facing mouths, bellows and pipe ranks should make the mechanism readable',
+  'moon-jelly-lanterns':
+    'a lending library for living moon-jelly lanterns. A marine librarian lifts a round glass seawater lantern, enclosing one pale peach jellyfish, from a rack beside the quay into the hands of a night ferryman. Filled lanterns are checked out onto small boats; returned jellies drift back into sheltered nursery pools. Show a broad glazed reading room, ranks of distinct round vessels, and a return flume. Daylight atlas colours with pearly lilac jellyfish',
+  'pleasure-pier':
+    'a Victorian pleasure pier with an iron pavilion, carousel and promenade on timber piles connected to shore',
+  'tidal-bathhouse':
+    'a Victorian tidal bathhouse with striped changing cabins and sea bathing pools on a shore-connected pier',
+  'floating-opera':
+    'a Victorian floating opera with a moored theatre barge, painted scenery and a gangway to a quayside foyer',
+  'shipwright-dock':
+    'a Victorian floating dry dock with a steam launch under repair, timber workshops and shore-connected pontoons',
+  'kelp-conservatory':
+    'a Victorian marine botanical conservatory with glasshouses on a piled pier, kelp growing frames and naturalists tending specimen tanks',
   circus: 'a Victorian circus',
   'balloon-festival': 'a balloon festival',
   'art-nouveau-palace': 'an elaborate Art Nouveau palace',
@@ -30,25 +47,34 @@ export const atlasScenes = {
   shipyard: 'a Victorian steamship shipyard',
   'telegraph-office': 'an enormous Victorian telegraph office',
   'photography-studio': 'an early Victorian photography studio',
-  'mechanical-theatre': 'a Victorian mechanical theatre with a cutaway stage, brass automata, scenery painters and a fly-gallery workshop',
-  automata: 'an exhibition of Victorian automata with moving brass birds, winding benches and clockmakers tending exposed gears',
+  'mechanical-theatre':
+    'a Victorian mechanical theatre with a cutaway stage, brass automata, scenery painters and a fly-gallery workshop',
+  automata:
+    'an exhibition of Victorian automata with moving brass birds, winding benches and clockmakers tending exposed gears',
   'anatomical-museum': 'a Victorian anatomical museum',
   'mesmerist-salon': 'an enormous candlelit Victorian mesmerist salon',
   'hall-of-mirrors': 'a grand Victorian hall of mirrors',
   'botanical-laboratory': 'an enormous Victorian botanical laboratory',
   'electrical-laboratory': 'an experimental Victorian electrical laboratory',
-  'tropical-aquarium': 'a celebration of tropical aquatic lifeforms across the rainbow of colours',
-  'sushi-restaurant': 'world\'s largest conveyer belt sushi restaurant',
+  'tropical-aquarium':
+    'a celebration of tropical aquatic lifeforms across the rainbow of colours',
+  'sushi-restaurant': "world's largest conveyer belt sushi restaurant",
   'thrifting-paradise': 'eclectic neighbourhood with street fashion and voguey vibes',
   'beer-garden': 'an lush bavarian beer garden',
-  'grand-library': 'a restrofuturistic library - testament to the englightenment that comes from knowledge',
-  'rice-sculpture-festival': 'a quirky competition creating the most marvelous sculptures out of rice',
-  'cyber-deck-alley': 'neuromanceresque back alley selling wetware for neural deck jockeys and netrunners',
-  'marshmallow-factory': 'a rainbow themed marshmallow structure with transparent domes so you can see how marshmallows are born',
+  'grand-library':
+    'a restrofuturistic library - testament to the englightenment that comes from knowledge',
+  'rice-sculpture-festival':
+    'a quirky competition creating the most marvelous sculptures out of rice',
+  'cyber-deck-alley':
+    'neuromanceresque back alley selling wetware for neural deck jockeys and netrunners',
+  'marshmallow-factory':
+    'a rainbow themed marshmallow structure with transparent domes so you can see how marshmallows are born',
   observatory: 'a Victorian astronomical observatory',
   'weather-station': 'an enormous Victorian meteorological station',
-  'orrery-hall': 'a Victorian orrery court with brass orbital rings, an instrument workshop and outdoor calibration benches',
-  'analytical-engine': 'a Victorian analytical-engine workshop with gear trains, punch-card looms and rows of card-sorting tables',
+  'orrery-hall':
+    'a Victorian orrery court with brass orbital rings, an instrument workshop and outdoor calibration benches',
+  'analytical-engine':
+    'a Victorian analytical-engine workshop with gear trains, punch-card looms and rows of card-sorting tables',
   'utopian-garden': 'an idealised Victorian utopian garden city',
   'theme-park': 'a sprawling theme park packed with looping roller coasters',
   zoo: 'a sprawling zoo with radiating animal enclosures and winding paths',
@@ -57,32 +83,46 @@ export const atlasScenes = {
   'ferris-wheel': 'a giant illuminated Ferris wheel surrounded by fairground rides',
   aquarium: 'a monumental aquarium with a central glass dome and branching tanks',
   'water-park': 'a sprawling water park with twisting slides and turquoise pools',
-  'race-circuit': 'a motor-racing circuit with grandstands, pit lanes, and hairpin turns',
+  'race-circuit':
+    'a motor-racing circuit with grandstands, pit lanes, and hairpin turns',
   'medieval-castle': 'a sprawling medieval castle with concentric walls and courtyards',
   'pirate-harbour': 'a theatrical pirate harbour with ships, docks, and a crescent bay',
   'dinosaur-park': 'a dinosaur park with giant fossil-shaped exhibits and jungle paths',
   'film-backlot': 'a film-studio backlot with oversized sets and enormous sound stages',
-  'ancient-temple': 'a monumental ancient temple complex with courtyards and colonnades',
+  'ancient-temple':
+    'a monumental ancient temple complex with courtyards and colonnades',
   'japanese-garden': 'a formal Japanese garden with ponds, bridges, and winding paths',
   'maze-garden': 'a vast hedge maze surrounding a symmetrical garden pavilion',
   'floating-market': 'a busy floating market filled with boats, stalls, and canals',
-  'spaceport': 'a futuristic spaceport with launch pads, terminals, and orbital shuttles',
+  spaceport: 'a futuristic spaceport with launch pads, terminals, and orbital shuttles',
   'solar-farm': 'a huge solar farm arranged in shimmering geometric fields',
   'wind-farm': 'a coastal wind farm with dozens of enormous turbines',
   'lunar-outpost': 'a lunar outpost with domes, rover tracks, and a rocket landing pad',
   'volcano-observatory': 'a dramatic volcano observatory overlooking a glowing crater',
-  'grand-exhibition': 'a vast Victorian world exhibition with pavilions, boulevards, and glass halls',
-  'market-quarter': 'a dense covered market quarter with arcades, stalls, alleys, and surrounding tenements',
-  'steampunk-city': 'a dense steampunk city with factories, elevated railways, pipes, towers, and crowded streets',
-  'civic-centre': 'a near-future Hong Kong civic centre where residents shape public services together, with sun-tracking canopies, step-free public rooms and planted courts open to the street',
-  'worlds-fair': 'a sprawling international exposition with themed districts, pavilions, gardens, and promenades',
-  'floating-city': 'a sprawling floating city of platforms, canals, markets, docks, and interconnected buildings',
-  arcology: 'a colossal arcology complex with layered streets, plazas, gardens, transit hubs, and vertical districts',
-  'robot-factory': 'a sprawling automated factory city with assembly halls, conveyor corridors, depots, and worker districts',
-  'festival-city': 'a temporary festival city with food streets, stages, parade routes, pavilions, and packed camps',
-  'giant-fairground': 'an enormous fairground district with rides, arcades, food courts, service lanes, and illuminated promenades',
-  'botanical-city': 'a sprawling botanical city with conservatories, research blocks, gardens, nurseries, and pedestrian streets',
-  'archaeological-excavation': 'a vast archaeological excavation with ruins, field camps, museums, trenches, and temporary roads',
+  'grand-exhibition':
+    'a vast Victorian world exhibition with pavilions, boulevards, and glass halls',
+  'market-quarter':
+    'a dense covered market quarter with arcades, stalls, alleys, and surrounding tenements',
+  'steampunk-city':
+    'a dense steampunk city with factories, elevated railways, pipes, towers, and crowded streets',
+  'civic-centre':
+    'a near-future Hong Kong civic centre where residents shape public services together, with sun-tracking canopies, step-free public rooms and planted courts open to the street',
+  'worlds-fair':
+    'a sprawling international exposition with themed districts, pavilions, gardens, and promenades',
+  'floating-city':
+    'a sprawling floating city of platforms, canals, markets, docks, and interconnected buildings',
+  arcology:
+    'a colossal arcology complex with layered streets, plazas, gardens, transit hubs, and vertical districts',
+  'robot-factory':
+    'a sprawling automated factory city with assembly halls, conveyor corridors, depots, and worker districts',
+  'festival-city':
+    'a temporary festival city with food streets, stages, parade routes, pavilions, and packed camps',
+  'giant-fairground':
+    'an enormous fairground district with rides, arcades, food courts, service lanes, and illuminated promenades',
+  'botanical-city':
+    'a sprawling botanical city with conservatories, research blocks, gardens, nurseries, and pedestrian streets',
+  'archaeological-excavation':
+    'a vast archaeological excavation with ruins, field camps, museums, trenches, and temporary roads',
 } as const
 
 export const atlasSeaScenes = new Set<keyof typeof atlasScenes>([
@@ -105,7 +145,9 @@ export const atlasSeaScenes = new Set<keyof typeof atlasScenes>([
   'moon-jelly-lanterns',
 ])
 
-export const atlasSceneNames = Object.keys(atlasScenes) as Array<keyof typeof atlasScenes>
+export const atlasSceneNames = Object.keys(atlasScenes) as Array<
+  keyof typeof atlasScenes
+>
 
 export type AtlasScene = keyof typeof atlasScenes
 

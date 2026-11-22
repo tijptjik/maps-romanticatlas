@@ -3,7 +3,7 @@
 type Position = number[]
 type Edge = { a: string; b: string; minor: boolean; twoWay: boolean }
 const vertex = (p: Position) => p.join(',')
-const edgeKey = (a: string, b: string) => (a < b ? a + '/' + b : b + '/' + a)
+const edgeKey = (a: string, b: string) => (a < b ? `${a}/${b}` : `${b}/${a}`)
 
 export const planAtlasRoads = (features, bounds) => {
   const nodes = new Map<string, Set<string>>()
@@ -69,7 +69,7 @@ export const planAtlasRoads = (features, bounds) => {
         [b, a],
       ]) {
         if (!nodes.has(from)) nodes.set(from, new Set())
-        nodes.get(from)!.add(to)
+        nodes.get(from)?.add(to)
       }
     }
   }
@@ -100,7 +100,7 @@ export const planAtlasRoads = (features, bounds) => {
         b = next
       while (true) {
         const key = edgeKey(a, b)
-        if (visited.has(key) || !edges.get(key)!.minor || !inside(position(b))) break
+        if (visited.has(key) || !edges.get(key)?.minor || !inside(position(b))) break
         visited.add(key)
         const onward = nodes.get(b)!
         if (onward.size !== 2) {
@@ -126,11 +126,15 @@ export const planAtlasRoads = (features, bounds) => {
     let current = tip
     while (true) {
       const next = [...nodes.get(current)!].find(node => node !== previous)
-      if (!next || !edges.get(edgeKey(current, next))!.minor || !inside(position(next))) break
+      if (!next || !edges.get(edgeKey(current, next))?.minor || !inside(position(next)))
+        break
       chain.push(next)
       if (accesses.has(next)) break
-      const degree = nodes.get(next)!.size
-      if (degree >= 3) { deadEnds.push(chain); break }
+      const degree = nodes.get(next)?.size
+      if (degree >= 3) {
+        deadEnds.push(chain)
+        break
+      }
       if (degree !== 2) break
       previous = current
       current = next
@@ -164,7 +168,7 @@ export const planAtlasRoads = (features, bounds) => {
         if (
           reached.has(k) ||
           blocked.has(key) ||
-          !edges.get(key)!.twoWay ||
+          !edges.get(key)?.twoWay ||
           !inside(position(k))
         )
           continue
@@ -173,13 +177,17 @@ export const planAtlasRoads = (features, bounds) => {
       }
     }
     if (!reached.has(end)) continue
-    keys.forEach(k => removed.add(k))
+    keys.forEach(k => {
+      removed.add(k)
+    })
     usedJunctions.add(start)
     usedJunctions.add(end)
     removedPaths.push(chain.map(position))
   }
   for (const chain of deadEnds) {
-    chain.slice(1).forEach((node, index) => removed.add(edgeKey(chain[index], node)))
+    chain.slice(1).forEach((node, index) => {
+      removed.add(edgeKey(chain[index], node))
+    })
     removedPaths.push(chain.map(position))
   }
   const retained = lines.flatMap(({ coords, properties }) => {

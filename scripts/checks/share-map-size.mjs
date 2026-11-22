@@ -8,13 +8,18 @@ import sharp from 'sharp'
 const browser = await chromium.launch({
   channel: 'chrome',
   headless: false,
-  args: ['--ozone-platform=x11', '--class=' + process.env.DEV_RUNNER_CHROME_CLASS],
+  args: ['--ozone-platform=x11', `--class=${process.env.DEV_RUNNER_CHROME_CLASS}`],
 })
 try {
-  const page = await browser.newPage({ viewport: { width: 800, height: 900 }, hasTouch: true })
-  page.on("pageerror", error => console.error(error.message))
+  const page = await browser.newPage({
+    viewport: { width: 800, height: 900 },
+    hasTouch: true,
+  })
+  page.on('pageerror', error => console.error(error.message))
   // Check the frame selected by the real app before using a controlled canvas for pixel assertions.
-  await page.goto(new URL('/?noSplash=true', process.env.PLAYWRIGHT_BASE_URL).href, { waitUntil: 'domcontentloaded' })
+  await page.goto(new URL('/?noSplash=true', process.env.PLAYWRIGHT_BASE_URL).href, {
+    waitUntil: 'domcontentloaded',
+  })
   const actualFrame = page.locator('.atlas-share-frame img')
   const frameUrl = await actualFrame.evaluate(async img => {
     await img.decode()
@@ -22,14 +27,21 @@ try {
   })
   const frame = await (await page.request.get(frameUrl)).body()
   const digest = createHash('sha256').update(frame).digest('hex')
-  assert.equal(media['/pavilion/orchid-camera-frame.webp'], 'release-assets/' + digest + '.webp')
-  const background = await page.locator('.atlas-share-result').evaluate(el => getComputedStyle(el).backgroundImage)
+  assert.equal(
+    media['/pavilion/orchid-camera-frame.webp'],
+    `release-assets/${digest}.webp`,
+  )
+  const background = await page
+    .locator('.atlas-share-result')
+    .evaluate(el => getComputedStyle(el).backgroundImage)
   assert.ok(background.includes('orchid-share-frame'), 'QR dialog lost its print frame')
   // Serve a controlled canvas on the app origin and exercise its real sharing UI and API.
-  await page.route('**/share-test-fixture', route => route.fulfill({
-    contentType: 'text/html',
-    body: '<meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/src/style.css"><style>#map{position:relative;width:min(580px,100vw);height:min(835px,100dvh)} canvas{width:100%;height:100%;background:#adcac0}</style><div id="map"><canvas width="2160" height="2700"></canvas></div>',
-  }))
+  await page.route('**/share-test-fixture', route =>
+    route.fulfill({
+      contentType: 'text/html',
+      body: '<meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/src/style.css"><style>#map{position:relative;width:min(580px,100vw);height:min(835px,100dvh)} canvas{width:100%;height:100%;background:#adcac0}</style><div id="map"><canvas width="2160" height="2700"></canvas></div>',
+    }),
+  )
   await page.goto(new URL('/share-test-fixture', process.env.PLAYWRIGHT_BASE_URL).href)
   await page.evaluate(async () => {
     const { installAtlasSharing } = await import('/src/atlas-sharing.ts')
@@ -58,9 +70,14 @@ try {
     const trigger = document.querySelector('.atlas-share-button--trigger')
     return trigger && getComputedStyle(trigger).opacity === '1'
   })
-  const iconWidth = await page.locator('.atlas-share-button--trigger svg').evaluate(svg => svg.getBoundingClientRect().width)
+  const iconWidth = await page
+    .locator('.atlas-share-button--trigger svg')
+    .evaluate(svg => svg.getBoundingClientRect().width)
   assert.ok(iconWidth <= 20, 'Share glyph crowds the enamel plate')
-  await page.getByRole('button', { name: 'Share your map' }).screenshot({ animations: 'disabled', path: path.join(process.env.DEV_RUNNER_ARTIFACTS, 'share-button.png') })
+  await page.getByRole('button', { name: 'Share your map' }).screenshot({
+    animations: 'disabled',
+    path: path.join(process.env.DEV_RUNNER_ARTIFACTS, 'share-button.png'),
+  })
   const note = page.locator('.artist-statement-ui > .artist-statement__map-trigger')
   await note.click()
   assert.ok(await page.locator('.atlas-share-button--trigger').isHidden())
@@ -88,7 +105,9 @@ try {
     }
     await page.locator('.atlas-share-frame img').evaluate(img => img.decode())
     const frameBox = await page.locator('.atlas-share-frame').boundingBox()
-    const shutter = await page.getByRole('button', { name: 'Snap this map' }).boundingBox()
+    const shutter = await page
+      .getByRole('button', { name: 'Snap this map' })
+      .boundingBox()
     const socketX = frameBox.x + frameBox.width / 2
     const socketY = frameBox.y + frameBox.height * 0.937
     assert.ok(Math.abs(shutter.x + shutter.width / 2 - socketX) < 1)
@@ -103,18 +122,27 @@ try {
       const x = (frame.left - bounds.left + frame.width * 0.45) * scale
       const y = (frame.top - bounds.top + frame.height * 0.45) * scale
       const context = canvas.getContext('2d')
-      context.fillStyle = 'rgb(' + rgb.join(',') + ')'
+      context.fillStyle = `rgb(${rgb.join(',')})`
       context.fillRect(x - 20, y - 20, 40, 40)
     }, swatch)
-    await page.screenshot({ path: path.join(process.env.DEV_RUNNER_ARTIFACTS, 'compose-' + detailed + '.png') })
-    const saved = page.waitForResponse(response => response.url().endsWith('/api/share-maps'))
-    await page.evaluate(() => { window.titleLines.length = 0 })
+    await page.screenshot({
+      path: path.join(process.env.DEV_RUNNER_ARTIFACTS, `compose-${detailed}.png`),
+    })
+    const saved = page.waitForResponse(response =>
+      response.url().endsWith('/api/share-maps'),
+    )
+    await page.evaluate(() => {
+      window.titleLines.length = 0
+    })
     if (detailed) await page.touchscreen.tap(socketX, socketY)
     else await page.mouse.click(socketX, socketY)
     const response = await saved
     assert.equal(response.status(), 200, await response.text())
     const lines = await page.evaluate(() => window.titleLines)
-    assert.ok(lines.includes('The Rain') && lines.includes('Inheritance'), JSON.stringify(lines))
+    assert.ok(
+      lines.includes('The Rain') && lines.includes('Inheritance'),
+      JSON.stringify(lines),
+    )
     const { url } = await response.json()
     const download = await page.request.get(url)
     assert.equal(download.status(), 200)
@@ -130,37 +158,75 @@ try {
       const remote = await page.request.get(href)
       assert.equal(remote.status(), 200)
       assert.equal(remote.headers()['content-type'], 'image/png')
-      assert.ok(png.equals(await remote.body()), 'Tailnet preview differs from the saved capture')
+      assert.ok(
+        png.equals(await remote.body()),
+        'Tailnet preview differs from the saved capture',
+      )
     }
     const { width, height } = await sharp(png).metadata()
     assert.deepEqual([width, height], detailed ? [1080, 1350] : [2160, 2700])
     assert.ok(png.length <= 8_000_000)
     const pixel = await sharp(png)
-      .extract({ left: Math.floor(width * 0.45), top: Math.floor(height * 0.45), width: 1, height: 1 })
-      .removeAlpha().raw().toBuffer()
+      .extract({
+        left: Math.floor(width * 0.45),
+        top: Math.floor(height * 0.45),
+        width: 1,
+        height: 1,
+      })
+      .removeAlpha()
+      .raw()
+      .toBuffer()
     assert.deepEqual([...pixel], swatch, 'Map RGB changed during PNG export')
     const cornerWidth = Math.ceil(width * 0.27)
     const cornerHeight = Math.ceil(height * 0.12)
     await sharp(png)
-      .extract({ left: Math.floor(width * 0.67), top: Math.floor(height * 0.80), width: cornerWidth, height: cornerHeight })
-      .toFile(path.join(process.env.DEV_RUNNER_ARTIFACTS, 'corner-' + width + '.png'))
+      .extract({
+        left: Math.floor(width * 0.67),
+        top: Math.floor(height * 0.8),
+        width: cornerWidth,
+        height: cornerHeight,
+      })
+      .toFile(path.join(process.env.DEV_RUNNER_ARTIFACTS, `corner-${width}.png`))
     if (!detailed) {
-      const { data, info } = await sharp(png).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
-      const alpha = (x, y) => data[(Math.floor(y * height) * width + Math.floor(x * width)) * info.channels + 3]
+      const { data, info } = await sharp(png)
+        .ensureAlpha()
+        .raw()
+        .toBuffer({ resolveWithObject: true })
+      const alpha = (x, y) =>
+        data[
+          (Math.floor(y * height) * width + Math.floor(x * width)) * info.channels + 3
+        ]
       assert.ok(alpha(0.5, 0.934) > 240, 'Bottom rail missing from export')
       assert.equal(alpha(0.5, 0.5), 0, 'Frame aperture obscures the map')
-      const cornerAlpha = await sharp(png).extract({
-        left: Math.floor(width * 0.76), top: Math.floor(height * 0.84),
-        width: Math.floor(width * 0.12), height: Math.floor(height * 0.04),
-      }).extractChannel('alpha').raw().toBuffer()
-      assert.ok(cornerAlpha.every(value => value === 0), 'Unexpected overlay above the orchid')
+      const cornerAlpha = await sharp(png)
+        .extract({
+          left: Math.floor(width * 0.76),
+          top: Math.floor(height * 0.84),
+          width: Math.floor(width * 0.12),
+          height: Math.floor(height * 0.04),
+        })
+        .extractChannel('alpha')
+        .raw()
+        .toBuffer()
+      assert.ok(
+        cornerAlpha.every(value => value === 0),
+        'Unexpected overlay above the orchid',
+      )
     }
-    const outside = await sharp(png).extract({ left: Math.floor(width / 2), top: 2, width: 1, height: 1 }).ensureAlpha().raw().toBuffer()
+    const outside = await sharp(png)
+      .extract({ left: Math.floor(width / 2), top: 2, width: 1, height: 1 })
+      .ensureAlpha()
+      .raw()
+      .toBuffer()
     assert.equal(outside[3], 0, 'Outside edge must remain transparent')
     const qr = page.getByAltText('QR code for your map image')
     await qr.evaluate(img => img.decode())
-    await qr.screenshot({ path: path.join(process.env.DEV_RUNNER_ARTIFACTS, 'qr-' + width + '.png') })
-    await page.getByRole('dialog').screenshot({ path: path.join(process.env.DEV_RUNNER_ARTIFACTS, 'result-' + width + '.png') })
+    await qr.screenshot({
+      path: path.join(process.env.DEV_RUNNER_ARTIFACTS, `qr-${width}.png`),
+    })
+    await page.getByRole('dialog').screenshot({
+      path: path.join(process.env.DEV_RUNNER_ARTIFACTS, `result-${width}.png`),
+    })
     await qr.click()
     assert.equal(await page.getByRole('dialog').getByRole('button').count(), 1)
     if (!detailed) {

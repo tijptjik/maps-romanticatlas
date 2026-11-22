@@ -14,5 +14,7 @@ const client = createOpenRouterClient()
 const generatedImage = await client.generateImage({ prompt })
 
 await mkdir(path.dirname(outputPath), { recursive: true })
-await sharp(generatedImage.data).webp({ quality: 88, smartSubsample: true }).toFile(outputPath)
+await sharp(generatedImage.data)
+  .webp({ quality: 88, smartSubsample: true })
+  .toFile(outputPath)
 console.log(`Generated ${outputPath}`)

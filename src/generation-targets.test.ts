@@ -1,9 +1,22 @@
 import { expect, test } from 'bun:test'
-import { availableFamilies, familyIndex, generationJob, scenesForFamily } from './generation-targets'
+import {
+  availableFamilies,
+  familyIndex,
+  generationJob,
+  scenesForFamily,
+} from './generation-targets'
 import { isFogPatternSelected } from './fog-pattern.js'
 
-const tile = { zoom: 18, x: 214180, y: 114420, regionalLandAvailable: true, isTargetable: true,
-  coastal: false, landFraction: 1, streetFraction: 0.1 }
+const tile = {
+  zoom: 18,
+  x: 214180,
+  y: 114420,
+  regionalLandAvailable: true,
+  isTargetable: true,
+  coastal: false,
+  landFraction: 1,
+  streetFraction: 0.1,
+}
 while (!isFogPatternSelected(tile)) tile.x++
 
 test('family spacing includes the target, diagonals, and every occupied footprint cell', () => {
@@ -18,18 +31,24 @@ test('family spacing includes the target, diagonals, and every occupied footprin
   expect(families).toContain('observatory')
   expect(families).not.toContain('lighthouse')
   const chosen = scenesForFamily('observatory')[2]
-  const job = generationJob({family: 'observatory', scene: chosen.name}, tile, [])
+  const job = generationJob({ family: 'observatory', scene: chosen.name }, tile, [])
   expect(job?.source.title).toBe(chosen.name)
   expect(job?.prompt).toBe(chosen.prompt)
 })
 
 test('both selection paths fail closed on unavailable land and exhausted families', () => {
-  const coast = {...tile, coastal: true}
-  const occupied = availableFamilies(coast, familyIndex([])).map(scene => ({...tile, scene}))
-  for (const choice of [{random: true}, {family: 'lighthouse', scene: 'Lighthouse'}]) {
+  const coast = { ...tile, coastal: true }
+  const occupied = availableFamilies(coast, familyIndex([])).map(scene => ({
+    ...tile,
+    scene,
+  }))
+  for (const choice of [
+    { random: true },
+    { family: 'lighthouse', scene: 'Lighthouse' },
+  ]) {
     expect(generationJob(choice, coast, occupied)).toBeNull()
-    expect(generationJob(choice, {...coast, isTargetable: false}, [])).toBeNull()
+    expect(generationJob(choice, { ...coast, isTargetable: false }, [])).toBeNull()
   }
   const only = occupied.filter(art => art.scene !== 'lighthouse')
-  expect(generationJob({random: true}, coast, only)?.source.scene).toBe('lighthouse')
+  expect(generationJob({ random: true }, coast, only)?.source.scene).toBe('lighthouse')
 })

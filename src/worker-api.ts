@@ -1,11 +1,31 @@
-import { generationEndpoint, generationJob, generationPosition, reservedArt } from './generation-targets'
+import {
+  generationEndpoint,
+  generationJob,
+  generationPosition,
+  reservedArt,
+} from './generation-targets'
 import { atlasSceneGridRadius } from './atlas-protocol'
 import { overlapsPeakMaquette } from './artwork-reservation'
-import { revisionEndpoint, revisionId, revisionImagePattern, revisionRequest } from './artwork-revision'
-import { isFakeRenderTile, isRotatingVariant, type RevealImage } from './fake-render-state'
+import {
+  revisionEndpoint,
+  revisionId,
+  revisionImagePattern,
+  revisionRequest,
+} from './artwork-revision'
+import {
+  isFakeRenderTile,
+  isRotatingVariant,
+  type RevealImage,
+} from './fake-render-state'
 import { fakeRenderSeed } from './fake-render-seed'
 import { generator, startSiGeneration, siGenerationStatus } from './si-generation'
-import { orphanGroup, releaseObjects, removeArchivedObjects, type ArchivedObject, type AssetBucket } from './artwork-purge'
+import {
+  orphanGroup,
+  releaseObjects,
+  removeArchivedObjects,
+  type ArchivedObject,
+  type AssetBucket,
+} from './artwork-purge'
 import { releaseCatalog, releaseMediaKeys } from './release-media'
 import { parseArtworkReview, reviewEndpoint } from './artwork-review.ts'
 import type { ArtworkReview } from './artwork-review.ts'
@@ -161,9 +181,7 @@ const readCachedTile = async (
 ): Promise<CachedTile | null> => {
   const imageObject = await bucket.head(atlasImageKey(tile, version, variant))
   if (!imageObject) return null
-  const metadataObject = await bucket.get(
-    atlasMetadataKey(tile, version, variant),
-  )
+  const metadataObject = await bucket.get(atlasMetadataKey(tile, version, variant))
   if (!metadataObject) return null
   try {
     const metadata = await metadataObject.json<{
@@ -246,17 +264,27 @@ const cachedTilesFromBucket = async (
   })
   return (
     await Promise.all(
-      entries.map(entry => readCachedTile(bucket, entry.tile, entry.version, entry.variant)),
+      entries.map(entry =>
+        readCachedTile(bucket, entry.tile, entry.version, entry.variant),
+      ),
     )
   ).filter((entry): entry is CachedTile => entry !== null)
 }
 
-const findCachedTile = async (env: AtlasEnv, position: Omit<Tile, 'scene'>, discovery?: string) => {
-  const allowed = (entry: CachedTile) => !isRotatingVariant(entry.variant) && (!discovery || entry.variant.startsWith(discovery + '-'))
+const findCachedTile = async (
+  env: AtlasEnv,
+  position: Omit<Tile, 'scene'>,
+  discovery?: string,
+) => {
+  const allowed = (entry: CachedTile) =>
+    !isRotatingVariant(entry.variant) &&
+    (!discovery || entry.variant.startsWith(`${discovery}-`))
   const cached = (await manifestEntriesForPosition(env, position)).filter(allowed)
   if (cached.length) return randomItem(cached)
   if (!localDevelopmentEnabled(env)) return null
-  const recovered = (await cachedTilesFromBucket(env.ATLAS_BUCKET, position)).filter(allowed)
+  const recovered = (await cachedTilesFromBucket(env.ATLAS_BUCKET, position)).filter(
+    allowed,
+  )
   return recovered.length ? randomItem(recovered) : null
 }
 
@@ -370,7 +398,8 @@ const fogIndexForTile = async (env: AtlasEnv, x: number, y: number) => {
       ),
     ).then(entries => entries.flat()),
   ])
-  const cached = manifestEntries.filter(entry => !isRotatingVariant(entry.variant))
+  const cached = manifestEntries
+    .filter(entry => !isRotatingVariant(entry.variant))
     .map(toCachedTile)
     .filter((entry): entry is CachedTile => entry !== null)
     .map(entry => ({
@@ -439,7 +468,11 @@ const cachedTileFromManifest = async (
   return readCachedTile(env.ATLAS_BUCKET, tile, expectedVersion, variant)
 }
 
-const listCachedTiles = async (bucket: R2Bucket, requested: number | null = null, discoveryOnly = false) => {
+const listCachedTiles = async (
+  bucket: R2Bucket,
+  requested: number | null = null,
+  discoveryOnly = false,
+) => {
   const cachedVariants = new Map<
     string,
     { tile: Tile; version: number; variant: string }
@@ -650,15 +683,23 @@ const serveCachedTile = async (request: Request, env: AtlasEnv, tile: Tile) => {
 // Claim receipts outlive purged image objects. Keep the receipts for idempotency,
 // but never offer an image that the generated-tile endpoint can no longer serve.
 async function availableReleasedImages(env: AtlasEnv, images: RevealImage[]) {
-  const available = await Promise.all(images.map(async image => {
-    const url = new URL(image.url, 'https://atlas.invalid')
-    if (!url.pathname.startsWith('/generated-tiles/')) return true
-    const tile = parseAtlasTilePath(url.pathname, (scene): scene is Scene => Boolean(atlasScenes[scene]))
-    if (!tile) return false
-    const cached = await cachedTileFromManifest(env, tile,
-      requestedCacheVersion(url.searchParams), requestedAtlasVariant(url.searchParams))
-    return Boolean(cached && await env.ATLAS_BUCKET.head(cached.imageKey))
-  }))
+  const available = await Promise.all(
+    images.map(async image => {
+      const url = new URL(image.url, 'https://atlas.invalid')
+      if (!url.pathname.startsWith('/generated-tiles/')) return true
+      const tile = parseAtlasTilePath(url.pathname, (scene): scene is Scene =>
+        Boolean(atlasScenes[scene]),
+      )
+      if (!tile) return false
+      const cached = await cachedTileFromManifest(
+        env,
+        tile,
+        requestedCacheVersion(url.searchParams),
+        requestedAtlasVariant(url.searchParams),
+      )
+      return Boolean(cached && (await env.ATLAS_BUCKET.head(cached.imageKey)))
+    }),
+  )
   return images.filter((_, index) => available[index])
 }
 
@@ -679,12 +720,15 @@ const generateTile = async (
   tile: Tile,
   force = false,
 ) => {
-  if (overlapsPeakMaquette(tile)) return errorResponse(403, 'Reserved for Fragrant Harbour in the Clouds.')
+  if (overlapsPeakMaquette(tile))
+    return errorResponse(403, 'Reserved for Fragrant Harbour in the Clouds.')
   const discovery = discoveryVariantForRequest(new URL(request.url).searchParams)
   const existing = force ? null : await findCachedTile(env, tile, discovery)
   if (existing) {
     const payload = cachedTilePayload(existing)
-    const review = await env.ATLAS_BUCKET.head('v2-artwork-reviews/' + encodeURIComponent(payload.url))
+    const review = await env.ATLAS_BUCKET.head(
+      `v2-artwork-reviews/${encodeURIComponent(payload.url)}`,
+    )
     const decision = review?.customMetadata?.review
       ? JSON.parse(decodeURIComponent(review.customMetadata.review)).status
       : releaseReviews.find(item => item.url === payload.url)?.status
@@ -707,20 +751,21 @@ const generateTile = async (
   } catch {
     // Eligibility is fail-closed: an unavailable map index must not create a
     // persistent entry that later turns out to be outside the fog program.
-    return errorResponse(503, 'Could not verify this atlas tile is eligible for generation.')
+    return errorResponse(
+      503,
+      'Could not verify this atlas tile is eligible for generation.',
+    )
   }
   if (!isFogPatternSelected(tile) || !isTargetable) {
-    return errorResponse(
-      403,
-      'This atlas tile is not eligible for generation.',
-    )
+    return errorResponse(403, 'This atlas tile is not eligible for generation.')
   }
 
   let body: Record<string, unknown>
   try {
     body = await readJsonBody(request)
     const source = decodeDataUrl(body.sourceImage, 'The tile source image')
-    if (source.contentType !== 'image/png') return errorResponse(400, 'Codex requires a PNG source.')
+    if (source.contentType !== 'image/png')
+      return errorResponse(400, 'Codex requires a PNG source.')
     return startSiGeneration(env, tile, String(body.sourceImage), discovery)
   } catch (error) {
     return errorResponse(
@@ -845,7 +890,13 @@ const serveCacheStatusBatch = async (
 
   return json({
     statuses: positions.map(position => {
-      const cached = cachedByPosition.get(positionId(position))?.filter(entry => !isRotatingVariant(entry.variant) && (!discovery || entry.variant.startsWith(discovery + '-')))
+      const cached = cachedByPosition
+        .get(positionId(position))
+        ?.filter(
+          entry =>
+            !isRotatingVariant(entry.variant) &&
+            (!discovery || entry.variant.startsWith(`${discovery}-`)),
+        )
       return cacheStatusPayload({
         cached: cached?.length ? randomItem(cached) : null,
         scenes: [...(scenesByPosition.get(positionId(position)) ?? [])],
@@ -1026,12 +1077,16 @@ async function allArtworkReviews(env: AtlasEnv, useIndex = false) {
   const bucket = env.ATLAS_BUCKET
   const index = useIndex ? await bucket.get(reviewIndexKey) : null
   if (index?.customMetadata?.ready && Date.now() - index.uploaded.getTime() < 300_000)
-    return [...releaseReviews, ...await index.json<ArtworkReview[]>()]
+    return [...releaseReviews, ...(await index.json<ArtworkReview[]>())]
   await index?.body.cancel()
   const reviews: ArtworkReview[] = []
   let cursor: string | undefined
   do {
-    const page = await env.ATLAS_BUCKET.list({ prefix: 'v2-artwork-reviews/', cursor, include: ['customMetadata'] })
+    const page = await env.ATLAS_BUCKET.list({
+      prefix: 'v2-artwork-reviews/',
+      cursor,
+      include: ['customMetadata'],
+    })
     for (const object of page.objects) {
       const record = object.customMetadata?.review
       if (record) reviews.push(JSON.parse(decodeURIComponent(record)))
@@ -1047,11 +1102,17 @@ async function allArtworkReviews(env: AtlasEnv, useIndex = false) {
   return [...releaseReviews, ...reviews]
 }
 
-const deployedObjects = releaseObjects(releaseMediaKeys.values(), releaseCatalog.sheets.flatMap(sheet => sheet.art.map(art => art.url)))
-const deployedKeys = { media: new Set(deployedObjects.media), tiles: new Set(deployedObjects.tiles) }
+const deployedObjects = releaseObjects(
+  releaseMediaKeys.values(),
+  releaseCatalog.sheets.flatMap(sheet => sheet.art.map(art => art.url)),
+)
+const deployedKeys = {
+  media: new Set(deployedObjects.media),
+  tiles: new Set(deployedObjects.tiles),
+}
 
 async function purgeArtwork(request: Request, env: AtlasEnv) {
-  if (!env.ATLAS_ADMIN_TOKEN || !await manifestBackfillIsAllowed(request, env))
+  if (!env.ATLAS_ADMIN_TOKEN || !(await manifestBackfillIsAllowed(request, env)))
     return errorResponse(403, 'Production administrator required.')
   if (request.method === 'GET') {
     const csrf = await csrfToken(env.ATLAS_ADMIN_TOKEN)
@@ -1062,16 +1123,40 @@ async function purgeArtwork(request: Request, env: AtlasEnv) {
   if (request.method !== 'POST') return errorResponse(405, 'Unsupported method.')
   const denied = await adminMutationIsAllowed(request, env)
   if (denied) return errorResponse(denied.status, denied.error)
-  const body = await readJsonBody(request).catch(() => null) as { bucket: AssetBucket; objects: ArchivedObject[] } | null
-  if (!body || !['tiles', 'media'].includes(body.bucket) || !Array.isArray(body.objects) ||
-      !body.objects.length || body.objects.length > 2 || body.objects.some(obj =>
-        !obj || typeof obj.key !== 'string' || !(obj.sha256 === null || (typeof obj.sha256 === 'string' && /^[a-f0-9]{64}$/.test(obj.sha256)))))
+  const body = (await readJsonBody(request).catch(() => null)) as {
+    bucket: AssetBucket
+    objects: ArchivedObject[]
+  } | null
+  if (
+    !body ||
+    !['tiles', 'media'].includes(body.bucket) ||
+    !Array.isArray(body.objects) ||
+    !body.objects.length ||
+    body.objects.length > 2 ||
+    body.objects.some(
+      obj =>
+        !obj ||
+        typeof obj.key !== 'string' ||
+        !(
+          obj.sha256 === null ||
+          (typeof obj.sha256 === 'string' && /^[a-f0-9]{64}$/.test(obj.sha256))
+        ),
+    )
+  )
     return errorResponse(400, 'Invalid archive receipt.')
   const keys = orphanGroup(body.bucket, body.objects[0].key, deployedKeys[body.bucket])
-  if (!keys || keys.length !== body.objects.length || !keys.every((key, i) => key === body.objects[i].key))
-    return errorResponse(409, 'Object group is referenced, incomplete or outside the release namespaces.')
-  const bucket = body.bucket === 'tiles' ? env.ATLAS_BUCKET : env.maps_romanticatlas_assets
-  if (!await removeArchivedObjects(bucket, body.objects, body.bucket === 'media'))
+  if (
+    !keys ||
+    keys.length !== body.objects.length ||
+    !keys.every((key, i) => key === body.objects[i].key)
+  )
+    return errorResponse(
+      409,
+      'Object group is referenced, incomplete or outside the release namespaces.',
+    )
+  const bucket =
+    body.bucket === 'tiles' ? env.ATLAS_BUCKET : env.maps_romanticatlas_assets
+  if (!(await removeArchivedObjects(bucket, body.objects, body.bucket === 'media')))
     return errorResponse(409, 'Remote bytes differ from the verified archive.')
   return json({ deleted: keys })
 }
@@ -1083,35 +1168,66 @@ export const handleAtlasApi = async (
   const url = new URL(request.url)
   const fake = url.pathname.match(/^\/api\/fake-render\/18\/(\d+)\/(\d+)$/)
   if (fake) {
-    if (!applicationRequestIsAllowed(request, env)) return errorResponse(403, 'Application origin required.')
+    if (!applicationRequestIsAllowed(request, env))
+      return errorResponse(403, 'Application origin required.')
     const tile = { zoom: 18, x: Number(fake[1]), y: Number(fake[2]) }
-    if (!isValidAtlasPosition(tile) || overlapsPeakMaquette(tile) || !isFogPatternSelected(tile)) return errorResponse(400, 'Invalid cloud position.')
+    if (
+      !isValidAtlasPosition(tile) ||
+      overlapsPeakMaquette(tile) ||
+      !isFogPatternSelected(tile)
+    )
+      return errorResponse(400, 'Invalid cloud position.')
     const cloud = env.FAKE_RENDER_CLOUD.getByName(positionId(tile))
     if (request.method === 'GET') {
-      if (url.searchParams.has('availability')) return json({ ready: await cloud.hasReadyImage() })
+      if (url.searchParams.has('availability'))
+        return json({ ready: await cloud.hasReadyImage() })
       if (!url.searchParams.has('includeCache')) {
         const snapshot = await cloud.snapshot()
-        return json({ ...snapshot, released: await availableReleasedImages(env, snapshot.released) })
+        return json({
+          ...snapshot,
+          released: await availableReleasedImages(env, snapshot.released),
+        })
       }
-      const [snapshot, cached] = await Promise.all([cloud.snapshot(), manifestEntriesForPosition(env, tile)])
-      return json({ ...snapshot, released: await availableReleasedImages(env,
-        [...snapshot.released, ...cached.filter(entry => !isRotatingVariant(entry.variant)).map(cachedTilePayload)]) })
+      const [snapshot, cached] = await Promise.all([
+        cloud.snapshot(),
+        manifestEntriesForPosition(env, tile),
+      ])
+      return json({
+        ...snapshot,
+        released: await availableReleasedImages(env, [
+          ...snapshot.released,
+          ...cached
+            .filter(entry => !isRotatingVariant(entry.variant))
+            .map(cachedTilePayload),
+        ]),
+      })
     }
-    if (request.method !== 'POST') return errorResponse(405, 'Use POST to reveal a cloud.')
-    if (!isFakeRenderTile(tile, Number(url.searchParams.get('visit')))) return errorResponse(400, 'Not a rotating cloud.')
+    if (request.method !== 'POST')
+      return errorResponse(405, 'Use POST to reveal a cloud.')
+    if (!isFakeRenderTile(tile, Number(url.searchParams.get('visit'))))
+      return errorResponse(400, 'Not a rotating cloud.')
     const body = await readJsonBody(request)
     if (typeof body.requestId !== 'string' || !/^[a-f0-9-]{36}$/.test(body.requestId))
       return errorResponse(400, 'A reveal request ID is required.')
     const source = decodeDataUrl(body.sourceImage, 'The tile source image')
-    if (source.contentType !== 'image/png') return errorResponse(400, 'A PNG source is required.')
+    if (source.contentType !== 'image/png')
+      return errorResponse(400, 'A PNG source is required.')
     const { eligibilities } = await fogEligibilityForPositions(env, [tile])
-    if (!eligibilities[0]?.isTargetable) return errorResponse(403, 'This tile cannot be rendered.')
+    if (!eligibilities[0]?.isTargetable)
+      return errorResponse(403, 'This tile cannot be rendered.')
     const cached = await findCachedTile(env, tile)
     const seed = fakeRenderSeed(tile) ?? (cached ? cachedTilePayload(cached) : null)
-    const result = await cloud.claim(tile, seed, body.requestId, String(body.sourceImage))
+    const result = await cloud.claim(
+      tile,
+      seed,
+      body.requestId,
+      String(body.sourceImage),
+    )
     return result ? json(result) : json({ pending: true }, 202)
   }
-  const job = url.pathname.match(/^\/api\/discovery-jobs\/([a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12})$/)
+  const job = url.pathname.match(
+    /^\/api\/discovery-jobs\/([a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12})$/,
+  )
   if (job) {
     try {
       return await siGenerationStatus(request, env, job[1])
@@ -1129,9 +1245,12 @@ export const handleAtlasApi = async (
   if (revisionImage && request.method === 'GET') {
     const key = url.pathname.slice(1)
     const cached = await env.ATLAS_BUCKET.get(key)
-    const headers = { 'content-type': 'image/png', 'cache-control': 'public, max-age=31536000, immutable' }
+    const headers = {
+      'content-type': 'image/png',
+      'cache-control': 'public, max-age=31536000, immutable',
+    }
     if (cached) return new Response(cached.body, { headers })
-    const image = await generator(env, '/revisions/' + revisionImage[1])
+    const image = await generator(env, `/revisions/${revisionImage[1]}`)
     if (!image.ok) return errorResponse(image.status, 'Revision image unavailable.')
     await env.ATLAS_BUCKET.put(key, image.body)
     const stored = await env.ATLAS_BUCKET.get(key)
@@ -1147,27 +1266,45 @@ export const handleAtlasApi = async (
     const radius = atlasSceneGridRadius
     const [land, cached, reviews, jobs] = await Promise.all([
       fogEligibilityForPositions(env, [tile]),
-      Promise.all(manifestShardNamesForGrid(tile).map(name => env.ATLAS_MANIFEST.getByName(name)
-        .entriesForTileArea(tile.zoom, tile.x-radius, tile.y-radius, tile.x+radius, tile.y+radius))),
-      allArtworkReviews(env, true), generator(env, '/revisions'),
+      Promise.all(
+        manifestShardNamesForGrid(tile).map(name =>
+          env.ATLAS_MANIFEST.getByName(name).entriesForTileArea(
+            tile.zoom,
+            tile.x - radius,
+            tile.y - radius,
+            tile.x + radius,
+            tile.y + radius,
+          ),
+        ),
+      ),
+      allArtworkReviews(env, true),
+      generator(env, '/revisions'),
     ])
     if (!jobs.ok) return errorResponse(503, 'Artwork queue unavailable.')
     const job = generationJob(payload, land.eligibilities[0], [
-      ...releaseCatalog.sheets.flatMap(sheet => sheet.art), ...cached.flat(), ...reviews, ...reservedArt(await jobs.json()),
+      ...releaseCatalog.sheets.flatMap(sheet => sheet.art),
+      ...cached.flat(),
+      ...reviews,
+      ...reservedArt(await jobs.json()),
     ])
-    if (!job) return errorResponse(409, 'This tile or scene family is no longer available.')
+    if (!job)
+      return errorResponse(409, 'This tile or scene family is no longer available.')
     return generator(env, '/revisions', { method: 'POST', body: JSON.stringify(job) })
   }
   if (url.pathname === revisionEndpoint) {
     if (request.method === 'GET') return generator(env, '/revisions')
-    if (request.method !== 'POST' && request.method !== 'DELETE') return errorResponse(405, 'Unsupported revision method.')
+    if (request.method !== 'POST' && request.method !== 'DELETE')
+      return errorResponse(405, 'Unsupported revision method.')
     const denied = await adminMutationIsAllowed(request, env)
     if (denied) return errorResponse(denied.status, denied.error)
     const payload = await readJsonBody(request).catch(() => null)
     if (request.method === 'DELETE') {
       const id = revisionId(payload)
       if (!id) return errorResponse(400, 'Invalid revision id.')
-      return generator(env, '/revisions', { method: 'DELETE', body: JSON.stringify({ id }) })
+      return generator(env, '/revisions', {
+        method: 'DELETE',
+        body: JSON.stringify({ id }),
+      })
     }
     const body = revisionRequest(payload)
     if (!body) return errorResponse(400, 'Invalid artwork revision.')
@@ -1178,7 +1315,8 @@ export const handleAtlasApi = async (
     if (request.method === 'GET') {
       return json(await allArtworkReviews(env, !adminModeEnabled(request)))
     }
-    if (request.method !== 'PUT' && request.method !== 'DELETE') return errorResponse(405, 'Unsupported review method.')
+    if (request.method !== 'PUT' && request.method !== 'DELETE')
+      return errorResponse(405, 'Unsupported review method.')
     const error = await adminMutationIsAllowed(request, env)
     if (error) return errorResponse(error.status, error.error)
     const review = parseArtworkReview(await readJsonBody(request).catch(() => null))
@@ -1237,10 +1375,13 @@ export const handleAtlasApi = async (
             : undefined,
         )
     }
-    const discoveryOnly = diagnosticsModeEnabled(request) && url.searchParams.get('collection') === 'discovery'
-    const version = adminMode || discoveryOnly
-      ? requestedVersion(request)
-      : requestedVersion(request) ?? generationVersion
+    const discoveryOnly =
+      diagnosticsModeEnabled(request) &&
+      url.searchParams.get('collection') === 'discovery'
+    const version =
+      adminMode || discoveryOnly
+        ? requestedVersion(request)
+        : (requestedVersion(request) ?? generationVersion)
     const tiles = await listCachedTiles(env.ATLAS_BUCKET, version, discoveryOnly)
     const csrf = adminMode ? await csrfToken(env.ATLAS_ADMIN_TOKEN as string) : null
     const secureCookie = url.protocol === 'https:' ? '; Secure' : ''
@@ -1322,7 +1463,13 @@ export const handleAtlasApi = async (
     try {
       if (url.searchParams.get('eligibilityOnly') === 'true') {
         const { cacheVersion, eligibilities } = await fogIndexEligibility(env, x, y)
-        return json({ x, y, zoom: fogIndexZoom, version: cacheVersion, eligibility: eligibilities })
+        return json({
+          x,
+          y,
+          zoom: fogIndexZoom,
+          version: cacheVersion,
+          eligibility: eligibilities,
+        })
       }
       return json(await fogIndexForTile(env, x, y))
     } catch (error) {

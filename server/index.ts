@@ -1,11 +1,31 @@
 import { overlapsPeakMaquette } from '../src/artwork-reservation'
-import { generationEndpoint, generationJob, generationPosition, reservedArt } from '../src/generation-targets'
-import { revisionEndpoint, revisionId, revisionImagePattern, revisionRequest } from '../src/artwork-revision'
-import { resumeRevisions, revisionFile, revisionList, changeRevision } from './review-revisions'
+import {
+  generationEndpoint,
+  generationJob,
+  generationPosition,
+  reservedArt,
+} from '../src/generation-targets'
+import {
+  revisionEndpoint,
+  revisionId,
+  revisionImagePattern,
+  revisionRequest,
+} from '../src/artwork-revision'
+import {
+  resumeRevisions,
+  revisionFile,
+  revisionList,
+  changeRevision,
+} from './review-revisions'
 import { createFakeRenderStore } from './fake-render-store'
 import { isFakeRenderTile, isRotatingVariant } from '../src/fake-render-state'
 import { fakeRenderSeed } from '../src/fake-render-seed'
-import { releaseCatalog, mediaCacheControl, releaseObjectKey, releaseMediaPath } from '../src/release-media.ts'
+import {
+  releaseCatalog,
+  mediaCacheControl,
+  releaseObjectKey,
+  releaseMediaPath,
+} from '../src/release-media.ts'
 import { createServer } from 'node:http'
 import { createHmac, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto'
 import {
@@ -69,7 +89,11 @@ import {
   requestedCacheVersion as parseRequestedCacheVersion,
 } from '../src/atlas-protocol.ts'
 
-import { parseArtworkReview, reviewEndpoint, type ArtworkReview } from '../src/artwork-review.ts'
+import {
+  parseArtworkReview,
+  reviewEndpoint,
+  type ArtworkReview,
+} from '../src/artwork-review.ts'
 
 const rootDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const cacheDirectory = path.join(rootDirectory, 'generated-tiles')
@@ -438,9 +462,7 @@ const serveFogIndex = async (request, response, match) => {
       (_, offset) => ({
         zoom: atlasZoom,
         x: x * fogEligibilityChildSpan + (offset % fogEligibilityChildSpan),
-        y:
-          y * fogEligibilityChildSpan +
-          Math.floor(offset / fogEligibilityChildSpan),
+        y: y * fogEligibilityChildSpan + Math.floor(offset / fogEligibilityChildSpan),
       }),
     )
     const eligibility = await localEligibilityForPositions(positions)
@@ -448,9 +470,10 @@ const serveFogIndex = async (request, response, match) => {
     const minimumY = positions[0].y
     const maximumX = positions.at(-1).x
     const maximumY = positions.at(-1).y
-    const cached = requestSearchParams(request).get('eligibilityOnly') === 'true'
-      ? []
-      : await listCachedTiles(null, { minimumX, maximumX, minimumY, maximumY })
+    const cached =
+      requestSearchParams(request).get('eligibilityOnly') === 'true'
+        ? []
+        : await listCachedTiles(null, { minimumX, maximumX, minimumY, maximumY })
     sendJson(response, 200, {
       zoom: fogEligibilitySourceZoom,
       x,
@@ -600,15 +623,9 @@ const getCachedTile = async tile => {
   return cached ? { ...cached, version: generationVersion } : null
 }
 const getLegacyCachedTile = tile => readCachedTile(legacyTilePaths(tile))
-const getVersionedCachedTile = async (
-  tile,
-  version,
-  variant = defaultAtlasVariant,
-) => {
+const getVersionedCachedTile = async (tile, version, variant = defaultAtlasVariant) => {
   if (!isSupportedCacheVersion(version)) return null
-  const cached = await readCachedTile(
-    versionedTilePaths(tile, version, variant),
-  )
+  const cached = await readCachedTile(versionedTilePaths(tile, version, variant))
   return cached ? { ...cached, version, variant } : null
 }
 const getVersionedCachedTiles = async (tile, version) => {
@@ -618,9 +635,7 @@ const getVersionedCachedTiles = async (tile, version) => {
     const files = await readdir(directory)
     const variants = files.flatMap(file => {
       const match = file.match(
-        new RegExp(
-          `^${scenePattern}\\.v${version}(?:\\.([a-z0-9-]{1,64}))?\\.json$`,
-        ),
+        new RegExp(`^${scenePattern}\\.v${version}(?:\\.([a-z0-9-]{1,64}))?\\.json$`),
       )
       return match ? [match[1] ?? defaultAtlasVariant] : []
     })
@@ -640,7 +655,8 @@ const getVersionedCachedTiles = async (tile, version) => {
 const requestedCacheVersion = request =>
   parseRequestedCacheVersion(requestSearchParams(request))
 
-const releasedCacheEntries = async tile => (
+const releasedCacheEntries = async tile =>
+  (
     await Promise.all(
       readableCacheVersions.flatMap(version =>
         atlasSceneNames.map(async scene =>
@@ -648,10 +664,16 @@ const releasedCacheEntries = async tile => (
         ),
       ),
     )
-  ).flat().filter(entry => !isRotatingVariant(entry.variant))
+  )
+    .flat()
+    .filter(entry => !isRotatingVariant(entry.variant))
 
 const findCachedTile = async (tile, excludedUrls?: Set<string>, discovery?: string) => {
-  const cachedTiles = (await releasedCacheEntries(tile)).filter(entry => (!discovery || entry.variant.startsWith(discovery + '-')) && !excludedUrls?.has(cachedTilePayload(entry).url))
+  const cachedTiles = (await releasedCacheEntries(tile)).filter(
+    entry =>
+      (!discovery || entry.variant.startsWith(`${discovery}-`)) &&
+      !excludedUrls?.has(cachedTilePayload(entry).url),
+  )
   if (!cachedTiles.length) return null
   return cachedTiles[Math.floor(Math.random() * cachedTiles.length)]
 }
@@ -781,19 +803,21 @@ const cachedScenesInGrid = async position => {
   return [...new Set(sceneLists.flat())]
 }
 
-const generateTile = async (
-  tile,
-  sourceImage,
-  discovery?: string,
-) => {
+const generateTile = async (tile, sourceImage, discovery?: string) => {
   const startedAt = performance.now()
   const variantId = randomUUID()
-  const variant = discovery ? discovery + '-' + variantId.slice(-12) : variantId
+  const variant = discovery ? `${discovery}-${variantId.slice(-12)}` : variantId
   const { directory, image, metadata } = tilePaths(tile, variant)
-  const { data, ...renderMetadata } = await renderCodexTile(rootDirectory, tile, sourceImage)
+  const { data, ...renderMetadata } = await renderCodexTile(
+    rootDirectory,
+    tile,
+    sourceImage,
+  )
   const generatedAt = performance.now()
   const cacheEntry = {
-    ...renderMetadata, generationVersion, generatedAt: new Date().toISOString(),
+    ...renderMetadata,
+    generationVersion,
+    generatedAt: new Date().toISOString(),
     contentBounds: null,
   }
   await mkdir(directory, { recursive: true })
@@ -815,7 +839,7 @@ const serveCachedTile = async (request, response, tile) => {
   const variant = requestedAtlasVariant(requestSearchParams(request))
   const cached = Number.isInteger(requestedVersion)
     ? await getVersionedCachedTile(tile, requestedVersion, variant)
-    : (await getCachedTile(tile)) ?? (await getLegacyCachedTile(tile))
+    : ((await getCachedTile(tile)) ?? (await getLegacyCachedTile(tile)))
   if (!cached) {
     sendError(response, 404, 'This atlas tile has not been generated yet.')
     return true
@@ -870,7 +894,11 @@ const serveCacheStatusBatch = async (request, response) => {
     const statuses = await Promise.all(
       [...positions.values()].map(async position => {
         const [cached, scenes] = await Promise.all([
-          findCachedTile(position, undefined, discoveryVariantForRequest(requestSearchParams(request))),
+          findCachedTile(
+            position,
+            undefined,
+            discoveryVariantForRequest(requestSearchParams(request)),
+          ),
           cachedScenesInGrid(position),
         ])
         return cacheStatusPayload({ cached, scenes })
@@ -909,7 +937,7 @@ const deleteCachedTile = async (request, response, tile) => {
     const variant = requestedAtlasVariant(requestSearchParams(request))
     const cached = Number.isInteger(requestedVersion)
       ? await getVersionedCachedTile(tile, requestedVersion, variant)
-      : (await getCachedTile(tile)) ?? (await getLegacyCachedTile(tile))
+      : ((await getCachedTile(tile)) ?? (await getLegacyCachedTile(tile)))
     if (!cached) {
       sendError(response, 404, 'This atlas tile is not cached.')
       return true
@@ -964,7 +992,11 @@ const generateAtlasTile = async (request, response, tile, force = false) => {
   // request. Resolve that case before validating the generation request so a
   // cached tile never depends on generator availability.
   const discovery = discoveryVariantForRequest(requestSearchParams(request))
-  const rejectedUrls = new Set((await readReviews()).filter(review => review.status === 'rejected').map(review => review.url))
+  const rejectedUrls = new Set(
+    (await readReviews())
+      .filter(review => review.status === 'rejected')
+      .map(review => review.url),
+  )
   const cached = force ? null : await findCachedTile(tile, rejectedUrls, discovery)
   if (cached) {
     sendJson(response, 200, cachedTilePayload(cached))
@@ -988,13 +1020,20 @@ const generateAtlasTile = async (request, response, tile, force = false) => {
         return true
       }
     } catch {
-      sendError(response, 503, 'Could not verify this atlas tile is eligible for generation.')
+      sendError(
+        response,
+        503,
+        'Could not verify this atlas tile is eligible for generation.',
+      )
       return true
     }
   }
 
   const { sourceImage } = await readRequestBody(request)
-  if (typeof sourceImage !== 'string' || !sourceImage.startsWith('data:image/png;base64,')) {
+  if (
+    typeof sourceImage !== 'string' ||
+    !sourceImage.startsWith('data:image/png;base64,')
+  ) {
     sendError(response, 400, 'Codex requires a PNG source.')
     return true
   }
@@ -1003,7 +1042,9 @@ const generateAtlasTile = async (request, response, tile, force = false) => {
   // this position waits and then receives the newly cached result.
   const releaseTileLock = await acquireTileLock(tile)
   try {
-    const lockedCached = force ? null : await findCachedTile(tile, rejectedUrls, discovery)
+    const lockedCached = force
+      ? null
+      : await findCachedTile(tile, rejectedUrls, discovery)
     if (lockedCached) {
       sendJson(response, 200, cachedTilePayload(lockedCached))
       return true
@@ -1020,10 +1061,11 @@ const generateAtlasTile = async (request, response, tile, force = false) => {
       liveJobs.set(jobId, { status: 202, body: { pending: true } })
       sendJson(response, 202, { statusUrl: liveJobPath + jobId })
       try {
-        const generated = await generateTile(
-          tile, sourceImage, discovery,
-        )
-        const payload = cachedTilePayload({ ...generated, version: generated.generationVersion })
+        const generated = await generateTile(tile, sourceImage, discovery)
+        const payload = cachedTilePayload({
+          ...generated,
+          version: generated.generationVersion,
+        })
         liveJobs.set(jobId, { status: 200, body: payload })
       } catch (error) {
         liveJobs.set(jobId, { status: 502, body: { error: error.message } })
@@ -1128,13 +1170,15 @@ async function saveReview(review: ArtworkReview, undo: boolean) {
   const previous = await readReviews()
   const reviews = previous.filter(item => item.url !== review.url)
   if (!undo) reviews.push(review)
-  const temporary = reviewsPath + '.' + randomUUID()
+  const temporary = `${reviewsPath}.${randomUUID()}`
   await mkdir(path.dirname(reviewsPath), { recursive: true })
-  await writeFile(temporary, JSON.stringify(reviews, null, 2) + '\n')
+  await writeFile(temporary, `${JSON.stringify(reviews, null, 2)}\n`)
   await rename(temporary, reviewsPath)
 }
 
-const rotatingClouds = createFakeRenderStore(path.join(rootDirectory, '.local/fake-render'))
+const rotatingClouds = createFakeRenderStore(
+  path.join(rootDirectory, '.local/fake-render'),
+)
 const rotatingJobs = new Set<string>()
 async function serveRotatingCloud(request, response, match: RegExpMatchArray) {
   if (!applicationRequestIsAllowed(request)) {
@@ -1143,36 +1187,77 @@ async function serveRotatingCloud(request, response, match: RegExpMatchArray) {
   }
   const tile = { zoom: 18, x: Number(match[1]), y: Number(match[2]) }
   const id = `${tile.x}/${tile.y}`
-  if (!isValidAtlasPosition(tile) || overlapsPeakMaquette(tile) || !isFogPatternSelected(tile)) return sendError(response, 400, 'Invalid cloud position.')
+  if (
+    !isValidAtlasPosition(tile) ||
+    overlapsPeakMaquette(tile) ||
+    !isFogPatternSelected(tile)
+  )
+    return sendError(response, 400, 'Invalid cloud position.')
   if (request.method === 'GET') {
     if (requestSearchParams(request).has('availability')) {
       const state = rotatingClouds.read(id)
-      return sendJson(response, 200, { ready: !state || Boolean(state.ready) }, { 'cache-control': 'no-store' })
+      return sendJson(
+        response,
+        200,
+        { ready: !state || Boolean(state.ready) },
+        { 'cache-control': 'no-store' },
+      )
     }
     const snapshot = rotatingClouds.snapshot(id)
-    const cached = requestSearchParams(request).has('includeCache') ? await releasedCacheEntries(tile) : []
-    return sendJson(response, 200, { ...snapshot, released: [...snapshot.released, ...cached.map(cachedTilePayload)] }, { 'cache-control': 'no-store' })
+    const cached = requestSearchParams(request).has('includeCache')
+      ? await releasedCacheEntries(tile)
+      : []
+    return sendJson(
+      response,
+      200,
+      {
+        ...snapshot,
+        released: [...snapshot.released, ...cached.map(cachedTilePayload)],
+      },
+      { 'cache-control': 'no-store' },
+    )
   }
-  if (request.method !== 'POST') return sendError(response, 405, 'Use POST to reveal a cloud.')
-  if (!isFakeRenderTile(tile, Number(requestSearchParams(request).get('visit')))) { sendError(response, 400, 'Not a rotating cloud.'); return }
+  if (request.method !== 'POST')
+    return sendError(response, 405, 'Use POST to reveal a cloud.')
+  if (!isFakeRenderTile(tile, Number(requestSearchParams(request).get('visit')))) {
+    sendError(response, 400, 'Not a rotating cloud.')
+    return
+  }
   const body = await readRequestBody(request)
-  if (typeof body.requestId !== 'string' || !/^[a-f0-9-]{36}$/.test(body.requestId)) { sendError(response, 400, 'Invalid request ID.'); return }
+  if (typeof body.requestId !== 'string' || !/^[a-f0-9-]{36}$/.test(body.requestId)) {
+    sendError(response, 400, 'Invalid request ID.')
+    return
+  }
   const source = parseImageDataUrl(body.sourceImage)
-  if (source.contentType !== 'image/png') { sendError(response, 400, 'PNG required.'); return }
+  if (source.contentType !== 'image/png') {
+    sendError(response, 400, 'PNG required.')
+    return
+  }
   const { eligibilities } = await localEligibilityForPositions([tile])
-  if (!eligibilities[0]?.isTargetable) { sendError(response, 403, 'This tile cannot be rendered.'); return }
+  if (!eligibilities[0]?.isTargetable) {
+    sendError(response, 403, 'This tile cannot be rendered.')
+    return
+  }
   const cached = await findCachedTile(tile)
   const seed = fakeRenderSeed(tile) ?? (cached ? cachedTilePayload(cached) : null)
   const result = rotatingClouds.claim(id, seed, body.requestId, body.sourceImage)
   const state = rotatingClouds.read(id)
-  sendJson(response, result ? 200 : 202, result ?? { pending: true }, { 'cache-control': 'no-store' })
+  sendJson(response, result ? 200 : 202, result ?? { pending: true }, {
+    'cache-control': 'no-store',
+  })
   if (!state?.job || state.attempts >= 3 || rotatingJobs.has(id)) return
   rotatingJobs.add(id)
   try {
-    const generated = await generateTile({ ...tile, scene: state.scene, hasSea: false }, state.sourceImage,
-      'discovery-rotating')
+    const generated = await generateTile(
+      { ...tile, scene: state.scene, hasSea: false },
+      state.sourceImage,
+      'discovery-rotating',
+    )
     const latest = rotatingClouds.read(id)
-    latest.ready = cachedTilePayload({ ...generated, version: generated.generationVersion })
+    latest.ready = cachedTilePayload({
+      ...generated,
+      version: generated.generationVersion,
+    })
     latest.job = null
     latest.sourceImage = ''
     rotatingClouds.save(id, latest)
@@ -1181,7 +1266,9 @@ async function serveRotatingCloud(request, response, match: RegExpMatchArray) {
     latest.attempts++
     rotatingClouds.save(id, latest)
     console.error('Rotating cloud replacement failed', id, error)
-  } finally { rotatingJobs.delete(id) }
+  } finally {
+    rotatingJobs.delete(id)
+  }
 }
 
 const server = createServer(async (request, response) => {
@@ -1189,33 +1276,57 @@ const server = createServer(async (request, response) => {
     const pathname = new URL(request.url, 'http://localhost').pathname
 
     if (request.method === 'GET' || request.method === 'HEAD') {
-      if (pathname === '/atlas-v2/catalog.json' && (isProduction || !await Bun.file(path.join(rootDirectory, 'public', pathname)).exists())) {
+      if (
+        pathname === '/atlas-v2/catalog.json' &&
+        (isProduction ||
+          !(await Bun.file(path.join(rootDirectory, 'public', pathname)).exists()))
+      ) {
         return sendJson(response, 200, releaseCatalog)
       }
       const localPath = releaseMediaPath(pathname)
       const key = releaseObjectKey(pathname)
       if (!key && pathname.startsWith('/release-assets/'))
         return sendError(response, 404, 'Unknown release asset.')
-      if (key && (isProduction || !await Bun.file(path.join(rootDirectory, 'public', localPath)).exists())) {
-        const origin = process.env.ATLAS_SHARE_ASSET_ORIGIN || 'https://romanticassets.hype.hk'
+      if (
+        key &&
+        (isProduction ||
+          !(await Bun.file(path.join(rootDirectory, 'public', localPath)).exists()))
+      ) {
+        const origin =
+          process.env.ATLAS_SHARE_ASSET_ORIGIN || 'https://romanticassets.hype.hk'
         const media = await fetch(new URL(key, origin), {
           method: request.method,
-          headers: Object.fromEntries(['range', 'if-range', 'if-none-match', 'if-modified-since']
-            .filter(name => typeof request.headers[name] === 'string').map(name => [name, request.headers[name] as string])),
+          headers: Object.fromEntries(
+            ['range', 'if-range', 'if-none-match', 'if-modified-since']
+              .filter(name => typeof request.headers[name] === 'string')
+              .map(name => [name, request.headers[name] as string]),
+          ),
         })
-        const headers = { 'cache-control': mediaCacheControl(pathname, key, media.status) }
-        for (const name of ['content-type', 'content-range', 'accept-ranges', 'etag', 'last-modified']) {
+        const headers = {
+          'cache-control': mediaCacheControl(pathname, key, media.status),
+        }
+        for (const name of [
+          'content-type',
+          'content-range',
+          'accept-ranges',
+          'etag',
+          'last-modified',
+        ]) {
           const value = media.headers.get(name)
           if (value) headers[name] = value
         }
         response.writeHead(media.status, headers)
         return response.end(Buffer.from(await media.arrayBuffer()))
       }
-      if (localPath !== pathname) request.url = localPath + new URL(request.url, 'http://localhost').search
+      if (localPath !== pathname)
+        request.url = localPath + new URL(request.url, 'http://localhost').search
     }
 
     const rotating = pathname.match(/^\/api\/fake-render\/18\/(\d+)\/(\d+)$/)
-    if (rotating) { await serveRotatingCloud(request, response, rotating); return }
+    if (rotating) {
+      await serveRotatingCloud(request, response, rotating)
+      return
+    }
     if (request.method === 'GET' && pathname.startsWith(liveJobPath)) {
       const job = liveJobs.get(pathname.slice(liveJobPath.length))
       if (!job) return sendError(response, 404, 'This generation job has expired.')
@@ -1224,37 +1335,71 @@ const server = createServer(async (request, response) => {
 
     const revisionImage = revisionImagePattern.exec(pathname)
     if (revisionImage && request.method === 'GET') {
-      const bytes = await Bun.file(revisionFile(revisionImage[1])).bytes().catch(() => null)
+      const bytes = await Bun.file(revisionFile(revisionImage[1]))
+        .bytes()
+        .catch(() => null)
       if (!bytes) return sendError(response, 404, 'Revision image unavailable.')
-      response.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'public, max-age=31536000, immutable' })
+      response.writeHead(200, {
+        'content-type': 'image/png',
+        'cache-control': 'public, max-age=31536000, immutable',
+      })
       return response.end(bytes)
     }
     if (pathname === generationEndpoint) {
       if (request.method !== 'POST') return sendError(response, 405, 'POST required.')
-      if (rejectAdminAccess(request, response, { requireOrigin: true, requireCsrf: true })) return
+      if (
+        rejectAdminAccess(request, response, { requireOrigin: true, requireCsrf: true })
+      )
+        return
       const payload = await readRequestBody(request).catch(() => null)
       const tile = generationPosition(payload)
-      if (!tile) return sendError(response, 400, 'Invalid generation target or reference.')
+      if (!tile)
+        return sendError(response, 400, 'Invalid generation target or reference.')
       const radius = atlasSceneGridRadius
-      const localCatalog = Bun.file(path.join(rootDirectory, 'public/atlas-v2/catalog.json'))
+      const localCatalog = Bun.file(
+        path.join(rootDirectory, 'public/atlas-v2/catalog.json'),
+      )
       const [land, catalog, cached, reviews, jobs] = await Promise.all([
         localEligibilityForPositions([tile]),
-        !isProduction && await localCatalog.exists() ? localCatalog.json() : releaseCatalog,
-        listCachedTiles(null, { minimumX: tile.x-radius, maximumX: tile.x+radius, minimumY: tile.y-radius, maximumY: tile.y+radius }),
-        readReviews(), revisionList(),
+        !isProduction && (await localCatalog.exists())
+          ? localCatalog.json()
+          : releaseCatalog,
+        listCachedTiles(null, {
+          minimumX: tile.x - radius,
+          maximumX: tile.x + radius,
+          minimumY: tile.y - radius,
+          maximumY: tile.y + radius,
+        }),
+        readReviews(),
+        revisionList(),
       ])
       const job = generationJob(payload, land.eligibilities[0], [
-        ...catalog.sheets.flatMap(sheet => sheet.art), ...cached, ...reviews, ...reservedArt(jobs),
+        ...catalog.sheets.flatMap(sheet => sheet.art),
+        ...cached,
+        ...reviews,
+        ...reservedArt(jobs),
       ])
-      if (!job) return sendError(response, 409, 'This tile or scene family is no longer available.')
+      if (!job)
+        return sendError(
+          response,
+          409,
+          'This tile or scene family is no longer available.',
+        )
       const record = await changeRevision('submit', job)
       if (record.conflict) return sendError(response, 409, record.conflict)
       return sendJson(response, 202, record)
     }
     if (pathname === revisionEndpoint) {
-      if (request.method === 'GET') return sendJson(response, 200, await revisionList(), { 'cache-control': 'no-store' })
-      if (request.method !== 'POST' && request.method !== 'DELETE') return sendError(response, 405, 'Unsupported revision method.')
-      if (rejectAdminAccess(request, response, { requireOrigin: true, requireCsrf: true })) return
+      if (request.method === 'GET')
+        return sendJson(response, 200, await revisionList(), {
+          'cache-control': 'no-store',
+        })
+      if (request.method !== 'POST' && request.method !== 'DELETE')
+        return sendError(response, 405, 'Unsupported revision method.')
+      if (
+        rejectAdminAccess(request, response, { requireOrigin: true, requireCsrf: true })
+      )
+        return
       const payload = await readRequestBody(request).catch(() => null)
       if (request.method === 'DELETE') {
         const id = revisionId(payload)
@@ -1270,10 +1415,20 @@ const server = createServer(async (request, response) => {
       if (request.method === 'GET') {
         sendJson(response, 200, await readReviews(), { 'cache-control': 'no-store' })
       } else if (request.method === 'PUT' || request.method === 'DELETE') {
-        if (rejectAdminAccess(request, response, { requireOrigin: true, requireCsrf: true })) return
-        const review = parseArtworkReview(await readRequestBody(request).catch(() => null))
+        if (
+          rejectAdminAccess(request, response, {
+            requireOrigin: true,
+            requireCsrf: true,
+          })
+        )
+          return
+        const review = parseArtworkReview(
+          await readRequestBody(request).catch(() => null),
+        )
         if (!review) return sendError(response, 400, 'Invalid artwork review.')
-        const write = reviewWrite.then(() => saveReview(review, request.method === 'DELETE'))
+        const write = reviewWrite.then(() =>
+          saveReview(review, request.method === 'DELETE'),
+        )
         reviewWrite = write.catch(() => {})
         await write
         sendJson(response, 200, review)
@@ -1288,7 +1443,11 @@ const server = createServer(async (request, response) => {
 
     const sharedMapMatch = pathname.match(localSharedMapPattern)
     if ((request.method === 'GET' || request.method === 'HEAD') && sharedMapMatch) {
-      await serveSharedMap(response, `${sharedMapMatch[1]}.png`, request.method === 'HEAD')
+      await serveSharedMap(
+        response,
+        `${sharedMapMatch[1]}.png`,
+        request.method === 'HEAD',
+      )
       return
     }
 
@@ -1301,18 +1460,21 @@ const server = createServer(async (request, response) => {
           response,
           200,
           cachedTilesPayload({
-          adminMode: false,
-          diagnosticsMode: false,
-          version: null,
-          tiles: [],
+            adminMode: false,
+            diagnosticsMode: false,
+            version: null,
+            tiles: [],
           }),
         )
         return
       }
       if (adminMode && rejectAdminAccess(request, response)) return
       if (adminMode) ensureCsrfCookie(request, response)
-      const discoveryOnly = diagnosticsMode && requestSearchParams(request).get('collection') === 'discovery'
-      const version = requestedCacheVersion(request) ?? (discoveryOnly ? null : generationVersion)
+      const discoveryOnly =
+        diagnosticsMode &&
+        requestSearchParams(request).get('collection') === 'discovery'
+      const version =
+        requestedCacheVersion(request) ?? (discoveryOnly ? null : generationVersion)
       const tiles = await listCachedTiles(version, undefined, discoveryOnly)
       sendJson(
         response,
@@ -1404,5 +1566,6 @@ const port = Number(process.env.PORT ?? 5173)
 server.listen(port, '127.0.0.1', () => {
   void resumeRevisions()
   const address = server.address()
-  if (address && typeof address !== 'string') console.log(`Hong Kong Map is running at http://127.0.0.1:${address.port}`)
+  if (address && typeof address !== 'string')
+    console.log(`Hong Kong Map is running at http://127.0.0.1:${address.port}`)
 })

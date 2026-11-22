@@ -60,22 +60,42 @@ export default {
     try {
       if (request.method === 'GET' || request.method === 'HEAD') {
         if (url.pathname === '/atlas-v2/catalog.json') {
-          return new Response(request.method === 'HEAD' ? null : JSON.stringify(releaseCatalog), {
-            headers: { 'content-type': 'application/json', 'cache-control': 'no-cache' },
-          })
+          return new Response(
+            request.method === 'HEAD' ? null : JSON.stringify(releaseCatalog),
+            {
+              headers: {
+                'content-type': 'application/json',
+                'cache-control': 'no-cache',
+              },
+            },
+          )
         }
         const key = releaseObjectKey(url.pathname)
         if (!key && url.pathname.startsWith('/release-assets/'))
-          return new Response(null, { status: 404, headers: { 'cache-control': 'no-store' } })
+          return new Response(null, {
+            status: 404,
+            headers: { 'cache-control': 'no-store' },
+          })
         if (key) {
           const headers = new Headers()
-          for (const name of ['range', 'if-range', 'if-none-match', 'if-modified-since']) {
+          for (const name of [
+            'range',
+            'if-range',
+            'if-none-match',
+            'if-modified-since',
+          ]) {
             const value = request.headers.get(name)
             if (value) headers.set(name, value)
           }
-          const media = await fetch(new URL(key, env.ATLAS_SHARE_ASSET_ORIGIN), { method: request.method, headers })
+          const media = await fetch(new URL(key, env.ATLAS_SHARE_ASSET_ORIGIN), {
+            method: request.method,
+            headers,
+          })
           const response = new Response(media.body, media)
-          response.headers.set('cache-control', mediaCacheControl(url.pathname, key, media.status))
+          response.headers.set(
+            'cache-control',
+            mediaCacheControl(url.pathname, key, media.status),
+          )
           return response
         }
       }
@@ -96,7 +116,9 @@ export default {
       // completed render from the cache when it receives a normal response.
       console.error(`[atlas] request failed for ${url.pathname}`, error)
       return new Response(
-        JSON.stringify({ error: 'The atlas service could not complete this request. Please try again.' }),
+        JSON.stringify({
+          error: 'The atlas service could not complete this request. Please try again.',
+        }),
         {
           status: 500,
           headers: {

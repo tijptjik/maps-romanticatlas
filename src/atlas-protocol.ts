@@ -11,7 +11,7 @@ export const discoveryVariantForRequest = (params: URLSearchParams) => {
   if (visit === null) return undefined
   if (!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/.test(visit))
     throw new Error('Invalid discovery visit.')
-  return 'discovery-' + visit
+  return `discovery-${visit}`
 }
 
 export const defaultAtlasVariant = 'default'
@@ -156,10 +156,7 @@ export const cookieValue = (cookieHeader: unknown, name: string) =>
     .find(cookie => cookie.startsWith(`${name}=`))
     ?.slice(name.length + 1) ?? null
 
-export const modeEnabled = (
-  searchParams: URLSearchParams,
-  mode: string,
-) => {
+export const modeEnabled = (searchParams: URLSearchParams, mode: string) => {
   const value = searchParams.get(mode)
   return value === '' || value === 'true'
 }

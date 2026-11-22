@@ -11,9 +11,14 @@ export const atlasSceneTitle = (value: string) =>
 const historicalTitles: Record<string, string> = recoveredTitles
 
 export const discoveryTitle = (url: string, scene: string, title?: string) =>
-  title && title !== atlasSceneTitle(scene) ? title : historicalTitles[url] ?? title
+  title && title !== atlasSceneTitle(scene) ? title : (historicalTitles[url] ?? title)
 
-export const createAtlasTitleCard = (container, scene, displayTitle?: string, onCopy?: () => void) => {
+export const createAtlasTitleCard = (
+  container,
+  scene,
+  displayTitle?: string,
+  onCopy?: () => void,
+) => {
   const card = document.createElement(onCopy ? 'button' : 'aside')
   if (card instanceof HTMLButtonElement && onCopy) {
     card.type = 'button'
@@ -24,7 +29,10 @@ export const createAtlasTitleCard = (container, scene, displayTitle?: string, on
     }
   }
   card.className = 'atlas-title-card is-awaiting-focus'
-  card.setAttribute('aria-label', displayTitle ?? `${atlasSceneTitle(scene)}: ${atlasScenes[scene]}`)
+  card.setAttribute(
+    'aria-label',
+    displayTitle ?? `${atlasSceneTitle(scene)}: ${atlasScenes[scene]}`,
+  )
 
   const title = document.createElement('strong')
   title.className = 'atlas-title-card__title'
@@ -39,7 +47,10 @@ export const createAtlasTitleCard = (container, scene, displayTitle?: string, on
 export function sampleArtworkAlpha(image: HTMLImageElement) {
   const canvas = document.createElement('canvas')
   canvas.width = 96
-  canvas.height = Math.max(1, Math.round(canvas.width * image.naturalHeight / image.naturalWidth))
+  canvas.height = Math.max(
+    1,
+    Math.round((canvas.width * image.naturalHeight) / image.naturalWidth),
+  )
   const context = canvas.getContext('2d')!
   context.drawImage(image, 0, 0, canvas.width, canvas.height)
   const { data } = context.getImageData(0, 0, canvas.width, canvas.height)
@@ -54,8 +65,14 @@ export function sampleArtworkAlpha(image: HTMLImageElement) {
   return { counts, width: canvas.width, height: canvas.height }
 }
 
-export const positionAtlasTitleCard = (map, card, tile, contentBounds,
-  bounds = tileBounds(tile), alpha?: ReturnType<typeof sampleArtworkAlpha>) => {
+export const positionAtlasTitleCard = (
+  map,
+  card,
+  tile,
+  contentBounds,
+  bounds = tileBounds(tile),
+  alpha?: ReturnType<typeof sampleArtworkAlpha>,
+) => {
   const northWest = map.project([bounds.west, bounds.north])
   const southEast = map.project([bounds.east, bounds.south])
   const canvas = map.getCanvas()
@@ -72,7 +89,11 @@ export const positionAtlasTitleCard = (map, card, tile, contentBounds,
   const tileHeight = Math.max(1, southEast.y - northWest.y)
   // Keep the title wrapped at its full size while the whole plaque shrinks.
   const cardWidth = card.offsetWidth
-  const scale = Math.min(1, tileWidth * 0.8 / cardWidth, Math.max(1, canvas.clientWidth - 16) / cardWidth)
+  const scale = Math.min(
+    1,
+    (tileWidth * 0.8) / cardWidth,
+    Math.max(1, canvas.clientWidth - 16) / cardWidth,
+  )
   card.style.scale = String(scale)
   const renderedCardWidth = cardWidth * scale
   const layoutHeight = card.offsetHeight
@@ -93,8 +114,14 @@ export const positionAtlasTitleCard = (map, card, tile, contentBounds,
   )
   let preferredTop = contentBottom
   if (alpha) {
-    const first = Math.max(0, Math.floor((left - northWest.x) / tileWidth * alpha.width))
-    const last = Math.min(alpha.width, Math.ceil((left + renderedCardWidth - northWest.x) / tileWidth * alpha.width))
+    const first = Math.max(
+      0,
+      Math.floor(((left - northWest.x) / tileWidth) * alpha.width),
+    )
+    const last = Math.min(
+      alpha.width,
+      Math.ceil(((left + renderedCardWidth - northWest.x) / tileWidth) * alpha.width),
+    )
     if (first < last) {
       // Skip faint shadows and narrow details such as a staircase below a building.
       const required = Math.ceil((last - first) / 3)
@@ -110,7 +137,7 @@ export const positionAtlasTitleCard = (map, card, tile, contentBounds,
         if (painted >= required) break
       }
       if (anchorRow >= 0) {
-        const bottom = northWest.y + (anchorRow + 1) / alpha.height * tileHeight
+        const bottom = northWest.y + ((anchorRow + 1) / alpha.height) * tileHeight
         preferredTop = Math.min(contentBottom, bottom) - Math.min(12, cardHeight / 3)
       }
     }
