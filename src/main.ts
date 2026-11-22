@@ -33,7 +33,8 @@ maplibregl.setWorkerUrl(workerUrl)
 
 const initialView = {
   center: [114.13765, 22.28364] as [number, number],
-  zoom: 17 + Math.log2(artworkZoomScale(document.documentElement.clientWidth)),
+  zoom: 17 + Math.log2(artworkZoomScale(document.documentElement.clientWidth)) -
+    (document.documentElement.clientWidth <= 700 ? 1 : 0),
   bearing: 0,
   pitch: 0,
 }
