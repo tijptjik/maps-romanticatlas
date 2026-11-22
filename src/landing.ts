@@ -18,7 +18,8 @@ const reviewMode = reviewModeEnabled()
 const kioskMode = kioskModeEnabled()
 const restoringMap = history.state?.atlasView === 'map' ||
   (!history.state?.atlasView && Boolean(history.state?.atlasModeCamera))
-const directEntry = Boolean(linkedTile()) || revealedModeEnabled() || reviewMode || kioskMode || noSplashEnabled() || restoringMap
+const directArtistStatement = location.hash === '#artist-statement'
+const directEntry = directArtistStatement || Boolean(linkedTile()) || revealedModeEnabled() || reviewMode || kioskMode || noSplashEnabled() || restoringMap
 
 if (directEntry) document.documentElement.classList.remove('atlas-boot')
 if (reviewMode) {
@@ -46,6 +47,7 @@ if (reviewMode) {
     onBookmarkPull: () => audio.playPavilionCue('book', 'pull'),
     onPavilionClose: () => audio.playPavilionCue('book', 'fall'),
   })
+  if (directArtistStatement) statement.open()
   const showPavilion = () => {
     void statement.close()
     void intro.show()
