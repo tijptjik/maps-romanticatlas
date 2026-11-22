@@ -33,6 +33,8 @@ export function mediaCacheControl(pathname: string, key: string, status: number)
 
 function publishedUrl(url: string) {
   const key = releaseMediaKeys.get(releaseMediaPath(url.split('?')[0]))
+  if (!key && !url.startsWith('/generated-tiles/'))
+    throw new Error(`Accepted artwork has no released media mapping: ${url}`)
   return key ? publishedArtworkUrl('/' + key, url) : url
 }
 
