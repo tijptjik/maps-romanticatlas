@@ -9879,6 +9879,62 @@
           "rows": 1,
           "scene": "botanical-laboratory",
           "url": "/generated-tiles/18/214187/114425/botanical-laboratory?version=6&variant=discovery-713fd1b2-4cc6-4124-8081-68a7399f9e34-128c475e214c"
+        },
+        {
+          "title": "Wave Organ",
+          "x": 214270,
+          "y": 114481,
+          "rows": 1,
+          "scene": "wave-organ",
+          "url": "/generated-tiles/18/214270/114481/wave-organ?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-cfa1265f3ba8"
+        },
+        {
+          "title": "Pirate Harbour",
+          "x": 214200,
+          "y": 114479,
+          "rows": 1,
+          "scene": "pirate-harbour",
+          "url": "/generated-tiles/18/214200/114479/pirate-harbour?version=6&variant=discovery-69f0d12b-2a2e-43d7-9640-502ee9393bb5-db8006affc1d"
+        },
+        {
+          "title": "Car Boat Works",
+          "x": 214256,
+          "y": 114469,
+          "rows": 1,
+          "scene": "car-boat-works",
+          "url": "/generated-tiles/18/214256/114469/car-boat-works?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-c6c1d64c263f"
+        },
+        {
+          "title": "Pirate Harbour",
+          "x": 214165,
+          "y": 114465,
+          "rows": 1,
+          "scene": "pirate-harbour",
+          "url": "/generated-tiles/18/214165/114465/pirate-harbour?version=6&variant=discovery-rotating-109473b60b1f"
+        },
+        {
+          "title": "A Street Cast Overnight",
+          "x": 214220,
+          "y": 114458,
+          "rows": 1,
+          "scene": "ironworks",
+          "url": "/generated-tiles/18/214220/114458/ironworks?version=6&variant=discovery-69f0d12b-2a2e-43d7-9640-502ee9393bb5-eeb005af0632"
+        },
+        {
+          "title": "Mermaid Station",
+          "x": 214165,
+          "y": 114457,
+          "rows": 1,
+          "scene": "mermaid-station",
+          "url": "/artwork-revisions/1206ec57a279443dbcf8fff605adac3a.png"
+        },
+        {
+          "title": "A River Across the Ceiling",
+          "x": 214209,
+          "y": 114455,
+          "rows": 1,
+          "scene": "tropical-aquarium",
+          "url": "/artwork-revisions/e650fcff2f244e3fb6f2d9addbba6769.png"
         }
       ]
     }

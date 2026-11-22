@@ -6907,5 +6907,302 @@
     "scene": "botanical-laboratory",
     "url": "/generated-tiles/18/214187/114425/botanical-laboratory?version=6&variant=discovery-713fd1b2-4cc6-4124-8081-68a7399f9e34-128c475e214c",
     "status": "accepted"
+  },
+  {
+    "title": "Wave Organ",
+    "x": 214270,
+    "y": 114481,
+    "rows": 1,
+    "scene": "wave-organ",
+    "url": "/generated-tiles/18/214270/114481/wave-organ?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-cfa1265f3ba8",
+    "status": "accepted"
+  },
+  {
+    "title": "Pirate Harbour",
+    "x": 214200,
+    "y": 114479,
+    "rows": 1,
+    "scene": "pirate-harbour",
+    "url": "/generated-tiles/18/214200/114479/pirate-harbour?version=6&variant=discovery-69f0d12b-2a2e-43d7-9640-502ee9393bb5-db8006affc1d",
+    "status": "accepted"
+  },
+  {
+    "title": "Car Boat Works",
+    "x": 214256,
+    "y": 114469,
+    "rows": 1,
+    "scene": "car-boat-works",
+    "url": "/generated-tiles/18/214256/114469/car-boat-works?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-c6c1d64c263f",
+    "status": "accepted"
+  },
+  {
+    "title": "Pirate Harbour",
+    "x": 214165,
+    "y": 114465,
+    "rows": 1,
+    "scene": "pirate-harbour",
+    "url": "/generated-tiles/18/214165/114465/pirate-harbour?version=6&variant=discovery-rotating-109473b60b1f",
+    "status": "accepted"
+  },
+  {
+    "title": "A Street Cast Overnight",
+    "x": 214220,
+    "y": 114458,
+    "rows": 1,
+    "scene": "ironworks",
+    "url": "/generated-tiles/18/214220/114458/ironworks?version=6&variant=discovery-69f0d12b-2a2e-43d7-9640-502ee9393bb5-eeb005af0632",
+    "status": "accepted"
+  },
+  {
+    "title": "Mermaid Station",
+    "x": 214165,
+    "y": 114457,
+    "rows": 1,
+    "scene": "mermaid-station",
+    "url": "/artwork-revisions/1206ec57a279443dbcf8fff605adac3a.png",
+    "status": "accepted"
+  },
+  {
+    "title": "A River Across the Ceiling",
+    "x": 214209,
+    "y": 114455,
+    "rows": 1,
+    "scene": "tropical-aquarium",
+    "url": "/artwork-revisions/e650fcff2f244e3fb6f2d9addbba6769.png",
+    "status": "accepted"
+  },
+  {
+    "title": "Shipwright Dock",
+    "x": 214185,
+    "y": 114451,
+    "rows": 1,
+    "scene": "shipwright-dock",
+    "url": "/generated-tiles/18/214185/114451/shipwright-dock?version=6&variant=discovery-69f0d12b-2a2e-43d7-9640-502ee9393bb5-88188b949c2d",
+    "status": "rejected"
+  },
+  {
+    "title": "Paper Roofs After Rain",
+    "x": 214179,
+    "y": 114435,
+    "rows": 1,
+    "scene": "festival-city",
+    "url": "/generated-tiles/18/214179/114435/festival-city?version=6&variant=discovery-69f0d12b-2a2e-43d7-9640-502ee9393bb5-cb3e48719889",
+    "status": "accepted"
+  },
+  {
+    "title": "The Lofting Floor",
+    "x": 214201,
+    "y": 114426,
+    "rows": 1,
+    "scene": "shipyard",
+    "url": "/generated-tiles/18/214201/114426/shipyard?version=6&variant=discovery-89b34bd2-bed3-40c9-b282-b8e96bf58beb-a565f53072df",
+    "status": "accepted"
+  },
+  {
+    "title": "The Fragments' Supper",
+    "x": 214183,
+    "y": 114422,
+    "rows": 1,
+    "scene": "archaeological-excavation",
+    "url": "/generated-tiles/18/214183/114422/archaeological-excavation?version=6&variant=discovery-rotating-191561b0551c",
+    "status": "accepted"
+  },
+  {
+    "title": "Time in a Revolving Door",
+    "x": 214182,
+    "y": 114422,
+    "rows": 1,
+    "scene": "photography-studio",
+    "url": "/generated-tiles/18/214182/114422/photography-studio?version=6&variant=discovery-rotating-011d496fdaca",
+    "status": "accepted"
+  },
+  {
+    "title": "The Silver Bath",
+    "x": 214182,
+    "y": 114422,
+    "rows": 1,
+    "scene": "photography-studio",
+    "url": "/generated-tiles/18/214182/114422/photography-studio?version=6&variant=discovery-rotating-893e03054747",
+    "status": "accepted"
+  },
+  {
+    "title": "The Rain Parliament",
+    "x": 214185,
+    "y": 114420,
+    "rows": 1,
+    "scene": "civic-centre",
+    "url": "/generated-tiles/18/214185/114420/civic-centre?version=6&variant=discovery-rotating-f6e5f080c8d0",
+    "status": "accepted"
+  },
+  {
+    "title": "The Borrowed Reflection",
+    "x": 214185,
+    "y": 114419,
+    "rows": 1,
+    "scene": "japanese-garden",
+    "url": "/generated-tiles/18/214185/114419/japanese-garden?version=6&variant=discovery-rotating-31780b0e9ce9",
+    "status": "accepted"
+  },
+  {
+    "title": "The Park on a Hinge",
+    "x": 214188,
+    "y": 114417,
+    "rows": 1,
+    "scene": "theme-park",
+    "url": "/generated-tiles/18/214188/114417/theme-park?version=6&variant=discovery-rotating-1a7ee39c66f1",
+    "status": "accepted"
+  },
+  {
+    "title": "The Hemline Parliament",
+    "x": 214195,
+    "y": 114417,
+    "rows": 1,
+    "scene": "thrifting-paradise",
+    "url": "/generated-tiles/18/214195/114417/thrifting-paradise?version=6&variant=discovery-rotating-63778b94bfbf",
+    "status": "accepted"
+  },
+  {
+    "title": "A Bridge of Borrowed Doors",
+    "x": 214181,
+    "y": 114416,
+    "rows": 1,
+    "scene": "suspension-bridge",
+    "url": "/generated-tiles/18/214181/114416/suspension-bridge?version=6&variant=discovery-rotating-d6af25d5e94a",
+    "status": "accepted"
+  },
+  {
+    "title": "Kelp Conservatory",
+    "x": 214181,
+    "y": 114415,
+    "rows": 1,
+    "scene": "kelp-conservatory",
+    "url": "/generated-tiles/18/214181/114415/kelp-conservatory?version=6&variant=discovery-rotating-3ba066f45446",
+    "status": "accepted"
+  },
+  {
+    "title": "Floating Opera",
+    "x": 214196,
+    "y": 114405,
+    "rows": 1,
+    "scene": "floating-opera",
+    "url": "/generated-tiles/18/214196/114405/floating-opera?version=6&variant=discovery-69f0d12b-2a2e-43d7-9640-502ee9393bb5-eba466c7738a",
+    "status": "accepted"
+  },
+  {
+    "title": "The Pattern Exchange",
+    "x": 214187,
+    "y": 114393,
+    "rows": 1,
+    "scene": "luddite-rally",
+    "url": "/generated-tiles/18/214187/114393/luddite-rally?version=6&variant=discovery-69f0d12b-2a2e-43d7-9640-502ee9393bb5-cbb4b39de585",
+    "status": "accepted"
+  },
+  {
+    "title": "A City One Plank Deep",
+    "x": 214188,
+    "y": 114393,
+    "rows": 1,
+    "scene": "film-backlot",
+    "url": "/generated-tiles/18/214188/114393/film-backlot?version=6&variant=discovery-69f0d12b-2a2e-43d7-9640-502ee9393bb5-be7b8d67fd83",
+    "status": "accepted"
+  },
+  {
+    "title": "The Courtesy Machine",
+    "x": 214201,
+    "y": 114385,
+    "rows": 1,
+    "scene": "automata",
+    "url": "/generated-tiles/18/214201/114385/automata?version=6&variant=discovery-69f0d12b-2a2e-43d7-9640-502ee9393bb5-fc92bbc2b1c8",
+    "status": "accepted"
+  },
+  {
+    "title": "The Cold Stone Tap",
+    "x": 214202,
+    "y": 114384,
+    "rows": 1,
+    "scene": "beer-garden",
+    "url": "/generated-tiles/18/214202/114384/beer-garden?version=6&variant=discovery-69f0d12b-2a2e-43d7-9640-502ee9393bb5-3d128230a82f",
+    "status": "accepted"
+  },
+  {
+    "title": "Dinner Above the Greenhouse",
+    "x": 214201,
+    "y": 114383,
+    "rows": 1,
+    "scene": "arcology",
+    "url": "/generated-tiles/18/214201/114383/arcology?version=6&variant=discovery-69f0d12b-2a2e-43d7-9640-502ee9393bb5-7eeab43ce29e",
+    "status": "accepted"
+  },
+  {
+    "title": "The Silent Shift",
+    "x": 214272,
+    "y": 114356,
+    "rows": 1,
+    "scene": "luddite-rally",
+    "url": "/generated-tiles/18/214272/114356/luddite-rally?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-3c3c43f9a915",
+    "status": "rejected"
+  },
+  {
+    "title": "The Inflatable Wing",
+    "x": 214206,
+    "y": 114292,
+    "rows": 1,
+    "scene": "lunar-outpost",
+    "url": "/generated-tiles/18/214206/114292/lunar-outpost?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-7444a50efc71",
+    "status": "accepted"
+  },
+  {
+    "title": "The Payload Garden",
+    "x": 214207,
+    "y": 114287,
+    "rows": 1,
+    "scene": "rocket-launch",
+    "url": "/generated-tiles/18/214207/114287/rocket-launch?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-68d19e347d31",
+    "status": "accepted"
+  },
+  {
+    "title": "The Supper Bell District",
+    "x": 214179,
+    "y": 114435,
+    "rows": 1,
+    "scene": "festival-city",
+    "url": "/artwork-revisions/853dba4a33b146a6a81b5191d26935c6.png",
+    "status": "accepted"
+  },
+  {
+    "title": "The Second Life Works",
+    "x": 214185,
+    "y": 114420,
+    "rows": 1,
+    "scene": "civic-centre",
+    "url": "/artwork-revisions/89b7e30729164683be59856349cc61c9.png",
+    "status": "accepted"
+  },
+  {
+    "title": "The White City Melt",
+    "x": 214183,
+    "y": 114418,
+    "rows": 1,
+    "scene": "rice-sculpture-festival",
+    "url": "/artwork-revisions/1012d273e29b42bc885d574765ac25ea.png",
+    "status": "accepted"
+  },
+  {
+    "title": "Kelp Conservatory",
+    "x": 214181,
+    "y": 114415,
+    "rows": 1,
+    "scene": "kelp-conservatory",
+    "url": "/artwork-revisions/db3715a7ec0f42f4b014af3375c1ae1f.png",
+    "status": "accepted"
+  },
+  {
+    "title": "Time in a Revolving Door",
+    "x": 214184,
+    "y": 114421,
+    "rows": 1,
+    "scene": "photography-studio",
+    "url": "/artwork-revisions/bc9540ac8b3f4734beb3a6427134fe90.png",
+    "status": "accepted"
   }
 ]
