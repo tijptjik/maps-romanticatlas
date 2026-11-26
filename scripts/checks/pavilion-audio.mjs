@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { chromium } from 'playwright'
+import { observePavilionAudio } from './observe-pavilion-audio.mjs'
 
 const browser = await chromium.launch({
   channel: 'chrome',
@@ -12,23 +13,15 @@ try {
   const page = await browser.newPage({
     hasTouch: true,
     isMobile: true,
-    viewport: { width: 390, height: 844 },
+    viewport: { width: 1024, height: 768 },
     reducedMotion: 'reduce',
   })
+  await page.addInitScript(observePavilionAudio)
   await page.addInitScript(() => {
-    window.cues = []
-    const play = HTMLMediaElement.prototype.play
-    HTMLMediaElement.prototype.play = function () {
-      this.addEventListener(
-        'ended',
-        () => window.cues.push(this.src.split('/').pop()),
-        { once: true },
-      )
-      return play.call(this)
-    }
+    window.tones = []
     const start = OscillatorNode.prototype.start
     OscillatorNode.prototype.start = function (...args) {
-      window.cues.push('tone')
+      window.tones.push('tone')
       return start.apply(this, args)
     }
   })
@@ -39,38 +32,63 @@ try {
       document.querySelector('.atlas-intro.is-visible') &&
       !document.querySelector('#map').inert,
   )
+  const book = page.locator('.pavilion-notes')
+  assert.ok(
+    await page.evaluate(() =>
+      window.pavilionPlayback.decoded.includes('book-open.ogg'),
+    ),
+  )
+  assert.deepEqual(await page.evaluate(() => window.pavilionPlayback.started), [])
+  await book.tap()
+  assert.deepEqual(await page.evaluate(() => window.pavilionPlayback.firstClick), [
+    'book-open.ogg',
+  ])
+  await page.waitForFunction(() =>
+    window.pavilionPlayback.ended.includes('book-open.ogg'),
+  )
+  await page.getByRole('button', { name: 'Close the artist statement' }).tap()
+  await page.waitForFunction(() =>
+    window.pavilionPlayback.ended.includes('book-close.ogg'),
+  )
+  await page.setViewportSize({ width: 390, height: 844 })
   const leaf = page.locator('.pavilion-credit')
   const pose = () =>
     leaf
       .locator('.pavilion-credit__petal')
       .evaluate(el => getComputedStyle(el).transform)
-  assert.equal(await pose(), 'matrix(1, 0, 0, 1, 0, -6)')
+  assert.equal(await pose(), 'none')
   await leaf.hover()
-  assert.equal(await pose(), 'matrix(1, 0, 0, 1, 0, -6)')
+  assert.equal(await pose(), 'none')
   await leaf.screenshot({
     path: path.join(process.env.DEV_RUNNER_ARTIFACTS, 'upright-petal.png'),
   })
   const popup = page.waitForEvent('popup')
   await leaf.tap()
   const linkPage = await popup
-  await page.waitForFunction(() => window.cues.includes('petal-touch.ogg'))
+  await page.waitForFunction(() =>
+    window.pavilionPlayback.ended.includes('petal-touch.ogg'),
+  )
   await linkPage.close()
+  await page.setViewportSize({ width: 1024, height: 768 })
   await page.locator('.pavilion-orrery').tap()
-  await page.waitForFunction(() => window.cues.includes('gear-click.ogg'))
+  await page.waitForFunction(() =>
+    window.pavilionPlayback.ended.includes('gear-click.ogg'),
+  )
   await page.locator('.pavilion-orrery').tap()
-  await page.waitForFunction(() => window.cues.includes('gear-release.ogg'))
-  await page.locator('.pavilion-notes').tap()
-  await page.waitForFunction(() => window.cues.includes('book-open.ogg'))
-  await page.getByRole('button', { name: 'Close the artist statement' }).tap()
-  await page.waitForFunction(() => window.cues.includes('book-close.ogg'))
+  await page.waitForFunction(() =>
+    window.pavilionPlayback.ended.includes('gear-release.ogg'),
+  )
   await page.locator('.pavilion-book').tap()
-  const cues = await page.evaluate(() => window.cues)
+  const cues = await page.evaluate(() => [
+    ...window.pavilionPlayback.ended,
+    ...window.tones,
+  ])
   assert.deepEqual(cues, [
+    'book-open.ogg',
+    'book-close.ogg',
     'petal-touch.ogg',
     'gear-click.ogg',
     'gear-release.ogg',
-    'book-open.ogg',
-    'book-close.ogg',
     'tone',
   ])
   await writeFile(
@@ -78,6 +96,7 @@ try {
     JSON.stringify(cues, null, 2),
   )
   const desktop = await browser.newPage({ reducedMotion: 'reduce' })
+  await desktop.addInitScript(observePavilionAudio)
   await desktop.addInitScript(() => {
     window.tones = []
     const pitches = new WeakMap()
@@ -109,6 +128,20 @@ try {
       document.querySelector('.atlas-intro.is-visible') &&
       !document.querySelector('#map').inert,
   )
+  assert.ok(
+    await desktop.evaluate(() =>
+      window.pavilionPlayback.decoded.includes('gear-click.ogg'),
+    ),
+  )
+  assert.deepEqual(await desktop.evaluate(() => window.pavilionPlayback.started), [])
+  await desktop.locator('.pavilion-orrery').click()
+  assert.deepEqual(await desktop.evaluate(() => window.pavilionPlayback.firstClick), [
+    'gear-click.ogg',
+  ])
+  await desktop.waitForFunction(() =>
+    window.pavilionPlayback.ended.includes('gear-click.ogg'),
+  )
+  await desktop.locator('.pavilion-orrery').click()
   await desktop.emulateMedia({ reducedMotion: 'no-preference' })
   const petal = credit.locator('.pavilion-credit__petal')
   for (const lighting of ['day', 'night']) {

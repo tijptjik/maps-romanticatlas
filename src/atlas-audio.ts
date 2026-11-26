@@ -3,6 +3,7 @@ import type { AtlasScene } from './atlas-scenes.ts'
 import { createPavilionSounds, type PavilionCue } from './pavilion-audio'
 
 type AtlasAudioHooks = {
+  pavilionSoundsReady: Promise<void>
   playPavilionCue: PavilionCue
   unlock: () => void
   playCameraFlash: () => void
@@ -184,11 +185,16 @@ export const installAtlasAudio = (
     void loadSceneAudio(scene)
   }
 
-  const ensureContext = () => {
+  const initializeContext = () => {
     if (!context) {
       const AudioContextConstructor = window.AudioContext || window.webkitAudioContext
-      if (!AudioContextConstructor) return false
-      context = new AudioContextConstructor()
+      if (!AudioContextConstructor) return
+      try {
+        context = new AudioContextConstructor()
+      } catch {
+        // The pavilion can still open if the browser cannot initialize audio yet.
+        return
+      }
       masterGain = context.createGain()
       musicGain = context.createGain()
       masterGain.gain.value = 0.55
@@ -197,16 +203,23 @@ export const installAtlasAudio = (
       masterGain.connect(context.destination)
       noiseBuffer = createNoiseBuffer(context, 2.2)
     }
+    return context
+  }
+
+  const pavilionSounds = createPavilionSounds()
+  const pavilionSoundsReady = pavilionSounds.preload(initializeContext())
+
+  const ensureContext = () => {
+    if (!initializeContext()) return false
     if (context.state === 'suspended') void context.resume()
     return true
   }
 
-  const soundPavilionItem = createPavilionSounds()
   const playPavilionCue: PavilionCue = (item, movement) => {
     if (audioMode === 'all-off' || !ensureContext() || !context || !masterGain) return
     // A hover before Chrome grants audio access must not queue notes for the first click.
     if (context.state !== 'running' && !navigator.userActivation?.hasBeenActive) return
-    soundPavilionItem(context, masterGain, item, movement)
+    pavilionSounds.play(context, masterGain, item, movement)
   }
 
   const loadThemeAudio = (): Promise<AudioBuffer | undefined> => {
@@ -306,7 +319,7 @@ export const installAtlasAudio = (
     syncAudioMode()
     // The toggle itself can acknowledge muting after the effects bus goes silent.
     if (context)
-      soundPavilionItem(
+      pavilionSounds.play(
         context,
         context.destination,
         'orb',
@@ -428,6 +441,7 @@ export const installAtlasAudio = (
   updateControl()
 
   return {
+    pavilionSoundsReady,
     playPavilionCue,
     playCameraFlash,
     playFogLift,

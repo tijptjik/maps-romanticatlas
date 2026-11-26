@@ -102,6 +102,7 @@ export const createIntroSplash = (
   initiallyVisible = true,
   onMapVisible = () => {},
   playCue: PavilionCue = () => {},
+  soundsReady: Promise<void> = Promise.resolve(),
 ) => {
   const splash = document.createElement('section')
   splash.className = 'atlas-intro'
@@ -192,7 +193,7 @@ export const createIntroSplash = (
     if (opening) {
       preparing = true
       mapContainer.inert = true
-      await preparePavilion(pieces)
+      await Promise.all([preparePavilion(pieces), soundsReady])
       const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches
       const curtain = document.createElement('div')
       curtain.className = 'pavilion-curtain'

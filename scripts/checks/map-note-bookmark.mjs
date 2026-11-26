@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import path from 'node:path'
 import { chromium } from 'playwright'
+import { observePavilionAudio } from './observe-pavilion-audio.mjs'
 
 const artifacts = process.env.DEV_RUNNER_ARTIFACTS
 const base = process.env.PLAYWRIGHT_BASE_URL
@@ -15,16 +16,7 @@ try {
     const page = await browser.newPage({
       viewport: { width, height: width === 390 ? 844 : 900 },
     })
-    await page.addInitScript(() => {
-      window.effectStarts = []
-      const play = HTMLMediaElement.prototype.play
-      HTMLMediaElement.prototype.play = function () {
-        if (this.src.endsWith('/pavilion/book-shelf-pull.ogg')) {
-          window.effectStarts.push(this)
-        }
-        return play.call(this)
-      }
-    })
+    await page.addInitScript(observePavilionAudio)
     await page.goto(
       base + (width === 390 ? '/?noSplash=true&noMusic=true' : '/?noMusic=true'),
       { waitUntil: 'domcontentloaded' },
@@ -64,14 +56,14 @@ try {
     )
     const reader = page.getByRole('dialog')
     await page.evaluate(() => {
-      window.effectStarts.length = 0
+      window.pavilionPlayback.started.length = 0
     })
     await tag.click()
     await page.waitForFunction(() =>
-      window.effectStarts.some(clip => clip.currentTime > 0),
+      window.pavilionPlayback.ended.includes('book-shelf-pull.ogg'),
     )
     assert.equal(
-      await page.evaluate(() => window.effectStarts.length),
+      await page.evaluate(() => window.pavilionPlayback.started.length),
       1,
       'One shelf pull with music off',
     )
@@ -131,12 +123,12 @@ try {
       'all-off',
     )
     await page.evaluate(() => {
-      window.effectStarts.length = 0
+      window.pavilionPlayback.started.length = 0
     })
     await page.emulateMedia({ reducedMotion: 'reduce' })
     await tag.click()
     assert.equal(
-      await page.evaluate(() => window.effectStarts.length),
+      await page.evaluate(() => window.pavilionPlayback.started.length),
       0,
       'All-off silences the shelf pull',
     )

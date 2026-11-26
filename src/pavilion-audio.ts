@@ -3,48 +3,75 @@ type Movement = 'rise' | 'fall' | 'activate' | 'pull'
 export type PavilionCue = (item: PavilionItem, movement: Movement) => void
 
 export function createPavilionSounds() {
-  const recordings = {
-    book: new Audio('/pavilion/book-open.ogg'),
-    pull: new Audio('/pavilion/book-shelf-pull.ogg'),
-    close: new Audio('/pavilion/book-close.ogg'),
-    sun: new Audio('/pavilion/gear-click.ogg'),
-    release: new Audio('/pavilion/gear-release.ogg'),
-    leaf: new Audio('/pavilion/petal-touch.ogg'),
+  const bookClips = {
+    rise: 'book-open',
+    activate: 'book-open',
+    fall: 'book-close',
+    pull: 'book-shelf-pull',
+  } as const
+  const clips = [
+    'gear-click',
+    'gear-release',
+    ...new Set(Object.values(bookClips)),
+    'petal-touch',
+  ]
+  const buffers = new Map<string, AudioBuffer>()
+  const playing = new Map<string, AudioBufferSourceNode>()
+  const fallback = new Map<string, HTMLAudioElement>()
+  const url = (clip: string) => `/pavilion/${clip}.ogg`
+
+  const preload = async (ctx?: AudioContext) => {
+    if (!ctx) return
+    await Promise.allSettled(
+      clips.map(async clip => {
+        const response = await fetch(url(clip), { signal: AbortSignal.timeout(4000) })
+        if (response.ok)
+          buffers.set(clip, await ctx.decodeAudioData(await response.arrayBuffer()))
+      }),
+    )
   }
-  const connected = new Set<HTMLAudioElement>()
-  return (
+
+  const play = (
     ctx: AudioContext,
     output: AudioNode,
     item: PavilionItem,
     movement: Movement,
   ) => {
     if (item !== 'orb') {
-      const bookClips = {
-        rise: 'book',
-        activate: 'book',
-        fall: 'close',
-        pull: 'pull',
-      } as const
-      const clipName =
+      const clip =
         item === 'book'
           ? bookClips[movement]
-          : item === 'sun' && movement === 'fall'
-            ? 'release'
-            : item
-      const clip = recordings[clipName]
-      if (!connected.has(clip)) {
-        const source = ctx.createMediaElementSource(clip)
-        if (item === 'book' || item === 'sun') {
+          : item === 'leaf'
+            ? 'petal-touch'
+            : movement === 'fall'
+              ? 'gear-release'
+              : 'gear-click'
+      // Skip the quiet lead-in before the first page rustle.
+      const offset = clip === 'book-open' ? 0.065 : 0
+      const buffer = buffers.get(clip)
+      let media = fallback.get(clip)
+      if (buffer) {
+        media?.pause()
+        playing.get(clip)?.stop()
+        const source = ctx.createBufferSource()
+        source.buffer = buffer
+        const gain = ctx.createGain()
+        gain.gain.value = item === 'leaf' ? 1 : 0.7
+        source.connect(gain).connect(output)
+        playing.set(clip, source)
+        source.start(0, offset)
+      } else {
+        // Direct map entry and failed preloads can reach a cue before it is decoded.
+        if (!media) {
+          media = new Audio(url(clip))
           const gain = ctx.createGain()
-          gain.gain.value = 0.7
-          source.connect(gain).connect(output)
-        } else {
-          source.connect(output)
+          gain.gain.value = item === 'leaf' ? 1 : 0.7
+          ctx.createMediaElementSource(media).connect(gain).connect(output)
+          fallback.set(clip, media)
         }
-        connected.add(clip)
+        media.currentTime = offset
+        void media.play().catch(() => {})
       }
-      clip.currentTime = 0
-      void clip.play().catch(() => {})
       return
     }
 
@@ -66,4 +93,5 @@ export function createPavilionSounds() {
     tone.start(at)
     tone.stop(at + duration)
   }
+  return { play, preload }
 }

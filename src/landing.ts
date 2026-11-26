@@ -61,6 +61,7 @@ if (reviewMode) {
       pavilion.onMapVisible?.()
     },
     audio.playPavilionCue,
+    audio.pavilionSoundsReady,
   )
   const statement = installArtistStatement(container, {
     showMapTrigger: !adminModeEnabled(),
