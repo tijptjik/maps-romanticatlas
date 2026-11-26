@@ -1,10 +1,11 @@
 import { createPavilionSky } from './pavilion-sky'
 import { createPageMist } from './pavilion-page-mist'
 import { createHarbourWater } from './pavilion-water'
-import { createMist } from './pavilion-mist'
+import { createMist, paintOrbBloom } from './pavilion-mist'
 
 export function installPavilionScene(splash: HTMLElement) {
   const motion = window.matchMedia('(prefers-reduced-motion: reduce)')
+  paintOrbBloom(splash.querySelector<HTMLCanvasElement>('.pavilion-bloom')!)
   const render = createMist(
     splash.querySelector<HTMLCanvasElement>('.pavilion-orb canvas')!,
   )

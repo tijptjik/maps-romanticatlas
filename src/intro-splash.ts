@@ -36,7 +36,7 @@ const splashMarkup = `
     <div class="pavilion-air" aria-hidden="true">${airPetals}</div>
     <div class="pavilion-sun" aria-hidden="true"><i></i><i></i><i></i></div>
     <header class="pavilion-title">
-      <p>The Cartographic Pavilion</p>
+      <p><span>The Cartographic Pavilion</span></p>
       <h1>A Romantic’s Atlas<small>of Hong Kong</small></h1>
     </header>
     <button class="pavilion-orrery" type="button" aria-label="Night mode" aria-pressed="false" title="Switch to night">
@@ -52,6 +52,7 @@ const splashMarkup = `
         <canvas></canvas>
         <span class="pavilion-sparks">${orbParticles}</span>
       </span>
+      <canvas class="pavilion-bloom" aria-hidden="true"></canvas>
     </button>
     <button class="pavilion-notes" type="button" aria-controls="artist-statement" aria-expanded="false">
       <span class="pavilion-notes__cover">

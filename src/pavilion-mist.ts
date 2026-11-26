@@ -1,5 +1,27 @@
 import { createFogSilhouette } from './fog-silhouette'
 
+// Paint the cast light as artwork, like the orb itself. Automatic dark themes
+// can turn a pale CSS background gradient into a dark overlay on the book.
+export function paintOrbBloom(canvas: HTMLCanvasElement) {
+  const size = 256
+  canvas.width = canvas.height = size
+  const ctx = canvas.getContext('2d')!
+  const center = size / 2
+  const glow = ctx.createRadialGradient(
+    center,
+    center,
+    0,
+    center,
+    center,
+    Math.SQRT2 * center,
+  )
+  glow.addColorStop(0, '#fffce9')
+  glow.addColorStop(0.26, '#ffe6bda8')
+  glow.addColorStop(0.68, '#ffe6bd00')
+  ctx.fillStyle = glow
+  ctx.fillRect(0, 0, size, size)
+}
+
 function colouredVapour(variant: number, colour: string) {
   const sprite = createFogSilhouette(variant, 0.57, 0, 64)
   const brush = sprite.getContext('2d')!

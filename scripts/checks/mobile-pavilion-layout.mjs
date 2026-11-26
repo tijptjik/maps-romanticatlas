@@ -30,8 +30,10 @@ try {
   assert.equal(await notes.isVisible(), false)
   const credit = await page.locator('.pavilion-credit').boundingBox()
   const room = await page.locator('.pavilion-room').boundingBox()
-  const petalCenter = (credit.x + credit.width / 2 - room.x) / room.width
-  assert.ok(Math.abs(petalCenter - 0.7) < 0.01)
+  const petalCenterX = (credit.x + credit.width / 2 - room.x) / room.width
+  const petalCenterY = (credit.y + credit.height / 2 - room.y) / room.height
+  assert.ok(Math.abs(petalCenterX - 0.73) < 0.01)
+  assert.ok(Math.abs(petalCenterY - 0.915) < 0.01)
   assert.ok(credit.y + credit.height < room.y + room.height)
   const title = page.locator('.pavilion-title')
   for (const balloon of await page.locator('.pavilion-aerostat').all()) {
