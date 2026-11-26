@@ -6,8 +6,6 @@
   overflow: auto;
   overscroll-behavior: contain;
   touch-action: pan-y;
-  padding: env(safe-area-inset-top) env(safe-area-inset-right)
-    env(safe-area-inset-bottom) env(safe-area-inset-left);
   color: var(--ink);
   background: #000;
   font:
@@ -443,16 +441,15 @@
     display: none;
   }
 }
+@media (pointer: coarse), (max-aspect-ratio: 9 / 10) {
+  /* Let the painting continue behind retracting browser bars. */
+  #map:has(> .atlas-intro:not([hidden])) {
+    position: fixed;
+    inset: 0;
+    height: 100lvh;
+  }
+}
 @media (max-aspect-ratio: 9 / 10) {
-  /* Some mobile toolbars sample the page backdrop at the edge of the artwork. */
-  .atlas-intro,
-  :root:not(.atlas-boot):has(.atlas-intro.is-visible) {
-    background: #b6c5bc linear-gradient(#b6c5bc, #bd6b23) no-repeat;
-  }
-  .atlas-intro.is-night,
-  :root:not(.atlas-boot):has(.atlas-intro.is-visible.is-night) {
-    background: #112033 linear-gradient(#112033, #331f15) no-repeat;
-  }
   .pavilion-room {
     background-image: url("/pavilion/glasshouse-portrait.webp");
   }
@@ -483,7 +480,8 @@
     min-height: 320px;
   }
   .pavilion-credit {
-    bottom: 6%;
+    bottom: max(6%, calc(100% - 100dvh + env(safe-area-inset-bottom, 0px) + 8px));
+    right: max(3%, env(safe-area-inset-right, 0px));
     width: 100px;
   }
 }
@@ -530,19 +528,20 @@
   }
 }
 @media (max-aspect-ratio: 9 / 10) and (max-width: 700px) {
-  /* Keep the tabletop and its garden layers aligned in the phone portrait crop. */
+  /* The cabinet fills the room. Place the atlas and petal in the visible part. */
   .pavilion-room {
-    --room-art-height: 108%;
+    --visible-height: calc(100dvh - env(safe-area-inset-bottom, 0px));
+    --room-art-height: max(100%, calc(var(--visible-height) * 1.04));
   }
   .pavilion-garden {
     height: var(--room-art-height);
   }
   .pavilion-book {
     width: min(91cqw, 50cqh);
-    bottom: 16%;
+    bottom: max(19%, calc(100% - var(--visible-height) * 0.86));
   }
   .pavilion-credit {
-    top: 90%;
+    top: min(87%, calc(var(--visible-height) - max(44px, 6%)));
     left: 73%;
   }
 }
@@ -1145,7 +1144,7 @@
   /* Leave the illuminated shoreline visible above the open pages. */
   .is-night .pavilion-book {
     width: min(73cqw, 48cqh);
-    bottom: 21%;
+    bottom: max(21%, calc(100% - var(--visible-height, 100%) * 0.85));
   }
 }
 

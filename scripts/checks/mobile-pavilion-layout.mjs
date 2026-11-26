@@ -42,7 +42,7 @@ try {
   const petalCenterX = (credit.x + credit.width / 2 - room.x) / room.width
   const petalCenterY = (credit.y + credit.height / 2 - room.y) / room.height
   assert.ok(Math.abs(petalCenterX - 0.73) < 0.01)
-  assert.ok(Math.abs(petalCenterY - 0.9) < 0.01)
+  assert.ok(Math.abs(petalCenterY - 0.87) < 0.01)
   assert.ok(credit.y + credit.height < room.y + room.height)
   const title = page.locator('.pavilion-title')
   for (const balloon of await page.locator('.pavilion-aerostat').all()) {
@@ -59,7 +59,7 @@ try {
     .boundingBox()
   assert.ok(heading.y + heading.height < cloud.y)
   assert.ok(atlas.y + atlas.height < credit.y)
-  assert.ok(Math.abs((atlas.y + atlas.height) / room.height - 0.84) < 0.01)
+  assert.ok(Math.abs((atlas.y + atlas.height) / room.height - 0.81) < 0.01)
   await shot('pavilion')
   // Repeat with a shorter visible viewport, as when mobile browser bars expand.
   await page.setViewportSize({ width: 384, height: 650 })
@@ -71,18 +71,43 @@ try {
   await shot('pavilion-short-viewport')
   await page.setViewportSize({ width: 384, height: 722 })
   await safeArea({ top: 59, bottom: 76 })
-  assert.deepEqual(await page.locator('.pavilion-room').boundingBox(), {
-    x: 0,
-    y: 59,
-    width: 384,
-    height: 722 - 59 - 76,
-  })
+  assert.deepEqual(await page.locator('.pavilion-room').boundingBox(), room)
   const insetCredit = await page.locator('.pavilion-credit').boundingBox()
-  assert.ok(
-    insetCredit.y + insetCredit.height < 722 - 76,
-    'The whole petal clears the bottom inset',
-  )
-  await shot('pavilion-safe-area')
+  const insetAtlas = await page.locator('.pavilion-book').boundingBox()
+  assert.ok(insetAtlas.y + insetAtlas.height + 12 < insetCredit.y)
+  assert.ok(insetCredit.y + insetCredit.height + 24 < room.height - 76)
+
+  // The first and last painted rows must contain artwork across their width, even inside the insets.
+  const checkEdges = async name => {
+    const png = await shot(name)
+    const { data, info } = await sharp(png)
+      .greyscale()
+      .raw()
+      .toBuffer({ resolveWithObject: true })
+    for (const row of [1, info.height - 2]) {
+      const pixels = data.subarray(row * info.width, (row + 1) * info.width)
+      assert.ok(new Set(pixels).size > 16, `Flat strip in ${name} at row ${row}`)
+    }
+  }
+  await checkEdges('pavilion-safe-area')
+  const togglePortraitNight = async () => {
+    await page.setViewportSize({ width: 1280, height: 800 })
+    await page.locator('.pavilion-orrery').tap()
+    await page.setViewportSize({ width: 384, height: 722 })
+    await page.locator('.pavilion-room').evaluate(el =>
+      Promise.all(
+        el
+          .getAnimations({ subtree: true })
+          .filter(a => a.transitionProperty === 'opacity')
+          .map(a => a.finished),
+      ),
+    )
+  }
+  await togglePortraitNight()
+  const nightAtlas = await page.locator('.pavilion-book').boundingBox()
+  assert.ok(nightAtlas.y + nightAtlas.height + 12 < insetCredit.y)
+  await checkEdges('pavilion-safe-area-night')
+  await togglePortraitNight()
   await safeArea({})
   for (const [width, height] of [
     [834, 1194],
