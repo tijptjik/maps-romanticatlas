@@ -377,9 +377,16 @@
   box-shadow:
     0 0 4px 2px #f9d395,
     0 0 14px 3px #ffefa7;
+  /* Tint the painted core and halo together, even if a mobile theme darkens them. */
+  filter: brightness(0) invert(1) sepia(0.35);
 }
-.is-visible .pavilion-lamps i {
-  animation: pavilion-glimmer 4s ease-in-out infinite;
+@media (prefers-reduced-motion: no-preference) {
+  :is(.is-visible, .is-exiting) .pavilion-lamps i {
+    animation: pavilion-glimmer 4s ease-in-out infinite;
+  }
+  .is-exiting .pavilion-lamps i {
+    animation-play-state: paused;
+  }
 }
 @keyframes pavilion-glimmer {
   50% {

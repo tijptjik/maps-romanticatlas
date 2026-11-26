@@ -51,9 +51,23 @@ try {
   // Hold the real opening transition at its brightest frame for paired samples.
   await page.locator('.maplibregl-canvas').waitFor({ state: 'attached' })
   await page.clock.pauseAt(new Date(await page.evaluate(() => Date.now() + 1000)))
+  // Keep the shapes and blur radii but force the roof lights to paint with black ink.
+  await page.addStyleTag({
+    content:
+      '.pavilion-lamps i { background: black !important; box-shadow: 0 0 4px 2px black, 0 0 14px 3px black !important }',
+  })
+  const lamp = page.locator('.pavilion-lamps i').first()
+  const glimmer = await lamp.evaluateHandle(el => el.getAnimations()[0])
   await page.locator('.pavilion-book').tap()
   const bloom = page.locator('.atlas-intro.is-exiting .pavilion-bloom')
   await bloom.waitFor()
+  assert.ok(
+    await lamp.evaluate(
+      (el, before) =>
+        before && el.getAnimations()[0] === before && before.playState === 'paused',
+      glimmer,
+    ),
+  )
   await bloom.evaluate(el => {
     const intro = el.closest('.atlas-intro')
     for (const animation of intro.getAnimations({ subtree: true })) {
@@ -63,6 +77,33 @@ try {
   })
   assert.ok(await bloom.evaluate(el => Number(getComputedStyle(el).opacity) > 0.9))
   const lit = await shot('pavilion-orb-launch')
+  const lamps = page.locator('.pavilion-lamps')
+  const centers = await lamps.locator('i').evaluateAll(elements =>
+    elements
+      .map(el => {
+        const box = el.getBoundingClientRect()
+        return [Math.floor(box.x + box.width / 2), Math.floor(box.y + box.height / 2)]
+      })
+      .filter(([x, y]) => x >= 0 && x < innerWidth && y >= 0 && y < innerHeight),
+  )
+  assert.ok(centers.length > 0, 'Roof lamps are visible during launch')
+  await lamps.evaluate(el => {
+    el.style.visibility = 'hidden'
+  })
+  const grey = png => sharp(png).greyscale().raw().toBuffer({ resolveWithObject: true })
+  const withLamps = await grey(lit)
+  const withoutLamps = await grey(await page.screenshot())
+  const gains = centers.map(([x, y]) => {
+    const index = y * withLamps.info.width + x
+    return withLamps.data[index] - withoutLamps.data[index]
+  })
+  assert.ok(
+    gains.every(gain => gain >= -2) && Math.max(...gains) > 5,
+    `Roof lights should brighten the rafters, measured differences ${gains}`,
+  )
+  await lamps.evaluate(el => {
+    el.style.visibility = ''
+  })
   const book = await page.locator('.pavilion-book').boundingBox()
   const sample = {
     left: Math.round(book.x + book.width / 2) - 8,
