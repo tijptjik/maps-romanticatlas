@@ -7366,5 +7366,500 @@
     "scene": "staircase-foundation",
     "url": "/artwork-revisions/6b28a3cf2757487a929c3383d43b0e33.png",
     "status": "accepted"
+  },
+  {
+    "title": "The Silver Reedbed",
+    "x": 214208,
+    "y": 114455,
+    "rows": 1,
+    "scene": "hall-of-mirrors",
+    "url": "/generated-tiles/18/214208/114455/hall-of-mirrors?version=6&variant=discovery-2b51cc29-3d37-4da4-9787-f2f0089b8a87-f471d655ba14",
+    "status": "accepted"
+  },
+  {
+    "title": "The Upside-Down Orchard",
+    "x": 214210,
+    "y": 114455,
+    "rows": 1,
+    "scene": "suspension-bridge",
+    "url": "/generated-tiles/18/214210/114455/suspension-bridge?version=6&variant=discovery-2b51cc29-3d37-4da4-9787-f2f0089b8a87-e13bb8e4c3aa",
+    "status": "accepted"
+  },
+  {
+    "title": "Paper Roofs After Rain",
+    "x": 214206,
+    "y": 114452,
+    "rows": 1,
+    "scene": "festival-city",
+    "url": "/generated-tiles/18/214206/114452/festival-city?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-1d8f02ceb4e6",
+    "status": "accepted"
+  },
+  {
+    "title": "Numbers on the Half Shell",
+    "x": 214239,
+    "y": 114441,
+    "rows": 1,
+    "scene": "analytical-engine",
+    "url": "/generated-tiles/18/214239/114441/analytical-engine?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-4c2d587db216",
+    "status": "rejected"
+  },
+  {
+    "title": "The Rice Clock",
+    "x": 214192,
+    "y": 114440,
+    "rows": 1,
+    "scene": "sushi-restaurant",
+    "url": "/generated-tiles/18/214192/114440/sushi-restaurant?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-d377524ad987",
+    "status": "accepted"
+  },
+  {
+    "title": "Pillows by Post",
+    "x": 214183,
+    "y": 114426,
+    "rows": 1,
+    "scene": "marshmallow-factory",
+    "url": "/generated-tiles/18/214183/114426/marshmallow-factory?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-ef2c912c65f7",
+    "status": "accepted"
+  },
+  {
+    "title": "Rain Has Neighbours",
+    "x": 214183,
+    "y": 114425,
+    "rows": 1,
+    "scene": "arcology",
+    "url": "/generated-tiles/18/214183/114425/arcology?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-13df72084d18",
+    "status": "accepted"
+  },
+  {
+    "title": "Letters from the Foundry",
+    "x": 214214,
+    "y": 114425,
+    "rows": 1,
+    "scene": "ironworks",
+    "url": "/generated-tiles/18/214214/114425/ironworks?version=6&variant=discovery-rotating-f670993396ff",
+    "status": "accepted"
+  },
+  {
+    "title": "A Coaster for Fallen Leaves",
+    "x": 214186,
+    "y": 114423,
+    "rows": 1,
+    "scene": "theme-park",
+    "url": "/generated-tiles/18/214186/114423/theme-park?version=6&variant=discovery-rotating-d198586cf744",
+    "status": "accepted"
+  },
+  {
+    "title": "Rehearsal for a Falling Moon",
+    "x": 214187,
+    "y": 114423,
+    "rows": 1,
+    "scene": "circus",
+    "url": "/generated-tiles/18/214187/114423/circus?version=6&variant=discovery-rotating-fd6e80cbf7c1",
+    "status": "accepted"
+  },
+  {
+    "title": "The Kelp Elevator",
+    "x": 214190,
+    "y": 114423,
+    "rows": 1,
+    "scene": "aquarium",
+    "url": "/generated-tiles/18/214190/114423/aquarium?version=6&variant=discovery-550fa236-8b16-453c-83ca-c015297613f6-6943aa992b94",
+    "status": "accepted"
+  },
+  {
+    "title": "The Orchard Lift",
+    "x": 214195,
+    "y": 114423,
+    "rows": 1,
+    "scene": "arcology",
+    "url": "/generated-tiles/18/214195/114423/arcology?version=6&variant=discovery-rotating-7ea5f3b63a11",
+    "status": "accepted"
+  },
+  {
+    "title": "A Factory for Gentle Work",
+    "x": 214201,
+    "y": 114422,
+    "rows": 1,
+    "scene": "robot-factory",
+    "url": "/generated-tiles/18/214201/114422/robot-factory?version=6&variant=discovery-rotating-9eeadb4ce297",
+    "status": "accepted"
+  },
+  {
+    "title": "The Unrolled Landscape",
+    "x": 214199,
+    "y": 114422,
+    "rows": 1,
+    "scene": "japanese-garden",
+    "url": "/generated-tiles/18/214199/114422/japanese-garden?version=6&variant=discovery-2b51cc29-3d37-4da4-9787-f2f0089b8a87-3cccb4b05316",
+    "status": "accepted"
+  },
+  {
+    "title": "The Walk-In Negative",
+    "x": 214182,
+    "y": 114422,
+    "rows": 1,
+    "scene": "photography-studio",
+    "url": "/generated-tiles/18/214182/114422/photography-studio?version=6&variant=discovery-rotating-dc7d3c73f17f",
+    "status": "accepted"
+  },
+  {
+    "title": "A Barograph Big Enough to Walk",
+    "x": 214182,
+    "y": 114421,
+    "rows": 1,
+    "scene": "weather-station",
+    "url": "/generated-tiles/18/214182/114421/weather-station?version=6&variant=discovery-rotating-f7f7c6cc5423",
+    "status": "accepted"
+  },
+  {
+    "title": "A Street Learns to Float",
+    "x": 214186,
+    "y": 114421,
+    "rows": 1,
+    "scene": "balloon-festival",
+    "url": "/generated-tiles/18/214186/114421/balloon-festival?version=6&variant=discovery-rotating-edd9b048397b",
+    "status": "accepted"
+  },
+  {
+    "title": "The Edible Moon Calendar",
+    "x": 214197,
+    "y": 114421,
+    "rows": 1,
+    "scene": "rice-sculpture-festival",
+    "url": "/generated-tiles/18/214197/114421/rice-sculpture-festival?version=6&variant=discovery-rotating-19f37f44fc17",
+    "status": "accepted"
+  },
+  {
+    "title": "The Dynamo Roundabout",
+    "x": 214200,
+    "y": 114420,
+    "rows": 1,
+    "scene": "electrical-laboratory",
+    "url": "/generated-tiles/18/214200/114420/electrical-laboratory?version=6&variant=discovery-rotating-eb9c5d0d5316",
+    "status": "accepted"
+  },
+  {
+    "title": "A Bridge of Borrowed Doors",
+    "x": 214197,
+    "y": 114420,
+    "rows": 1,
+    "scene": "suspension-bridge",
+    "url": "/generated-tiles/18/214197/114420/suspension-bridge?version=6&variant=discovery-rotating-d26075746594",
+    "status": "accepted"
+  },
+  {
+    "title": "The Folded Stratum",
+    "x": 214196,
+    "y": 114420,
+    "rows": 1,
+    "scene": "archaeological-excavation",
+    "url": "/generated-tiles/18/214196/114420/archaeological-excavation?version=6&variant=discovery-rotating-b275093402b4",
+    "status": "accepted"
+  },
+  {
+    "title": "The Moving Shade Office",
+    "x": 214185,
+    "y": 114420,
+    "rows": 1,
+    "scene": "civic-centre",
+    "url": "/generated-tiles/18/214185/114420/civic-centre?version=6&variant=discovery-rotating-ac26ccb6ed75",
+    "status": "accepted"
+  },
+  {
+    "title": "The Crossing Belongs to Them",
+    "x": 214183,
+    "y": 114420,
+    "rows": 1,
+    "scene": "zoo",
+    "url": "/generated-tiles/18/214183/114420/zoo?version=6&variant=discovery-rotating-e7feb467a202",
+    "status": "accepted"
+  },
+  {
+    "title": "The Rake Remembers",
+    "x": 214181,
+    "y": 114419,
+    "rows": 1,
+    "scene": "japanese-garden",
+    "url": "/generated-tiles/18/214181/114419/japanese-garden?version=6&variant=discovery-rotating-7b4486cb9ade",
+    "status": "accepted"
+  },
+  {
+    "title": "The Borrowed Reflection",
+    "x": 214181,
+    "y": 114419,
+    "rows": 1,
+    "scene": "japanese-garden",
+    "url": "/generated-tiles/18/214181/114419/japanese-garden?version=6&variant=discovery-rotating-dbad58a05c04",
+    "status": "accepted"
+  },
+  {
+    "title": "The Difference Stair",
+    "x": 214182,
+    "y": 114419,
+    "rows": 1,
+    "scene": "analytical-engine",
+    "url": "/generated-tiles/18/214182/114419/analytical-engine?version=6&variant=discovery-rotating-b9752f2ae64e",
+    "status": "accepted"
+  },
+  {
+    "title": "The Graft Supper",
+    "x": 214195,
+    "y": 114419,
+    "rows": 1,
+    "scene": "botanical-laboratory",
+    "url": "/generated-tiles/18/214195/114419/botanical-laboratory?version=6&variant=discovery-rotating-d3e9f60e464d",
+    "status": "accepted"
+  },
+  {
+    "title": "The Sleepwalking Wardrobe",
+    "x": 214197,
+    "y": 114419,
+    "rows": 1,
+    "scene": "automata",
+    "url": "/generated-tiles/18/214197/114419/automata?version=6&variant=discovery-rotating-ba2f1898f1b7",
+    "status": "accepted"
+  },
+  {
+    "title": "A Maze of Low Tides",
+    "x": 214198,
+    "y": 114419,
+    "rows": 1,
+    "scene": "maze-garden",
+    "url": "/generated-tiles/18/214198/114419/maze-garden?version=6&variant=discovery-rotating-89e5a46970ef",
+    "status": "accepted"
+  },
+  {
+    "title": "Rehearsal for a Falling Moon",
+    "x": 214240,
+    "y": 114418,
+    "rows": 1,
+    "scene": "circus",
+    "url": "/generated-tiles/18/214240/114418/circus?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-9a110ebdfa03",
+    "status": "accepted"
+  },
+  {
+    "title": "A River You Can Pedal",
+    "x": 214201,
+    "y": 114418,
+    "rows": 1,
+    "scene": "water-park",
+    "url": "/generated-tiles/18/214201/114418/water-park?version=6&variant=discovery-rotating-e080c4b87d06",
+    "status": "accepted"
+  },
+  {
+    "title": "The Orange Peel Cosmos",
+    "x": 214197,
+    "y": 114418,
+    "rows": 1,
+    "scene": "orrery-hall",
+    "url": "/generated-tiles/18/214197/114418/orrery-hall?version=6&variant=discovery-rotating-760753fac62d",
+    "status": "accepted"
+  },
+  {
+    "title": "An Interval for Rain",
+    "x": 214189,
+    "y": 114418,
+    "rows": 1,
+    "scene": "japanese-garden",
+    "url": "/generated-tiles/18/214189/114418/japanese-garden?version=6&variant=discovery-rotating-c17b4b7c8f8c",
+    "status": "accepted"
+  },
+  {
+    "title": "The Forge Below the Table",
+    "x": 214187,
+    "y": 114418,
+    "rows": 1,
+    "scene": "ironworks",
+    "url": "/generated-tiles/18/214187/114418/ironworks?version=6&variant=discovery-rotating-61443c3a068a",
+    "status": "accepted"
+  },
+  {
+    "title": "The Missing Middle",
+    "x": 214186,
+    "y": 114416,
+    "rows": 1,
+    "scene": "suspension-bridge",
+    "url": "/generated-tiles/18/214186/114416/suspension-bridge?version=6&variant=discovery-rotating-40fe8664d1c4",
+    "status": "accepted"
+  },
+  {
+    "title": "Staircase Foundation",
+    "x": 214194,
+    "y": 114415,
+    "rows": 1,
+    "scene": "staircase-foundation",
+    "url": "/generated-tiles/18/214194/114415/staircase-foundation?version=6&variant=discovery-rotating-8ba0e553fc3f",
+    "status": "accepted"
+  },
+  {
+    "title": "The Quarry of Whispers",
+    "x": 214228,
+    "y": 114414,
+    "rows": 1,
+    "scene": "grand-library",
+    "url": "/generated-tiles/18/214228/114414/grand-library?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-992d81e375f9",
+    "status": "accepted"
+  },
+  {
+    "title": "The Rice Clock",
+    "x": 214186,
+    "y": 114414,
+    "rows": 1,
+    "scene": "sushi-restaurant",
+    "url": "/generated-tiles/18/214186/114414/sushi-restaurant?version=6&variant=discovery-rotating-98bd0ae660a9",
+    "status": "accepted"
+  },
+  {
+    "title": "The Seaweed Loom",
+    "x": 214186,
+    "y": 114414,
+    "rows": 1,
+    "scene": "sushi-restaurant",
+    "url": "/generated-tiles/18/214186/114414/sushi-restaurant?version=6&variant=discovery-rotating-fed5c7d5fb35",
+    "status": "rejected"
+  },
+  {
+    "title": "The Candle Exchange",
+    "x": 214213,
+    "y": 114407,
+    "rows": 1,
+    "scene": "mesmerist-salon",
+    "url": "/generated-tiles/18/214213/114407/mesmerist-salon?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-fc320292d160",
+    "status": "accepted"
+  },
+  {
+    "title": "The Herbarium Unpressed",
+    "x": 214223,
+    "y": 114341,
+    "rows": 1,
+    "scene": "botanical-laboratory",
+    "url": "/generated-tiles/18/214223/114341/botanical-laboratory?version=6&variant=discovery-a0ea1a08-4722-497b-ad8d-76821266ee0a-083711975fca",
+    "status": "accepted"
+  },
+  {
+    "title": "The Logic Beehive",
+    "x": 214182,
+    "y": 114424,
+    "rows": 1,
+    "scene": "analytical-engine",
+    "url": "/artwork-revisions/0e9e696870244a2294ff3b21d1d853ad.png",
+    "status": "accepted"
+  },
+  {
+    "title": "The Telescope That Kneels",
+    "x": 214185,
+    "y": 114423,
+    "rows": 1,
+    "scene": "observatory",
+    "url": "/artwork-revisions/692def80a5ad498c85f71cd9ec348ea9.png",
+    "status": "accepted"
+  },
+  {
+    "title": "The Moving Shade Office",
+    "x": 214207,
+    "y": 114422,
+    "rows": 1,
+    "scene": "civic-centre",
+    "url": "/artwork-revisions/304a0646e3b547e7bb6aa142e2271652.png",
+    "status": "accepted"
+  },
+  {
+    "title": "The Brass Migration",
+    "x": 214185,
+    "y": 114421,
+    "rows": 1,
+    "scene": "automata",
+    "url": "/artwork-revisions/4d2fc229999a495daacb5cf9c1382be5.png",
+    "status": "accepted"
+  },
+  {
+    "title": "The Station That Braids Trains",
+    "x": 214182,
+    "y": 114420,
+    "rows": 1,
+    "scene": "steam-railway",
+    "url": "/artwork-revisions/2d52a8d26da4486d945993eea45078d3.png",
+    "status": "accepted"
+  },
+  {
+    "title": "The Rain Rehearsal",
+    "x": 214184,
+    "y": 114417,
+    "rows": 1,
+    "scene": "mechanical-theatre",
+    "url": "/artwork-revisions/820df94da237490795a5a3ed9d24f02d.png",
+    "status": "rejected"
+  },
+  {
+    "title": "The Crater in the Courtyard",
+    "x": 214214,
+    "y": 114400,
+    "rows": 1,
+    "scene": "observatory",
+    "url": "/artwork-revisions/4ffbf1cbb66e4c20a8a2367be24b8dd2.png",
+    "status": "accepted"
+  },
+  {
+    "title": "The Second Life Works",
+    "x": 214223,
+    "y": 114339,
+    "rows": 1,
+    "scene": "civic-centre",
+    "url": "/artwork-revisions/fb3bb4aff1f8426cadafd6e621d5a4e5.png",
+    "status": "accepted"
+  },
+  {
+    "title": "The Self-Mending Elephant",
+    "x": 214230,
+    "y": 114330,
+    "rows": 1,
+    "scene": "automata",
+    "url": "/artwork-revisions/c327036eefd743d196eb94689356e1ed.png",
+    "status": "accepted"
+  },
+  {
+    "title": "The Sleepwalking Wardrobe",
+    "x": 214185,
+    "y": 114421,
+    "rows": 1,
+    "scene": "automata",
+    "url": "/artwork-revisions/26319f14353b4473a342a49c2638c101.png",
+    "status": "accepted"
+  },
+  {
+    "title": "The Nocturnal Curtain",
+    "x": 214183,
+    "y": 114420,
+    "rows": 1,
+    "scene": "zoo",
+    "url": "/artwork-revisions/ae830233c8e84c64b3e16403f3d07593.png",
+    "status": "rejected"
+  },
+  {
+    "title": "The Unrolled Landscape",
+    "x": 214185,
+    "y": 114419,
+    "rows": 1,
+    "scene": "japanese-garden",
+    "url": "/artwork-revisions/931a1f8d08704627bd4b22a2221ab70d.png",
+    "status": "accepted"
+  },
+  {
+    "title": "A Wardrobe by Weight",
+    "x": 214195,
+    "y": 114417,
+    "rows": 1,
+    "scene": "thrifting-paradise",
+    "url": "/artwork-revisions/cbabd2c0ea214ca8b9108faac091bdbb.png",
+    "status": "rejected"
+  },
+  {
+    "title": "The Marble Holiday",
+    "x": 214229,
+    "y": 114414,
+    "rows": 1,
+    "scene": "theme-park",
+    "url": "/artwork-revisions/ee5ef3324908410eb92fe8d222499b14.png",
+    "status": "rejected"
   }
 ]
