@@ -22,7 +22,7 @@ try {
     )
     await route.fulfill({ response, body })
   })
-  await page.goto(`${process.env.PLAYWRIGHT_BASE_URL}/?noSplash=true&noMusic=true`, {
+  await page.goto(`${process.env.PLAYWRIGHT_BASE_URL}/?noMusic=true`, {
     waitUntil: 'domcontentloaded',
   })
   await page.locator('.atlas-fog').waitFor({ timeout: 90000 })
@@ -53,8 +53,25 @@ try {
       pitch: window.testAtlasMap.getPitch(),
       pageScale: visualViewport.scale,
     }))
+  const landing = page.locator('#map:not([inert]) .atlas-intro.is-visible')
+  await landing.waitFor()
+  const before = await camera()
+  await gesture(45, 100)
+  assert.deepEqual(
+    await camera(),
+    before,
+    'Pinching the pavilion keeps the page and map at their original scale',
+  )
+  for (let tap = 0; tap < 2; tap++) await page.touchscreen.tap(195, 300)
+  await page.waitForTimeout(350)
+  assert.deepEqual(
+    await camera(),
+    before,
+    'Double-tapping the pavilion keeps its scale',
+  )
+  await page.locator('.pavilion-book').tap()
+  await page.locator('.atlas-intro').waitFor({ state: 'hidden' })
   const initial = await camera()
-  assert.ok(Math.abs(2 ** (initial.zoom - 17) - 1.75) < 1e-6)
   await gesture(100, 45)
   const inward = await camera()
   await gesture(45, 100)

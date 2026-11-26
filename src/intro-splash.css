@@ -5,6 +5,7 @@
   inset: 0;
   overflow: auto;
   overscroll-behavior: contain;
+  touch-action: pan-y;
   color: var(--ink);
   background: #000;
   font:

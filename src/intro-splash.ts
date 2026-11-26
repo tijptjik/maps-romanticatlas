@@ -148,6 +148,13 @@ export const createIntroSplash = (
     tap = undefined
     if (released && event.timeStamp - released.started < 500) released.control.click()
   })
+  splash.addEventListener(
+    'wheel',
+    event => {
+      if (event.ctrlKey || event.metaKey) event.preventDefault()
+    },
+    { passive: false },
+  )
   const pieces = splash.querySelectorAll<HTMLImageElement>('img')
   const book = splash.querySelector<HTMLButtonElement>('.pavilion-book')!
   book
