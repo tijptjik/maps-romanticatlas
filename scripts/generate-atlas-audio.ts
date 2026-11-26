@@ -634,11 +634,14 @@ const thirdPartyNotices = () => {
 
 The background theme, *Harbour Light (Legato)*, is an original piano composition.
 Its recorded piano samples were pitch-shifted, filtered and mixed for the atlas. Every
-scene cue is a 2.35-second excerpt from public-domain material. Freesound
-recordings are published under the
+scene cue is a 2.35-second excerpt from public-domain material. The scene recordings from Freesound
+are published under the
 [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/) dedication;
 the NASA recording is United States government public-domain material. The local Ogg
 files are clipped and transcoded versions of the linked source recordings.
+
+The pavilion petal uses a trimmed, faded and level-adjusted excerpt of *Fabric Swish*
+by harrietniamh. [Original recording on Freesound](https://freesound.org/people/harrietniamh/sounds/400351/) · [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
 
 | Local track | Source | Creator | Licence |
 | --- | --- | --- | --- |
