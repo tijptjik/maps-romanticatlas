@@ -102,7 +102,7 @@ body {
   position: absolute;
   z-index: 3;
   bottom: max(10px, env(safe-area-inset-bottom));
-  left: 10px;
+  left: max(10px, env(safe-area-inset-left));
   display: grid;
   width: 29px;
   height: 29px;
@@ -578,6 +578,11 @@ body {
   }
 }
 
+#map .maplibregl-ctrl-bottom-right {
+  bottom: env(safe-area-inset-bottom, 0px);
+  right: env(safe-area-inset-right, 0px);
+}
+
 .maplibregl-ctrl.maplibregl-ctrl-attrib {
   z-index: 3;
   color: #a86f5b;
@@ -682,7 +687,7 @@ body {
   position: absolute;
   z-index: 1;
   top: max(48px, env(safe-area-inset-top));
-  right: 0;
+  right: env(safe-area-inset-right, 0px);
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -1055,9 +1060,6 @@ body {
   .artist-statement-ui .artist-statement__trigger {
     top: 0.8rem;
     right: 0.8rem;
-  }
-  .artist-statement-ui .artist-statement__map-trigger {
-    right: 0;
   }
   .artist-statement {
     padding: 0.65rem;

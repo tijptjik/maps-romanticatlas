@@ -432,6 +432,13 @@
   }
 }
 @media (max-aspect-ratio: 9 / 10) {
+  /* Some mobile toolbars sample the page backdrop at the edge of the artwork. */
+  :root:not(.atlas-boot):has(.atlas-intro.is-visible) {
+    background: #b6c5bc linear-gradient(#b6c5bc, #bd6b23) no-repeat;
+  }
+  :root:not(.atlas-boot):has(.atlas-intro.is-visible.is-night) {
+    background: #112033 linear-gradient(#112033, #331f15) no-repeat;
+  }
   .pavilion-room {
     background-image: url("/pavilion/glasshouse-portrait.webp");
   }

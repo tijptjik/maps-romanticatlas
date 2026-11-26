@@ -30,6 +30,13 @@ try {
   assert.equal(await notes.isVisible(), false)
   const credit = await page.locator('.pavilion-credit').boundingBox()
   const room = await page.locator('.pavilion-room').boundingBox()
+  assert.match(
+    await page.locator('meta[name=viewport]').getAttribute('content'),
+    /viewport-fit=cover/,
+  )
+  const touch = await page.context().newCDPSession(page)
+  const safeArea = insets =>
+    touch.send('Emulation.setSafeAreaInsetsOverride', { insets })
   const petalCenterX = (credit.x + credit.width / 2 - room.x) / room.width
   const petalCenterY = (credit.y + credit.height / 2 - room.y) / room.height
   assert.ok(Math.abs(petalCenterX - 0.73) < 0.01)
@@ -51,6 +58,17 @@ try {
   assert.ok(heading.y + heading.height < cloud.y)
   assert.ok(atlas.y + atlas.height < credit.y)
   await shot('pavilion')
+  await safeArea({ top: 59, bottom: 76 })
+  assert.deepEqual(await page.locator('.pavilion-room').boundingBox(), {
+    x: 0,
+    y: 0,
+    width: 384,
+    height: 722,
+  })
+  const insetCredit = await page.locator('.pavilion-credit').boundingBox()
+  assert.deepEqual(insetCredit, credit, 'The petal stays aligned with the cabinet')
+  await shot('pavilion-safe-area')
+  await safeArea({})
   for (const [width, height] of [
     [834, 1194],
     [1024, 1366],
@@ -78,7 +96,6 @@ try {
   })
   await page.setViewportSize({ width: 384, height: 722 })
   const pages = page.locator('.note-pages')
-  const touch = await page.context().newCDPSession(page)
   async function readBook(source) {
     await pages.evaluate(async el => {
       await Promise.all(
@@ -137,6 +154,17 @@ try {
   await page.locator('.pavilion-book').tap()
   await page.locator('.atlas-intro').waitFor({ state: 'hidden' })
   const trigger = page.getByRole('button', { name: "Cartographer's Note", exact: true })
+  await page.setViewportSize({ width: 844, height: 390 })
+  await safeArea({ left: 47, right: 47, bottom: 21 })
+  const audio = await page.locator('.atlas-audio-control').boundingBox()
+  const attribution = await page.locator('.maplibregl-ctrl-attrib').boundingBox()
+  const note = await trigger.boundingBox()
+  assert.ok(audio.x >= 47 && audio.y + audio.height <= 390 - 21 + 1)
+  assert.ok(attribution.x + attribution.width <= 844 - 47 + 1)
+  assert.ok(attribution.y + attribution.height <= 390 - 21 + 1)
+  assert.ok(note.x + note.width <= 844 - 47 + 1)
+  await safeArea({})
+  await page.setViewportSize({ width: 384, height: 722 })
   assert.equal(
     await trigger.locator('.artist-statement__map-trigger-label').isVisible(),
     false,
