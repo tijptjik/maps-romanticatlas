@@ -178,6 +178,10 @@ def where(job, part):
     return OUT / 'jobs' / job['id'] / part
 
 
+class BlackColumnError(ValueError):
+    pass
+
+
 def check_png(path, reference=False):
     with Image.open(path) as image:
         if image.format != 'PNG' or image.width != image.height or image.width < (128 if reference else 512):
@@ -185,7 +189,17 @@ def check_png(path, reference=False):
         image.verify()
     with Image.open(path) as image:
         image.load()
-        colors = image.convert('RGB').getextrema()
+        rgb = image.convert('RGB')
+        if not reference:
+            # Project visible pixels onto the x axis. A zero marks a full black column.
+            visible = rgb
+            if 'A' in image.getbands() or 'transparency' in image.info:
+                visible = Image.new('RGB', image.size, 'white')
+                visible.paste(rgb, mask=image.convert('RGBA').getchannel('A'))
+            columns, _ = visible.getprojection()
+            if 0 in columns:
+                raise BlackColumnError(f'Black column at x={columns.index(0)} in {path}')
+        colors = rgb.getextrema()
         if all(low == high for low, high in colors):
             # A whole live tile can fall inside the basemap's park or landcover fill.
             landcover = colors == ((167, 167), (174, 174), (124, 124))
@@ -243,8 +257,12 @@ def recover(job):
         return True
     dest = where(job, 'image.png')
     if dest.exists():
-        accept(job, dest, 'recovered local image')
-        return True
+        try:
+            accept(job, dest, 'recovered local image')
+            return True
+        except BlackColumnError:
+            # An interrupted job can have a pre-check image without a receipt.
+            dest.rename(where(job, 'rejected-black-column.png'))
     for attempt in sorted(where(job, 'attempts').glob('*.json'), reverse=True):
         thread = load(attempt).get('thread')
         if thread:
@@ -256,6 +274,8 @@ def recover(job):
                 except (OSError, ValueError, SyntaxError) as exc:
                     meta = load(attempt)
                     meta['invalidCachedImage'] = str(exc)
+                    if isinstance(exc, BlackColumnError):
+                        meta['rejection'] = 'black-column'
                     save(attempt, meta)
                     continue
                 accept(job, files[0], 'thread ' + thread)
@@ -288,6 +308,13 @@ def edge_and_figure_directions():
 
 
 def child(job, lock, timeout):
+    result = generate_attempt(job, lock, timeout)
+    if result == 'black-column' and not STOP.is_set():
+        result = generate_attempt(job, lock, timeout)
+    return result
+
+
+def generate_attempt(job, lock, timeout):
     source = reference_for(job)
     attempts = where(job, 'attempts')
     number = len(list(attempts.glob('*.json'))) + 1
@@ -386,7 +413,7 @@ def child(job, lock, timeout):
         save(path, meta)
     if recover(job):
         return 'saved'
-    return kind or 'missing-output'
+    return kind or load(path).get('rejection', 'missing-output')
 
 
 def run_job(job, lock, args):

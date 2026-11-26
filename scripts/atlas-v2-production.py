@@ -121,6 +121,7 @@ def recover_edition(job, folder, registration):
         if legacy["file_hash"](source) != receipt["sha256"]:
             raise ValueError(f"Archived source digest changed: {source}")
         try:
+            legacy["check_png"](source)
             registration.finish(job, edition)
         except ValueError:
             save(tested, version)

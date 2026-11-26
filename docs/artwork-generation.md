@@ -35,8 +35,9 @@ rejected paintings, HKU stack replenishment and selected-area runs.
 6. `recover()` locates the PNG under the configured Codex home's
    `generated_images/THREAD_UUID/` directory. It requires an unambiguous output,
    validates and decodes the PNG, checks it differs from the reference, and copies it
-   into the job directory. `result.json` records the source thread, image hash,
-   reference hash and dimensions.
+   into the job directory. If any full-height column is opaque pure black, the renderer
+   rejects that output and makes one fresh generation attempt. `result.json` records
+   the accepted image's source thread, image hash, reference hash and dimensions.
 7. Registration extracts the magenta background, produces `overlay.webp`, and records
    geometric checks in `qa.json`. `production.json` links the registered overlay hash to
    its source image, cell, title, family and description.
