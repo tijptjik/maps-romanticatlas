@@ -11,7 +11,10 @@ const browser = await chromium.launch({
   args: ['--ozone-platform=x11', `--class=${process.env.DEV_RUNNER_CHROME_CLASS}`],
 })
 try {
-  const page = await browser.newPage({ viewport: { width: 1200, height: 800 } })
+  const page = await browser.newPage({
+    viewport: { width: 1200, height: 800 },
+    hasTouch: true,
+  })
   const x = 214168,
     y = 114420
   const center = [
@@ -36,7 +39,7 @@ try {
     const response = await route.fetch()
     const body = await response.text()
     const timeline =
-      /clampUnit\(\(\s*(?:performance\.now\(\)|time) - (?:start|startedAt)\) \/ generatedRevealDuration\)/g
+      /clampUnit\(\(\s*(?:now - ready|time - startedAt)\) \/ generatedRevealDuration\)/g
     assert.equal(body.match(timeline)?.length, 2)
     await route.fulfill({
       response,
@@ -123,7 +126,48 @@ try {
     },
     { x, y },
   )
-  await page.mouse.click(470, 400)
+  // Hold the image off the network until a real tap has visibly thinned its cloud.
+  let releaseImage
+  const held = new Promise(resolve => {
+    releaseImage = resolve
+  })
+  await page.route('**/*?row=114420', async route => {
+    await held
+    await route.continue()
+  })
+  await page.evaluate(() => {
+    const mist = document.querySelector('.atlas-fog-cached-mist')
+    const ctx = mist.getContext('2d')
+    const rect = mist.getBoundingClientRect()
+    const x = Math.floor((470 - rect.left) * mist.width / rect.width)
+    const y = Math.floor((400 - rect.top) * mist.height / rect.height)
+    const alpha = () => ctx.getImageData(x, y, 1, 1).data[3]
+    window.fogTapSample = new Promise(resolve => {
+      document.addEventListener(
+        'touchend',
+        () => {
+          const before = alpha()
+          const start = performance.now()
+          let frames = 0
+          const sample = () => {
+            frames++
+            const after = alpha()
+            if (after < before * 0.9 || frames >= 8) {
+              const elapsedMs = Math.round(performance.now() - start)
+              resolve({ before, after, frames, elapsedMs })
+            } else requestAnimationFrame(sample)
+          }
+          requestAnimationFrame(sample)
+        },
+        { once: true, capture: true },
+      )
+    })
+  })
+  await page.touchscreen.tap(470, 400)
+  const first = await page.evaluate(() => window.fogTapSample)
+  releaseImage()
+  console.log('Touch release to visible fog change with artwork held', first)
+  assert.ok(first.before > 0 && first.after < first.before * 0.9 && first.frames <= 3)
   await page.locator('.atlas-title-card:visible').first().waitFor()
   await page.waitForFunction(
     ({ x, y }) => {

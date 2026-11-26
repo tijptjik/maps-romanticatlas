@@ -53,8 +53,6 @@ export const generatedRevealDuration = 1400
 const generatedTileOpacity = 0.94
 const revealedTileFocusDuration = 1500
 const titleCardFocusLeadTime = 500
-const fogPokeDuration = 900
-const fogPokeExpansion = 0.16
 const concurrentGenerationLimit = 3
 // A Worker may finish writing an image after the browser connection has been
 // interrupted by an edge or mobile-network timeout. Give that completed work a
@@ -1161,7 +1159,7 @@ export const createFogCanvas = (
   let fogError: { id: string; text: string; startedAt: number } | undefined
   const generatingStartedAt = new Map()
   const revealStartedAt = new Map()
-  const pokedAt = new Map()
+  const clearingStartedAt = new Map<string, number>()
   const revealFootprints = new Map<
     string,
     {
@@ -1350,12 +1348,20 @@ export const createFogCanvas = (
   const easeInOutSine = progress => -(Math.cos(Math.PI * clampUnit(progress)) - 1) / 2
 
   const revealProgressFor = id => {
-    const start = revealStartedAt.get(id)
-    return start === undefined
-      ? 0
-      : clampUnit((performance.now() - start) / generatedRevealDuration)
+    const tapped = clearingStartedAt.get(id)
+    const ready = revealStartedAt.get(id)
+    if (tapped === undefined && ready === undefined) return 0
+    const now = performance.now()
+    // Show a change on the first frame, then leave some mist while the image loads.
+    const pending =
+      tapped === undefined
+        ? 0
+        : 0.14 + 0.28 * easeOutCubic(clampUnit((now - tapped) / 240))
+    if (ready === undefined) return pending
+    const finish = easeInOutSine(clampUnit((now - ready) / generatedRevealDuration))
+    return pending + (1 - pending) * finish
   }
-  const bankOpacity = id => 1 - easeInOutSine(revealProgressFor(id))
+  const bankOpacity = id => 1 - revealProgressFor(id)
 
   // Carry the bank's density to a shared edge before applying the artwork
   // feather. Multiplying two already-fading edges would shift the visible
@@ -1372,8 +1378,7 @@ export const createFogCanvas = (
       const state = tileState.get(id)
       if (state !== 'generated' && state !== 'revealing') continue
       context.save()
-      if (state === 'revealing')
-        context.globalAlpha *= easeInOutSine(revealProgressFor(id))
+      if (state === 'revealing') context.globalAlpha *= revealProgressFor(id)
       context.translate(x + (size * (1 + dx)) / 2, y + (size * (1 + dy)) / 2)
       context.scale(size * (dx ? 0.48 : 0.74), size * (dy ? 0.48 : 0.74))
       const gradient = context.createRadialGradient(0, 0, 0, 0, 0, 1)
@@ -1394,28 +1399,14 @@ export const createFogCanvas = (
     const x = northWest.x
     const y = northWest.y
     const id = tileId(tile)
-    const pokeProgress = pokedAt.has(id)
-      ? clampUnit((time - pokedAt.get(id)) / fogPokeDuration)
-      : 1
-    const footprint = revealFootprints.get(id)
-    const pokeScale = 1 + Math.sin(Math.PI * pokeProgress) * fogPokeExpansion
     const generationProgress = generatingStartedAt.has(id)
       ? clampUnit((time - generatingStartedAt.get(id)) / fogRadiusDuration)
       : 0
-    const baseRadiusScale =
+    const radiusScale =
       state === 'generating' || state === 'revealing'
         ? 1 - generationProgress * 0.34
         : 1
-    const radiusScale = baseRadiusScale * (footprint ? 1 : pokeScale)
     context.save()
-    if (footprint && pokeScale !== 1) {
-      const [nw, se] = screenBounds(map, footprint.bounds)
-      const cx = (nw.x + se.x) / 2,
-        cy = (nw.y + se.y) / 2
-      context.translate(cx, cy)
-      context.scale(pokeScale, pokeScale)
-      context.translate(-cx, -cy)
-    }
     context.globalAlpha = bankOpacity(id)
     const padding = 0.5
     const sprite = silhouette(seed, 1.1 * groundFogRadiusMultiplier, padding)
@@ -1463,7 +1454,7 @@ export const createFogCanvas = (
     const gradient = context.createLinearGradient(nw.x, nw.y, se.x, se.y)
     for (let i = 0; i <= 5; i++) {
       const variation = (seeded(seed + i * 17) - 0.5) * 0.38
-      const alpha = easeInOutSine(progress + variation * Math.sin(Math.PI * progress))
+      const alpha = clampUnit(progress + variation * Math.sin(Math.PI * progress))
       gradient.addColorStop(i / 5, `rgba(255,255,255,${alpha})`)
     }
     context.save()
@@ -1645,7 +1636,7 @@ export const createFogCanvas = (
       if (state === 'generated') {
         appendClearing(finished, tileBounds(tile))
         hasFinished = true
-      } else if (state === 'revealing') {
+      } else if (state === 'revealing' || clearingStartedAt.has(id)) {
         const key = revealFootprints.get(id)?.key ?? id
         if (painted.has(key)) continue
         painted.add(key)
@@ -2146,9 +2137,6 @@ export const createFogCanvas = (
       if (state === 'generating' && !generatingStartedAt.has(id)) {
         generatingStartedAt.set(id, animationTime)
       }
-      if (state !== 'checking' && state !== 'generating' && state !== 'revealing') {
-        pokedAt.delete(id)
-      }
       if (isFogTileRenderable(tile) && isSelected(tile) && state !== 'generated') {
         drawFogMask(context, tile, state, animationTime)
       }
@@ -2321,8 +2309,32 @@ export const createFogCanvas = (
       mistContentDirty = true
       invalidate()
     },
-    poke: id => {
-      pokedAt.set(id, animationTime)
+    beginClearing: (ids: string[]) => {
+      const now = performance.now()
+      if (ids.length > 1) {
+        const tiles = ids.map(tileFromId)
+        const xs = tiles.map(tile => tile.x),
+          ys = tiles.map(tile => tile.y)
+        const minX = Math.min(...xs),
+          maxX = Math.max(...xs)
+        const minY = Math.min(...ys),
+          maxY = Math.max(...ys)
+        const { west, north } = tileBounds({ x: minX, y: minY })
+        const { east, south } = tileBounds({ x: maxX, y: maxY })
+        const group = {
+          key: ids[0],
+          bounds: { west, north, east, south },
+          cells: tiles.map(tileBounds),
+          rectangular: ids.length === (maxX - minX + 1) * (maxY - minY + 1),
+        }
+        for (const id of ids) revealFootprints.set(id, group)
+      }
+      for (const id of ids) {
+        if (!clearingStartedAt.has(id)) clearingStartedAt.set(id, now)
+      }
+      lastMaskFrame = lastCachedMistTime = lastFogFrame = -Infinity
+      maskContentDirty = mistContentDirty = true
+      invalidate()
     },
     showError: (id, text) => {
       fogError = { id, text, startedAt: animationTime }
@@ -2338,24 +2350,6 @@ export const createFogCanvas = (
     ) => {
       const startedAt = performance.now()
       const key = ids[0]
-      if (ids.length > 1) {
-        const tiles = ids.map(tileFromId)
-        const xs = tiles.map(tile => tile.x),
-          ys = tiles.map(tile => tile.y)
-        const minX = Math.min(...xs),
-          maxX = Math.max(...xs)
-        const minY = Math.min(...ys),
-          maxY = Math.max(...ys)
-        const { west, north } = tileBounds({ x: minX, y: minY })
-        const { east, south } = tileBounds({ x: maxX, y: maxY })
-        const group = {
-          key,
-          bounds: { west, north, east, south },
-          cells: tiles.map(tileBounds),
-          rectangular: ids.length === (maxX - minX + 1) * (maxY - minY + 1),
-        }
-        for (const id of ids) revealFootprints.set(id, group)
-      }
       for (const id of ids) {
         singleReadings.delete(id)
         tileState.set(id, 'revealing')
@@ -2379,22 +2373,17 @@ export const createFogCanvas = (
         for (const id of ids) {
           tileState.set(id, 'generated')
           revealStartedAt.delete(id)
-          pokedAt.delete(id)
+          clearingStartedAt.delete(id)
+          revealFootprints.delete(id)
         }
         onComplete?.()
       }
       frame(startedAt)
     },
-    beginReveal: id => {
-      revealStartedAt.set(id, performance.now())
-    },
-    finishReveal: id => {
-      revealStartedAt.delete(id)
-      pokedAt.delete(id)
-    },
     cancelReveal: id => {
       revealStartedAt.delete(id)
-      pokedAt.delete(id)
+      clearingStartedAt.delete(id)
+      revealFootprints.delete(id)
       singleReadings.delete(id)
     },
     destroy: () => {
@@ -2418,7 +2407,7 @@ export const createFogCanvas = (
       revealFrames.clear()
       revealFootprints.clear()
       revealStartedAt.clear()
-      pokedAt.clear()
+      clearingStartedAt.clear()
       silhouettes.clear()
       canvas.remove()
       mistCanvas.remove()
@@ -3303,7 +3292,7 @@ export const installAtlasTileInteractions = (
     const cells = footprint.cells.map(tileId)
     if (cells.some(cell => tileState.has(cell))) return
     for (const cell of cells) tileState.set(cell, 'checking')
-    fog.invalidate()
+    fog.beginClearing(cells)
     try {
       const plate = art.animation?.plate ?? art.imageUrl ?? art.url
       const image = await loadArtworkImage(plate)
@@ -3342,8 +3331,10 @@ export const installAtlasTileInteractions = (
         onRevealCountChange(revealedTileIds.size)
       })
     } catch {
-      for (const cell of cells) tileState.delete(cell)
-      fog.cancelReveal(id)
+      for (const cell of cells) {
+        tileState.delete(cell)
+        fog.cancelReveal(cell)
+      }
       fog.showError(id, 'The artwork could not load. Click the cloud to try again.')
       fog.invalidate()
     }
@@ -3361,13 +3352,12 @@ export const installAtlasTileInteractions = (
     const claim = rotatingRequests.has(id) || fakeRenderTile(tile)
     tileState.set(id, 'checking')
     fog.clearError()
-    fog.poke(id)
+    fog.beginClearing([id])
     const reading = claim ? fog.readOnce(id) : undefined
     const keepAlive = window.setInterval(
       () => map.getContainer().dispatchEvent(new Event('atlas-generation-progress')),
       5000,
     )
-    fog.invalidate()
     try {
       let result: RevealImage | undefined
       if (claim) {
@@ -3538,6 +3528,7 @@ export const installAtlasTileInteractions = (
       const baseId = tileId(hkuBase)
       if (tileState.has(baseId)) return
       for (const cell of hkuCells) tileState.set(cell, 'checking')
+      fog.beginClearing(hkuCells)
       const tower = hkuTowers[Math.floor(Math.random() * hkuTowers.length)]
       const image = new Image()
       image.src = `/hku-skyscrapers-in-place/${tower.slug}.webp`
@@ -3569,7 +3560,11 @@ export const installAtlasTileInteractions = (
           onRevealCountChange(revealedTileIds.size)
         })
       } catch {
-        for (const cell of hkuCells) tileState.delete(cell)
+        for (const cell of hkuCells) {
+          tileState.delete(cell)
+          fog.cancelReveal(cell)
+        }
+        fog.invalidate()
         const message = 'The HKU tower could not load. Click either tile to try again.'
         fog.showError(id, message)
         fogErrorAnnouncer.announce(message)
@@ -3580,33 +3575,29 @@ export const installAtlasTileInteractions = (
     const budget = AbortSignal.timeout(
       revealBudget - generatedRevealDuration - revealedTileFocusDuration - 500,
     )
+    if (tileState.has(id) || !isFogTileLand(tile) || !selected(tile)) return
+    fog.beginClearing([id])
     if (!isFullyVisible(map, tile)) {
-      if (tileState.has(id)) return
       tileState.set(id, 'focusing')
       try {
         await withinClickBudget(focusTileForCapture(tile), budget)
       } catch {
+        fog.cancelReveal(id)
+        fog.invalidate()
         return
       } finally {
         tileState.delete(id)
       }
     }
-    if (
-      !isFogTileLand(tile) ||
-      !selected(tile) ||
-      !isFullyVisible(map, tile) ||
-      tileState.get(id) === 'checking' ||
-      tileState.get(id) === 'generating' ||
-      tileState.get(id) === 'revealing' ||
-      tileState.get(id) === 'generated'
-    )
+    if (!isFogTileLand(tile) || !selected(tile) || !isFullyVisible(map, tile)) {
+      fog.cancelReveal(id)
+      fog.invalidate()
       return
+    }
 
     fog.clearError()
     fogErrorAnnouncer.clear()
     tileState.set(id, 'checking')
-    fog.poke(id)
-    fog.invalidate()
     const startedAt = performance.now()
     let rateLimited = false
     try {
@@ -3783,6 +3774,7 @@ export const installAtlasTileInteractions = (
       )
     } catch (error) {
       tileState.delete(id)
+      fog.cancelReveal(id)
       fog.invalidate()
       if (!rateLimited) {
         const message = budget.aborted
@@ -3850,6 +3842,7 @@ export const installAtlasTileInteractions = (
         artworkFrames.clear()
         revealedTileIds.clear()
         onRevealCountChange(0)
+        for (const id of tileState.keys()) fog.cancelReveal(id)
         tileState.clear()
         clearanceNotice.hide()
         fog.clearError()
