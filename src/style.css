@@ -1,6 +1,7 @@
 @import "./intro-splash.css";
 @import "./atlas-title-cards.css";
 :root {
+  color-scheme: only light;
   font-family: Inter, ui-sans-serif, system-ui, sans-serif;
   color: #1d2939;
   background: #e2dfda;
@@ -620,11 +621,6 @@ body {
     0 3px 8px rgba(62, 35, 18, 0.24);
   pointer-events: none;
   user-select: none;
-}
-
-.atlas-intro,
-.artist-statement-ui {
-  color-scheme: only light;
 }
 
 .artist-statement-ui {

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { join } from 'node:path'
 import { chromium } from 'playwright'
+import sharp from 'sharp'
 
 const browser = await chromium.launch({
   channel: 'chrome',
@@ -14,6 +15,8 @@ try {
     hasTouch: true,
     colorScheme: 'dark',
   })
+  const touch = await page.context().newCDPSession(page)
+  await touch.send('Emulation.setAutoDarkModeOverride', { enabled: true })
   const shot = name =>
     page.screenshot({ path: join(process.env.DEV_RUNNER_ARTIFACTS, `${name}.png`) })
   await page.goto(`${process.env.PLAYWRIGHT_BASE_URL}/?noMusic`, {
@@ -34,7 +37,6 @@ try {
     await page.locator('meta[name=viewport]').getAttribute('content'),
     /viewport-fit=cover/,
   )
-  const touch = await page.context().newCDPSession(page)
   const safeArea = insets =>
     touch.send('Emulation.setSafeAreaInsetsOverride', { insets })
   const petalCenterX = (credit.x + credit.width / 2 - room.x) / room.width
@@ -184,6 +186,17 @@ try {
   assert.deepEqual(await palette(), mobilePalette)
   await page.setViewportSize({ width: 384, height: 722 })
   await shot('map-button')
+  for (const control of [trigger, page.locator('.atlas-audio-control')]) {
+    const { data } = await sharp(await control.screenshot())
+      .greyscale()
+      .raw()
+      .toBuffer({ resolveWithObject: true })
+    const median = data.sort()[Math.floor(data.length / 2)]
+    assert.ok(
+      median > 170,
+      `Expected a light control under auto-darkening, got ${median}`,
+    )
+  }
   await trigger.tap()
   await readBook('map')
 } finally {
