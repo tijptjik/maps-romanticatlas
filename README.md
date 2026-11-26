@@ -340,9 +340,12 @@ remain on), and all sounds off. Successfully revealed tiles add a short filtered
 swell and a scene-specific sound cue. The synthesized chime remains as a fallback while
 a cue loads or when playback is unsupported.
 
-The pavilion uses trimmed CC0 field recordings for its touch controls.
+The pavilion uses the following sound effects for its controls.
 
-- The petal plays one hand brushing leaves.
+- A fabric swish plays as the petal lifts and a quieter one as it settles. Tapping the
+  petal plays a short leaf brush.
+  [harrietniamh, _Fabric Swish_](https://freesound.org/people/harrietniamh/sounds/400351/)
+  ·
   [newtad1, *brushing leaves_with hand*](https://freesound.org/people/newtad1/sounds/836390/)
 - The orrery plays a single ratchet click.
   [CallFlan, *Single_Ratchet-05*](https://freesound.org/people/CallFlan/sounds/495238/)

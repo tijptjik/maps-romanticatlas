@@ -250,6 +250,9 @@ export const createIntroSplash = (
   const orrery = splash.querySelector<HTMLButtonElement>('.pavilion-orrery')!
   const notes = splash.querySelector<HTMLButtonElement>('.pavilion-notes')!
   const leaf = splash.querySelector<HTMLAnchorElement>('.pavilion-credit')!
+  const petalFlight = matchMedia(
+    '(hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)',
+  )
   for (const [button, item] of [
     [book, 'orb'],
     [notes, 'book'],
@@ -258,7 +261,7 @@ export const createIntroSplash = (
     button.addEventListener('click', () => {
       if (button.matches('button, a[href]')) playCue(item, 'activate')
     })
-    if (item !== 'orb') continue
+    if (item === 'book') continue
     let hovered = false
     let selected = false
     const update = () => {
@@ -266,7 +269,8 @@ export const createIntroSplash = (
       if (next === selected) return
       selected = next
       if (
-        splash.matches('.is-visible') &&
+        (item !== 'leaf' || petalFlight.matches) &&
+        splash.matches('.is-visible:not([inert])') &&
         !mapContainer.inert &&
         button.getAttribute('aria-expanded') !== 'true'
       ) {

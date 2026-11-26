@@ -1,3 +1,5 @@
+import petalWhooshUrl from './assets/petal-whoosh.ogg?url'
+
 type PavilionItem = 'orb' | 'sun' | 'book' | 'leaf'
 type Movement = 'rise' | 'fall' | 'activate' | 'pull'
 export type PavilionCue = (item: PavilionItem, movement: Movement) => void
@@ -13,12 +15,14 @@ export function createPavilionSounds() {
     'gear-click',
     'gear-release',
     ...new Set(Object.values(bookClips)),
+    'petal-whoosh',
     'petal-touch',
   ]
   const buffers = new Map<string, AudioBuffer>()
   const playing = new Map<string, AudioBufferSourceNode>()
-  const fallback = new Map<string, HTMLAudioElement>()
-  const url = (clip: string) => `/pavilion/${clip}.ogg`
+  const fallback = new Map<string, { media: HTMLAudioElement; gain: GainNode }>()
+  const url = (clip: string) =>
+    clip === 'petal-whoosh' ? petalWhooshUrl : `/pavilion/${clip}.ogg`
 
   const preload = async (ctx?: AudioContext) => {
     if (!ctx) return
@@ -31,6 +35,14 @@ export function createPavilionSounds() {
     )
   }
 
+  function connectClip(source: AudioNode, output: AudioNode) {
+    const ctx = source.context
+    const gain = ctx.createGain()
+    source.connect(gain)
+    gain.connect(output)
+    return gain
+  }
+
   const play = (
     ctx: AudioContext,
     output: AudioNode,
@@ -38,39 +50,45 @@ export function createPavilionSounds() {
     movement: Movement,
   ) => {
     if (item !== 'orb') {
+      const leafClip = movement === 'activate' ? 'petal-touch' : 'petal-whoosh'
       const clip =
         item === 'book'
           ? bookClips[movement]
           : item === 'leaf'
-            ? 'petal-touch'
+            ? leafClip
             : movement === 'fall'
               ? 'gear-release'
               : 'gear-click'
-      // Skip the quiet lead-in before the first page rustle.
       const offset = clip === 'book-open' ? 0.065 : 0
+      const level =
+        clip === 'petal-touch'
+          ? 1
+          : clip === 'petal-whoosh' && movement === 'fall'
+            ? 0.42
+            : 0.7
       const buffer = buffers.get(clip)
-      let media = fallback.get(clip)
+      let player = fallback.get(clip)
       if (buffer) {
-        media?.pause()
+        player?.media.pause()
         playing.get(clip)?.stop()
         const source = ctx.createBufferSource()
         source.buffer = buffer
-        const gain = ctx.createGain()
-        gain.gain.value = item === 'leaf' ? 1 : 0.7
-        source.connect(gain).connect(output)
+        connectClip(source, output).gain.value = level
         playing.set(clip, source)
         source.start(0, offset)
       } else {
         // Direct map entry and failed preloads can reach a cue before it is decoded.
-        if (!media) {
-          media = new Audio(url(clip))
-          const gain = ctx.createGain()
-          gain.gain.value = item === 'leaf' ? 1 : 0.7
-          ctx.createMediaElementSource(media).connect(gain).connect(output)
-          fallback.set(clip, media)
+        if (!player) {
+          const media = new Audio(url(clip))
+          player = {
+            media,
+            gain: connectClip(ctx.createMediaElementSource(media), output),
+          }
+          fallback.set(clip, player)
         }
-        media.currentTime = offset
-        void media.play().catch(() => {})
+        player.gain.gain.value = level
+        player.media.currentTime = offset
+        void player.media.play().catch(() => {})
       }
       return
     }

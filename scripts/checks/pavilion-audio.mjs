@@ -144,6 +144,19 @@ try {
   await desktop.locator('.pavilion-orrery').click()
   await desktop.emulateMedia({ reducedMotion: 'no-preference' })
   const petal = credit.locator('.pavilion-credit__petal')
+  const whooshCount = () =>
+    desktop.evaluate(
+      () =>
+        window.pavilionPlayback.started.filter(clip => clip === 'petal-whoosh.ogg')
+          .length,
+    )
+  const waitForWhooshes = count =>
+    desktop.waitForFunction(
+      expected =>
+        window.pavilionPlayback.ended.filter(clip => clip === 'petal-whoosh.ogg')
+          .length === expected,
+      count,
+    )
   for (const lighting of ['day', 'night']) {
     if (lighting === 'night') await desktop.locator('.pavilion-orrery').click()
     const resting = await petal.boundingBox()
@@ -153,6 +166,7 @@ try {
     await petal.screenshot({
       path: path.join(process.env.DEV_RUNNER_ARTIFACTS, `petal-rest-${lighting}.png`),
     })
+    const before = await whooshCount()
     await petal.hover()
     await petal.evaluate(async el => {
       const flight = el
@@ -162,6 +176,8 @@ try {
       await flight.finished
     })
     const raised = await petal.boundingBox()
+    await waitForWhooshes(before + 1)
+    assert.equal(await whooshCount(), before + 1)
     assert.ok(raised.width > resting.width * 1.75)
     assert.equal(await petal.evaluate(el => getComputedStyle(el).transform), 'none')
     const layoutWidth = await credit.locator('img').evaluate(el => el.offsetWidth)
@@ -177,13 +193,23 @@ try {
     await petal.evaluate(el =>
       Promise.all(el.getAnimations().map(animation => animation.finished)),
     )
+    await waitForWhooshes(before + 2)
+    assert.equal(await whooshCount(), before + 2)
   }
+  const beforeFocus = await whooshCount()
+  await desktop.keyboard.press('ArrowRight')
+  await credit.focus()
+  assert.ok(await credit.evaluate(el => el.matches(':focus-visible')))
+  await waitForWhooshes(beforeFocus + 1)
+  await credit.evaluate(el => el.blur())
+  await waitForWhooshes(beforeFocus + 2)
   await desktop.emulateMedia({ reducedMotion: 'reduce' })
   const orb = desktop.locator('.pavilion-book')
   await orb.hover()
   await credit.hover()
   await orb.hover()
   await orb.click()
+  assert.equal(await whooshCount(), beforeFocus + 2)
   const control = desktop.locator('.atlas-audio-control')
   await control.click()
   await control.click()

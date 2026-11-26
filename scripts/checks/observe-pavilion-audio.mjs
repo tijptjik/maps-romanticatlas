@@ -14,7 +14,10 @@ export function observePavilionAudio() {
   const read = Response.prototype.arrayBuffer
   Response.prototype.arrayBuffer = async function () {
     const data = await read.call(this)
-    if (this.url.includes('/pavilion/')) names.set(data, this.url.split('/').pop())
+    const file = this.url.split('?')[0].split('/').pop()
+    if (/^petal-whoosh(?:-[\w-]+)?\.ogg$/.test(file))
+      names.set(data, 'petal-whoosh.ogg')
+    else if (this.url.includes('/pavilion/')) names.set(data, file)
     return data
   }
   const decode = BaseAudioContext.prototype.decodeAudioData
