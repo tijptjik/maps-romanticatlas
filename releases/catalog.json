@@ -10631,6 +10631,22 @@
           "rows": 1,
           "scene": "automata",
           "url": "/artwork-revisions/c327036eefd743d196eb94689356e1ed.png"
+        },
+        {
+          "title": "The Sleepwalking Wardrobe",
+          "x": 214185,
+          "y": 114421,
+          "rows": 1,
+          "scene": "automata",
+          "url": "/artwork-revisions/26319f14353b4473a342a49c2638c101.png"
+        },
+        {
+          "title": "The Unrolled Landscape",
+          "x": 214185,
+          "y": 114419,
+          "rows": 1,
+          "scene": "japanese-garden",
+          "url": "/artwork-revisions/931a1f8d08704627bd4b22a2221ab70d.png"
         }
       ]
     }
