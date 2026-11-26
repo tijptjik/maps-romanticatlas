@@ -37,6 +37,10 @@
   animation-direction: reverse;
 }
 
+:root {
+  --pavilion-day-art: url("/pavilion/glasshouse.webp");
+  --pavilion-night-art: url("/pavilion/glasshouse-night.webp");
+}
 .pavilion-room {
   /* From 8:5 to 4:5, each step grows from zero to 1% of the room height. */
   --portrait-step: clamp(0px, 2cqh - 1.25cqw, 1cqh);
@@ -51,8 +55,7 @@
   min-height: 410px;
   container-type: size;
   background:
-    url("/pavilion/glasshouse.webp") center top / 100% var(--room-art-height, 100%)
-    no-repeat;
+    var(--pavilion-day-art) center top / 100% var(--room-art-height, 100%) no-repeat;
 }
 .pavilion-garden,
 .pavilion-piers {
@@ -442,16 +445,32 @@
   }
 }
 @media (pointer: coarse), (max-aspect-ratio: 9 / 10) {
-  /* Let the painting continue behind retracting browser bars. */
+  /* Safari can composite document content under its bars and clip fixed layers. */
   #map:has(> .atlas-intro:not([hidden])) {
-    position: fixed;
-    inset: 0;
     height: 100lvh;
+  }
+  .atlas-intro {
+    overscroll-behavior-y: auto;
+  }
+  :root:not(.atlas-boot):has(.atlas-intro:not([hidden])) {
+    --pavilion-backdrop: var(--pavilion-day-art);
+    --pavilion-roof: #a8d6f1;
+    background:
+      var(--pavilion-roof) var(--pavilion-backdrop) center top / 100%
+      var(--pavilion-backdrop-height, 100lvh) no-repeat;
+  }
+  :root:not(.atlas-boot):has(.atlas-intro.is-night:not([hidden])) {
+    --pavilion-backdrop: var(--pavilion-night-art);
+    --pavilion-roof: #081931;
   }
 }
 @media (max-aspect-ratio: 9 / 10) {
-  .pavilion-room {
-    background-image: url("/pavilion/glasshouse-portrait.webp");
+  :root {
+    --pavilion-day-art: url("/pavilion/glasshouse-portrait.webp");
+    --pavilion-night-art: url("/pavilion/glasshouse-portrait-night.webp");
+  }
+  :root:not(.atlas-boot):has(.atlas-intro:not(.is-night, [hidden])) {
+    --pavilion-roof: #bfd9ce;
   }
   .pavilion-title {
     color: #000;
@@ -528,10 +547,13 @@
   }
 }
 @media (max-aspect-ratio: 9 / 10) and (max-width: 700px) {
-  /* The cabinet fills the room. Place the atlas and petal in the visible part. */
-  .pavilion-room {
+  /* Register both copies of the painting to the same height, including behind the bars. */
+  :root {
     --visible-height: calc(100dvh - env(safe-area-inset-bottom, 0px));
-    --room-art-height: max(100%, calc(var(--visible-height) * 1.04));
+    --pavilion-backdrop-height: max(100lvh, calc(var(--visible-height) * 1.04));
+  }
+  .pavilion-room {
+    --room-art-height: max(100%, var(--pavilion-backdrop-height));
   }
   .pavilion-garden {
     height: var(--room-art-height);
@@ -1013,15 +1035,9 @@
   inset: 0;
   pointer-events: none;
   background:
-    url("/pavilion/glasshouse-night.webp") center top / 100%
-    var(--room-art-height, 100%) no-repeat;
+    var(--pavilion-night-art) center top / 100% var(--room-art-height, 100%) no-repeat;
   opacity: 0;
   transition: opacity 0.45s ease;
-}
-@media (max-aspect-ratio: 9 / 10) {
-  .pavilion-room::before {
-    background-image: url("/pavilion/glasshouse-portrait-night.webp");
-  }
 }
 .is-night {
   --ink: #a2d7fe;

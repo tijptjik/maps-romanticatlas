@@ -89,6 +89,38 @@ try {
       assert.ok(new Set(pixels).size > 16, `Flat strip in ${name} at row ${row}`)
     }
   }
+  // Safari may expose the document canvas around a composited scene. Inspect that
+  // canvas on its own as well as checking both edges of the assembled artwork.
+  const checkBackdrop = async (night = false) => {
+    const root = page.locator('html')
+    const backdrop = await root.evaluate(el => getComputedStyle(el).backgroundImage)
+    const painting = await page
+      .locator('.pavilion-room')
+      .evaluate(
+        (el, night) => getComputedStyle(el, night ? '::before' : null).backgroundImage,
+        night,
+      )
+    assert.match(painting, /glasshouse-portrait/)
+    assert.equal(backdrop, painting)
+    const hideScene = await page.addStyleTag({ content: 'main { visibility: hidden }' })
+    try {
+      await checkEdges(night ? 'document-backdrop-night' : 'document-backdrop-day')
+    } finally {
+      await hideScene.evaluate(el => el.remove())
+    }
+  }
+  await checkBackdrop()
+  // Model a large viewport extending below the visible one. The room must travel
+  // with the document when the user scrolls past the expanded toolbar.
+  const taller = await page.addStyleTag({ content: '#map { min-height: 820px }' })
+  try {
+    await page.evaluate(() => window.scrollTo(0, 56))
+    assert.equal(await page.evaluate(() => scrollY), 56)
+    assert.equal((await page.locator('.pavilion-room').boundingBox()).y, -56)
+  } finally {
+    await page.evaluate(() => window.scrollTo(0, 0))
+    await taller.evaluate(el => el.remove())
+  }
   await checkEdges('pavilion-safe-area')
   const togglePortraitNight = async () => {
     await page.setViewportSize({ width: 1280, height: 800 })
@@ -107,6 +139,7 @@ try {
   const nightAtlas = await page.locator('.pavilion-book').boundingBox()
   assert.ok(nightAtlas.y + nightAtlas.height + 12 < insetCredit.y)
   await checkEdges('pavilion-safe-area-night')
+  await checkBackdrop(true)
   await togglePortraitNight()
   await safeArea({})
   for (const [width, height] of [
@@ -193,6 +226,10 @@ try {
   await page.setViewportSize({ width: 384, height: 722 })
   await page.locator('.pavilion-book').tap()
   await page.locator('.atlas-intro').waitFor({ state: 'hidden' })
+  assert.equal(
+    await page.locator('html').evaluate(el => getComputedStyle(el).backgroundImage),
+    'none',
+  )
   const trigger = page.getByRole('button', { name: "Cartographer's Note", exact: true })
   await page.setViewportSize({ width: 844, height: 390 })
   await safeArea({ left: 47, right: 47, bottom: 21 })
