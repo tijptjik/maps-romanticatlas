@@ -40,10 +40,14 @@ try {
     const body = await response.text()
     const timeline =
       /clampUnit\(\(\s*(?:now - ready|time - startedAt)\) \/ generatedRevealDuration\)/g
+    const initial = /clampUnit\(\(now - tapped\) \/ initialCloudFadeDuration\)/
+    assert.match(body, initial)
     assert.equal(body.match(timeline)?.length, 2)
     await route.fulfill({
       response,
-      body: body.replace(timeline, '(window.sampleProgress ?? $&)'),
+      body: body
+        .replace(timeline, '(window.sampleProgress ?? $&)')
+        .replace(initial, '(window.initialFadeProgress ?? $&)'),
     })
   })
   await page.route('**/src/main.ts*', async route => {
@@ -136,38 +140,46 @@ try {
     await route.continue()
   })
   await page.evaluate(() => {
-    const mist = document.querySelector('.atlas-fog-cached-mist')
-    const ctx = mist.getContext('2d')
-    const rect = mist.getBoundingClientRect()
-    const x = Math.floor((470 - rect.left) * mist.width / rect.width)
-    const y = Math.floor((400 - rect.top) * mist.height / rect.height)
-    const alpha = () => ctx.getImageData(x, y, 1, 1).data[3]
-    window.fogTapSample = new Promise(resolve => {
-      document.addEventListener(
-        'touchend',
-        () => {
-          const before = alpha()
-          const start = performance.now()
-          let frames = 0
-          const sample = () => {
-            frames++
-            const after = alpha()
-            if (after < before * 0.9 || frames >= 8) {
-              const elapsedMs = Math.round(performance.now() - start)
-              resolve({ before, after, frames, elapsedMs })
-            } else requestAnimationFrame(sample)
-          }
-          requestAnimationFrame(sample)
-        },
-        { once: true, capture: true },
-      )
-    })
+    window.initialFadeProgress = 0
   })
+  const rainbowAlpha = () =>
+    page.locator('.atlas-fog-cached-mist').evaluate(mist => {
+      const rect = mist.getBoundingClientRect()
+      const x = Math.floor(((470 - rect.left) * mist.width) / rect.width)
+      const y = Math.floor(((400 - rect.top) * mist.height) / rect.height)
+      return mist.getContext('2d').getImageData(x, y, 1, 1).data[3]
+    })
+  const beforeTap = await rainbowAlpha()
+  assert.ok(beforeTap > 0)
   await page.touchscreen.tap(470, 400)
-  const first = await page.evaluate(() => window.fogTapSample)
-  releaseImage()
-  console.log('Touch release to visible fog change with artwork held', first)
-  assert.ok(first.before > 0 && first.after < first.before * 0.9 && first.frames <= 3)
+  const rainbow = []
+  try {
+    for (const progress of [0, 0.25, 0.65, 1]) {
+      await page.evaluate(value => {
+        window.initialFadeProgress = value
+      }, progress)
+      await page.waitForTimeout(200)
+      rainbow.push(await rainbowAlpha())
+    }
+    assert.ok(
+      Math.abs(rainbow[0] - beforeTap) < beforeTap * 0.08,
+      'No opacity jump on tap',
+    )
+    assert.ok(
+      rainbow.every((alpha, i) => alpha > 0 && (!i || alpha < rainbow[i - 1])),
+      'Rainbow fades progressively and remains visible while the image is held',
+    )
+    console.log(
+      'Rainbow alpha before tap and through the initial fade',
+      beforeTap,
+      rainbow,
+    )
+  } finally {
+    releaseImage()
+    await page.evaluate(() => {
+      delete window.initialFadeProgress
+    })
+  }
   await page.locator('.atlas-title-card:visible').first().waitFor()
   await page.waitForFunction(
     ({ x, y }) => {

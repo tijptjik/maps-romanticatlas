@@ -49,7 +49,8 @@ const waterLayerIds = ['water', 'water_stream', 'water_river']
 const groundFogMotionSpeed = 1.1
 const groundFogRadiusMultiplier = 1.045
 const fogRadiusDuration = 180_000
-export const generatedRevealDuration = 1400
+const initialCloudFadeDuration = 1000
+export const generatedRevealDuration = 2000
 const generatedTileOpacity = 0.94
 const revealedTileFocusDuration = 1500
 const titleCardFocusLeadTime = 500
@@ -812,12 +813,12 @@ export const addGeneratedTile = async (
   const id = `atlas-tile-${tile.x}-${tile.y}`
   if (map.getLayer(id)) return
   const bounds = placement?.bounds ?? tileBounds(tile)
-  const alpha =
-    scene && titleCards
-      ? sampleArtworkAlpha(
-          placement?.image ?? (await withinClickBudget(decodeTileImage(url), signal)),
-        )
-      : undefined
+  const image =
+    placement?.image ??
+    (scene && titleCards
+      ? await withinClickBudget(decodeTileImage(url), signal)
+      : undefined)
+  const alpha = image && scene && titleCards ? sampleArtworkAlpha(image) : undefined
   signal?.throwIfAborted()
   map.addSource(id, {
     type: 'image',
@@ -829,6 +830,8 @@ export const addGeneratedTile = async (
       [bounds.west, bounds.south],
     ],
   })
+  // Give the renderer the decoded plate before starting the crossfade.
+  if (image) map.getSource(id).updateImage({ image })
   map.addLayer(
     {
       id,
@@ -1159,7 +1162,7 @@ export const createFogCanvas = (
   let fogError: { id: string; text: string; startedAt: number } | undefined
   const generatingStartedAt = new Map()
   const revealStartedAt = new Map()
-  const clearingStartedAt = new Map<string, number>()
+  const clearings = new Map<string, { start: number; rainbow: boolean }>()
   const revealFootprints = new Map<
     string,
     {
@@ -1348,15 +1351,16 @@ export const createFogCanvas = (
   const easeInOutSine = progress => -(Math.cos(Math.PI * clampUnit(progress)) - 1) / 2
 
   const revealProgressFor = id => {
-    const tapped = clearingStartedAt.get(id)
+    const tapped = clearings.get(id)?.start
     const ready = revealStartedAt.get(id)
     if (tapped === undefined && ready === undefined) return 0
     const now = performance.now()
-    // Show a change on the first frame, then leave some mist while the image loads.
+    // Start at full density and keep some cloud cover until the plate is ready.
     const pending =
       tapped === undefined
         ? 0
-        : 0.14 + 0.28 * easeOutCubic(clampUnit((now - tapped) / 240))
+        : 0.42 *
+          Math.sin((Math.PI / 2) * clampUnit((now - tapped) / initialCloudFadeDuration))
     if (ready === undefined) return pending
     const finish = easeInOutSine(clampUnit((now - ready) / generatedRevealDuration))
     return pending + (1 - pending) * finish
@@ -1636,7 +1640,7 @@ export const createFogCanvas = (
       if (state === 'generated') {
         appendClearing(finished, tileBounds(tile))
         hasFinished = true
-      } else if (state === 'revealing' || clearingStartedAt.has(id)) {
+      } else if (state === 'revealing' || clearings.has(id)) {
         const key = revealFootprints.get(id)?.key ?? id
         if (painted.has(key)) continue
         painted.add(key)
@@ -1673,23 +1677,30 @@ export const createFogCanvas = (
       return
 
     const ratio = canvas.width / Math.max(1, fogCanvasWidth)
-    if (cachedTileIds.size === 0 && !colourCloudsVisible) return
+    if (!cachedTileIds.size && !clearings.size && !colourCloudsVisible) return
     clearOverlayContext(mistContext)
     setOverlayContextTransform(mistContext, ratio)
     let hasVisibleColourCloud = false
-    cachedTileIds.forEach(id => {
-      if (singleReadings.has(id) || fakeRenderTile(tileFromId(id))) return
+    const drawBank = (id: string) => {
       const tile = tileFromId(id)
-      const state = tileState.get(id)
-      if (
-        (state && state !== 'checking' && state !== 'revealing') ||
-        !isSelected(tile) ||
-        !isFogTileRenderable(tile)
-      )
-        return
+      if (!isSelected(tile) || !isFogTileRenderable(tile)) return
       mistContext.globalAlpha = bankOpacity(id)
       hasVisibleColourCloud =
         drawCachedColourField(tile, visualTime) || hasVisibleColourCloud
+    }
+    cachedTileIds.forEach(id => {
+      // Preserve the original colour and stacking order while the artwork loads.
+      const clearing = clearings.get(id)
+      if (clearing) {
+        if (clearing.rainbow) drawBank(id)
+        return
+      }
+      if (singleReadings.has(id) || fakeRenderTile(tileFromId(id))) return
+      const state = tileState.get(id)
+      if (!state || state === 'checking' || state === 'revealing') drawBank(id)
+    })
+    clearings.forEach(({ rainbow }, id) => {
+      if (rainbow && !cachedTileIds.has(id)) drawBank(id)
     })
     mistContext.globalAlpha = 1
     if (hasVisibleColourCloud && tileState.size) {
@@ -2330,7 +2341,10 @@ export const createFogCanvas = (
         for (const id of ids) revealFootprints.set(id, group)
       }
       for (const id of ids) {
-        if (!clearingStartedAt.has(id)) clearingStartedAt.set(id, now)
+        if (!clearings.has(id)) {
+          const rainbow = cachedTileIds.has(id) && !fakeRenderTile(tileFromId(id))
+          clearings.set(id, { start: now, rainbow })
+        }
       }
       lastMaskFrame = lastCachedMistTime = lastFogFrame = -Infinity
       maskContentDirty = mistContentDirty = true
@@ -2373,7 +2387,7 @@ export const createFogCanvas = (
         for (const id of ids) {
           tileState.set(id, 'generated')
           revealStartedAt.delete(id)
-          clearingStartedAt.delete(id)
+          clearings.delete(id)
           revealFootprints.delete(id)
         }
         onComplete?.()
@@ -2382,7 +2396,7 @@ export const createFogCanvas = (
     },
     cancelReveal: id => {
       revealStartedAt.delete(id)
-      clearingStartedAt.delete(id)
+      clearings.delete(id)
       revealFootprints.delete(id)
       singleReadings.delete(id)
     },
@@ -2407,7 +2421,7 @@ export const createFogCanvas = (
       revealFrames.clear()
       revealFootprints.clear()
       revealStartedAt.clear()
-      clearingStartedAt.clear()
+      clearings.clear()
       silhouettes.clear()
       canvas.remove()
       mistCanvas.remove()
