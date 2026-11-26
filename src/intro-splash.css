@@ -6,6 +6,8 @@
   overflow: auto;
   overscroll-behavior: contain;
   touch-action: pan-y;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+    env(safe-area-inset-bottom) env(safe-area-inset-left);
   color: var(--ink);
   background: #000;
   font:
@@ -50,7 +52,9 @@
   height: 100%;
   min-height: 410px;
   container-type: size;
-  background: url("/pavilion/glasshouse.webp") center / 100% 100% no-repeat;
+  background:
+    url("/pavilion/glasshouse.webp") center top / 100% var(--room-art-height, 100%)
+    no-repeat;
 }
 .pavilion-garden,
 .pavilion-piers {
@@ -179,12 +183,12 @@
 .pavilion-aerostat--west {
   width: min(42px, max(18px, 2.6cqw) + 1.4 * var(--portrait-step));
   left: max(18.5%, 27% - 16 * var(--portrait-step));
-  top: calc(37% - 14 * var(--portrait-step));
+  top: calc(37cqh - 14 * var(--portrait-step));
 }
 .pavilion-aerostat--east {
   width: min(32px, max(15px, 2.2cqw) + 0.85 * var(--portrait-step));
   right: max(18.5%, 26% - 16 * var(--portrait-step));
-  top: calc(42% - 15 * var(--portrait-step));
+  top: calc(42cqh - 15 * var(--portrait-step));
 }
 .pavilion-aerostat img {
   display: block;
@@ -441,9 +445,11 @@
 }
 @media (max-aspect-ratio: 9 / 10) {
   /* Some mobile toolbars sample the page backdrop at the edge of the artwork. */
+  .atlas-intro,
   :root:not(.atlas-boot):has(.atlas-intro.is-visible) {
     background: #b6c5bc linear-gradient(#b6c5bc, #bd6b23) no-repeat;
   }
+  .atlas-intro.is-night,
   :root:not(.atlas-boot):has(.atlas-intro.is-visible.is-night) {
     background: #112033 linear-gradient(#112033, #331f15) no-repeat;
   }
@@ -524,9 +530,19 @@
   }
 }
 @media (max-aspect-ratio: 9 / 10) and (max-width: 700px) {
+  /* Keep the tabletop and its garden layers aligned in the phone portrait crop. */
+  .pavilion-room {
+    --room-art-height: 108%;
+  }
+  .pavilion-garden {
+    height: var(--room-art-height);
+  }
+  .pavilion-book {
+    width: min(91cqw, 50cqh);
+    bottom: 16%;
+  }
   .pavilion-credit {
-    /* Center the petal inside the carved panel below the brass rail. */
-    top: 91.5%;
+    top: 90%;
     left: 73%;
   }
 }
@@ -997,7 +1013,9 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: url("/pavilion/glasshouse-night.webp") center / 100% 100%;
+  background:
+    url("/pavilion/glasshouse-night.webp") center top / 100%
+    var(--room-art-height, 100%) no-repeat;
   opacity: 0;
   transition: opacity 0.45s ease;
 }

@@ -42,7 +42,7 @@ try {
   const petalCenterX = (credit.x + credit.width / 2 - room.x) / room.width
   const petalCenterY = (credit.y + credit.height / 2 - room.y) / room.height
   assert.ok(Math.abs(petalCenterX - 0.73) < 0.01)
-  assert.ok(Math.abs(petalCenterY - 0.915) < 0.01)
+  assert.ok(Math.abs(petalCenterY - 0.9) < 0.01)
   assert.ok(credit.y + credit.height < room.y + room.height)
   const title = page.locator('.pavilion-title')
   for (const balloon of await page.locator('.pavilion-aerostat').all()) {
@@ -59,16 +59,29 @@ try {
     .boundingBox()
   assert.ok(heading.y + heading.height < cloud.y)
   assert.ok(atlas.y + atlas.height < credit.y)
+  assert.ok(Math.abs((atlas.y + atlas.height) / room.height - 0.84) < 0.01)
   await shot('pavilion')
+  // Repeat with a shorter visible viewport, as when mobile browser bars expand.
+  await page.setViewportSize({ width: 384, height: 650 })
+  const visibleHeight = await page.evaluate(() => visualViewport.height)
+  const shorter = await page.locator('.pavilion-room').boundingBox()
+  const petal = await page.locator('.pavilion-credit img').boundingBox()
+  assert.equal(shorter.height, visibleHeight)
+  assert.ok(visibleHeight - petal.y - petal.height > visibleHeight * 0.06)
+  await shot('pavilion-short-viewport')
+  await page.setViewportSize({ width: 384, height: 722 })
   await safeArea({ top: 59, bottom: 76 })
   assert.deepEqual(await page.locator('.pavilion-room').boundingBox(), {
     x: 0,
-    y: 0,
+    y: 59,
     width: 384,
-    height: 722,
+    height: 722 - 59 - 76,
   })
   const insetCredit = await page.locator('.pavilion-credit').boundingBox()
-  assert.deepEqual(insetCredit, credit, 'The petal stays aligned with the cabinet')
+  assert.ok(
+    insetCredit.y + insetCredit.height < 722 - 76,
+    'The whole petal clears the bottom inset',
+  )
   await shot('pavilion-safe-area')
   await safeArea({})
   for (const [width, height] of [
