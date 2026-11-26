@@ -95,7 +95,10 @@ try {
     path.join(process.env.DEV_RUNNER_ARTIFACTS, 'pavilion-audio.json'),
     JSON.stringify(cues, null, 2),
   )
-  const desktop = await browser.newPage({ reducedMotion: 'reduce' })
+  const desktop = await browser.newPage({
+    viewport: { width: 1050, height: 1148 },
+    reducedMotion: 'reduce',
+  })
   await desktop.addInitScript(observePavilionAudio)
   await desktop.addInitScript(() => {
     window.tones = []
@@ -144,6 +147,20 @@ try {
   await desktop.locator('.pavilion-orrery').click()
   await desktop.emulateMedia({ reducedMotion: 'no-preference' })
   const petal = credit.locator('.pavilion-credit__petal')
+  const atlas = await desktop.locator('.pavilion-book').boundingBox()
+  const restingPetal = await petal.boundingBox()
+  const overlap = {
+    x: atlas.x + atlas.width - 2,
+    y: restingPetal.y + restingPetal.height / 2,
+  }
+  assert.ok(
+    overlap.x > restingPetal.x && overlap.x < restingPetal.x + restingPetal.width,
+  )
+  const controlAtOverlap = () =>
+    desktop.evaluate(
+      ({ x, y }) => document.elementFromPoint(x, y)?.closest('a, button')?.className,
+      overlap,
+    )
   const whooshCount = () =>
     desktop.evaluate(
       () =>
@@ -159,6 +176,7 @@ try {
     )
   for (const lighting of ['day', 'night']) {
     if (lighting === 'night') await desktop.locator('.pavilion-orrery').click()
+    assert.equal(await controlAtOverlap(), 'pavilion-book')
     const resting = await petal.boundingBox()
     const filter = await credit
       .locator('img')
@@ -176,6 +194,7 @@ try {
       await flight.finished
     })
     const raised = await petal.boundingBox()
+    assert.equal(await controlAtOverlap(), 'pavilion-credit')
     await waitForWhooshes(before + 1)
     assert.equal(await whooshCount(), before + 1)
     assert.ok(raised.width > resting.width * 1.75)
@@ -194,6 +213,7 @@ try {
       Promise.all(el.getAnimations().map(animation => animation.finished)),
     )
     await waitForWhooshes(before + 2)
+    assert.equal(await controlAtOverlap(), 'pavilion-book')
     assert.equal(await whooshCount(), before + 2)
   }
   const beforeFocus = await whooshCount()

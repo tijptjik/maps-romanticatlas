@@ -402,7 +402,7 @@
 
 .pavilion-credit {
   position: absolute;
-  z-index: 4;
+  z-index: 1;
   right: 3%;
   bottom: 12%;
   width: clamp(105px, 9.5cqw, 146px);
@@ -527,6 +527,9 @@
   .pavilion-credit img {
     height: 100%;
   }
+  .pavilion-credit:is(:hover, :focus-visible) {
+    z-index: 4;
+  }
   .pavilion-credit:is(:hover, :focus-visible) .pavilion-credit__petal {
     width: 137.5%;
     height: 137.5%;
@@ -563,7 +566,10 @@
     bottom: max(19%, calc(100% - var(--visible-height) * 0.86));
   }
   .pavilion-credit {
-    top: min(87%, calc(var(--visible-height) - max(44px, 6%)));
+    top: min(
+      calc(var(--room-art-height) * 0.815),
+      calc(var(--visible-height) - max(44px, 6%))
+    );
     left: 73%;
   }
 }
@@ -573,6 +579,10 @@
   }
 }
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .pavilion-credit:is(:hover, :focus-visible) {
+    /* Clear the book after the first upward tilt. */
+    transition: z-index 0s 220ms;
+  }
   .pavilion-credit__petal {
     transition:
       width 300ms ease-out,

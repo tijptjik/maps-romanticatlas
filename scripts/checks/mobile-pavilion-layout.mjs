@@ -40,9 +40,10 @@ try {
   const safeArea = insets =>
     touch.send('Emulation.setSafeAreaInsetsOverride', { insets })
   const petalCenterX = (credit.x + credit.width / 2 - room.x) / room.width
-  const petalCenterY = (credit.y + credit.height / 2 - room.y) / room.height
+  const roomArt = await page.locator('.pavilion-garden').boundingBox()
+  const petalCenterY = (credit.y + credit.height / 2 - roomArt.y) / roomArt.height
   assert.ok(Math.abs(petalCenterX - 0.73) < 0.01)
-  assert.ok(Math.abs(petalCenterY - 0.87) < 0.01)
+  assert.ok(Math.abs(petalCenterY - 0.815) < 0.002)
   assert.ok(credit.y + credit.height < room.y + room.height)
   const title = page.locator('.pavilion-title')
   for (const balloon of await page.locator('.pavilion-aerostat').all()) {
